@@ -595,6 +595,7 @@ function routeFromLocation(): Route {
     '/admin/accounts',
     '/admin/pos',
     '/admin/service-coverage',
+    '/cart',
     '/checkout',
     '/shop',
     '/tournaments',

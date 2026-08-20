@@ -32,4 +32,10 @@ describe('IdentityAccess presentation', () => {
     expect(screen.queryByRole('button', { name: /primer Admin/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/MFA|factor adicional/i)).not.toBeInTheDocument();
   });
+
+  it('keeps the cart route when it is opened as a direct link', () => {
+    window.history.replaceState({}, '', '/cart');
+    render(<App />);
+    expect(screen.getByRole('heading', { name: 'Carrito' })).toBeInTheDocument();
+  });
 });
