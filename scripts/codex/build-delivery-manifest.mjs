@@ -55,7 +55,7 @@ const verification = {
     unit: 'PASS_216',
     application: 'PASS_43',
     contract: 'PASS_53_SKIP_1',
-    web: 'PASS_22',
+    web: 'PASS_27',
     integrationLocalAssertions: 'PASS_163_POSTGRESQL_18_4',
     integrationLocalRunnerExit: 'WARN_MANUAL_TERMINATION_AFTER_PASS_SUMMARY',
     build: 'PASS',

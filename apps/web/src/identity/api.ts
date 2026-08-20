@@ -1,3 +1,5 @@
+import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
+
 export interface SessionTokens {
   readonly accessToken: string;
   readonly expiresAt: number | null;
@@ -23,13 +25,46 @@ export interface AccountView {
 }
 
 let session: SessionTokens | null = null;
+let sessionClient: SupabaseClient | null | undefined;
+const sessionListeners = new Set<(value: SessionTokens | null) => void>();
 
 export function currentSession(): SessionTokens | null {
   return session;
 }
 
-export function clearSession(): void {
-  session = null;
+export function subscribeSession(listener: (value: SessionTokens | null) => void): () => void {
+  sessionListeners.add(listener);
+  return () => sessionListeners.delete(listener);
+}
+
+export async function initializeSession(): Promise<void> {
+  const client = configuredSessionClient();
+  if (client === null) {
+    updateSession(null);
+    return;
+  }
+  const { data, error } = await client.auth.getSession();
+  if (error !== null) {
+    updateSession(null);
+    return;
+  }
+  updateSession(mapSession(data.session));
+}
+
+export async function clearSession(): Promise<void> {
+  const client = configuredSessionClient();
+  if (client === null) {
+    updateSession(null);
+    return;
+  }
+  const { error } = await client.auth.signOut({ scope: 'local' });
+  if (error !== null) {
+    throw new ApiError(
+      'SESSION_CLEAR_FAILED',
+      'No fue posible borrar de forma segura la sesión de este navegador.',
+    );
+  }
+  updateSession(null);
 }
 
 export async function legalVersions(): Promise<readonly LegalVersion[]> {
@@ -57,10 +92,28 @@ export async function login(input: {
   readonly email: string;
   readonly password: string;
 }): Promise<void> {
-  session = await request<SessionTokens>('/api/v1/identity/sessions', {
+  const client = requiredSessionClient();
+  const created = await request<SessionTokens>('/api/v1/identity/sessions', {
     body: JSON.stringify(input),
     method: 'POST',
   });
+  const { data, error } = await client.auth.setSession({
+    access_token: created.accessToken,
+    refresh_token: created.refreshToken,
+  });
+  if (error !== null || data.session === null) {
+    await request('/api/v1/identity/session', {
+      headers: { authorization: `Bearer ${created.accessToken}` },
+      method: 'DELETE',
+    }).catch(() => undefined);
+    await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+    updateSession(null);
+    throw new ApiError(
+      'SESSION_PERSISTENCE_FAILED',
+      'La sesión fue validada, pero no pudo guardarse de forma segura. Inténtalo nuevamente.',
+    );
+  }
+  updateSession(mapSession(data.session));
 }
 
 export async function completeEmailCallback(
@@ -84,10 +137,9 @@ export async function resendEmailVerification(email: string): Promise<void> {
 }
 
 export async function requestEmailChange(email: string): Promise<void> {
-  if (session === null)
-    throw new ApiError('AUTHENTICATION_REQUIRED', 'Inicia sesión para continuar.');
+  const active = await activeSession();
   await authorizedRequest('/api/v1/account/email-changes', {
-    body: JSON.stringify({ email, refreshToken: session.refreshToken }),
+    body: JSON.stringify({ email, refreshToken: active.refreshToken }),
     method: 'POST',
   });
 }
@@ -107,12 +159,12 @@ export async function changePassword(input: {
     body: JSON.stringify(input),
     method: 'POST',
   });
-  clearSession();
+  await clearSession();
 }
 
 export async function logout(): Promise<void> {
   await authorizedRequest('/api/v1/identity/session', { method: 'DELETE' });
-  clearSession();
+  await clearSession();
 }
 
 export async function requestRecovery(email: string): Promise<void> {
@@ -131,7 +183,7 @@ export async function completeRecovery(
     headers: { authorization: `Bearer ${accessToken}` },
     method: 'POST',
   });
-  clearSession();
+  await clearSession();
 }
 
 export async function ownAccount(): Promise<AccountView> {
@@ -164,12 +216,115 @@ export async function authorizedRequest<Value>(
   path: string,
   init: RequestInit = {},
 ): Promise<Value> {
-  if (session === null)
-    throw new ApiError('AUTHENTICATION_REQUIRED', 'Inicia sesión para continuar.');
+  const active = await activeSession();
+  try {
+    return await authorizedRequestOnce<Value>(path, init, active);
+  } catch (error) {
+    if (!(error instanceof ApiError) || !refreshableAuthenticationError(error.code)) throw error;
+    const refreshed = await refreshSession();
+    return authorizedRequestOnce<Value>(path, init, refreshed);
+  }
+}
+
+async function authorizedRequestOnce<Value>(
+  path: string,
+  init: RequestInit,
+  active: SessionTokens,
+): Promise<Value> {
   return request<Value>(path, {
     ...init,
-    headers: { ...init.headers, authorization: `Bearer ${session.accessToken}` },
+    headers: { ...init.headers, authorization: `Bearer ${active.accessToken}` },
   });
+}
+
+async function activeSession(): Promise<SessionTokens> {
+  const client = requiredSessionClient();
+  const { data, error } = await client.auth.getSession();
+  if (error !== null) {
+    throw new ApiError(
+      'IDENTITY_PROVIDER_UNAVAILABLE',
+      'No fue posible comprobar tu sesión. Inténtalo nuevamente.',
+    );
+  }
+  const active = mapSession(data.session);
+  updateSession(active);
+  if (active === null) {
+    throw new ApiError('AUTHENTICATION_REQUIRED', 'Inicia sesión para continuar.');
+  }
+  return active;
+}
+
+async function refreshSession(): Promise<SessionTokens> {
+  const client = requiredSessionClient();
+  const { data, error } = await client.auth.refreshSession();
+  if (error !== null) {
+    throw new ApiError(
+      'IDENTITY_PROVIDER_UNAVAILABLE',
+      'No fue posible renovar tu sesión. Inténtalo nuevamente.',
+    );
+  }
+  const refreshed = mapSession(data.session);
+  updateSession(refreshed);
+  if (refreshed === null) {
+    throw new ApiError('AUTHENTICATION_REQUIRED', 'Tu sesión terminó. Ingresa nuevamente.');
+  }
+  return refreshed;
+}
+
+function configuredSessionClient(): SupabaseClient | null {
+  if (sessionClient !== undefined) return sessionClient;
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !publishableKey) {
+    sessionClient = null;
+    return sessionClient;
+  }
+  sessionClient = createClient(url, publishableKey, {
+    auth: {
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      persistSession: true,
+      storageKey: 'sergod-store-auth-v1',
+    },
+  });
+  sessionClient.auth.onAuthStateChange((_event, value) => updateSession(mapSession(value)));
+  return sessionClient;
+}
+
+function requiredSessionClient(): SupabaseClient {
+  const client = configuredSessionClient();
+  if (client === null) {
+    throw new ApiError(
+      'AUTH_CONFIGURATION_MISSING',
+      'La configuración pública de autenticación no está disponible.',
+    );
+  }
+  return client;
+}
+
+function mapSession(value: Session | null): SessionTokens | null {
+  if (value === null) return null;
+  return {
+    accessToken: value.access_token,
+    expiresAt: value.expires_at ?? null,
+    refreshToken: value.refresh_token,
+  };
+}
+
+function updateSession(value: SessionTokens | null): void {
+  if (
+    session?.accessToken === value?.accessToken &&
+    session?.expiresAt === value?.expiresAt &&
+    session?.refreshToken === value?.refreshToken
+  ) {
+    return;
+  }
+  session = value;
+  for (const listener of sessionListeners) listener(value);
+}
+
+function refreshableAuthenticationError(code: string): boolean {
+  return code === 'AUTHENTICATION_REQUIRED' || code === 'PROVIDER_TOKEN_INVALID';
 }
 
 async function request<Value = void>(path: string, init: RequestInit = {}): Promise<Value> {

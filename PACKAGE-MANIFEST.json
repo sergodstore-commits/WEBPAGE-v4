@@ -1,9 +1,9 @@
 {
   "schemaVersion": 4,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-08-20T19:18:55.113Z",
-  "fileCount": 480,
-  "totalBytes": 45484284,
+  "createdUtc": "2026-08-20T19:45:31.819Z",
+  "fileCount": 481,
+  "totalBytes": 45495963,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -1352,8 +1352,8 @@
     },
     {
       "path": "apps/web/src/app/SiteChrome.tsx",
-      "bytes": 4672,
-      "sha256": "04094280445aadceefb04b8efdfcd1361ed3a6a4ddca4eedc0b4e262524b9db4"
+      "bytes": 4842,
+      "sha256": "bb3d214feb9f099afd10216a82f29f4608b179ef7d1a0fb0813d602cd3fe4b51"
     },
     {
       "path": "apps/web/src/cart/CartPage.test.tsx",
@@ -1381,9 +1381,14 @@
       "sha256": "66f57d49366e1c676fa4a499ac6b587ef9ff2c270e68d68cca3f7b0f1e3ab86a"
     },
     {
+      "path": "apps/web/src/identity/api.session.test.tsx",
+      "bytes": 5697,
+      "sha256": "7d80f62951d3464a4cf88b2baaf348bf143f4253fa9da661c9a6932750cc235b"
+    },
+    {
       "path": "apps/web/src/identity/api.ts",
-      "bytes": 6059,
-      "sha256": "d14957db2afc5273da1fc267c0d086018d220d88af5e6da1cf4e030375509e14"
+      "bytes": 10926,
+      "sha256": "eb5323908e32b3178a8c7c5617269d66796c1b4ecd210beacd4927140ee0fd8c"
     },
     {
       "path": "apps/web/src/identity/supabase-browser.test.tsx",
@@ -1397,8 +1402,8 @@
     },
     {
       "path": "apps/web/src/main.tsx",
-      "bytes": 377,
-      "sha256": "16daf6e9052b96d94c2d8b1aba96296d4298eb1c8bb50d041f527c3c4bda1b68"
+      "bytes": 522,
+      "sha256": "05313cd39072fcc209c9de9d4d43fc995ffa8f7bd1af5de1915e81fe8c9145e2"
     },
     {
       "path": "apps/web/src/pos/api.ts",
@@ -1538,7 +1543,7 @@
     {
       "path": "DELIVERY-VERIFICATION.json",
       "bytes": 1671,
-      "sha256": "d88c8b356d34da28fe64650edb3a1f3ff3ef308ea83c4dfeb51e198cad545638"
+      "sha256": "718fe667ef3c745426f9039741d2db72de8d666700cf0528aceeb0145060c3b2"
     },
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",
@@ -1822,8 +1827,8 @@
     },
     {
       "path": "docs/CURRENT/IMPLEMENTATION-STATUS.md",
-      "bytes": 7230,
-      "sha256": "ab24ca2de84397f550d048c30d837b36d5c5d60db52c52de14a4ea9010f13371"
+      "bytes": 7461,
+      "sha256": "8f03427a6d15f6b1c4da52e1704be13dc30230127a46aaec960e14b8d77a0b93"
     },
     {
       "path": "docs/CURRENT/INDEX.md",
@@ -1847,8 +1852,8 @@
     },
     {
       "path": "HANDOFF-NUEVA-CUENTA-CODEX-V4.md",
-      "bytes": 4745,
-      "sha256": "3e2aca7f347384b48340407aa21fb9abfb9eb441b74fca8ced18bc87674df406"
+      "bytes": 5101,
+      "sha256": "f86f01cd2222ea3b65ffae595f830971ef1c4ed8a49ede588058bb604ee07f25"
     },
     {
       "path": "INICIO-CODEX.txt",
@@ -1857,8 +1862,8 @@
     },
     {
       "path": "INICIO-NUEVA-CUENTA-CODEX-V4.txt",
-      "bytes": 2572,
-      "sha256": "5c27f8d631214eaeeefcac014cc43d7b50d803a45d91abe2dea08d2dbf1d8759"
+      "bytes": 2676,
+      "sha256": "b2e40f85f0021a259cd0341182d22cde146545db389878d0df5cfbb9ca9fa701"
     },
     {
       "path": "LEEME-PRIMERO.txt",
@@ -2117,8 +2122,8 @@
     },
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
-      "bytes": 57495,
-      "sha256": "d8da99a0ea22f355728c9de26d29920aef3812558f44cebae22728551559418a"
+      "bytes": 57604,
+      "sha256": "1d647807483ea8db8162b478a51ed3bb24ba6a6621a65d6d22e09ba51dc94a57"
     },
     {
       "path": "README.md",
@@ -2133,7 +2138,7 @@
     {
       "path": "scripts/codex/build-delivery-manifest.mjs",
       "bytes": 4030,
-      "sha256": "e6e61d8c43c62aad3412b17b1ed4bfee899e383d98ac9c9ad5e3bc3a67d6d1dd"
+      "sha256": "ad0dd409454e9309207801a3792b36cc69d46b646e469223537c910d10f3b9cf"
     },
     {
       "path": "scripts/codex/FINAL-EXTERNAL-ACCEPTANCE.ps1",

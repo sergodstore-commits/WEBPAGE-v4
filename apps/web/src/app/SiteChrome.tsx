@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { currentSession, ownAccount } from '../identity/api.js';
+import { currentSession, ownAccount, subscribeSession } from '../identity/api.js';
 import type { Route } from './App.js';
 
 interface SiteChromeProps {
@@ -20,7 +20,12 @@ const publicRoutes: readonly { readonly label: string; readonly route: Route }[]
 export function SiteChrome({ navigate, route }: SiteChromeProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [role, setRole] = useState<'ADMIN' | 'CLIENTE' | null>(null);
-  const authenticated = currentSession() !== null;
+  const [authenticated, setAuthenticated] = useState(() => currentSession() !== null);
+
+  useEffect(
+    () => subscribeSession((activeSession) => setAuthenticated(activeSession !== null)),
+    [],
+  );
 
   useEffect(() => {
     if (!authenticated) return;

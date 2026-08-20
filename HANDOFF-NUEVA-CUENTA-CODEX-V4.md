@@ -13,6 +13,7 @@ Este repositorio es un checkpoint autocontenido de continuación. No representa 
 - Fulfillment mantiene `fulfillment_events` y `order_state_history`.
 - Notifications tiene outbox, worker, leases, idempotencia y wiring ejecutable.
 - Web responsive con navegación pública, catálogo, carrito persistente, checkout, selección Flow/Webpay y superficies acotadas de Cuenta/Admin.
+- La sesión web se restaura tras recargar y Supabase renueva el access token; existen pruebas de persistencia, retry único y cierre entre pestañas.
 - `FREIGHT_COLLECT` no exige domicilio y usa `shippingCostAmountClp=0`; torneos son solo editoriales.
 - Las 31 migraciones históricas protegidas permanecen intactas; las migraciones V4 son únicamente prospectivas.
 
@@ -45,6 +46,7 @@ Los secretos permanecen fuera de Git y fuera del paquete. Nunca imprimirlos, cop
 - El catálogo remoto observado contiene fixtures, no el catálogo final del negocio.
 - La UI Admin es operativa pero incompleta para todas las capacidades del backend.
 - No se ha completado una compra real Flow/Webpay ni una notificación real de extremo a extremo.
+- La persistencia/renovación de sesión está probada localmente, pero aún debe validarse con un login real remoto después de configurar `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` en Vercel.
 - No se ejecutó la limpieza irreversible propuesta para tablas remotas.
 - La repetición final de integración imprimió 163 PASS, pero quedó colgada al salir y se terminó manualmente.
 - `LOCAL_IMPLEMENTATION_COMPLETE`, producción lista y aceptación externa siguen sin declararse.

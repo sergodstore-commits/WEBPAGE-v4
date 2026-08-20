@@ -20,6 +20,7 @@ Orden de continuidad esperado:
 - aceptar Flow sandbox y Webpay Integración con credenciales reales;
 - probar envío real Resend y activar el worker solo si la entrega fue aceptada;
 - conectar Vercel V4 a Git, validar el preview correcto y ejecutar E2E remoto;
+- comprobar con una cuenta real que la sesión persiste tras recargar y se renueva, sin exponer tokens;
 - preparar observabilidad, backup/restore y rollback;
 - promover y mover el dominio únicamente en el stage Release y con autorización explícita.
 
