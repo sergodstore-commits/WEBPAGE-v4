@@ -130,6 +130,32 @@ export class PgOrderRepository implements OrderRepository {
             [reservation.reservation_id, now],
           );
         }
+        const loyalty = await transaction.query<LoyaltyReservationRow>(
+          `SELECT order_loyalty_reservation_id,loyalty_account_id,points
+             FROM order_loyalty_reservations
+            WHERE order_id=$1 AND status='ACTIVE' FOR UPDATE`,
+          [row.order_id],
+        );
+        for (const reservation of loyalty.rows) {
+          const released = await transaction.query(
+            `UPDATE loyalty_accounts SET reserved_points=reserved_points-$2,
+               version=version+1,updated_at=$3
+             WHERE loyalty_account_id=$1 AND reserved_points >= $2`,
+            [reservation.loyalty_account_id, reservation.points, now],
+          );
+          if (released.rowCount !== 1) {
+            throw new OrderError(
+              'ORDER_LOYALTY_RESERVATION_INVARIANT_BROKEN',
+              'INFRASTRUCTURE',
+              'Loyalty reservation could not be released.',
+            );
+          }
+          await transaction.query(
+            `UPDATE order_loyalty_reservations SET status='RELEASED',released_at=$2
+              WHERE order_loyalty_reservation_id=$1 AND status='ACTIVE'`,
+            [reservation.order_loyalty_reservation_id, now],
+          );
+        }
         await transaction.query(
           `UPDATE orders SET state='CANCELLED',cancelled_at=$2,updated_at=$2,version=version+1
             WHERE order_id=$1 AND state='PENDING_PAYMENT'`,
@@ -246,6 +272,11 @@ interface ReservationRow extends QueryResultRow {
   reservation_id: string;
   source_id: string;
   quantity: string | number;
+}
+interface LoyaltyReservationRow extends QueryResultRow {
+  loyalty_account_id: string;
+  order_loyalty_reservation_id: string;
+  points: string | number;
 }
 interface OrderRow extends QueryResultRow {
   order_id: string;

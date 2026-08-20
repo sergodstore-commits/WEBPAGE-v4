@@ -20,9 +20,15 @@ Debe conservar de forma auditable:
 
 La UI puede mostrar “Retirado” o “Entregado” para `FULFILLED` según modalidad.
 
+Un Order cuyo total sea cero se confirma transaccionalmente como `PAID` durante checkout. No queda en `PENDING_PAYMENT`, no crea `PaymentAttempt` externo y conserva las transiciones `NULL → PENDING_PAYMENT → PAID` en `order_state_history`.
+
 ## Pago
 
 Flow y Webpay Plus son adaptadores independientes bajo Payments. La confirmación del proveedor se verifica y procesa de forma idempotente; el redirect del navegador es solo parte de UX.
+
+Al confirmar un Order se consumen de forma idempotente las reservas de inventario/preventa, los usos de promociones/cupón y la reserva/movimientos de loyalty usando los snapshots CURRENT del checkout. La transacción crea fulfillment y escribe el historial de Order.
+
+El retorno Flow configurado es la ruta API real `/api/v1/payments/flow/return`; confirmación Flow y retornos Flow/Webpay verifican estado server-to-server.
 
 ## Fulfillment
 
@@ -31,6 +37,8 @@ Flow y Webpay Plus son adaptadores independientes bajo Payments. La confirmació
 `PAID → PREPARING → READY_FOR_PICKUP → FULFILLED`.
 
 La operación identifica el pedido y registra la transición auditable correspondiente.
+
+Cada transición escribe tanto `fulfillment_events` como `order_state_history` en la misma transacción y encola la notificación idempotente correspondiente cuando aplica.
 
 ### Despacho
 

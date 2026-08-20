@@ -85,7 +85,7 @@ export const deliverySnapshotV2Schema = z.discriminatedUnion('mode', [
       carrier: z.enum(['CHILEXPRESS', 'STARKEN']),
       destinationCommune: z.string().trim().min(1).max(100),
       agencyDestination: text,
-      shippingCostAmountClp: z.null(),
+      shippingCostAmountClp: z.literal(0),
       shippingIncludedInOrderTotal: z.literal(false),
       orderTotalWithoutShippingClp: z.int().min(0),
     })

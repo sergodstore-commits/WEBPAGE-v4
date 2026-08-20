@@ -54,7 +54,7 @@ Preferir orquestación explícita de Application y contratos estables. Outbox/In
 
 - `apps/web` → Vercel.
 - `apps/api` → Render Web Service (servidor Node persistente).
-- jobs lifecycle/expiration → Render Cron Jobs mientras no exista necesidad de worker continuo.
+- jobs lifecycle/expiration → Render Cron Jobs; notificaciones puede ejecutarse como polling continuo explícitamente habilitado o como job one-shot.
 - PostgreSQL/Auth/Storage → Supabase.
 - Docker no es requisito del desarrollo local; Supabase local completo puede usarlo opcionalmente.
 

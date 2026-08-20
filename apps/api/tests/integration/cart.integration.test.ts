@@ -892,7 +892,7 @@ describe('PostgreSQL Phase 9B provisional checkout', () => {
     );
     expect(result.item).toMatchObject({
       canCreateOrder: true,
-      shippingCostAmountClp: null,
+      shippingCostAmountClp: 0,
       shippingIncludedInOrderTotal: false,
       shippingPaymentMode: 'FREIGHT_COLLECT',
     });

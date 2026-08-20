@@ -124,10 +124,17 @@ function match(method: string | undefined, pathname: string): Route | null {
     pathname,
   );
   if (transition?.[1] !== undefined && transition[2] !== undefined && method === 'POST') {
+    const statusByAction = {
+      archive: 'ARCHIVED',
+      draft: 'DRAFT',
+      publish: 'PUBLISHED',
+    } as const;
     return {
       entryId: transition[1],
       kind: 'ADMIN_TRANSITION',
-      status: editorialStatusSchema.parse(transition[2].toUpperCase()),
+      status: editorialStatusSchema.parse(
+        statusByAction[transition[2] as keyof typeof statusByAction],
+      ),
     };
   }
   const update = /^\/api\/v1\/admin\/content\/([^/]+)$/u.exec(pathname);

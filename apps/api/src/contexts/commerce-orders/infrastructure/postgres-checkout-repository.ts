@@ -2,7 +2,7 @@ import type { AppliedPromotionSnapshotV1, PromotionPreview } from '@sergod/contr
 import type { Clock, ExecutionContext, UuidGenerator } from '@sergod/foundation';
 import type { Pool, QueryResultRow } from 'pg';
 
-import { calculateRedeem, LoyaltyError } from '../../loyalty/domain/loyalty.js';
+import { calculateEarn, calculateRedeem, LoyaltyError } from '../../loyalty/domain/loyalty.js';
 import {
   evaluatePromotionSet,
   normalizeCouponCode,
@@ -19,6 +19,7 @@ import type {
 } from '../application/checkout-ports.js';
 import { CheckoutError, type StoredCartDeliveryIntent } from '../domain/checkout.js';
 import { formatOrderPublicNumber } from '../domain/order.js';
+import { confirmOrder } from './postgres-order-confirmation.js';
 
 const IDEMPOTENCY_SCOPE = 'CHECKOUT_PROVISIONAL';
 
@@ -180,20 +181,23 @@ export class PgCheckoutRepository implements CheckoutRepository {
           throw conflict(summary.validationErrorCodes[0] ?? 'CHECKOUT_NOT_READY');
         }
 
-        const duration = await transaction.query<{ integer_value: string | number }>(
-          `SELECT integer_value FROM system_configurations
-            WHERE configuration_key='PAYMENT_RESERVATION_DURATION_MINUTES'
-              AND scope='GLOBAL' AND state='ACTIVE'`,
-        );
-        const durationMinutes = Number(duration.rows[0]?.integer_value);
-        if (!Number.isSafeInteger(durationMinutes) || durationMinutes < 1) {
-          throw new CheckoutError(
-            'PAYMENT_RESERVATION_CONFIGURATION_REQUIRED',
-            'INFRASTRUCTURE',
-            'Payment reservation duration is not configured.',
+        let expiresAt = now;
+        if (summary.requiresExternalPayment) {
+          const duration = await transaction.query<{ integer_value: string | number }>(
+            `SELECT integer_value FROM system_configurations
+              WHERE configuration_key='PAYMENT_RESERVATION_DURATION_MINUTES'
+                AND scope='GLOBAL' AND state='ACTIVE'`,
           );
+          const durationMinutes = Number(duration.rows[0]?.integer_value);
+          if (!Number.isSafeInteger(durationMinutes) || durationMinutes < 1) {
+            throw new CheckoutError(
+              'PAYMENT_RESERVATION_CONFIGURATION_REQUIRED',
+              'INFRASTRUCTURE',
+              'Payment reservation duration is not configured.',
+            );
+          }
+          expiresAt = new Date(now.getTime() + durationMinutes * 60_000);
         }
-        const expiresAt = new Date(now.getTime() + durationMinutes * 60_000);
         const orderId = this.uuids.generate();
         const year = now.getUTCFullYear();
         await transaction.query(
@@ -328,6 +332,36 @@ export class PgCheckoutRepository implements CheckoutRepository {
           }
         }
 
+        if (summary.loyalty.requestedPoints > 0) {
+          if (summary.loyalty.configuration === null) {
+            throw conflict('LOYALTY_CONFIGURATION_NOT_ACTIVE');
+          }
+          const loyalty = await transaction.query<{ loyalty_account_id: string }>(
+            `UPDATE loyalty_accounts SET reserved_points=reserved_points+$2,
+               version=version+1,updated_at=$3
+             WHERE account_id=$1 AND balance-reserved_points >= $2
+             RETURNING loyalty_account_id`,
+            [input.accountId, summary.loyalty.requestedPoints, now],
+          );
+          const loyaltyAccountId = loyalty.rows[0]?.loyalty_account_id;
+          if (loyaltyAccountId === undefined) {
+            throw conflict('LOYALTY_AVAILABLE_POINTS_INSUFFICIENT');
+          }
+          await transaction.query(
+            `INSERT INTO order_loyalty_reservations(order_loyalty_reservation_id,order_id,
+               loyalty_account_id,points,status,configuration_snapshot,created_at)
+             VALUES($1,$2,$3,$4,'ACTIVE',$5,$6)`,
+            [
+              this.uuids.generate(),
+              orderId,
+              loyaltyAccountId,
+              summary.loyalty.requestedPoints,
+              summary.loyalty.configuration,
+              now,
+            ],
+          );
+        }
+
         await transaction.query(
           `INSERT INTO order_state_history(order_state_history_id,order_id,from_state,to_state,reason,
              actor_id,correlation_id,occurred_at)
@@ -340,6 +374,30 @@ export class PgCheckoutRepository implements CheckoutRepository {
             now,
           ],
         );
+        await transaction.query(
+          `INSERT INTO notification_outbox(notification_id,event_type,recipient_account_id,
+             recipient_email,payload,idempotency_key,status,next_attempt_at,created_at,updated_at)
+           SELECT $1,'ORDER_CREATED',account.account_id,account.current_email,$2,$3,'PENDING',$4,$4,$4
+             FROM user_accounts account WHERE account.account_id=$5
+           ON CONFLICT(idempotency_key) DO NOTHING`,
+          [
+            this.uuids.generate(),
+            JSON.stringify({ orderPublicNumber: publicNumber }),
+            `order:${orderId}:created`,
+            now,
+            input.accountId,
+          ],
+        );
+        const finalState = summary.requiresExternalPayment ? 'PENDING_PAYMENT' : 'PAID';
+        if (!summary.requiresExternalPayment) {
+          await confirmOrder(transaction, {
+            context: input.context,
+            now,
+            orderId,
+            reason: 'ZERO_TOTAL_CONFIRMED',
+            uuids: this.uuids,
+          });
+        }
         await transaction.query(
           `INSERT INTO checkout_order_idempotency_results(checkout_order_idempotency_result_id,
              account_id,cart_group_id,idempotency_key,request_fingerprint,order_id,created_at)
@@ -366,11 +424,11 @@ export class PgCheckoutRepository implements CheckoutRepository {
         return {
           replayed: false,
           order: {
-            expiresAt,
+            expiresAt: summary.requiresExternalPayment ? expiresAt : null,
             orderId,
             publicNumber,
             requiresExternalPayment: summary.requiresExternalPayment,
-            state: 'PENDING_PAYMENT',
+            state: finalState,
             totalAmountClp: summary.totalAmountClp,
           },
         };
@@ -596,7 +654,7 @@ export class PgCheckoutRepository implements CheckoutRepository {
       promotionDiscountClp: promotions.discountClp,
       recalculatedAt: now,
       requiresExternalPayment: totalAmountClp > 0,
-      shippingCostAmountClp: null,
+      shippingCostAmountClp: 0,
       shippingIncludedInOrderTotal: false,
       shippingLabel: persistedIntent?.mode === 'SHIPPING' ? 'NO INCLUIDO — ENVÍO POR PAGAR' : null,
       shippingPaymentMode: persistedIntent?.mode === 'SHIPPING' ? 'FREIGHT_COLLECT' : null,
@@ -1013,9 +1071,12 @@ async function evaluateLoyalty(
   if (branchId === null) {
     return {
       availablePoints: available,
+      configuration: null,
       configured: false,
+      loyaltyEligibleAmountClp: 0,
       maxRedeemablePoints: 0,
       pointsDiscountClp: 0,
+      pointsEarned: 0,
       requestedPoints,
       validationErrorCodes: requestedPoints > 0 ? ['DELIVERY_INTENT_REQUIRED'] : [],
     };
@@ -1028,13 +1089,30 @@ async function evaluateLoyalty(
   if (configuration === undefined) {
     return {
       availablePoints: available,
+      configuration: null,
       configured: false,
+      loyaltyEligibleAmountClp: 0,
       maxRedeemablePoints: 0,
       pointsDiscountClp: 0,
+      pointsEarned: 0,
       requestedPoints,
       validationErrorCodes: requestedPoints > 0 ? ['LOYALTY_CONFIGURATION_NOT_ACTIVE'] : [],
     };
   }
+  const configurationSnapshot = {
+    branchId: configuration.branch_id,
+    earnClpPerPoint: safePositive(configuration.earn_clp_per_point),
+    loyaltyConfigurationId: configuration.loyalty_configuration_id,
+    maximumRedeemBasisPoints:
+      configuration.maximum_redeem_basis_points === null
+        ? null
+        : Number(configuration.maximum_redeem_basis_points),
+    minimumRedeemPoints: safeNonnegative(configuration.minimum_redeem_points),
+    redeemClpPerPoint: safePositive(configuration.redeem_clp_per_point),
+    snapshot_contract: 'LoyaltyConfigurationSnapshot.v1' as const,
+    snapshot_schema_version: 1 as const,
+    versionNumber: safePositive(configuration.version_number),
+  };
   try {
     const calculated = calculateRedeem({
       balance: safeInteger(loyaltyAccount.balance),
@@ -1050,7 +1128,22 @@ async function evaluateLoyalty(
       reservedPoints: safeNonnegative(loyaltyAccount.reserved_points),
       shippingFeeClp,
     });
-    return { ...calculated, configured: true, requestedPoints, validationErrorCodes: [] };
+    const earned = calculateEarn({
+      accountLinked: true,
+      earnClpPerPoint: configurationSnapshot.earnClpPerPoint,
+      merchandiseSubtotalClp,
+      pointsDiscountClp: calculated.pointsDiscountClp,
+      promotionDiscountClp,
+      shippingFeeClp,
+    });
+    return {
+      ...calculated,
+      configuration: configurationSnapshot,
+      configured: true,
+      ...earned,
+      requestedPoints,
+      validationErrorCodes: [],
+    };
   } catch (error) {
     if (error instanceof LoyaltyError) {
       const allowed = calculateRedeem({
@@ -1069,7 +1162,16 @@ async function evaluateLoyalty(
       });
       return {
         ...allowed,
+        configuration: configurationSnapshot,
         configured: true,
+        ...calculateEarn({
+          accountLinked: true,
+          earnClpPerPoint: configurationSnapshot.earnClpPerPoint,
+          merchandiseSubtotalClp,
+          pointsDiscountClp: 0,
+          promotionDiscountClp,
+          shippingFeeClp,
+        }),
         pointsDiscountClp: 0,
         requestedPoints,
         validationErrorCodes: [error.code],
@@ -1389,7 +1491,11 @@ interface LoyaltyAccountRow extends QueryResultRow {
   readonly reserved_points: string;
 }
 interface LoyaltyConfigurationRow extends QueryResultRow {
+  readonly branch_id: string;
+  readonly earn_clp_per_point: string;
+  readonly loyalty_configuration_id: string;
   readonly maximum_redeem_basis_points: number | null;
   readonly minimum_redeem_points: string;
   readonly redeem_clp_per_point: string;
+  readonly version_number: string;
 }

@@ -238,7 +238,7 @@ it('builds nationwide freight-collect SHIPPING with no shipping cost in the orde
     mode: 'SHIPPING',
     carrier: 'CHILEXPRESS',
     orderTotalWithoutShippingClp: 10000,
-    shippingCostAmountClp: null,
+    shippingCostAmountClp: 0,
     shippingIncludedInOrderTotal: false,
   });
 });

@@ -101,6 +101,20 @@ export class PgFulfillmentRepository implements FulfillmentRepository {
         [row.order_id, orderState, now],
       );
       await transaction.query(
+        `INSERT INTO order_state_history(order_state_history_id,order_id,from_state,to_state,reason,
+           actor_id,correlation_id,occurred_at)
+         VALUES($1,$2,$3,$4,'FULFILLMENT_TRANSITION',$5,$6,$7)`,
+        [
+          this.uuids.generate(),
+          row.order_id,
+          row.status === 'PENDING' ? 'PAID' : row.status,
+          orderState,
+          input.context.actorId ?? null,
+          input.context.correlationId,
+          now,
+        ],
+      );
+      await transaction.query(
         `INSERT INTO fulfillment_events(fulfillment_event_id,fulfillment_id,from_status,to_status,
            actor_id,correlation_id,occurred_at) VALUES($1,$2,$3,$4,$5,$6,$7)`,
         [

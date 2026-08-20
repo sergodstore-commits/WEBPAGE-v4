@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
-import { publicRequest } from '../identity/api.js';
+import { ApiError, authorizedRequest, currentSession, publicRequest } from '../identity/api.js';
 
 interface ProductCard {
   readonly availableForPurchase: boolean;
@@ -23,6 +23,7 @@ export function StorePage() {
   const [items, setItems] = useState<readonly ProductCard[]>([]);
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('Cargando catálogo…');
+  const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const load = (q = '') => {
     const params = new URLSearchParams({ limit: '24', sort: 'NEWEST' });
     if (q.trim().length >= 2) params.set('q', q.trim());
@@ -37,6 +38,17 @@ export function StorePage() {
   const search = (event: FormEvent) => {
     event.preventDefault();
     load(query);
+  };
+  const addToCart = async (product: ProductCard) => {
+    setAddingProductId(product.productId);
+    try {
+      await addProductToCart(product.productId);
+      setMessage(`${product.name} fue agregado al carrito.`);
+    } catch (error) {
+      setMessage(messageOf(error));
+    } finally {
+      setAddingProductId(null);
+    }
   };
   return (
     <main className="page-frame">
@@ -69,14 +81,39 @@ export function StorePage() {
             <h2>{product.name}</h2>
             <p className="price">${product.priceAmountClp.toLocaleString('es-CL')}</p>
             <p>{product.availableForPurchase ? 'Disponible' : 'Agotado'}</p>
-            <button disabled={!product.availableForPurchase} type="button">
-              Agregar al carrito
+            <button
+              disabled={!product.availableForPurchase || addingProductId === product.productId}
+              onClick={() => void addToCart(product)}
+              type="button"
+            >
+              {addingProductId === product.productId ? 'Agregando…' : 'Agregar al carrito'}
             </button>
           </article>
         ))}
       </section>
     </main>
   );
+}
+
+async function addProductToCart(productId: string): Promise<void> {
+  const send = currentSession() === null ? publicRequest : authorizedRequest;
+  const add = () =>
+    send('/api/v1/cart/lines', {
+      body: JSON.stringify({ preorderCampaignId: null, productId, quantity: 1 }),
+      headers: { 'idempotency-key': crypto.randomUUID() },
+      method: 'POST',
+    });
+  try {
+    await add();
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.code !== 'CART_SESSION_REQUIRED') throw error;
+    await send('/api/v1/cart', {
+      body: '{}',
+      headers: { 'idempotency-key': crypto.randomUUID() },
+      method: 'POST',
+    });
+    await add();
+  }
 }
 
 export function EditorialPage({ type, title }: { readonly type: string; readonly title: string }) {

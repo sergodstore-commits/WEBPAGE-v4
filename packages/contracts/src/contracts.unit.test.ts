@@ -56,7 +56,7 @@ describe('closed compiled contract registries', () => {
       carrier: 'STARKEN',
       destinationCommune: 'Copiapó',
       agencyDestination: 'Agencia Starken Copiapó Centro',
-      shippingCostAmountClp: null,
+      shippingCostAmountClp: 0,
       shippingIncludedInOrderTotal: false,
       orderTotalWithoutShippingClp: 10_000,
     };
@@ -64,7 +64,7 @@ describe('closed compiled contract registries', () => {
     expect(() =>
       snapshotRegistry.validate('DeliverySnapshot.v2', {
         ...shippingV2,
-        shippingCostAmountClp: 0,
+        shippingCostAmountClp: 1,
       }),
     ).toThrowError(expect.objectContaining({ code: 'SCHEMA_VALIDATION_FAILED' }));
   });

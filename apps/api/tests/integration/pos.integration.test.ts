@@ -778,7 +778,7 @@ it('completes nationwide freight collect PREORDER without adding shipping to its
     agencyDestination: 'Agencia centro de Copiapó',
     carrier: 'STARKEN',
     orderTotalWithoutShippingClp: 2000,
-    shippingCostAmountClp: null,
+    shippingCostAmountClp: 0,
     shippingIncludedInOrderTotal: false,
     shippingPaymentMode: 'FREIGHT_COLLECT',
     snapshot_contract: 'DeliverySnapshot.v2',

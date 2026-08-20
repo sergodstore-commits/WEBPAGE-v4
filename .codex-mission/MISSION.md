@@ -1,4 +1,4 @@
-# Sergod Store V1 V2 — auditoría, aceptación externa y release
+# Sergod Store V1 V3 — auditoría, aceptación externa y release
 
 ## Autoridad y punto de partida
 

@@ -35,9 +35,12 @@ const summary: CheckoutSummaryView = {
   lines: [],
   loyalty: {
     availablePoints: 0,
+    configuration: null,
     configured: false,
+    loyaltyEligibleAmountClp: 0,
     maxRedeemablePoints: 0,
     pointsDiscountClp: 0,
+    pointsEarned: 0,
     requestedPoints: 0,
     validationErrorCodes: [],
   },
@@ -46,7 +49,7 @@ const summary: CheckoutSummaryView = {
   recalculatedAt: new Date('2026-08-13T12:00:00.000Z'),
   requiresExternalPayment: false,
   orderTotalWithoutShippingClp: 1000,
-  shippingCostAmountClp: null,
+  shippingCostAmountClp: 0,
   shippingIncludedInOrderTotal: false,
   shippingLabel: null,
   shippingPaymentMode: null,
@@ -59,11 +62,11 @@ function subject() {
     createOrder: vi.fn(async () => ({
       replayed: false,
       order: {
-        expiresAt: new Date('2026-08-13T12:15:00.000Z'),
+        expiresAt: null,
         orderId: '0198a8be-6677-7000-8000-000000000010',
         publicNumber: 'SG-2026-000001',
         requiresExternalPayment: false,
-        state: 'PENDING_PAYMENT' as const,
+        state: 'PAID' as const,
         totalAmountClp: 0,
       },
     })),
@@ -111,7 +114,7 @@ describe('Phase 9B checkout application service', () => {
     const { repository, service } = subject();
     const result = await service.createOrder(context, accountId, groupId.toUpperCase());
     expect(result.item.publicNumber).toBe('SG-2026-000001');
-    expect(result.item.expiresAt).toBe('2026-08-13T12:15:00.000Z');
+    expect(result.item.expiresAt).toBeNull();
     const input = vi.mocked(repository.createOrder).mock.calls[0]?.[0];
     expect(input?.cartGroupId).toBe(groupId);
     expect(input?.idempotencyKey).toBe(context.idempotencyKey);

@@ -61,13 +61,6 @@ export function AdminHub() {
       <OperationalTable items={payments} title="Pagos" />
       <OperationalTable items={fulfillments} title="Fulfillment" />
       <EditorialComposer onSaved={reload} />
-      <section className="admin-modules cut-panel">
-        <h2>Módulos</h2>
-        <p>
-          Catálogo · Inventario · Preventas · Promociones · Loyalty · Pseudo‑POS · Usuarios ·
-          Configuración · Auditoría
-        </p>
-      </section>
     </main>
   );
 }

@@ -41,9 +41,22 @@ export interface CheckoutSummaryView {
   readonly lines: readonly CheckoutLineView[];
   readonly loyalty: {
     readonly availablePoints: number;
+    readonly configuration: null | {
+      readonly branchId: string;
+      readonly earnClpPerPoint: number;
+      readonly loyaltyConfigurationId: string;
+      readonly maximumRedeemBasisPoints: number | null;
+      readonly minimumRedeemPoints: number;
+      readonly redeemClpPerPoint: number;
+      readonly snapshot_contract: 'LoyaltyConfigurationSnapshot.v1';
+      readonly snapshot_schema_version: 1;
+      readonly versionNumber: number;
+    };
     readonly configured: boolean;
+    readonly loyaltyEligibleAmountClp: number;
     readonly maxRedeemablePoints: number;
     readonly pointsDiscountClp: number;
+    readonly pointsEarned: number;
     readonly requestedPoints: number;
     readonly validationErrorCodes: readonly string[];
   };
@@ -52,7 +65,7 @@ export interface CheckoutSummaryView {
   readonly recalculatedAt: Date;
   readonly requiresExternalPayment: boolean;
   readonly orderTotalWithoutShippingClp: number;
-  readonly shippingCostAmountClp: null;
+  readonly shippingCostAmountClp: 0;
   readonly shippingIncludedInOrderTotal: false;
   readonly shippingLabel: 'NO INCLUIDO — ENVÍO POR PAGAR' | null;
   readonly shippingPaymentMode: 'FREIGHT_COLLECT' | null;

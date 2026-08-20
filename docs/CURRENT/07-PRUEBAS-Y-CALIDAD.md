@@ -16,6 +16,8 @@ Un cambio debe ejecutar la combinación pertinente de:
 
 No declarar PASS por pruebas no ejecutadas.
 
+`npm test` agrupa únicamente unit/application/contract/web. PostgreSQL se ejecuta por separado mediante `test:integration:local`, cuyo preflight comprueba una vez la disponibilidad y no inicia suites cuando falta el servicio.
+
 ## Capas de prueba
 
 - Unit: invariantes puras.

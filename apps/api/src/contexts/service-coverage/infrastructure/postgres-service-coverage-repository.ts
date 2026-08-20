@@ -276,7 +276,7 @@ export class PgServiceCoverageRepository implements ServiceCoverageRepository {
         coverage: 'NATIONWIDE_CHILE',
         destinationType: 'CARRIER_AGENCY',
         mode: 'SHIPPING',
-        shippingCostAmountClp: null,
+        shippingCostAmountClp: 0,
         shippingIncludedInOrderTotal: false,
         shippingLabel: 'NO INCLUIDO — ENVÍO POR PAGAR',
         shippingPaymentMode: 'FREIGHT_COLLECT',
@@ -369,7 +369,7 @@ export class PgServiceCoverageRepository implements ServiceCoverageRepository {
       carrier: input.carrier,
       destinationCommune: input.destinationCommune,
       agencyDestination: input.agencyDestination,
-      shippingCostAmountClp: null,
+      shippingCostAmountClp: 0,
       shippingIncludedInOrderTotal: false,
       orderTotalWithoutShippingClp,
     });

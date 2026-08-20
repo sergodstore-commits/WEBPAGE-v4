@@ -168,7 +168,7 @@ export function configuredPaymentGateways(environment: NodeJS.ProcessEnv): Payme
           environment.API_PUBLIC_URL,
           '/api/v1/payments/flow/confirmation',
         ),
-        returnUrl: requiredUrl(environment.WEB_APP_URL, '/payment/flow/return'),
+        returnUrl: requiredUrl(environment.API_PUBLIC_URL, '/api/v1/payments/flow/return'),
         secretKey: flowSecretKey,
       }),
     );

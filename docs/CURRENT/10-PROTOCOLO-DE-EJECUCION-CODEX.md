@@ -33,7 +33,7 @@ Si Git muestra trabajo que `STATE.json` no refleja:
 
 ## Credenciales
 
-No bloquear la misión por credenciales tempranas. Registrar deuda `DEFERRED_EXTERNAL`. Al final, Codex entrega **un único comando PowerShell**: `scripts/codex/FINAL-EXTERNAL-ACCEPTANCE.ps1`. El usuario introduce lo necesario una sola vez; el resto vuelve a ser responsabilidad de Codex.
+No bloquear la misión por credenciales tempranas. Registrar deuda `DEFERRED_EXTERNAL`. `scripts/codex/FINAL-EXTERNAL-ACCEPTANCE.ps1` es actualmente un reporte no aceptante: enumera lo diferido, no solicita secretos, no muta `STATE.json`, devuelve exit code 2 y no puede producir un PASS falso. Solo podrá convertirse en runner de aceptación mediante un cambio prospectivo que defina procedimientos reales por proveedor y entorno.
 
 ## Mutaciones remotas
 

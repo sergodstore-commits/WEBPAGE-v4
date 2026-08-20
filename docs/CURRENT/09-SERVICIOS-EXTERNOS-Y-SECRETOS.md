@@ -36,7 +36,7 @@ Estados permitidos:
 
 - `PASS` — comportamiento e integración requerida verificados.
 - `PASS_LOCAL` — stage local deliberadamente completo.
-- `DEFERRED_EXTERNAL` — implementación local completa, validación oficial pendiente por credencial/acceso.
+- `DEFERRED_EXTERNAL` — una comprobación externa concreta no se ejecutó por falta de credencial/acceso; no afirma completitud del proyecto ni oculta defectos locales.
 - `FAIL` — problema real de código/contrato; no cerrar stage.
 
 La misión no debe detenerse por `DEFERRED_EXTERNAL` si existen etapas independientes.

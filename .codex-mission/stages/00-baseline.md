@@ -1,4 +1,4 @@
-# Stage 00-baseline — revalidar el V2 entregado
+# Stage 00-baseline — revalidar el V3 entregado
 
 ## Objetivo
 

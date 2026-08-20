@@ -634,7 +634,7 @@ export class PgPosRepository implements PosRepository {
       carrier: input.carrier,
       destinationCommune: input.destinationCommune,
       agencyDestination: input.agencyDestination,
-      shippingCostAmountClp: null,
+      shippingCostAmountClp: 0,
       shippingIncludedInOrderTotal: false,
       orderTotalWithoutShippingClp,
       capturedAt: n.toISOString(),

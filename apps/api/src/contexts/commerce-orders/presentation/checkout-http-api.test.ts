@@ -43,7 +43,7 @@ const item = {
   recalculatedAt: '2026-08-13T12:00:00.000Z',
   requiresExternalPayment: false,
   orderTotalWithoutShippingClp: 1000,
-  shippingCostAmountClp: null,
+  shippingCostAmountClp: 0,
   shippingIncludedInOrderTotal: false,
   shippingLabel: null,
   shippingPaymentMode: null,

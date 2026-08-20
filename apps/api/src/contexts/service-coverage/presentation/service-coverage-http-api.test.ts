@@ -22,7 +22,7 @@ const service = {
       coverage: 'NATIONWIDE_CHILE',
       destinationType: 'CARRIER_AGENCY',
       mode: 'SHIPPING',
-      shippingCostAmountClp: null,
+      shippingCostAmountClp: 0,
       shippingIncludedInOrderTotal: false,
       shippingLabel: 'NO INCLUIDO — ENVÍO POR PAGAR',
       shippingPaymentMode: 'FREIGHT_COLLECT',
@@ -216,7 +216,7 @@ describe('Service coverage administrative HTTP API', () => {
     await expect(response.json()).resolves.toMatchObject({
       nationwideShipping: {
         coverage: 'NATIONWIDE_CHILE',
-        shippingCostAmountClp: null,
+        shippingCostAmountClp: 0,
         shippingPaymentMode: 'FREIGHT_COLLECT',
       },
       serviceInfo: [],

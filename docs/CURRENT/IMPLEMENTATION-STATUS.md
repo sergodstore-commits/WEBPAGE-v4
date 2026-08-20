@@ -1,41 +1,44 @@
-# Implementation Status — CODEX-READY V2
+# Implementation Status — CODEX-READY V3
 
-> Estado rebaselined el 2026-08-20. Es evidencia local, no aceptación de proveedores ni producción. CURRENT continúa siendo la autoridad y Codex debe auditar/corregir toda preimplementación.
+> Estado auditado el 2026-08-20. Es evidencia de código y gates locales, no aceptación de PostgreSQL real, proveedores, staging ni producción. No se declara `LOCAL_IMPLEMENTATION_COMPLETE`.
 
-| Área                                                                                       | Implementación local                             | Evidencia disponible                                              | Pendiente obligatorio                        |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------ | ----------------------------------------------------------------- | -------------------------------------------- |
-| Foundation, Identity, Catalog, Inventory, Promotions, Loyalty, Preorders, Cart, Pseudo-POS | Preimplementado/avanzado                         | Gates unit/application/contract locales                           | Auditoría de conformidad y PostgreSQL real   |
-| Orders + Checkout                                                                          | Implementado localmente                          | Dominio, API, migraciones prospectivas y pruebas                  | Integración con PostgreSQL real y E2E remoto |
-| `FREIGHT_COLLECT`                                                                          | Implementado: shipping 0, domicilio no requerido | Pruebas locales de dominio/aplicación                             | E2E en staging                               |
-| Payments Core                                                                              | Implementado agnóstico                           | Intentos, eventos, idempotencia, reconciliación y pruebas locales | Integración DB real                          |
-| Flow                                                                                       | Adapter REST implementado                        | Firma/mapeo/callback + verificación server-to-server en código    | Sandbox real con credenciales                |
-| Webpay Plus                                                                                | Adapter REST implementado; sin POS físico        | Create/commit/status y reconciliación en código                   | Ambiente Integración con credenciales        |
-| Fulfillment                                                                                | Implementado                                     | Máquina de estados, tracking, eventos y notificaciones            | Integración DB + E2E remoto                  |
-| Cuenta cliente                                                                             | Superficies implementadas                        | Cuenta/órdenes/preferencias/preorders/loyalty/security            | UX/E2E autenticado remoto                    |
-| Admin                                                                                      | Superficies y APIs implementadas                 | Orders/payments/fulfillment/editorial y módulos                   | Matriz completa por rol en staging           |
-| Comercio público                                                                           | Implementado                                     | Home, shop, búsqueda y consumo de API pública                     | E2E/visual remoto y contenido real           |
-| Editorial                                                                                  | Implementado                                     | Torneos, noticias, comunidad y cómics como contenido editorial    | Operación real y revisión de contenido       |
-| Diseño                                                                                     | Integración local implementada                   | Asset oficial preservado; UI responsive y accesible base          | QA visual en navegadores/dispositivos        |
-| Notificaciones                                                                             | Outbox, worker y plantillas implementados        | Pruebas unitarias de reintento/plantillas                         | Adapter y envío con proveedor real           |
-| Hardening                                                                                  | Base implementada                                | Headers, CORS, timeout, smoke y auditoría de entrega              | Pentest/observabilidad/staging reales        |
+| Área                                                                                        | Estado local verificable       | Evidencia                                                                            | Pendiente separado                                     |
+| ------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Foundation, Identity, Catalog, Inventory, Promotions, Loyalty, Preorders, Cart y Pseudo-POS | Base preservada y gates verdes | Unit/application/contract                                                            | PostgreSQL real y E2E remoto                           |
+| Orders + Checkout                                                                           | Corregido                      | Total cero confirma `PAID` sin `PaymentAttempt`; historial; reservas                 | Integración PostgreSQL real                            |
+| Promotions + Loyalty en Order                                                               | Corregido                      | Consumo transaccional/idempotente desde snapshots; reserva loyalty prospectiva       | Concurrencia en PostgreSQL real                        |
+| `FREIGHT_COLLECT`                                                                           | Contrato unificado             | `shippingCostAmountClp=0`, no incluido en total, sin domicilio obligatorio           | E2E en staging                                         |
+| Payments Core                                                                               | Implementado                   | Intentos, eventos, idempotencia, reconciliación y tests de repositorio               | Integración DB real                                    |
+| Flow                                                                                        | Adapter y rutas coherentes     | Firma, status, callback y retorno `/api/v1/payments/flow/return` probados localmente | Sandbox con credenciales                               |
+| Webpay Plus                                                                                 | Adapter online; sin POS físico | Create/commit/status y tests focalizados                                             | Ambiente Integración con credenciales                  |
+| Fulfillment                                                                                 | Corregido                      | Cada transición mantiene `fulfillment_events` y `order_state_history`                | Integración DB + E2E                                   |
+| Cuenta cliente                                                                              | Superficie real acotada        | Perfil, pedidos y preferencias de despacho con repo/API                              | UX autenticada remota; otras áreas no se sobredeclaran |
+| Admin                                                                                       | Superficie real acotada        | Operaciones enlazadas a APIs; se retiró la lista decorativa de módulos               | Matriz por rol en staging                              |
+| Comercio público                                                                            | Corregido                      | Catálogo y botón Agregar al carrito con creación/reintento de carrito anónimo        | E2E navegador remoto                                   |
+| Editorial                                                                                   | Implementado                   | Repo/API y transición publish/archive/draft corregida; torneos solo informativos     | Operación y contenido real                             |
+| Notificaciones                                                                              | Pipeline local ejecutable      | Outbox, lease, polling, reintentos, Resend adapter, main y job one-shot; tests       | Dominio remitente y credenciales reales                |
+| Aceptación externa final                                                                    | Explícitamente no ejecutada    | Script de reporte devuelve `DEFERRED_EXTERNAL` y no muta estado                      | Procedimientos y accesos reales                        |
 
-## Gates locales ejecutados en Work
+## Gates locales reproducidos
 
-- Node `24.18.1` y npm `11.16.0`: compatibles con engines; el package manager preferido es npm `11.18.0`.
-- `npm ci`: PASS, lockfile preservado.
+- Node `24.18.1` y npm `11.16.0`: compatibles con engines; lockfile preservado.
+- `npm ci`: PASS.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit: 46 archivos / 185 pruebas PASS.
+- Unit: 58 archivos / 211 pruebas PASS.
 - Application: 8 archivos / 43 pruebas PASS.
-- Contract: 16 archivos / 47 PASS y 1 SKIP documentado.
-- Web: 6 archivos / 17 pruebas PASS.
-- `codex:prepare`: PASS antes del rebaseline; debe repetirse sobre el estado final.
-- Migraciones protegidas: 31 intactas; los cambios V2 son prospectivos (`017`, `018` y sus mirrors Supabase).
+- Contract: 17 archivos / 50 PASS y 1 SKIP documentado.
+- Web: 7 archivos / 18 pruebas PASS.
+- `codex:prepare`: 138 checks PASS; 8 Skills locales válidas.
+- Migraciones protegidas: 31 intactas; `016`–`019` y mirrors Supabase son prospectivas.
+- `npm audit`: 0 vulnerabilidades.
+- Auditoría de entrega: sin archivos/directorios vacíos, `.env` reales ni placeholders bloqueantes.
+- `test:integration:local`: `DEFERRED_EXTERNAL` en una sola detección porque no hay PostgreSQL configurado; no se iniciaron suites.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
-- PostgreSQL real/integration: el entorno no pudo descargar el runtime portable y no había servicio local disponible.
-- Flow sandbox y Webpay Integración: faltan credenciales y ambiente de aceptación.
-- Email real: faltan proveedor, dominio verificado y credenciales.
-- Staging/producción, E2E remoto, observabilidad y rollback: no se proporcionaron destinos ni autorización.
+- PostgreSQL real e integración local.
+- Flow sandbox y Webpay Integración.
+- Envío real de email mediante dominio verificado.
+- Staging/producción, E2E remoto, observabilidad, backup/restore y rollback.
 
-La misión reducida en `.codex-mission/` obliga a Codex a empezar desde auditoría, corregir la base y reunir evidencia externa antes de Release.
+Los hallazgos locales enumerados por la auditoría independiente que originó V3 fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.

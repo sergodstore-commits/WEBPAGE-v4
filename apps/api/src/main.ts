@@ -1,5 +1,8 @@
 import { CryptoUuidGenerator, SystemClock } from '@sergod/foundation';
 
+import { AccountDeliveryPreferencesService } from './contexts/account-preferences/application/account-delivery-preferences-service.js';
+import { PgAccountDeliveryPreferencesRepository } from './contexts/account-preferences/infrastructure/postgres-account-delivery-preferences-repository.js';
+import { AccountDeliveryPreferencesHttpApi } from './contexts/account-preferences/presentation/account-delivery-preferences-http-api.js';
 import { CatalogEntityAdminService } from './contexts/catalog/application/catalog-entity-admin-service.js';
 import { CartService } from './contexts/commerce-orders/application/cart-service.js';
 import { CheckoutService } from './contexts/commerce-orders/application/checkout-service.js';
@@ -45,6 +48,10 @@ import { InventoryAdminService } from './contexts/inventory/application/inventor
 import { PgInventoryAdminAuthorizer } from './contexts/inventory/infrastructure/postgres-inventory-admin-authorizer.js';
 import { PgInventoryRepository } from './contexts/inventory/infrastructure/postgres-inventory-repository.js';
 import { InventoryAdminHttpApi } from './contexts/inventory/presentation/inventory-admin-http-api.js';
+import {
+  createNotificationRuntime,
+  notificationWorkerEnabled,
+} from './contexts/notifications/infrastructure/notification-runtime.js';
 import { LoyaltyService } from './contexts/loyalty/application/loyalty-service.js';
 import { PgLoyaltyAdminAuthorizer } from './contexts/loyalty/infrastructure/postgres-loyalty-authorizer.js';
 import { PgLoyaltyRepository } from './contexts/loyalty/infrastructure/postgres-loyalty-repository.js';
@@ -74,6 +81,7 @@ import { loadIdentityRuntimeConfig } from './platform/config/identity-runtime-co
 import { loadRuntimeConfig } from './platform/config/load-runtime-config.js';
 import { createLogger } from './platform/logging/logger.js';
 import { createPostgresPool } from './platform/persistence/postgres.js';
+import { CancelableWorker } from './platform/workers/cancelable-worker.js';
 import {
   CompositeHttpRouteHandler,
   createServer,
@@ -89,6 +97,19 @@ const clock = new SystemClock();
 const uuids = new CryptoUuidGenerator();
 const logger = createLogger('info');
 const pool = databaseConfig === null ? null : createPostgresPool(databaseConfig.databaseUrl);
+const notificationController = new AbortController();
+let notificationLoop: Promise<void> | null = null;
+if (pool !== null && notificationWorkerEnabled(process.env)) {
+  const notificationRuntime = createNotificationRuntime(process.env, pool, clock);
+  notificationLoop = new CancelableWorker(async () => {
+    await notificationRuntime.worker.run(notificationRuntime.batchSize);
+  }, notificationRuntime.pollMs)
+    .run(notificationController.signal)
+    .catch(() => {
+      process.stderr.write('The notification worker stopped unexpectedly.\n');
+      process.exitCode = 1;
+    });
+}
 const catalogStorage =
   catalogConfig === null
     ? null
@@ -191,11 +212,15 @@ if (identityConfig !== null && pool !== null) {
     new PgFulfillmentRepository(pool, clock, uuids),
   );
   const editorialService = new EditorialService(new PgEditorialRepository(pool, clock, uuids));
+  const accountDeliveryPreferencesService = new AccountDeliveryPreferencesService(
+    new PgAccountDeliveryPreferencesRepository(pool, clock),
+  );
   const systemConfigurationService = new SystemConfigurationService(
     new PgSystemConfigurationRepository(pool, clock, uuids),
     new PgSystemConfigurationAdminAuthorizer(pool),
   );
   routeHandlers.push(
+    new AccountDeliveryPreferencesHttpApi(identityService, accountDeliveryPreferencesService),
     new SystemConfigurationHttpApi(identityService, systemConfigurationService, logger),
     new CheckoutHttpApi(identityService, checkoutService, logger),
     new PaymentHttpApi(identityService, paymentService, logger),
@@ -237,7 +262,9 @@ server.listen(config.port, config.host, () => {
 });
 
 const shutdown = (): void => {
+  notificationController.abort();
   server.close(async (error) => {
+    if (notificationLoop !== null) await notificationLoop;
     if (pool !== null) await pool.end();
     if (error) {
       process.stderr.write('The technical API server could not close cleanly.\n');

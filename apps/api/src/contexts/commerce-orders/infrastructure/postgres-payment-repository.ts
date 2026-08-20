@@ -9,6 +9,7 @@ import type {
   VerifiedProviderResult,
 } from '../application/payment-ports.js';
 import { assertPaymentTransition, assertVerifiedPayment, PaymentError } from '../domain/payment.js';
+import { confirmOrder } from './postgres-order-confirmation.js';
 
 export class PgPaymentRepository implements PaymentRepository {
   private readonly transactions: PgTransactionExecutor;
@@ -225,7 +226,13 @@ export class PgPaymentRepository implements PaymentRepository {
         );
       }
       if (input.result.status === 'SUCCEEDED') {
-        await this.confirmOrder(transaction, attempt.order_id, input.context, now);
+        await confirmOrder(transaction, {
+          context: input.context,
+          now,
+          orderId: attempt.order_id,
+          reason: 'PAYMENT_VERIFIED',
+          uuids: this.uuids,
+        });
       }
       return { attempt: mapAttempt(result), replayed: false };
     });
@@ -290,106 +297,6 @@ export class PgPaymentRepository implements PaymentRepository {
       nextCursor:
         result.rows.length > input.limit ? (page.at(-1)?.payment_attempt_id ?? null) : null,
     };
-  }
-
-  private async confirmOrder(
-    transaction: PgTransaction,
-    orderId: string,
-    context: ExecutionContext,
-    now: Date,
-  ): Promise<void> {
-    const order = await transaction.query<OrderPaymentRow>(
-      `SELECT order_id,account_id,public_number,state,total_amount_clp,currency,
-              requires_external_payment,expires_at,delivery_mode,delivery_snapshot
-       FROM orders WHERE order_id=$1 FOR UPDATE`,
-      [orderId],
-    );
-    const row = order.rows[0];
-    if (row === undefined) throw notFound('ORDER_NOT_FOUND');
-    if (row.state === 'PAID') return;
-    if (row.state !== 'PENDING_PAYMENT') {
-      await transaction.query(
-        `INSERT INTO order_state_history(order_state_history_id,order_id,from_state,to_state,reason,
-           actor_id,correlation_id,occurred_at) VALUES($1,$2,$3,$3,'LATE_PAYMENT_REQUIRES_REVIEW',$4,$5,$6)`,
-        [
-          this.uuids.generate(),
-          orderId,
-          row.state,
-          context.actorId ?? null,
-          context.correlationId,
-          now,
-        ],
-      );
-      return;
-    }
-    const inventory = await transaction.query<ReservationRow>(
-      `SELECT order_inventory_reservation_id reservation_id,inventory_position_id source_id,quantity
-       FROM order_inventory_reservations WHERE order_id=$1 AND status='ACTIVE' FOR UPDATE`,
-      [orderId],
-    );
-    for (const reservation of inventory.rows) {
-      const consumed = await transaction.query(
-        `UPDATE inventory_positions SET on_hand=on_hand-$2,reserved=reserved-$2,
-           version=version+1,updated_at=$3 WHERE inventory_position_id=$1
-           AND on_hand >= $2 AND reserved >= $2`,
-        [reservation.source_id, reservation.quantity, now],
-      );
-      if (consumed.rowCount !== 1) throw infrastructure('ORDER_RESERVATION_INVARIANT_BROKEN');
-      await transaction.query(
-        `UPDATE order_inventory_reservations SET status='CONSUMED',consumed_at=$2
-         WHERE order_inventory_reservation_id=$1`,
-        [reservation.reservation_id, now],
-      );
-    }
-    const preorders = await transaction.query<ReservationRow>(
-      `SELECT order_preorder_reservation_id reservation_id,preorder_campaign_id source_id,quantity
-       FROM order_preorder_reservations WHERE order_id=$1 AND status='ACTIVE' FOR UPDATE`,
-      [orderId],
-    );
-    for (const reservation of preorders.rows) {
-      const committed = await transaction.query(
-        `UPDATE preorder_campaigns SET temporarily_reserved=temporarily_reserved-$2,
-           committed=committed+$2,version=version+1,updated_at=$3
-         WHERE preorder_campaign_id=$1 AND temporarily_reserved >= $2`,
-        [reservation.source_id, reservation.quantity, now],
-      );
-      if (committed.rowCount !== 1) {
-        throw infrastructure('ORDER_PREORDER_RESERVATION_INVARIANT_BROKEN');
-      }
-      await transaction.query(
-        `UPDATE order_preorder_reservations SET status='COMMITTED',committed_at=$2
-         WHERE order_preorder_reservation_id=$1`,
-        [reservation.reservation_id, now],
-      );
-    }
-    await transaction.query(
-      `UPDATE orders SET state='PAID',paid_at=$2,expires_at=NULL,updated_at=$2,version=version+1
-       WHERE order_id=$1 AND state='PENDING_PAYMENT'`,
-      [orderId, now],
-    );
-    await transaction.query(
-      `INSERT INTO order_state_history(order_state_history_id,order_id,from_state,to_state,reason,
-         actor_id,correlation_id,occurred_at) VALUES($1,$2,'PENDING_PAYMENT','PAID',
-         'PAYMENT_VERIFIED',$3,$4,$5)`,
-      [this.uuids.generate(), orderId, context.actorId ?? null, context.correlationId, now],
-    );
-    const snapshot = row.delivery_snapshot;
-    await transaction.query(
-      `INSERT INTO order_fulfillments(fulfillment_id,order_id,method,status,recipient_name,
-         recipient_phone,carrier,commune,agency,created_at,updated_at)
-       VALUES($1,$2,$3,'PENDING',$4,$5,$6,$7,$8,$9,$9) ON CONFLICT(order_id) DO NOTHING`,
-      [
-        this.uuids.generate(),
-        orderId,
-        row.delivery_mode,
-        text(snapshot.recipientName),
-        text(snapshot.contactPhone),
-        text(snapshot.carrier),
-        text(snapshot.destinationCommune),
-        text(snapshot.agencyDestination),
-        now,
-      ],
-    );
   }
 
   private event(
@@ -461,19 +368,12 @@ function mapAttempt(row: AttemptRow): PaymentAttemptView {
   };
 }
 
-function text(value: unknown): string | null {
-  return typeof value === 'string' && value.trim() !== '' ? value : null;
-}
 function conflict(code: string) {
   return new PaymentError(code, 'CONFLICT', 'Payment operation conflicts with current state.');
 }
 function notFound(code: string) {
   return new PaymentError(code, 'NOT_FOUND', 'Payment resource was not found.');
 }
-function infrastructure(code: string) {
-  return new PaymentError(code, 'INFRASTRUCTURE', 'Payment persistence invariant failed.');
-}
-
 interface AttemptRow extends QueryResultRow {
   readonly account_id: string;
   readonly amount_clp: number | string;
@@ -505,9 +405,4 @@ interface OrderPaymentRow extends QueryResultRow {
   readonly requires_external_payment: boolean;
   readonly state: string;
   readonly total_amount_clp: number | string;
-}
-interface ReservationRow extends QueryResultRow {
-  readonly quantity: number | string;
-  readonly reservation_id: string;
-  readonly source_id: string;
 }

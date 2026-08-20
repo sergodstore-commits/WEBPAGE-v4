@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 
 import { authorizedRequest, ownAccount, type AccountView } from '../identity/api.js';
 
@@ -10,22 +10,58 @@ interface Order {
   readonly deliveryMode: string;
 }
 
+interface DeliveryPreferences {
+  readonly agencyDestination: string | null;
+  readonly carrier: 'CHILEXPRESS' | 'STARKEN' | null;
+  readonly destinationCommune: string | null;
+  readonly recipientName: string | null;
+  readonly recipientPhone: string | null;
+}
+
 export function AccountHub() {
   const [account, setAccount] = useState<AccountView | null>(null);
   const [orders, setOrders] = useState<readonly Order[]>([]);
+  const [preferences, setPreferences] = useState<DeliveryPreferences | null>(null);
   const [message, setMessage] = useState('Cargando tu resumen…');
   useEffect(() => {
     void Promise.all([
       ownAccount(),
       authorizedRequest<{ items: Order[] }>('/api/v1/orders?limit=25'),
+      authorizedRequest<{ item: DeliveryPreferences | null }>(
+        '/api/v1/account/delivery-preferences',
+      ),
     ])
-      .then(([profile, history]) => {
+      .then(([profile, history, delivery]) => {
         setAccount(profile);
         setOrders(history.items);
+        setPreferences(delivery.item);
         setMessage(history.items.length === 0 ? 'Aún no tienes pedidos.' : '');
       })
       .catch((error: unknown) => setMessage(messageOf(error)));
   }, []);
+  const savePreferences = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      const result = await authorizedRequest<{ item: DeliveryPreferences }>(
+        '/api/v1/account/delivery-preferences',
+        {
+          body: JSON.stringify({
+            agencyDestination: nullable(data.get('agencyDestination')),
+            carrier: nullable(data.get('carrier')),
+            destinationCommune: nullable(data.get('destinationCommune')),
+            recipientName: nullable(data.get('recipientName')),
+            recipientPhone: nullable(data.get('recipientPhone')),
+          }),
+          method: 'PUT',
+        },
+      );
+      setPreferences(result.item);
+      setMessage('Preferencias guardadas.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
   return (
     <main className="page-frame account-layout">
       <aside className="account-nav cut-panel" aria-label="Secciones de cuenta">
@@ -33,11 +69,9 @@ export function AccountHub() {
         <h1>Resumen</h1>
         <nav>
           <a href="#orders">Pedidos</a>
-          <a href="#preorders">Preventas</a>
-          <a href="#loyalty">Puntos</a>
           <a href="#profile">Perfil</a>
           <a href="#delivery">Preferencias</a>
-          <a href="#security">Seguridad</a>
+          <a href="/account">Seguridad</a>
         </nav>
       </aside>
       <section className="account-content">
@@ -86,22 +120,52 @@ export function AccountHub() {
         <section className="cut-panel" id="delivery">
           <h2>Preferencias de despacho</h2>
           <p>Despacho por pagar a agencia Chilexpress o Starken; el domicilio no es obligatorio.</p>
-        </section>
-        <section className="cut-panel" id="preorders">
-          <h2>Preventas</h2>
-          <p>Consulta aquí compromisos y actualizaciones de campañas.</p>
-        </section>
-        <section className="cut-panel" id="loyalty">
-          <h2>Puntos</h2>
-          <p>El saldo y los canjes se calculan siempre en servidor.</p>
-        </section>
-        <section className="cut-panel" id="security">
-          <h2>Seguridad</h2>
-          <p>Administra correo, contraseña y sesiones desde Identidad y seguridad.</p>
+          <form
+            key={preferences === null ? 'empty' : JSON.stringify(preferences)}
+            onSubmit={(event) => void savePreferences(event)}
+          >
+            <label>
+              Destinatario
+              <input defaultValue={preferences?.recipientName ?? ''} name="recipientName" />
+            </label>
+            <label>
+              Teléfono de contacto
+              <input
+                defaultValue={preferences?.recipientPhone ?? ''}
+                name="recipientPhone"
+                placeholder="+569…"
+              />
+            </label>
+            <label>
+              Transportista
+              <select defaultValue={preferences?.carrier ?? ''} name="carrier">
+                <option value="">Sin preferencia</option>
+                <option value="CHILEXPRESS">Chilexpress</option>
+                <option value="STARKEN">Starken</option>
+              </select>
+            </label>
+            <label>
+              Comuna de destino
+              <input
+                defaultValue={preferences?.destinationCommune ?? ''}
+                name="destinationCommune"
+              />
+            </label>
+            <label>
+              Agencia de destino
+              <input defaultValue={preferences?.agencyDestination ?? ''} name="agencyDestination" />
+            </label>
+            <button type="submit">Guardar preferencias</button>
+          </form>
         </section>
       </section>
     </main>
   );
+}
+
+function nullable(value: FormDataEntryValue | null): string | null {
+  const normalized = String(value ?? '').trim();
+  return normalized === '' ? null : normalized;
 }
 
 function messageOf(error: unknown) {

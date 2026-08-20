@@ -1,4 +1,5 @@
 export * from './code-registry.js';
+export * from './account-delivery-preferences.js';
 export * from './cart.js';
 export * from './checkout.js';
 export * from './catalog-admin.js';
