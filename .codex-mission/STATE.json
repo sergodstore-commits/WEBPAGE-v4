@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "mission": "SERGOD_STORE_WEB_V1_COMPLETION",
+  "status": "ACTIVE",
+  "currentStageId": "00-baseline",
+  "currentStageFile": ".codex-mission/stages/00-baseline.md",
+  "queue": [
+    {
+      "id": "00-baseline",
+      "file": ".codex-mission/stages/00-baseline.md"
+    },
+    {
+      "id": "01-conformance",
+      "file": ".codex-mission/stages/01-conformance.md"
+    },
+    {
+      "id": "02-design-inventory",
+      "file": ".codex-mission/stages/02-design-inventory.md"
+    },
+    {
+      "id": "03-design-system",
+      "file": ".codex-mission/stages/03-design-system.md"
+    },
+    {
+      "id": "04-orders-domain-data",
+      "file": ".codex-mission/stages/04-orders-domain-data.md"
+    },
+    {
+      "id": "05-orders-checkout-api",
+      "file": ".codex-mission/stages/05-orders-checkout-api.md"
+    },
+    {
+      "id": "06-payments-core",
+      "file": ".codex-mission/stages/06-payments-core.md"
+    },
+    {
+      "id": "07-flow",
+      "file": ".codex-mission/stages/07-flow.md"
+    },
+    {
+      "id": "08-webpay",
+      "file": ".codex-mission/stages/08-webpay.md"
+    },
+    {
+      "id": "09-fulfillment",
+      "file": ".codex-mission/stages/09-fulfillment.md"
+    },
+    {
+      "id": "10-customer-account",
+      "file": ".codex-mission/stages/10-customer-account.md"
+    },
+    {
+      "id": "11-admin",
+      "file": ".codex-mission/stages/11-admin.md"
+    },
+    {
+      "id": "12-public-commerce",
+      "file": ".codex-mission/stages/12-public-commerce.md"
+    },
+    {
+      "id": "13-editorial-content",
+      "file": ".codex-mission/stages/13-editorial-content.md"
+    },
+    {
+      "id": "14-visual-integration",
+      "file": ".codex-mission/stages/14-visual-integration.md"
+    },
+    {
+      "id": "15-notifications",
+      "file": ".codex-mission/stages/15-notifications.md"
+    },
+    {
+      "id": "16-e2e-integration",
+      "file": ".codex-mission/stages/16-e2e-integration.md"
+    },
+    {
+      "id": "17-visual-qa",
+      "file": ".codex-mission/stages/17-visual-qa.md"
+    },
+    {
+      "id": "18-hardening",
+      "file": ".codex-mission/stages/18-hardening.md"
+    },
+    {
+      "id": "19-final-external",
+      "file": ".codex-mission/stages/19-final-external.md"
+    },
+    {
+      "id": "20-release",
+      "file": ".codex-mission/stages/20-release.md"
+    }
+  ],
+  "completedStages": [],
+  "deferredExternal": [],
+  "notes": ["Read only the current stage file. CURRENT defines product scope."]
+}

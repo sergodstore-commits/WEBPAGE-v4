@@ -1,0 +1,16 @@
+SERGOD STORE WEB V1 — ENTREGA CODEX READY
+
+ESTE ZIP YA ES EL PROYECTO NUEVO.
+
+Para comenzar:
+1. Verifica el SHA-256 del ZIP con el archivo entregado junto a él.
+2. Extrae el ZIP en una carpeta nueva.
+3. No ejecutes git init: el proyecto ya incluye un repositorio Git local nuevo.
+4. No crees todavía un repositorio GitHub ni conectes un remote manualmente.
+5. Abre únicamente la carpeta SERGOD-STORE-WEB-V1 en tu cuenta nueva de Codex.
+6. Abre INICIO-CODEX.txt, copia todo y envíalo como primer mensaje.
+7. Deja que Codex ejecute el trabajo técnico por sí mismo.
+
+No necesitas ejecutar bootstrap de Skills, npm, PowerShell o PostgreSQL antes de entregar el prompt a Codex. Las Skills propias, políticas de eficiencia, stages, documentación CURRENT y scripts necesarios ya están dentro del workspace.
+
+Si Codex necesita una credencial externa que pueda diferirse, debe continuar con DEFERRED_EXTERNAL. Las intervenciones humanas inevitables se agrupan hacia la aceptación externa final.

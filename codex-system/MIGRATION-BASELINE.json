@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Protected historical migration baseline. These files are immutable; later prospective migrations may be added.",
+  "protectedFiles": [
+    {
+      "path": "apps/api/migrations/001_foundation.cjs",
+      "sha256": "283317c02d540deeca39448a8dea2e7036e847224cda040d988a7d0bfb70dffa"
+    },
+    {
+      "path": "apps/api/migrations/002_identity_access.cjs",
+      "sha256": "80060ac7a393d65fa9ef8ef316e67592cf54a390a2085e3226388920fa415214"
+    },
+    {
+      "path": "apps/api/migrations/003_email_only_authentication.cjs",
+      "sha256": "c29a6e102ffa06bb8aa6555d826044e948ecb4b9e7a930c692fca56a616f492b"
+    },
+    {
+      "path": "apps/api/migrations/004_catalog_foundation.cjs",
+      "sha256": "dec0fbb8960024de7afc4e2d9763405a2cde2892a5224eee2c253eb42a52d54c"
+    },
+    {
+      "path": "apps/api/migrations/005_catalog_public_read_indexes.cjs",
+      "sha256": "ab593c41a735ea7ec051dc5057db8cec066426847d804d37dc5a205c77084919"
+    },
+    {
+      "path": "apps/api/migrations/006_inventory_regular_base.cjs",
+      "sha256": "e2e1aee8a2af5253583bffe2ef7c4484e47c62f8ad605e650eda72ed762cedf4"
+    },
+    {
+      "path": "apps/api/migrations/007_promotions_coupons.cjs",
+      "sha256": "3b725f2571c13fcee55b772ab59554b265b648484d2883990a5ed47d0fcda764"
+    },
+    {
+      "path": "apps/api/migrations/008_loyalty_foundation.cjs",
+      "sha256": "d6ac28715a520f631ec5caafa7836ca541c62a2b46fffe93981da436afb0c352"
+    },
+    {
+      "path": "apps/api/migrations/009_preorders_base.cjs",
+      "sha256": "789ed2f1d08c40c80bb9631a41c92d7c1c74c8a0c2d5f9095ca39f0fc42bed40"
+    },
+    {
+      "path": "apps/api/migrations/010_service_info_shipping_evidence.cjs",
+      "sha256": "36b92d939381fa02df876bd7aa4625c3fc951117bf8901ed95824eaae3e4b87a"
+    },
+    {
+      "path": "apps/api/migrations/011_pseudo_pos.cjs",
+      "sha256": "af90a6afac125342aff9f2018a64f7c2e713870b55a6758b68231d55d8ac6555"
+    },
+    {
+      "path": "apps/api/migrations/012_cart_foundation.cjs",
+      "sha256": "1367dab7857cd458813fd686157bc45f39bcfc69e6d67d26c627081183dc0341"
+    },
+    {
+      "path": "apps/api/migrations/013_system_configuration_administration.cjs",
+      "sha256": "7953777494f1ffc906c281af22c27107f64ba07c9eac1e97e65adffd1d8226da"
+    },
+    {
+      "path": "apps/api/migrations/014_checkout_provisional.cjs",
+      "sha256": "1711593a3c446b1d4324731a39b2e3903c6da7d251d6669e14751408111a6ab1"
+    },
+    {
+      "path": "apps/api/migrations/015_r6_nationwide_freight_collect.cjs",
+      "sha256": "bd7eb553258a9c7de1cde314e2f4073d0e8337e15d97896b73fa5ce3c80902a0"
+    },
+    {
+      "path": "supabase/migrations/20260731193601_phase_1_foundation_baseline.sql",
+      "sha256": "c641bc198ac86b83ca700e43c4f509a187c80b9d3c1689b0ed64fe27c8e82298"
+    },
+    {
+      "path": "supabase/migrations/20260731210201_phase_2_identity_access_baseline.sql",
+      "sha256": "f1b25647d35c622eac7ea2b4666de25264329e0c18e555a997912f9649c625a6"
+    },
+    {
+      "path": "supabase/migrations/20260731233233_phase_2_email_only_authentication.sql",
+      "sha256": "df8dd906ebee6e8df50e461b7ddad2e97edba6ba4c0abe6d3229dc2ae35da8f6"
+    },
+    {
+      "path": "supabase/migrations/20260801014709_phase_2_security_hardening.sql",
+      "sha256": "c7fb1a59aad6f69c6c5aaec0a5e0f678a1ed3ca6c67b30043c1c366ea2a6dc86"
+    },
+    {
+      "path": "supabase/migrations/20260801051248_phase_3a_catalog_foundation.sql",
+      "sha256": "3a9a3ba3da0715deca679084fb183ef86f0e7ac547c632164e3e6b4e69b4d030"
+    },
+    {
+      "path": "supabase/migrations/20260802002322_phase_3f_public_catalog_indexes.sql",
+      "sha256": "dd1eaf6338c0c4fa7d335864f77be5de018c709069adf4da647c993b3e1190d8"
+    },
+    {
+      "path": "supabase/migrations/20260808165442_inventory_regular_base.sql",
+      "sha256": "40f0f2c8a21ecc515ad6228ef796c5ebf6a7f747eb1df5314050016900957286"
+    },
+    {
+      "path": "supabase/migrations/20260809064304_promotions_coupons.sql",
+      "sha256": "0723fd9ce64997f7e93520dde8d126479834b32f96bacc5fb413133fafae4af9"
+    },
+    {
+      "path": "supabase/migrations/20260809162204_phase_6_loyalty.sql",
+      "sha256": "dfc449f45db4b72f0d39b8b7765f64b586f37db3d0c4ad5074aa085acd598ac4"
+    },
+    {
+      "path": "supabase/migrations/20260810214318_phase_7_preorders_base.sql",
+      "sha256": "8284328aac99ed846748ce13f6baac7a2ade5a40ec8b7b98f58f8ffcfbea22f7"
+    },
+    {
+      "path": "supabase/migrations/20260811025159_phase_3_service_info_shipping_evidence.sql",
+      "sha256": "882dec60c1cbbc97dd8b03e32226d7551154d409610fb431834006bb61d6a2bd"
+    },
+    {
+      "path": "supabase/migrations/20260811025344_phase_8_pseudo_pos.sql",
+      "sha256": "f6f706daad2ebde12a19eb5164e363258aee0ba58bf9f610eb611c03909e0957"
+    },
+    {
+      "path": "supabase/migrations/20260811183924_phase_9a_cart_foundation.sql",
+      "sha256": "4cd9ec3734a6b9474073f96951290cae91d79a72c91bdc68bdc12a30675fb02d"
+    },
+    {
+      "path": "supabase/migrations/20260812025910_system_configuration_administration.sql",
+      "sha256": "c553e7767fb1d895d874a82d417dc065203bd26bf4f19b6944348975d3c121bc"
+    },
+    {
+      "path": "supabase/migrations/20260813055343_phase_9b_checkout_provisional.sql",
+      "sha256": "f9c008569cfea19e2f65cc7bd72cc6b0319f927ab49d4485f29b3dc2ec531974"
+    },
+    {
+      "path": "supabase/migrations/20260813223544_phase_r6_nationwide_freight_collect.sql",
+      "sha256": "db31f0a6860ccab59f24a983839cdb4f2e3b9d091b6ad4c1fc8074518f23f7fb"
+    }
+  ]
+}

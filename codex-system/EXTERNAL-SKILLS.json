@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "https://github.com/composio-community/awesome-codex-skills.git",
+    "repositoryFullName": "composio-community/awesome-codex-skills",
+    "defaultBranch": "master",
+    "pinnedCommit": "0930e1373789d2eda449039f7ac154b33031de89",
+    "verifiedAt": "2026-08-19"
+  },
+  "policy": {
+    "default": "DO_NOT_INSTALL",
+    "reason": "Third-party skills are loaded only when they reduce work for the current stage and never define product scope.",
+    "installTarget": ".agents/skills",
+    "requireExactPinnedCommit": true,
+    "requireSafetyScan": true,
+    "noAutoUpdateDuringMission": true
+  },
+  "skills": [
+    {
+      "name": "webapp-testing",
+      "path": "webapp-testing",
+      "status": "APPROVED_ON_DEMAND",
+      "allowedStages": ["12-public-commerce", "16-e2e-integration", "17-visual-qa"],
+      "riskClass": "LOCAL_EXECUTION",
+      "expectedBlobs": {
+        "SKILL.md": "4726215301db64a0cc4d41fc3219c61f37a30f4a",
+        "scripts/with_server.py": "431f2eba16b268b7f3e2ae4daae9db41c0289b6d",
+        "LICENSE.txt": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835"
+      },
+      "reason": "Targeted browser testing; bundled helper is designed to run as a black box and reduce context. Playwright dependency may require setup only when this stage needs it."
+    },
+    {
+      "name": "codebase-migrate",
+      "path": "codebase-migrate",
+      "status": "REJECTED",
+      "riskClass": "EXTERNAL_AUTH_NETWORK_WRITE",
+      "reason": "Requires Composio plus issue/PR ceremony and duplicates the local mission/refactor workflow."
+    },
+    {
+      "name": "create-plan",
+      "path": "create-plan",
+      "status": "REJECTED",
+      "riskClass": "CONTEXT_OVERHEAD",
+      "reason": "Mission stages already provide the plan; another planner duplicates context."
+    },
+    {
+      "name": "deploy-pipeline",
+      "path": "deploy-pipeline",
+      "status": "REJECTED",
+      "riskClass": "SCOPE_CONFLICT",
+      "reason": "Its Stripe-oriented deployment flow conflicts with Sergod's Flow/Webpay + Render architecture."
+    },
+    {
+      "name": "gh-fix-ci",
+      "path": "gh-fix-ci",
+      "status": "REJECTED_FOR_DEFAULT",
+      "riskClass": "EXTERNAL_AUTH_NETWORK_READ",
+      "reason": "May be reconsidered in hardening only if GitHub Actions failures exist; current workflow asks for approval and adds unnecessary interaction."
+    },
+    {
+      "name": "mcp-builder",
+      "path": "mcp-builder",
+      "status": "REJECTED_FOR_DEFAULT",
+      "riskClass": "MAINTENANCE_OVERHEAD",
+      "reason": "No custom MCP is justified yet. Reconsider only after measuring a repeated deterministic operation that scripts cannot cover."
+    },
+    {
+      "name": "theme-factory",
+      "path": "theme-factory",
+      "status": "REJECTED",
+      "riskClass": "VISUAL_SCOPE_RISK",
+      "reason": "Sergod has its own visual authority and approved assets."
+    },
+    {
+      "name": "multi-agent-orchestrators",
+      "path": "N/A",
+      "status": "REJECTED",
+      "riskClass": "TOKEN_MULTIPLIER",
+      "reason": "Bernstein/Polywave/AuraKit-style orchestration is contrary to single-agent-by-default efficiency."
+    }
+  ]
+}

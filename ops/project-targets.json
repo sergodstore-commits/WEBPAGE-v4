@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "classification": "NON_SECRET_OPERATIONAL_TARGETS",
+  "supabase": {
+    "staging": {
+      "projectId": "skhsmsgmceldmapdvcqo",
+      "projectName": "sergod-store-web-v1",
+      "role": "STAGING_INTEGRATION",
+      "verifyBeforeUse": true
+    },
+    "production": {
+      "role": "CREATE_CLEAN_DURING_RELEASE",
+      "projectId": null,
+      "projectName": null
+    }
+  },
+  "vercel": {
+    "existingProjectId": "prj_hKpppuLtu27PicSau0pEbz75usdk",
+    "existingProjectName": "sergod-store",
+    "existingTeamId": "team_cAzQMS9tsrBKGL4v6PA40ZFo",
+    "domains": ["sergodstore.cl", "www.sergodstore.cl"],
+    "role": "FRONTEND",
+    "verifyBeforeLinkingNewRepo": true
+  },
+  "render": {
+    "role": "API_AND_CRON_TARGET",
+    "serviceId": null,
+    "createWhenStageAuthorizes": true
+  },
+  "github": {
+    "role": "NEW_CLEAN_OPERATIONAL_REPOSITORY",
+    "repository": null,
+    "oldRepositoryPolicy": "ARCHIVE_DO_NOT_FORCE_PUSH"
+  }
+}

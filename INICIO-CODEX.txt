@@ -1,0 +1,17 @@
+Trabaja exclusivamente dentro de la carpeta de proyecto que tienes abierta.
+
+Este workspace es autocontenido y está preparado para ser iniciado por un Codex sin contexto previo. No necesitas conocer conversaciones, repositorios ni decisiones anteriores.
+
+Tu primera acción es leer AGENTS.md y obedecer desde allí el protocolo del proyecto. docs/CURRENT/ es la única autoridad normativa del producto. .codex-mission/ define la secuencia temporal de trabajo y debes leer únicamente el stage actual indicado por STATE.json.
+
+Prioridad operativa: completar Sergod Store Web V1 con máxima eficiencia de contexto, créditos/tokens y tiempo, sin reducir calidad, seguridad, pruebas ni cumplimiento de CURRENT.
+
+Ejecuta tú mismo terminal, PowerShell, Git, npm, PostgreSQL local, pruebas, diagnósticos, correcciones, commits y scripts que el entorno permita. No me delegues trabajo técnico que puedas realizar directamente.
+
+Usa un solo agente por defecto. No uses subagentes, worktrees paralelos ni orquestadores multiagente salvo que AGENTS.md y codex-system/AGENT-POLICY.md permitan una excepción crítica y la ganancia justifique el costo de contexto.
+
+Las Skills Sergod repo-local ya están en .agents/skills/. No las reinstales globalmente. Las Skills externas solo pueden usarse conforme a codex-system/EXTERNAL-SKILLS.json, bajo demanda y en el stage autorizado.
+
+Si falta una credencial o acceso externo que no impida trabajo independiente, registra DEFERRED_EXTERNAL y continúa. No realices operaciones destructivas de producción ni promociones a producción antes del stage autorizado.
+
+Comienza ahora. Continúa autónomamente stage por stage hasta completar la misión o encontrar un bloqueo verdaderamente humano que no pueda diferirse.

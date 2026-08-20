@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 3,
+  "project": "SERGOD-STORE-WEB-V1",
+  "deliveryProfile": "CODEX_READY_NEW_ACCOUNT",
+  "productAuthority": "docs/CURRENT/",
+  "missionStageCount": 21,
+  "initialStage": "00-baseline",
+  "sergodLocalSkills": 8,
+  "externalSkillsPolicy": "APPROVED_ON_DEMAND_ONLY",
+  "externalSkillsPinnedRepository": "composio-community/awesome-codex-skills",
+  "externalSkillsPinnedCommit": "0930e1373789d2eda449039f7ac154b33031de89",
+  "codexSystemValidation": "PASS_264_CHECKS",
+  "protectedMigrationHistory": "PASS_31_FILES",
+  "deliverySecrets": "NO_REAL_ENV_FILES_DETECTED",
+  "deliveryRuntimeArtifacts": "NONE_EXPECTED",
+  "gitPolicy": "NEW_LOCAL_MAIN_NO_REMOTE",
+  "requiredFirstMachineValidation": {
+    "platform": "Windows",
+    "node": "24.x per package.json",
+    "npm": "11.x per package.json",
+    "action": "Stage 00 must run npm ci, PostgreSQL local preparation and the complete official gates before implementation advances."
+  },
+  "packagingNote": "The package manifest excludes .git and PACKAGE-MANIFEST.json itself. ZIP and final Git integrity are verified outside this file after packaging."
+}

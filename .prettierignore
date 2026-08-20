@@ -1,0 +1,12 @@
+node_modules/
+coverage/
+dist/
+apps/*/dist/
+.runtime/
+.tmp/
+.tools/
+
+# Generated/local files not formatted by technical tooling.
+supabase/config.toml
+supabase/.temp/
+supabase/migrations/*.sql

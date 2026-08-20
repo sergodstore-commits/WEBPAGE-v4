@@ -1,0 +1,545 @@
+import { type FormEvent, useEffect, useRef, useState } from 'react';
+
+import {
+  accounts,
+  changeAccountState,
+  changePassword,
+  completeEmailCallback,
+  completeRecovery,
+  legalVersions,
+  login,
+  logout,
+  ownAccount,
+  promoteAccount,
+  register,
+  requestEmailChange,
+  requestRecovery,
+  resendEmailVerification,
+  updatePhone,
+  type AccountView,
+  type LegalVersion,
+} from '../identity/api.js';
+import {
+  clearEmailCallbackSession,
+  readEmailCallbackAccessToken,
+} from '../identity/supabase-browser.js';
+import { PosPanel } from '../pos/PosPanel.js';
+import { CheckoutPanel } from '../checkout/CheckoutPanel.js';
+import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.js';
+
+type Route =
+  | '/'
+  | '/account'
+  | '/admin/accounts'
+  | '/admin/pos'
+  | '/admin/service-coverage'
+  | '/checkout'
+  | '/auth/callback/confirm'
+  | '/auth/callback/email-change'
+  | '/auth/callback/recovery'
+  | '/login'
+  | '/recover'
+  | '/register';
+
+export function App() {
+  const [route, setRoute] = useState<Route>(routeFromLocation());
+  useEffect(() => {
+    const listener = () => setRoute(routeFromLocation());
+    window.addEventListener('popstate', listener);
+    return () => window.removeEventListener('popstate', listener);
+  }, []);
+  const navigate = (next: Route) => {
+    window.history.pushState({}, '', next);
+    setRoute(next);
+  };
+
+  return (
+    <div className="app-shell">
+      <header className="site-header">
+        <button className="brand" onClick={() => navigate('/')} type="button">
+          Sergod Store
+        </button>
+        <nav aria-label="Identidad y cuenta">
+          <button onClick={() => navigate('/register')} type="button">
+            Registro
+          </button>
+          <button onClick={() => navigate('/login')} type="button">
+            Ingresar
+          </button>
+          <button onClick={() => navigate('/account')} type="button">
+            Cuenta
+          </button>
+          <button onClick={() => navigate('/checkout')} type="button">
+            Checkout
+          </button>
+          <button onClick={() => navigate('/admin/pos')} type="button">
+            Pseudo‑POS
+          </button>
+          <button onClick={() => navigate('/admin/service-coverage')} type="button">
+            Atención y cobertura
+          </button>
+        </nav>
+      </header>
+      {route === '/' && <Home navigate={navigate} />}
+      {route === '/register' && <Registration navigate={navigate} />}
+      {route === '/login' && <Login navigate={navigate} />}
+      {route === '/recover' && <Recovery navigate={navigate} />}
+      {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
+      {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
+        <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
+      )}
+      {route === '/account' && <Account navigate={navigate} />}
+      {route === '/checkout' && <CheckoutPanel />}
+      {route === '/admin/accounts' && <AccountsPanel />}
+      {route === '/admin/pos' && <PosPanel />}
+      {route === '/admin/service-coverage' && <ServiceCoveragePanel />}
+    </div>
+  );
+}
+
+function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
+  return (
+    <main className="panel hero">
+      <p className="eyebrow">Base técnica · CURRENT</p>
+      <h1>Identidad y acceso</h1>
+      <p>Autenticación exclusiva mediante correo electrónico verificado.</p>
+      <div className="actions">
+        <button onClick={() => navigate('/register')} type="button">
+          Crear cuenta Cliente
+        </button>
+        <button className="secondary" onClick={() => navigate('/login')} type="button">
+          Iniciar sesión
+        </button>
+      </div>
+    </main>
+  );
+}
+
+function Registration({ navigate }: { readonly navigate: (route: Route) => void }) {
+  const [documents, setDocuments] = useState<readonly LegalVersion[]>([]);
+  const [message, setMessage] = useState('Cargando textos legales vigentes…');
+  useEffect(() => {
+    void legalVersions()
+      .then((items) => {
+        setDocuments(items);
+        setMessage(items.length === 0 ? 'El registro aún no está habilitado.' : '');
+      })
+      .catch((error: unknown) => setMessage(messageOf(error)));
+  }, []);
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      await register({
+        acceptedLegalVersionIds: documents
+          .filter(({ versionId }) => data.getAll('legal').includes(versionId))
+          .map(({ versionId }) => versionId),
+        email: String(data.get('email')),
+        password: String(data.get('password')),
+        passwordConfirmation: String(data.get('passwordConfirmation')),
+        phone: String(data.get('phone')).trim() || null,
+      });
+      setMessage('Cuenta creada. Revisa tu correo para confirmar la dirección antes de ingresar.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  return (
+    <main className="panel">
+      <p className="eyebrow">Cuenta Cliente</p>
+      <h1>Crear cuenta</h1>
+      <form onSubmit={(event) => void submit(event)}>
+        <Field label="Correo" name="email" type="email" />
+        <Field
+          label="Teléfono opcional (E.164)"
+          name="phone"
+          placeholder="+569…"
+          required={false}
+        />
+        <Field label="Contraseña" name="password" type="password" />
+        <Field label="Confirmar contraseña" name="passwordConfirmation" type="password" />
+        {documents.map((document) => (
+          <label className="legal" key={document.versionId}>
+            <input name="legal" required type="checkbox" value={document.versionId} />
+            <span>
+              Acepto{' '}
+              <a href={document.contentLocation} rel="noreferrer" target="_blank">
+                {document.publicTitle} · {document.versionLabel}
+              </a>
+            </span>
+          </label>
+        ))}
+        <button disabled={documents.length === 0} type="submit">
+          Crear cuenta
+        </button>
+      </form>
+      <Status message={message} />
+      <button className="link" onClick={() => navigate('/login')} type="button">
+        Ya tengo cuenta
+      </button>
+    </main>
+  );
+}
+
+function Login({ navigate }: { readonly navigate: (route: Route) => void }) {
+  const [message, setMessage] = useState('');
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      await login({ email: String(data.get('email')), password: String(data.get('password')) });
+      navigate('/account');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  const resend = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      await resendEmailVerification(String(new FormData(event.currentTarget).get('email')));
+      setMessage('Si la cuenta está pendiente, recibirás un nuevo correo de confirmación.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  return (
+    <main className="panel">
+      <p className="eyebrow">Acceso</p>
+      <h1>Iniciar sesión</h1>
+      <form onSubmit={(event) => void submit(event)}>
+        <Field label="Correo verificado" name="email" type="email" />
+        <Field label="Contraseña" name="password" type="password" />
+        <button type="submit">Ingresar</button>
+      </form>
+      <h2>Reenviar confirmación</h2>
+      <form onSubmit={(event) => void resend(event)}>
+        <Field label="Correo" name="email" type="email" />
+        <button className="secondary" type="submit">
+          Reenviar correo
+        </button>
+      </form>
+      <Status message={message} />
+      <button className="link" onClick={() => navigate('/recover')} type="button">
+        Recuperar acceso
+      </button>
+    </main>
+  );
+}
+
+function EmailCallback({ kind }: { readonly kind: 'cambio' | 'confirmación' }) {
+  const [message, setMessage] = useState('Validando el enlace de correo…');
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    void (async () => {
+      try {
+        const accessToken = await readEmailCallbackAccessToken();
+        const status = await completeEmailCallback(accessToken);
+        setMessage(
+          status === 'EMAIL_CHANGE_PENDING'
+            ? 'La confirmación doble sigue pendiente. Revisa también el otro correo.'
+            : kind === 'confirmación'
+              ? 'Correo confirmado. Ya puedes iniciar sesión.'
+              : 'Cambio de correo confirmado. Inicia sesión nuevamente.',
+        );
+      } catch (error) {
+        setMessage(messageOf(error));
+      } finally {
+        try {
+          await clearEmailCallbackSession();
+        } catch (error) {
+          setMessage(messageOf(error));
+        }
+      }
+    })();
+  }, [kind]);
+  return (
+    <main className="panel">
+      <p className="eyebrow">Correo verificado</p>
+      <h1>{kind === 'confirmación' ? 'Confirmar registro' : 'Confirmar cambio de correo'}</h1>
+      <Status message={message} />
+    </main>
+  );
+}
+
+function Recovery({ navigate }: { readonly navigate: (route: Route) => void }) {
+  const [message, setMessage] = useState('');
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      await requestRecovery(String(new FormData(event.currentTarget).get('email')));
+      setMessage('Si la cuenta existe, recibirás un enlace para recuperar el acceso.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  return (
+    <main className="panel">
+      <p className="eyebrow">Seguridad</p>
+      <h1>Recuperar acceso</h1>
+      <form onSubmit={(event) => void submit(event)}>
+        <Field label="Correo" name="email" type="email" />
+        <button type="submit">Enviar enlace</button>
+      </form>
+      <Status message={message} />
+      <button className="link" onClick={() => navigate('/login')} type="button">
+        Volver al ingreso
+      </button>
+    </main>
+  );
+}
+
+function RecoveryCallback({ navigate }: { readonly navigate: (route: Route) => void }) {
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [message, setMessage] = useState('Validando el enlace de recuperación…');
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    void readEmailCallbackAccessToken()
+      .then((token) => {
+        setAccessToken(token);
+        setMessage('Define una contraseña nueva.');
+      })
+      .catch((error: unknown) => setMessage(messageOf(error)));
+  }, []);
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (accessToken === null) return;
+    const data = new FormData(event.currentTarget);
+    try {
+      await completeRecovery(accessToken, {
+        newPassword: String(data.get('password')),
+        newPasswordConfirmation: String(data.get('confirmation')),
+      });
+      await clearEmailCallbackSession();
+      setMessage('Contraseña actualizada. Inicia sesión nuevamente.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  return (
+    <main className="panel">
+      <p className="eyebrow">Seguridad</p>
+      <h1>Definir contraseña nueva</h1>
+      <form onSubmit={(event) => void submit(event)}>
+        <Field label="Contraseña nueva" name="password" type="password" />
+        <Field label="Confirmar contraseña" name="confirmation" type="password" />
+        <button disabled={accessToken === null} type="submit">
+          Actualizar contraseña
+        </button>
+      </form>
+      <Status message={message} />
+      <button className="link" onClick={() => navigate('/login')} type="button">
+        Volver al ingreso
+      </button>
+    </main>
+  );
+}
+
+function Account({ navigate }: { readonly navigate: (route: Route) => void }) {
+  const [account, setAccount] = useState<AccountView | null>(null);
+  const [message, setMessage] = useState('Cargando cuenta…');
+  useEffect(() => {
+    void ownAccount()
+      .then((value) => {
+        setAccount(value);
+        setMessage('');
+      })
+      .catch((error: unknown) => setMessage(messageOf(error)));
+  }, []);
+  const email = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      await requestEmailChange(String(new FormData(event.currentTarget).get('email')));
+      setMessage('Cambio solicitado. El correo vigente continúa activo hasta confirmar el nuevo.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  const phone = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const value = String(new FormData(event.currentTarget).get('phone')).trim();
+      await updatePhone(value || null);
+      setMessage('Teléfono opcional actualizado; no se usa para autenticación ni verificación.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  const password = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      await changePassword({
+        newPassword: String(data.get('password')),
+        newPasswordConfirmation: String(data.get('confirmation')),
+      });
+      setMessage('Contraseña cambiada. Inicia sesión nuevamente.');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  const close = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  return (
+    <main className="panel">
+      <p className="eyebrow">Cuenta</p>
+      <h1>Identidad y seguridad</h1>
+      {account && (
+        <dl className="facts">
+          <dt>Correo</dt>
+          <dd>
+            {account.currentEmail} · {account.emailVerificationStatus}
+          </dd>
+          <dt>Teléfono</dt>
+          <dd>{account.currentPhone ?? 'No registrado'} · sin uso de autenticación</dd>
+          <dt>Rol</dt>
+          <dd>{account.role}</dd>
+          <dt>Estado</dt>
+          <dd>{account.status}</dd>
+        </dl>
+      )}
+      <form onSubmit={(event) => void email(event)}>
+        <h2>Cambiar correo</h2>
+        <Field label="Correo nuevo" name="email" type="email" />
+        <button type="submit">Solicitar cambio seguro</button>
+      </form>
+      <form onSubmit={(event) => void phone(event)}>
+        <h2>Teléfono opcional</h2>
+        <Field label="Teléfono E.164 (vacío para eliminar)" name="phone" required={false} />
+        <button type="submit">Guardar teléfono</button>
+      </form>
+      <form onSubmit={(event) => void password(event)}>
+        <h2>Cambiar contraseña</h2>
+        <Field label="Contraseña nueva" name="password" type="password" />
+        <Field label="Confirmar contraseña" name="confirmation" type="password" />
+        <button type="submit">Cambiar contraseña</button>
+      </form>
+      <Status message={message} />
+      <div className="actions">
+        <button className="secondary" onClick={() => void close()} type="button">
+          Cerrar sesión
+        </button>
+        {account?.role === 'ADMIN' && (
+          <button className="secondary" onClick={() => navigate('/admin/accounts')} type="button">
+            Panel de cuentas
+          </button>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function AccountsPanel() {
+  const [items, setItems] = useState<readonly AccountView[]>([]);
+  const [message, setMessage] = useState('Cargando cuentas…');
+  const reload = () =>
+    void accounts()
+      .then((value) => {
+        setItems(value);
+        setMessage('');
+      })
+      .catch((error: unknown) => setMessage(messageOf(error)));
+  useEffect(reload, []);
+  const action = async (event: FormEvent<HTMLFormElement>, account: AccountView) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      const operation = String(data.get('operation'));
+      const reason = String(data.get('reason'));
+      if (operation === 'PROMOTE') await promoteAccount(account.accountId, reason);
+      else
+        await changeAccountState(
+          account.accountId,
+          operation === 'DEACTIVATE' ? 'deactivate' : 'reactivate',
+          reason,
+        );
+      reload();
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+  return (
+    <main className="wide-panel">
+      <p className="eyebrow">Administración</p>
+      <h1>Cuentas</h1>
+      <Status message={message} />
+      {items.map((account) => (
+        <article className="account-card" key={account.accountId}>
+          <h2>{account.currentEmail}</h2>
+          <p>
+            {account.role} · {account.status} · correo {account.emailVerificationStatus}
+          </p>
+          <form className="inline-form" onSubmit={(event) => void action(event, account)}>
+            <label>
+              Acción
+              <select name="operation">
+                <option value="PROMOTE">Promover a Admin</option>
+                <option value="DEACTIVATE">Desactivar</option>
+                <option value="REACTIVATE">Reactivar</option>
+              </select>
+            </label>
+            <Field label="Motivo cuando corresponda" name="reason" />
+            <button type="submit">Aplicar</button>
+          </form>
+        </article>
+      ))}
+    </main>
+  );
+}
+
+function Field({
+  label,
+  name,
+  placeholder,
+  required = true,
+  type = 'text',
+}: {
+  readonly label: string;
+  readonly name: string;
+  readonly placeholder?: string;
+  readonly required?: boolean;
+  readonly type?: string;
+}) {
+  return (
+    <label>
+      {label}
+      <input name={name} placeholder={placeholder} required={required} type={type} />
+    </label>
+  );
+}
+function Status({ message }: { readonly message: string }) {
+  return message ? (
+    <p className="status" role="status">
+      {message}
+    </p>
+  ) : null;
+}
+function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : 'No fue posible completar la solicitud.';
+}
+function routeFromLocation(): Route {
+  const path = window.location.pathname;
+  const routes: readonly Route[] = [
+    '/',
+    '/account',
+    '/admin/accounts',
+    '/admin/pos',
+    '/admin/service-coverage',
+    '/auth/callback/confirm',
+    '/auth/callback/email-change',
+    '/auth/callback/recovery',
+    '/login',
+    '/recover',
+    '/register',
+  ];
+  return routes.includes(path as Route) ? (path as Route) : '/';
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@sergod/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run typecheck && vite build",
+    "dev": "vite",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.111.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}
