@@ -26,6 +26,7 @@ export interface NotificationQueue {
 export interface EmailGateway {
   send(input: {
     readonly html: string;
+    readonly idempotencyKey: string;
     readonly subject: string;
     readonly text: string;
     readonly to: string;
@@ -44,17 +45,29 @@ export class NotificationWorker {
     let sent = 0;
     let failed = 0;
     for (const job of jobs) {
+      const message = renderNotification(job.eventType, job.payload);
       try {
-        const message = renderNotification(job.eventType, job.payload);
-        await this.email.send({ ...message, to: job.recipientEmail });
-        await this.queue.markSent(job.notificationId);
-        sent += 1;
+        await this.email.send({
+          ...message,
+          idempotencyKey: job.notificationId,
+          to: job.recipientEmail,
+        });
       } catch {
         await this.queue.markFailed(
           job.notificationId,
           'EMAIL_DELIVERY_FAILED',
           new Date(this.now().getTime() + 5 * 60_000),
         );
+        failed += 1;
+        continue;
+      }
+      try {
+        await this.queue.markSent(job.notificationId);
+        sent += 1;
+      } catch {
+        // Keep the leased row in SENDING. Lease recovery will retry with the same
+        // provider idempotency key, avoiding a duplicate delivery after an
+        // ambiguous database acknowledgement.
         failed += 1;
       }
     }

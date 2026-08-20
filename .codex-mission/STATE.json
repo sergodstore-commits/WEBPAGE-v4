@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "mission": "SERGOD_STORE_WEB_V1_V3_AUDIT_AND_RELEASE",
+  "mission": "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
   "status": "ACTIVE",
   "currentStageId": "00-baseline",
   "currentStageFile": ".codex-mission/stages/00-baseline.md",
@@ -21,11 +21,6 @@
   ],
   "completedStages": [],
   "deferredExternal": [
-    {
-      "stageId": "00-baseline",
-      "capability": "PostgreSQL real integration",
-      "reason": "No PostgreSQL service or DATABASE_URL is configured; the single preflight check deferred integration suites."
-    },
     {
       "stageId": "02-external-providers",
       "capability": "Flow and Webpay sandbox",

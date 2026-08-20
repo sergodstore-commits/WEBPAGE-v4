@@ -307,6 +307,7 @@ interface ProductListRow extends QueryResultRow {
   readonly name: string;
   readonly normalized_name: string;
   readonly price_amount_clp: string;
+  readonly preorder_campaign_id: string | null;
   readonly product_id: string;
   readonly resource_alt_text: string;
   readonly resource_height_px: number;
@@ -344,15 +345,30 @@ const publicProductFrom = `FROM products p
   JOIN tcg_games g ON g.game_id = p.game_id
   JOIN categories c ON c.category_id = p.category_id
   LEFT JOIN collections co ON co.collection_id = p.collection_id
+  LEFT JOIN LATERAL (
+    SELECT campaign.preorder_campaign_id
+      FROM preorder_campaigns campaign
+      JOIN branches campaign_branch
+        ON campaign_branch.branch_id=campaign.branch_id AND campaign_branch.state='ACTIVE'
+     WHERE campaign.product_id=p.product_id
+       AND campaign.operational_state='OPEN'
+       AND campaign.publication_status='PUBLISHED'
+       AND campaign.opens_at<=CURRENT_TIMESTAMP AND campaign.closes_at>CURRENT_TIMESTAMP
+       AND campaign.temporarily_reserved+campaign.committed<campaign.capacity
+     ORDER BY campaign.opens_at,campaign.preorder_campaign_id
+     LIMIT 1
+  ) preorder ON p.sale_type='PREORDER'
   JOIN product_media pm ON pm.product_id = p.product_id AND pm.is_primary
   JOIN resource_assets resource ON resource.resource_id = pm.resource_id AND resource.state = 'ACTIVE'`;
 
 const publicProductCardColumns = `p.product_id, p.name, p.price_amount_clp, p.sale_type,
-  (p.sale_type = 'REGULAR' AND EXISTS (
-    SELECT 1 FROM inventory_positions inventory
-    JOIN branches branch ON branch.branch_id = inventory.branch_id AND branch.state = 'ACTIVE'
-    WHERE inventory.product_id = p.product_id AND inventory.on_hand > inventory.reserved
-  )) AS available_for_purchase,
+  ((p.sale_type = 'REGULAR' AND EXISTS (
+      SELECT 1 FROM inventory_positions inventory
+      JOIN branches branch ON branch.branch_id = inventory.branch_id AND branch.state = 'ACTIVE'
+      WHERE inventory.product_id = p.product_id AND inventory.on_hand > inventory.reserved
+    )) OR (p.sale_type='PREORDER' AND preorder.preorder_campaign_id IS NOT NULL))
+    AS available_for_purchase,
+  preorder.preorder_campaign_id,
   p.created_at, public.sergod_catalog_search_normalize(p.name) AS normalized_name,
   g.game_id, g.slug AS game_slug, g.name AS game_name,
   resource.resource_id, resource.alt_text AS resource_alt_text,
@@ -491,6 +507,7 @@ function mapProductCard(row: ProductListRow): CatalogPublicProductCard {
     game: { gameId: row.game_id, name: row.game_name, slug: row.game_slug },
     name: row.name,
     priceAmountClp: safeInteger(row.price_amount_clp),
+    preorderCampaignId: row.preorder_campaign_id,
     primaryResource: {
       altText: row.resource_alt_text,
       heightPx: row.resource_height_px,

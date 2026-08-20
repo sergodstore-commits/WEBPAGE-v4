@@ -77,11 +77,14 @@ export class PaymentHttpApi implements HttpRouteHandler {
 
   private async execute(route: Route, request: IncomingMessage, url: URL, correlationId: string) {
     if (route.kind === 'PROVIDER') {
-      const token = await providerToken(request, url, route.provider);
+      const providerReturn = await providerToken(request, url, route.provider);
       return this.payments.processProviderResult(
         { actorType: 'SYSTEM', correlationId },
         route.provider,
-        { mode: route.mode, token },
+        {
+          mode: providerReturn.recovery ? 'RECONCILE' : route.mode,
+          token: providerReturn.token,
+        },
       );
     }
     const admin = ['GET_ADMIN', 'LIST_ADMIN', 'RECONCILE'].includes(route.kind);
@@ -168,7 +171,15 @@ function match(method: string | undefined, pathname: string): Route | null {
 
 async function providerToken(request: IncomingMessage, url: URL, provider: PaymentProvider) {
   const queryToken = url.searchParams.get(provider === 'FLOW' ? 'token' : 'token_ws');
-  if (queryToken !== null && queryToken.trim() !== '') return queryToken;
+  if (queryToken !== null && queryToken.trim() !== '') {
+    return { recovery: false, token: queryToken };
+  }
+  if (provider === 'WEBPAY') {
+    const recoveryToken = url.searchParams.get('TBK_TOKEN');
+    if (recoveryToken !== null && recoveryToken.trim() !== '') {
+      return { recovery: true, token: recoveryToken };
+    }
+  }
   const contentType = request.headers['content-type']?.split(';', 1)[0]?.toLowerCase();
   if (request.method !== 'POST' || contentType !== 'application/x-www-form-urlencoded') {
     throw new HttpRequestError(
@@ -187,14 +198,14 @@ async function providerToken(request: IncomingMessage, url: URL, provider: Payme
   }
   const form = new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
   const token = form.get(provider === 'FLOW' ? 'token' : 'token_ws');
-  if (token === null || token.trim() === '') {
-    throw new HttpRequestError(
-      'PAYMENT_PROVIDER_TOKEN_REQUIRED',
-      422,
-      'Provider token is required.',
-    );
+  if (token !== null && token.trim() !== '') return { recovery: false, token };
+  if (provider === 'WEBPAY') {
+    const recoveryToken = form.get('TBK_TOKEN');
+    if (recoveryToken !== null && recoveryToken.trim() !== '') {
+      return { recovery: true, token: recoveryToken };
+    }
   }
-  return token;
+  throw new HttpRequestError('PAYMENT_PROVIDER_TOKEN_REQUIRED', 422, 'Provider token is required.');
 }
 
 function uuid(value: string): string {

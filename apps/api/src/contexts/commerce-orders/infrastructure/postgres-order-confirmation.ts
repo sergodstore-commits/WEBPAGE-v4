@@ -148,28 +148,14 @@ async function commitPromotions(
   const snapshots = appliedPromotionSnapshotSchema.array().parse(order.applied_promotions_snapshot);
   for (const snapshot of snapshots) {
     if (snapshot.totalDiscountAmountClp === 0) continue;
-    await transaction.query(
-      `INSERT INTO promotion_usages(promotion_usage_id,promotion_id,coupon_id,account_id,
-         channel,source_type,source_id,status,discount_amount_clp,applied_promotion_snapshot,
-         claimed_lines_snapshot,qualifying_units_snapshot,benefited_units_snapshot,
-         committed_at,released_at,occurred_at,idempotency_key)
-       VALUES($1,$2,$3,$4,'ECOMMERCE','ORDER',$5,'COMMITTED',$6,$7,$8,$9,$10,$11,NULL,$11,$12)
-       ON CONFLICT(promotion_id,source_type,source_id) DO NOTHING`,
-      [
-        input.uuids.generate(),
-        snapshot.promotionId,
-        snapshot.couponId,
-        order.account_id,
-        order.order_id,
-        snapshot.totalDiscountAmountClp,
-        snapshot,
-        JSON.stringify(snapshot.claimedUnits),
-        JSON.stringify(snapshot.qualifyingUnits),
-        JSON.stringify(snapshot.benefitedUnits),
-        input.now,
-        `order:${order.order_id}:promotion:${snapshot.promotionId}`,
-      ],
+    const committed = await transaction.query(
+      `UPDATE promotion_usages SET status='COMMITTED',committed_at=$3
+        WHERE promotion_id=$1 AND source_type='ORDER' AND source_id=$2 AND status='RESERVED'`,
+      [snapshot.promotionId, order.order_id, input.now],
     );
+    if (committed.rowCount !== 1) {
+      throw infrastructure('ORDER_PROMOTION_RESERVATION_NOT_ACTIVE');
+    }
   }
 }
 

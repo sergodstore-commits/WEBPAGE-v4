@@ -117,11 +117,19 @@ export class WebpayPaymentGateway implements PaymentGateway {
   }): Promise<VerifiedProviderResult> {
     const token = input.token ?? input.providerReference;
     if (!nonEmpty(token)) throw providerFailure('Webpay token is missing.');
-    const payload = await this.request<WebpayStatusResponse>(
-      `/transactions/${encodeURIComponent(token)}`,
-      input.mode === 'RETURN' ? 'PUT' : 'GET',
-      input.mode === 'RETURN' ? {} : undefined,
-    );
+    const path = `/transactions/${encodeURIComponent(token)}`;
+    let payload: WebpayStatusResponse;
+    if (input.mode === 'RETURN') {
+      try {
+        payload = await this.request<WebpayStatusResponse>(path, 'PUT', {});
+      } catch {
+        // The provider may have committed before the client lost the response, or
+        // the browser may replay its return. Status is authoritative and safe to retry.
+        payload = await this.request<WebpayStatusResponse>(path, 'GET');
+      }
+    } else {
+      payload = await this.request<WebpayStatusResponse>(path, 'GET');
+    }
     return {
       amountClp: integer(payload.amount),
       currency: 'CLP',

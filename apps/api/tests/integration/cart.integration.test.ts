@@ -12,6 +12,7 @@ import { CartService } from '../../src/contexts/commerce-orders/application/cart
 import { CheckoutService } from '../../src/contexts/commerce-orders/application/checkout-service.js';
 import { PgCartRepository } from '../../src/contexts/commerce-orders/infrastructure/postgres-cart-repository.js';
 import { PgCheckoutRepository } from '../../src/contexts/commerce-orders/infrastructure/postgres-checkout-repository.js';
+import { PgOrderRepository } from '../../src/contexts/commerce-orders/infrastructure/postgres-order-repository.js';
 import { CartError, type CartOwner } from '../../src/contexts/commerce-orders/domain/cart.js';
 import { ServiceCoverageService } from '../../src/contexts/service-coverage/application/service-coverage-service.js';
 import { PgServiceCoverageRepository } from '../../src/contexts/service-coverage/infrastructure/postgres-service-coverage-repository.js';
@@ -242,6 +243,13 @@ async function campaign(productId: string, key: string | null = null): Promise<s
         new Date('2026-08-12T12:00:00Z'),
         ids.admin,
       ],
+    );
+    await client.query(
+      `INSERT INTO preorder_stock_pools(preorder_stock_pool_id,inventory_position_id,pool_type,
+         campaign_id,available_quantity,version,created_at,updated_at)
+       SELECT $1,inventory_position_id,'CAMPAIGN',$2,0,1,$3,$3
+         FROM inventory_positions WHERE product_id=$4 AND branch_id=$5`,
+      [crypto.randomUUID(), campaignId, clock.now(), productId, ids.branch],
     );
     await client.query('COMMIT');
   } finally {
@@ -1147,7 +1155,7 @@ describe('PostgreSQL Phase 9B provisional checkout', () => {
     );
   });
 
-  it('never creates Phase 9C sources, reservations or commercial effects', async () => {
+  it('keeps provisional checkout free of Order reservations and commercial effects', async () => {
     await publishPickup();
     const groupId = await activeAccountGroup();
     await selectPickup(groupId);
@@ -1155,12 +1163,12 @@ describe('PostgreSQL Phase 9B provisional checkout', () => {
     for (const table of forbiddenTables) {
       expect((await pool.query(`SELECT count(*)::int count FROM ${table}`)).rows[0]?.count).toBe(0);
     }
-    const future = await pool.query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM information_schema.tables
-        WHERE table_schema='public' AND table_name=ANY($1::text[]))`,
-      [['orders', 'order_lines', 'payment_attempts', 'loyalty_reservations']],
+    const orderEffects = await pool.query<{ count: number }>(
+      `SELECT (SELECT count(*) FROM orders)::int
+            +(SELECT count(*) FROM order_lines)::int
+            +(SELECT count(*) FROM payment_attempts)::int AS count`,
     );
-    expect(future.rows[0]?.exists).toBe(false);
+    expect(orderEffects.rows[0]?.count).toBe(0);
     expect(
       (
         await pool.query(
@@ -1198,8 +1206,126 @@ describe('PostgreSQL Phase 9B provisional checkout', () => {
   });
 });
 
+describe('PostgreSQL Order promotion reservations', () => {
+  it('confirms a zero-total Order without an external PaymentAttempt and commits its promotion once', async () => {
+    await publishPickup();
+    const groupId = await activeAccountGroup();
+    await selectPickup(groupId);
+    await insertPromotion({ amount: 3100, mode: 'AUTOMATIC' });
+    const orderContext = checkoutContext('zero-total-order', 'zero-total-order-key');
+
+    const first = await checkout.createOrder(orderContext, ids.account, groupId);
+    const replay = await checkout.createOrder(orderContext, ids.account, groupId);
+
+    expect(first).toMatchObject({
+      item: {
+        expiresAt: null,
+        requiresExternalPayment: false,
+        state: 'PAID',
+        totalAmountClp: 0,
+      },
+      replayed: false,
+    });
+    expect(replay).toEqual({ ...first, replayed: true });
+    expect(
+      (await pool.query(`SELECT count(*)::int count FROM payment_attempts`)).rows[0]?.count,
+    ).toBe(0);
+    const usages = await pool.query(
+      `SELECT status,committed_at,released_at FROM promotion_usages WHERE source_id=$1`,
+      [first.item.orderId],
+    );
+    expect(usages.rows).toHaveLength(1);
+    expect(usages.rows[0]).toMatchObject({
+      committed_at: clock.now(),
+      released_at: null,
+      status: 'COMMITTED',
+    });
+    const history = await pool.query<{ to_state: string }>(
+      `SELECT to_state FROM order_state_history WHERE order_id=$1 ORDER BY occurred_at,order_state_history_id`,
+      [first.item.orderId],
+    );
+    expect(history.rows.map((row) => row.to_state)).toEqual(
+      expect.arrayContaining(['PENDING_PAYMENT', 'PAID']),
+    );
+    expect(history.rows).toHaveLength(2);
+  });
+
+  it('reserves a promotion while payment is pending and releases it with the expired Order', async () => {
+    await publishPickup();
+    await configurePaymentDuration();
+    const groupId = await activeAccountGroup();
+    await selectPickup(groupId);
+    await insertPromotion({ amount: 500, mode: 'AUTOMATIC' });
+
+    const created = await checkout.createOrder(
+      checkoutContext('pending-order'),
+      ids.account,
+      groupId,
+    );
+    expect(created.item.state).toBe('PENDING_PAYMENT');
+    await expect(
+      pool.query(`SELECT status FROM promotion_usages WHERE source_id=$1`, [created.item.orderId]),
+    ).resolves.toMatchObject({ rows: [{ status: 'RESERVED' }] });
+
+    clock.set(new Date('2026-08-11T12:16:00.000Z'));
+    const orders = new PgOrderRepository(pool, clock, uuids);
+    await expect(
+      orders.expirePending({ context: context('expire-order'), limit: 10 }),
+    ).resolves.toEqual({ expired: 1 });
+    await expect(
+      pool.query(`SELECT status,released_at FROM promotion_usages WHERE source_id=$1`, [
+        created.item.orderId,
+      ]),
+    ).resolves.toMatchObject({ rows: [{ released_at: clock.now(), status: 'RELEASED' }] });
+  });
+
+  it('serializes the global limit across concurrent Order reservations', async () => {
+    await publishPickup();
+    await configurePaymentDuration();
+    const firstGroup = await activeAccountGroup();
+    await selectPickup(firstGroup);
+    await create(accountTwo, ids.accountTwo);
+    const secondGroup = required((await add(accountTwo, ids.regular, null)).item.groups[0]);
+    await checkout.replaceIntent(
+      { ...context('second-pickup', ids.accountTwo), causationId: crypto.randomUUID() },
+      ids.accountTwo,
+      secondGroup.cartGroupId,
+      { branchId: ids.branch, mode: 'PICKUP' },
+    );
+    const promotionId = await insertPromotion({
+      amount: 500,
+      globalLimit: 1,
+      mode: 'AUTOMATIC',
+    });
+
+    const results = await Promise.all([
+      checkout.createOrder(checkoutContext('first-concurrent'), ids.account, firstGroup),
+      checkout.createOrder(
+        { ...context('second-concurrent', ids.accountTwo), causationId: crypto.randomUUID() },
+        ids.accountTwo,
+        secondGroup.cartGroupId,
+      ),
+    ]);
+    expect(results.map((result) => result.item.state)).toEqual([
+      'PENDING_PAYMENT',
+      'PENDING_PAYMENT',
+    ]);
+    const usages = await pool.query<{ count: number }>(
+      `SELECT count(*)::int count FROM promotion_usages
+        WHERE promotion_id=$1 AND status='RESERVED'`,
+      [promotionId],
+    );
+    expect(usages.rows[0]?.count).toBe(1);
+    const discounts = await pool.query<{ promotion_discount_clp: string }>(
+      `SELECT promotion_discount_clp FROM orders ORDER BY promotion_discount_clp`,
+    );
+    expect(discounts.rows.map((row) => row.promotion_discount_clp)).toEqual(['0', '500']);
+  });
+});
+
 async function insertPromotion(input: {
   readonly amount: number;
+  readonly globalLimit?: number;
   readonly mode: 'AUTOMATIC' | 'COUPON_REQUIRED';
 }): Promise<string> {
   const promotionId = crypto.randomUUID();
@@ -1208,13 +1334,14 @@ async function insertPromotion(input: {
     await client.query('BEGIN');
     await client.query(
       `INSERT INTO promotions(promotion_id,name,state,activation_mode,scope,channel,
-       benefit_type,fixed_amount_clp,starts_at,ends_at,priority,created_at,updated_at,activated_at)
-       VALUES($1,$2,'ACTIVE',$3,'ORDER','ECOMMERCE','FIXED_AMOUNT_DISCOUNT',$4,$5,$6,1,$5,$5,$5)`,
+       benefit_type,fixed_amount_clp,global_limit,starts_at,ends_at,priority,created_at,updated_at,activated_at)
+       VALUES($1,$2,'ACTIVE',$3,'ORDER','ECOMMERCE','FIXED_AMOUNT_DISCOUNT',$4,$5,$6,$7,1,$6,$6,$6)`,
       [
         promotionId,
         `Checkout ${input.mode}`,
         input.mode,
         input.amount,
+        input.globalLimit ?? null,
         new Date('2026-08-11T11:00:00Z'),
         new Date('2026-08-12T12:00:00Z'),
       ],
@@ -1230,6 +1357,15 @@ async function insertPromotion(input: {
     client.release();
   }
   return promotionId;
+}
+
+async function configurePaymentDuration(): Promise<void> {
+  await pool.query(
+    `INSERT INTO system_configurations(system_configuration_id,configuration_key,scope,value_type,
+      integer_value,version_number,state,created_by,created_at,activated_by,activated_at,correlation_id)
+     VALUES($1,'PAYMENT_RESERVATION_DURATION_MINUTES','GLOBAL','INTEGER',15,1,'ACTIVE',$2,$3,$2,$3,$4)`,
+    [crypto.randomUUID(), ids.admin, clock.now(), crypto.randomUUID()],
+  );
 }
 
 async function safeRollback(client: PoolClient): Promise<void> {

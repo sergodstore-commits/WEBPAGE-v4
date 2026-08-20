@@ -873,7 +873,8 @@ export class PgPosRepository implements PosRepository {
         Number(
           (
             await t.query<ReturnType<JSON['parse']>>(
-              `SELECT count(*)::int AS count FROM promotion_usages WHERE status='COMMITTED' AND ${where}`,
+              `SELECT count(*)::int AS count FROM promotion_usages
+                WHERE status IN ('RESERVED','COMMITTED') AND ${where}`,
               values,
             )
           ).rows[0].count,

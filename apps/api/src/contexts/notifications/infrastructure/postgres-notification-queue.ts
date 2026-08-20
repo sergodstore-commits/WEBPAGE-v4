@@ -24,16 +24,25 @@ export class PgNotificationQueue implements NotificationQueue {
     return this.transactions.execute(async (transaction) => {
       const now = this.clock.now();
       await transaction.query(
-        `UPDATE notification_outbox SET status='RETRY',next_attempt_at=$1,
+        `UPDATE notification_outbox
+         SET status=CASE WHEN attempt_count >= $3 THEN 'DEAD' ELSE 'RETRY' END,
+           next_attempt_at=CASE WHEN attempt_count >= $3 THEN next_attempt_at ELSE $1 END,
            last_error_code='WORKER_LEASE_EXPIRED',updated_at=$1
          WHERE status='SENDING' AND updated_at <= $2`,
-        [now, new Date(now.getTime() - this.leaseMs)],
+        [now, new Date(now.getTime() - this.leaseMs), this.maxAttempts],
+      );
+      await transaction.query(
+        `UPDATE notification_outbox SET status='DEAD',updated_at=$1,
+           last_error_code=COALESCE(last_error_code,'WORKER_MAX_ATTEMPTS_EXHAUSTED')
+         WHERE status IN ('PENDING','RETRY') AND attempt_count >= $2`,
+        [now, this.maxAttempts],
       );
       const due = await transaction.query<{ notification_id: string }>(
         `SELECT notification_id FROM notification_outbox
           WHERE status IN ('PENDING','RETRY') AND next_attempt_at <= $1
-          ORDER BY next_attempt_at,notification_id FOR UPDATE SKIP LOCKED LIMIT $2`,
-        [now, limit],
+            AND attempt_count < $2
+          ORDER BY next_attempt_at,notification_id FOR UPDATE SKIP LOCKED LIMIT $3`,
+        [now, this.maxAttempts, limit],
       );
       if (due.rows.length === 0) return [];
       const claimed = await transaction.query<Row>(

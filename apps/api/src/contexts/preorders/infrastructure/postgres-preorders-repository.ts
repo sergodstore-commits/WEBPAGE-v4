@@ -22,7 +22,7 @@ export class PgPreordersRepository implements PreordersRepository {
 
   async createCampaign(input: Parameters<PreordersRepository['createCampaign']>[0]) {
     const result = await this.idempotent('PREORDER_COMMAND', input, async (transaction, now) => {
-      await assertCompatibleCampaignProductBranch(
+      const inventoryPositionId = await assertCompatibleCampaignProductBranch(
         transaction,
         input.campaign.productId,
         input.campaign.branchId,
@@ -46,6 +46,12 @@ export class PgPreordersRepository implements PreordersRepository {
           requiredActor(input.context),
           now,
         ],
+      );
+      await transaction.query(
+        `INSERT INTO preorder_stock_pools(preorder_stock_pool_id,inventory_position_id,pool_type,
+           campaign_id,available_quantity,version,created_at,updated_at)
+         VALUES($1,$2,'CAMPAIGN',$3,0,1,$4,$4)`,
+        [this.uuids.generate(), inventoryPositionId, campaignId, now],
       );
       await this.history(
         transaction,
@@ -96,7 +102,7 @@ export class PgPreordersRepository implements PreordersRepository {
           'Campaign identity is immutable after reservations or commitments.',
         );
       }
-      await assertCompatibleCampaignProductBranch(
+      const inventoryPositionId = await assertCompatibleCampaignProductBranch(
         transaction,
         input.campaign.productId,
         input.campaign.branchId,
@@ -116,6 +122,11 @@ export class PgPreordersRepository implements PreordersRepository {
           input.campaign.estimatedArrivalText,
           now,
         ],
+      );
+      await transaction.query(
+        `UPDATE preorder_stock_pools SET inventory_position_id=$2,version=version+1,updated_at=$3
+          WHERE campaign_id=$1 AND pool_type='CAMPAIGN'`,
+        [input.campaignId, inventoryPositionId, now],
       );
       await this.audit(
         transaction,
@@ -528,7 +539,7 @@ async function assertCompatibleCampaignProductBranch(
   transaction: PgTransaction,
   productId: string,
   branchId: string,
-): Promise<void> {
+): Promise<string> {
   const result = await transaction.query<{ branch_state: string; sale_type: string }>(
     `SELECT p.sale_type,b.state AS branch_state
        FROM products p
@@ -550,6 +561,19 @@ async function assertCompatibleCampaignProductBranch(
       'Campaign requires a PREORDER product and ACTIVE branch.',
     );
   }
+  const position = await transaction.query<{ inventory_position_id: string }>(
+    `SELECT inventory_position_id FROM inventory_positions
+      WHERE product_id=$1 AND branch_id=$2 FOR SHARE`,
+    [productId, branchId],
+  );
+  const inventoryPositionId = position.rows[0]?.inventory_position_id;
+  if (inventoryPositionId === undefined) {
+    throw conflict(
+      'PREORDER_INVENTORY_POSITION_REQUIRED',
+      'Campaign requires an inventory position for its product and branch.',
+    );
+  }
+  return inventoryPositionId;
 }
 
 function integer(value: string): number {

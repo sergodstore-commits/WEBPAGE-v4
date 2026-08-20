@@ -157,6 +157,11 @@ export class PgOrderRepository implements OrderRepository {
           );
         }
         await transaction.query(
+          `UPDATE promotion_usages SET status='RELEASED',released_at=$2
+            WHERE source_type='ORDER' AND source_id=$1 AND status='RESERVED'`,
+          [row.order_id, now],
+        );
+        await transaction.query(
           `UPDATE orders SET state='CANCELLED',cancelled_at=$2,updated_at=$2,version=version+1
             WHERE order_id=$1 AND state='PENDING_PAYMENT'`,
           [row.order_id, now],

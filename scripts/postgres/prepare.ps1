@@ -6,7 +6,19 @@ if (-not (Test-Path -LiteralPath $script:ArchivePath -PathType Leaf)) {
   Invoke-WebRequest -Uri $script:ArchiveUrl -OutFile $script:ArchivePath
 }
 
-$actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $script:ArchivePath).Hash
+$stream = [System.IO.File]::OpenRead($script:ArchivePath)
+try {
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $actualHash = ([System.BitConverter]::ToString($sha256.ComputeHash($stream))).Replace('-', '')
+  }
+  finally {
+    $sha256.Dispose()
+  }
+}
+finally {
+  $stream.Dispose()
+}
 if ($actualHash -ne $script:ArchiveSha256) {
   throw "PostgreSQL archive checksum mismatch. Expected $script:ArchiveSha256."
 }

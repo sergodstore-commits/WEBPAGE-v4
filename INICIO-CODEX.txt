@@ -6,7 +6,7 @@ Tu primera acción es leer AGENTS.md y obedecer desde allí el protocolo del pro
 
 Prioridad operativa: completar Sergod Store Web V1 con máxima eficiencia de contexto, créditos/tokens y tiempo, sin reducir calidad, seguridad, pruebas ni cumplimiento de CURRENT.
 
-Este V3 corrige los hallazgos conocidos de la auditoría independiente sobre V2, pero no declara completitud local absoluta. Comienza por auditarlo contra CURRENT, reproduce los gates y exige evidencia real antes de aceptar PostgreSQL, proveedores o entornos externos.
+Este V4 corrige los hallazgos conocidos de V3 y defectos adicionales descubiertos con PostgreSQL local real, pero no declara completitud local absoluta. Comienza por auditarlo contra CURRENT, reproduce los gates y exige evidencia real antes de aceptar proveedores o entornos externos.
 
 Ejecuta tú mismo terminal, PowerShell, Git, npm, PostgreSQL local, pruebas, diagnósticos, correcciones, commits y scripts que el entorno permita. No me delegues trabajo técnico que puedas realizar directamente.
 

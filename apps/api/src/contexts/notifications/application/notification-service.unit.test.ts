@@ -40,7 +40,11 @@ describe('notification worker', () => {
     await expect(worker.run(10)).resolves.toEqual({ failed: 0, sent: 1 });
     expect(queue.claim).toHaveBeenCalledWith(10);
     expect(email.send).toHaveBeenCalledWith(
-      expect.objectContaining({ subject: 'Pedido SG-2026-1 creado', to: 'buyer@example.com' }),
+      expect.objectContaining({
+        idempotencyKey: 'notification-1',
+        subject: 'Pedido SG-2026-1 creado',
+        to: 'buyer@example.com',
+      }),
     );
     expect(queue.markSent).toHaveBeenCalledWith('notification-1');
     expect(queue.markFailed).not.toHaveBeenCalled();
@@ -72,5 +76,28 @@ describe('notification worker', () => {
       new Date('2026-08-20T12:05:00Z'),
     );
     expect(queue.markSent).not.toHaveBeenCalled();
+  });
+
+  it('reuses the provider idempotency key when delivery succeeded but acknowledgement failed', async () => {
+    const queue = {
+      claim: vi.fn().mockResolvedValue([
+        {
+          eventType: 'ORDER_CREATED',
+          notificationId: 'notification-3',
+          payload: { orderPublicNumber: 'SG-2026-3' },
+          recipientEmail: 'buyer@example.com',
+        },
+      ]),
+      markFailed: vi.fn(),
+      markSent: vi.fn().mockRejectedValue(new Error('database unavailable')),
+    } satisfies NotificationQueue;
+    const email = { send: vi.fn() } satisfies EmailGateway;
+    const worker = new NotificationWorker(queue, email, () => new Date('2026-08-20T12:00:00Z'));
+
+    await expect(worker.run()).resolves.toEqual({ failed: 1, sent: 0 });
+    expect(email.send).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: 'notification-3' }),
+    );
+    expect(queue.markFailed).not.toHaveBeenCalled();
   });
 });

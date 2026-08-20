@@ -7,6 +7,7 @@ interface ProductCard {
   readonly game: { readonly name: string };
   readonly name: string;
   readonly priceAmountClp: number;
+  readonly preorderCampaignId: string | null;
   readonly productId: string;
   readonly saleType: 'PREORDER' | 'REGULAR';
 }
@@ -42,7 +43,7 @@ export function StorePage() {
   const addToCart = async (product: ProductCard) => {
     setAddingProductId(product.productId);
     try {
-      await addProductToCart(product.productId);
+      await addProductToCart(product.productId, product.preorderCampaignId);
       setMessage(`${product.name} fue agregado al carrito.`);
     } catch (error) {
       setMessage(messageOf(error));
@@ -95,11 +96,14 @@ export function StorePage() {
   );
 }
 
-async function addProductToCart(productId: string): Promise<void> {
+async function addProductToCart(
+  productId: string,
+  preorderCampaignId: string | null,
+): Promise<void> {
   const send = currentSession() === null ? publicRequest : authorizedRequest;
   const add = () =>
     send('/api/v1/cart/lines', {
-      body: JSON.stringify({ preorderCampaignId: null, productId, quantity: 1 }),
+      body: JSON.stringify({ preorderCampaignId, productId, quantity: 1 }),
       headers: { 'idempotency-key': crypto.randomUUID() },
       method: 'POST',
     });

@@ -15,6 +15,7 @@ const record: CatalogPublicProductRecord = {
     game: { gameId: secondId, name: 'Pokémon', slug: 'pokemon' },
     name: 'Álbum Base',
     priceAmountClp: 5000,
+    preorderCampaignId: null,
     primaryResource: {
       altText: 'Principal',
       heightPx: 800,

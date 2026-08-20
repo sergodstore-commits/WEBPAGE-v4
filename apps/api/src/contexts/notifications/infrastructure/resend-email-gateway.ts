@@ -9,6 +9,7 @@ export class ResendEmailGateway implements EmailGateway {
 
   async send(input: {
     readonly html: string;
+    readonly idempotencyKey: string;
     readonly subject: string;
     readonly text: string;
     readonly to: string;
@@ -25,6 +26,7 @@ export class ResendEmailGateway implements EmailGateway {
       headers: {
         authorization: `Bearer ${this.apiKey}`,
         'content-type': 'application/json',
+        'idempotency-key': input.idempotencyKey,
       },
       method: 'POST',
       signal: AbortSignal.timeout(10_000),

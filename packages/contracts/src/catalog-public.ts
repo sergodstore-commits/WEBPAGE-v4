@@ -76,6 +76,7 @@ export const catalogPublicProductCardSchema = z
     game: catalogPublicGameReferenceSchema,
     name: z.string().min(1),
     priceAmountClp: z.number().int().nonnegative().safe(),
+    preorderCampaignId: z.uuid().nullable(),
     primaryResource: catalogPublicPrimaryResourceSchema,
     productId: z.uuid(),
     saleType: z.enum(['REGULAR', 'PREORDER']),

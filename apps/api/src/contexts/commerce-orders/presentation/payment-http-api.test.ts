@@ -52,4 +52,26 @@ describe('Payments HTTP provider routes', () => {
       error: { code: 'PAYMENT_PROVIDER_TOKEN_REQUIRED' },
     });
   });
+
+  it('commits a normal Webpay return and reconciles an abnormal TBK_TOKEN return', async () => {
+    const normal = await fetch(`${origin}/api/v1/payments/webpay/return?token_ws=normal-token`);
+    expect(normal.status).toBe(200);
+    expect(processProviderResult).toHaveBeenLastCalledWith(
+      expect.objectContaining({ actorType: 'SYSTEM' }),
+      'WEBPAY',
+      { mode: 'RETURN', token: 'normal-token' },
+    );
+
+    const abnormal = await fetch(`${origin}/api/v1/payments/webpay/return`, {
+      body: new URLSearchParams({ TBK_ID_SESION: 'session', TBK_TOKEN: 'aborted-token' }),
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      method: 'POST',
+    });
+    expect(abnormal.status).toBe(200);
+    expect(processProviderResult).toHaveBeenLastCalledWith(
+      expect.objectContaining({ actorType: 'SYSTEM' }),
+      'WEBPAY',
+      { mode: 'RECONCILE', token: 'aborted-token' },
+    );
+  });
 });

@@ -248,6 +248,15 @@ export class PgCheckoutRepository implements CheckoutRepository {
           ],
         );
 
+        await reservePromotions(
+          transaction,
+          orderId,
+          input.accountId,
+          summary.appliedPromotions,
+          now,
+          this.uuids,
+        );
+
         for (const line of summary.lines) {
           const orderLineId = this.uuids.generate();
           await transaction.query(
@@ -859,20 +868,20 @@ async function evaluatePromotions(
   );
   const timezone = branch.rows[0]?.timezone;
   if (timezone === undefined) return { coupon: null, discountClp: 0, snapshots: [] };
+  const promotions = await queryable.query<PromotionRow>(
+    `SELECT * FROM promotions
+      WHERE channel IN ('ECOMMERCE','BOTH') AND (branch_id IS NULL OR branch_id=$1)
+      ORDER BY promotion_id FOR UPDATE`,
+    [branchId],
+  );
   const selectedCoupon =
     selectedCouponId === null
       ? null
       : ((
-          await queryable.query<CouponRow>(`SELECT * FROM coupons WHERE coupon_id=$1`, [
+          await queryable.query<CouponRow>(`SELECT * FROM coupons WHERE coupon_id=$1 FOR UPDATE`, [
             selectedCouponId,
           ])
         ).rows[0] ?? null);
-  const promotions = await queryable.query<PromotionRow>(
-    `SELECT * FROM promotions
-      WHERE channel IN ('ECOMMERCE','BOTH') AND (branch_id IS NULL OR branch_id=$1)
-      ORDER BY promotion_id`,
-    [branchId],
-  );
   const metadataRows = await queryable.query<{
     category_id: string;
     game_id: string;
@@ -1017,6 +1026,40 @@ async function evaluatePromotions(
     discountClp: evaluated.totalDiscountAmountClp,
     snapshots: evaluated.snapshots,
   };
+}
+
+async function reservePromotions(
+  transaction: PgTransaction,
+  orderId: string,
+  accountId: string,
+  snapshots: readonly AppliedPromotionSnapshotV1[],
+  now: Date,
+  uuids: UuidGenerator,
+): Promise<void> {
+  for (const snapshot of snapshots) {
+    if (snapshot.totalDiscountAmountClp === 0) continue;
+    await transaction.query(
+      `INSERT INTO promotion_usages(promotion_usage_id,promotion_id,coupon_id,account_id,
+         channel,source_type,source_id,status,discount_amount_clp,applied_promotion_snapshot,
+         claimed_lines_snapshot,qualifying_units_snapshot,benefited_units_snapshot,
+         committed_at,released_at,occurred_at,idempotency_key)
+       VALUES($1,$2,$3,$4,'ECOMMERCE','ORDER',$5,'RESERVED',$6,$7,$8,$9,$10,NULL,NULL,$11,$12)`,
+      [
+        uuids.generate(),
+        snapshot.promotionId,
+        snapshot.couponId,
+        accountId,
+        orderId,
+        snapshot.totalDiscountAmountClp,
+        snapshot,
+        JSON.stringify(snapshot.claimedUnits),
+        JSON.stringify(snapshot.qualifyingUnits),
+        JSON.stringify(snapshot.benefitedUnits),
+        now,
+        `order:${orderId}:promotion:${snapshot.promotionId}`,
+      ],
+    );
+  }
 }
 
 function requirePromotionReference(

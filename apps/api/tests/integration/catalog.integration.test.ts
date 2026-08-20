@@ -930,7 +930,7 @@ describe('PostgreSQL Catalog foundation', () => {
           AND relname IN ('resource_assets', 'tcg_games', 'categories', 'collections',
             'catalog_entity_media', 'products', 'product_media')`,
     );
-    expect(rls.rows).toHaveLength(8);
+    expect(rls.rows).toHaveLength(7);
     expect(rls.rows.every((row) => row.relrowsecurity)).toBe(true);
     const grants = await pool.query<{ count: string }>(
       `SELECT count(*) FROM information_schema.role_table_grants

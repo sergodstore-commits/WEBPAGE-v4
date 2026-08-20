@@ -119,6 +119,39 @@ describe('payment provider gateways', () => {
     expect(returnInit.method).toBe('PUT');
   });
 
+  it('recovers an ambiguous or replayed Webpay browser return through provider status', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('already committed', { status: 422 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            amount: 8490,
+            buy_order: 'SG-2026-4',
+            response_code: 0,
+            status: 'AUTHORIZED',
+          }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const gateway = new WebpayPaymentGateway({
+      apiKey: 'api-key',
+      baseUrl: 'https://webpay.invalid',
+      commerceCode: 'commerce-code',
+      returnUrl: 'https://api.invalid/api/v1/payments/webpay/return',
+    });
+
+    await expect(gateway.verify({ mode: 'RETURN', token: 'tbk-token' })).resolves.toMatchObject({
+      orderReference: 'SG-2026-4',
+      status: 'SUCCEEDED',
+    });
+    expect(fetchMock.mock.calls.map((call) => (call[1] as RequestInit).method)).toEqual([
+      'PUT',
+      'GET',
+    ]);
+  });
+
   it('maps provider HTTP failures to a stable infrastructure error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('unavailable', { status: 503 })));
     const gateway = new FlowPaymentGateway({

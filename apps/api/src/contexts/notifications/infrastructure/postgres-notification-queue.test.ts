@@ -44,6 +44,8 @@ describe('Postgres notification outbox queue', () => {
       },
     ]);
     expect(statements.some((sql) => sql.includes('WORKER_LEASE_EXPIRED'))).toBe(true);
+    expect(statements.some((sql) => sql.includes("attempt_count >= $3 THEN 'DEAD'"))).toBe(true);
+    expect(statements.some((sql) => sql.includes('attempt_count < $2'))).toBe(true);
     expect(statements.some((sql) => sql.includes('FOR UPDATE SKIP LOCKED'))).toBe(true);
     expect(statements.at(-1)).toBe('COMMIT');
     expect(client.release).toHaveBeenCalledOnce();

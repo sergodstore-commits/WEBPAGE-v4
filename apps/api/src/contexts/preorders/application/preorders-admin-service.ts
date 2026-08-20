@@ -34,7 +34,10 @@ export class PreordersAdminService {
       idempotencyKey: requiredIdempotencyKey(context),
       requestFingerprint: fingerprint('CREATE_CAMPAIGN', campaign),
     });
-    return { item: await this.getRequiredCampaign(result.campaignId), replayed: result.replayed };
+    return {
+      item: serializeCampaign(await this.getRequiredCampaign(result.campaignId)),
+      replayed: result.replayed,
+    };
   }
 
   async editCampaign(context: ExecutionContext, campaignId: string, body: EditPreorderCampaign) {
@@ -48,7 +51,10 @@ export class PreordersAdminService {
       idempotencyKey: requiredIdempotencyKey(context),
       requestFingerprint: fingerprint('EDIT_CAMPAIGN', { campaign, campaignId }),
     });
-    return { item: await this.getRequiredCampaign(campaignId), replayed: result.replayed };
+    return {
+      item: serializeCampaign(await this.getRequiredCampaign(campaignId)),
+      replayed: result.replayed,
+    };
   }
 
   async getCampaign(context: ExecutionContext, campaignId: string) {
@@ -113,7 +119,10 @@ export class PreordersAdminService {
       }),
       source: 'ADMIN',
     });
-    return { item: await this.getRequiredCampaign(campaignId), replayed: result.replayed };
+    return {
+      item: serializeCampaign(await this.getRequiredCampaign(campaignId)),
+      replayed: result.replayed,
+    };
   }
 
   async transitionPublication(
@@ -135,7 +144,10 @@ export class PreordersAdminService {
         reason,
       }),
     });
-    return { item: await this.getRequiredCampaign(campaignId), replayed: result.replayed };
+    return {
+      item: serializeCampaign(await this.getRequiredCampaign(campaignId)),
+      replayed: result.replayed,
+    };
   }
 
   private async authorize(context: ExecutionContext): Promise<void> {

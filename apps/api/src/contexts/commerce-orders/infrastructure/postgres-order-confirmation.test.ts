@@ -110,9 +110,11 @@ describe('Postgres Order confirmation', () => {
       'CONFIRMED',
     );
 
-    expect(statements.filter((sql) => sql.includes('INSERT INTO promotion_usages'))).toHaveLength(
-      1,
-    );
+    expect(
+      statements.filter(
+        (sql) => sql.includes('UPDATE promotion_usages') && sql.includes("SET status='COMMITTED'"),
+      ),
+    ).toHaveLength(1);
     expect(statements.filter((sql) => sql.includes('INSERT INTO loyalty_movements'))).toHaveLength(
       2,
     );
@@ -127,5 +129,17 @@ describe('Postgres Order confirmation', () => {
       'REPLAYED',
     );
     expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses confirmation when the snapshotted promotion has no active reservation', async () => {
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes('FROM orders WHERE order_id')) return { rowCount: 1, rows: [order()] };
+      if (sql.includes('UPDATE promotion_usages')) return { rowCount: 0, rows: [] };
+      return { rowCount: 1, rows: [] };
+    });
+
+    await expect(
+      confirmOrder({ query } as unknown as PgTransaction, input()),
+    ).rejects.toMatchObject({ code: 'ORDER_PROMOTION_RESERVATION_NOT_ACTIVE' });
   });
 });
