@@ -1,9 +1,9 @@
 {
   "schemaVersion": 4,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-08-20T19:16:12.273Z",
-  "fileCount": 481,
-  "totalBytes": 45484373,
+  "createdUtc": "2026-08-20T19:18:55.113Z",
+  "fileCount": 480,
+  "totalBytes": 45484284,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -1538,7 +1538,7 @@
     {
       "path": "DELIVERY-VERIFICATION.json",
       "bytes": 1671,
-      "sha256": "e978c9f2e034616149f1d211aff7aa9450813ccd5a3a6e88fd1884a25ed94294"
+      "sha256": "d88c8b356d34da28fe64650edb3a1f3ff3ef308ea83c4dfeb51e198cad545638"
     },
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",
@@ -2117,8 +2117,8 @@
     },
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
-      "bytes": 57587,
-      "sha256": "3e02cd556095617557015f3b70ff0cfa2f9162a07dccbd2726e5576737935d59"
+      "bytes": 57495,
+      "sha256": "d8da99a0ea22f355728c9de26d29920aef3812558f44cebae22728551559418a"
     },
     {
       "path": "README.md",
@@ -2132,8 +2132,8 @@
     },
     {
       "path": "scripts/codex/build-delivery-manifest.mjs",
-      "bytes": 4019,
-      "sha256": "a925178207649a2762a85c57f128c651d4b260b6c5283f2d7fe9094457124023"
+      "bytes": 4030,
+      "sha256": "e6e61d8c43c62aad3412b17b1ed4bfee899e383d98ac9c9ad5e3bc3a67d6d1dd"
     },
     {
       "path": "scripts/codex/FINAL-EXTERNAL-ACCEPTANCE.ps1",
@@ -2269,11 +2269,6 @@
       "path": "supabase/.gitignore",
       "bytes": 72,
       "sha256": "507699eb91144818edf61d3a079212cacf31d8db520eae428e3b48fcf0d6919c"
-    },
-    {
-      "path": "supabase/.temp/cli-latest",
-      "bytes": 8,
-      "sha256": "c9bc27863494f40747ca15f4ffc262af03b0d7a212c5344d0c94ad387436baac"
     },
     {
       "path": "supabase/config.toml",
