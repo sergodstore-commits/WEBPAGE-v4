@@ -28,9 +28,11 @@ import { CheckoutPanel } from '../checkout/CheckoutPanel.js';
 import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.js';
 import { AccountHub } from '../account/AccountHub.js';
 import { AdminHub } from '../admin/AdminHub.js';
+import { CartPage } from '../cart/CartPage.js';
 import { EditorialPage, StorePage } from '../public-commerce/PublicPages.js';
+import { SiteChrome, SiteFooter } from './SiteChrome.js';
 
-type Route =
+export type Route =
   | '/'
   | '/account'
   | '/account/overview'
@@ -39,6 +41,7 @@ type Route =
   | '/admin/pos'
   | '/admin/service-coverage'
   | '/checkout'
+  | '/cart'
   | '/shop'
   | '/tournaments'
   | '/news'
@@ -65,69 +68,31 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <button className="brand" onClick={() => navigate('/')} type="button">
-          <img alt="Sergod Store" src="/assets/sergod/logo_sergod_store_oficial.png" />
-        </button>
-        <nav aria-label="Navegación principal">
-          <button onClick={() => navigate('/shop')} type="button">
-            Tienda
-          </button>
-          <button onClick={() => navigate('/tournaments')} type="button">
-            Torneos
-          </button>
-          <button onClick={() => navigate('/news')} type="button">
-            Noticias
-          </button>
-          <button onClick={() => navigate('/community')} type="button">
-            Comunidad
-          </button>
-          <button onClick={() => navigate('/register')} type="button">
-            Registro
-          </button>
-          <button onClick={() => navigate('/login')} type="button">
-            Ingresar
-          </button>
-          <button onClick={() => navigate('/account')} type="button">
-            Seguridad
-          </button>
-          <button onClick={() => navigate('/account/overview')} type="button">
-            Mi cuenta
-          </button>
-          <button onClick={() => navigate('/checkout')} type="button">
-            Checkout
-          </button>
-          <button onClick={() => navigate('/admin/pos')} type="button">
-            Pseudo‑POS
-          </button>
-          <button onClick={() => navigate('/admin')} type="button">
-            Admin
-          </button>
-          <button onClick={() => navigate('/admin/service-coverage')} type="button">
-            Atención y cobertura
-          </button>
-        </nav>
-      </header>
-      {route === '/' && <Home navigate={navigate} />}
-      {route === '/register' && <Registration navigate={navigate} />}
-      {route === '/login' && <Login navigate={navigate} />}
-      {route === '/recover' && <Recovery navigate={navigate} />}
-      {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
-      {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
-        <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
-      )}
-      {route === '/account' && <Account navigate={navigate} />}
-      {route === '/account/overview' && <AccountHub />}
-      {route === '/shop' && <StorePage />}
-      {route === '/tournaments' && <EditorialPage title="Torneos" type="TOURNAMENT" />}
-      {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
-      {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
-      {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
-      {route === '/admin' && <AdminHub />}
-      {route === '/checkout' && <CheckoutPanel />}
-      {route === '/admin/accounts' && <AccountsPanel />}
-      {route === '/admin/pos' && <PosPanel />}
-      {route === '/admin/service-coverage' && <ServiceCoveragePanel />}
+      <SiteChrome navigate={navigate} route={route} />
+      <div id="main-content" tabIndex={-1}>
+        {route === '/' && <Home navigate={navigate} />}
+        {route === '/register' && <Registration navigate={navigate} />}
+        {route === '/login' && <Login navigate={navigate} />}
+        {route === '/recover' && <Recovery navigate={navigate} />}
+        {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
+        {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
+          <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
+        )}
+        {route === '/account' && <Account navigate={navigate} />}
+        {route === '/account/overview' && <AccountHub />}
+        {route === '/shop' && <StorePage />}
+        {route === '/cart' && <CartPage />}
+        {route === '/tournaments' && <EditorialPage title="Torneos" type="TOURNAMENT" />}
+        {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
+        {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
+        {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
+        {route === '/admin' && <AdminHub />}
+        {route === '/checkout' && <CheckoutPanel />}
+        {route === '/admin/accounts' && <AccountsPanel />}
+        {route === '/admin/pos' && <PosPanel />}
+        {route === '/admin/service-coverage' && <ServiceCoveragePanel />}
+      </div>
+      <SiteFooter navigate={navigate} />
     </div>
   );
 }
@@ -136,10 +101,12 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   return (
     <main className="home-page">
       <section className="commerce-hero">
-        <div>
+        <div className="hero-copy">
           <p className="eyebrow">TCG · Comunidad · Competencia</p>
           <h1>Tu próxima jugada comienza aquí.</h1>
-          <p>Productos, preventas, torneos informativos y comunidad Sergod en un solo lugar.</p>
+          <p className="hero-lead">
+            Compra productos TCG, asegura preventas y mantente al día con la comunidad Sergod.
+          </p>
           <div className="actions">
             <button onClick={() => navigate('/shop')} type="button">
               Explorar tienda
@@ -149,9 +116,15 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
             </button>
           </div>
         </div>
-        <div className="hero-mark" aria-hidden="true">
-          SG
-        </div>
+        <aside className="hero-service cut-panel">
+          <p className="card-kicker">Compra con claridad</p>
+          <ul>
+            <li>Stock y precios confirmados por el servidor</li>
+            <li>Retiro en tienda</li>
+            <li>Despacho por pagar a agencia</li>
+            <li>Pago online mediante proveedores autorizados</li>
+          </ul>
+        </aside>
       </section>
       <section className="home-strips">
         <article>
@@ -170,9 +143,30 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
         </article>
         <article>
           <p className="card-kicker">Editorial</p>
-          <h2>Noticias y comunidad</h2>
+          <h2>Noticias del mundo TCG</h2>
           <button onClick={() => navigate('/news')} type="button">
             Leer novedades
+          </button>
+        </article>
+        <article>
+          <p className="card-kicker">Torneos</p>
+          <h2>Fechas, resultados y podios</h2>
+          <button onClick={() => navigate('/tournaments')} type="button">
+            Ver calendario
+          </button>
+        </article>
+        <article>
+          <p className="card-kicker">Comunidad</p>
+          <h2>Actividades y novedades locales</h2>
+          <button onClick={() => navigate('/community')} type="button">
+            Ir a comunidad
+          </button>
+        </article>
+        <article>
+          <p className="card-kicker">Historias</p>
+          <h2>Cómics y contenido Sergod</h2>
+          <button onClick={() => navigate('/comics')} type="button">
+            Descubrir historias
           </button>
         </article>
       </section>

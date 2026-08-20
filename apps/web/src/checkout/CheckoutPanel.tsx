@@ -1,9 +1,11 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 
 import {
   clearCheckoutCoupon,
   clearCheckoutPoints,
   clearDeliveryIntent,
+  createCheckoutOrder,
+  createPaymentAttempt,
   readCheckoutSummary,
   replaceDeliveryIntent,
   revalidateCheckout,
@@ -12,10 +14,32 @@ import {
 } from './api.js';
 
 export function CheckoutPanel() {
-  const [groupId, setGroupId] = useState('');
+  const initialGroupId = new URLSearchParams(window.location.search).get('group')?.trim() ?? '';
+  const [groupId, setGroupId] = useState(initialGroupId);
   const [summary, setSummary] = useState<ReturnType<JSON['parse']> | null>(null);
+  const [order, setOrder] = useState<ReturnType<JSON['parse']> | null>(null);
   const [message, setMessage] = useState('');
   const refresh = async (id = groupId) => setSummary((await readCheckoutSummary(id)).item);
+  useEffect(() => {
+    if (initialGroupId === '') return;
+    let active = true;
+    void readCheckoutSummary(initialGroupId)
+      .then((result) => {
+        if (!active) return;
+        setSummary(result.item);
+        setMessage('Revisa la entrega y el total antes de confirmar.');
+      })
+      .catch((error: unknown) =>
+        active
+          ? setMessage(
+              error instanceof Error ? error.message : 'No fue posible cargar el checkout.',
+            )
+          : undefined,
+      );
+    return () => {
+      active = false;
+    };
+  }, [initialGroupId]);
   const load = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const id = String(new FormData(event.currentTarget).get('groupId')).trim();
@@ -71,23 +95,63 @@ export function CheckoutPanel() {
       setMessage(error instanceof Error ? error.message : 'No fue posible actualizar el checkout.');
     }
   };
+  const confirmOrder = async () => {
+    try {
+      const result = await createCheckoutOrder(groupId);
+      setOrder(result.item);
+      setMessage(
+        result.item.requiresExternalPayment
+          ? `Pedido ${String(result.item.publicNumber)} creado. Elige cómo pagar.`
+          : `Pedido ${String(result.item.publicNumber)} confirmado sin pago externo.`,
+      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'No fue posible confirmar el pedido.');
+    }
+  };
+  const beginPayment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (order === null) return;
+    const data = new FormData(event.currentTarget);
+    try {
+      const result = await createPaymentAttempt(String(order.orderId), {
+        payerEmail: String(data.get('payerEmail')),
+        provider: String(data.get('provider')) as 'FLOW' | 'WEBPAY',
+      });
+      const redirectUrl = String(result.item.redirectUrl ?? '');
+      if (redirectUrl === '') {
+        setMessage('El proveedor no entregó una dirección de pago. Intenta nuevamente.');
+        return;
+      }
+      window.location.assign(redirectUrl);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'No fue posible iniciar el pago.');
+    }
+  };
 
   return (
-    <main className="wide-panel">
-      <p className="eyebrow">Compra · Checkout</p>
-      <h1>Revisión, entrega y beneficios</h1>
-      <form className="inline-form" onSubmit={(event) => void load(event)}>
-        <label>
-          Grupo del carrito
-          <input name="groupId" required />
-        </label>
-        <button>Cargar resumen</button>
-      </form>
+    <main className="page-frame checkout-page">
+      <header className="section-heading cut-panel">
+        <p className="eyebrow">Compra · Checkout</p>
+        <h1>Revisión, entrega y beneficios</h1>
+        <p>Confirma cada dato antes de crear el pedido. El flete por pagar no se cobra aquí.</p>
+      </header>
+      {initialGroupId === '' ? (
+        <form className="inline-form" onSubmit={(event) => void load(event)}>
+          <label>
+            Grupo del carrito
+            <input name="groupId" required />
+          </label>
+          <button>Cargar resumen</button>
+        </form>
+      ) : null}
       {summary && (
         <>
-          <section className="technical-card">
+          <section className="checkout-summary cut-panel">
             <h2>Resumen recalculado</h2>
-            <p>Total comercial: ${String(summary.totalAmountClp)} CLP</p>
+            <p className="checkout-total">
+              <span>Total comercial</span>
+              <strong>${Number(summary.totalAmountClp).toLocaleString('es-CL')} CLP</strong>
+            </p>
             {summary.shippingPaymentMode === 'FREIGHT_COLLECT' && (
               <p>
                 <strong>NO INCLUIDO — ENVÍO POR PAGAR</strong>
@@ -173,7 +237,39 @@ export function CheckoutPanel() {
               Quitar puntos
             </button>
           </div>
-          <pre>{JSON.stringify(summary, null, 2)}</pre>
+          {order === null ? (
+            <button
+              className="confirm-order"
+              disabled={!summary.canCreateOrder}
+              onClick={() => void confirmOrder()}
+              type="button"
+            >
+              Confirmar pedido
+            </button>
+          ) : null}
+          {order?.requiresExternalPayment ? (
+            <form
+              className="payment-choice cut-panel"
+              onSubmit={(event) => void beginPayment(event)}
+            >
+              <div>
+                <p className="eyebrow">Pago online</p>
+                <h2>Elige un proveedor</h2>
+              </div>
+              <label>
+                Correo del pagador
+                <input name="payerEmail" required type="email" />
+              </label>
+              <label>
+                Proveedor
+                <select name="provider">
+                  <option value="FLOW">Flow</option>
+                  <option value="WEBPAY">Webpay Plus</option>
+                </select>
+              </label>
+              <button type="submit">Ir al pago seguro</button>
+            </form>
+          ) : null}
         </>
       )}
       <p className="status" role="status">

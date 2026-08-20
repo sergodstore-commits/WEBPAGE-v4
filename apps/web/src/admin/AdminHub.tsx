@@ -39,6 +39,14 @@ export function AdminHub() {
         <p className="eyebrow">Operación Admin</p>
         <h1>Centro de control</h1>
         <p>Datos reales del servidor; sin métricas decorativas.</p>
+        <nav aria-label="Herramientas administrativas" className="admin-navigation">
+          <a aria-current="page" href="/admin">
+            Operación
+          </a>
+          <a href="/admin/accounts">Cuentas</a>
+          <a href="/admin/pos">Pseudo-POS</a>
+          <a href="/admin/service-coverage">Atención y cobertura</a>
+        </nav>
       </header>
       <p className="status" role="status">
         {message}

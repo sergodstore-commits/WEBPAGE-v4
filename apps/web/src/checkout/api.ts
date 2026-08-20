@@ -26,3 +26,14 @@ export const clearCheckoutPoints = (groupId: string) =>
   mutate<ReturnType<JSON['parse']>>(groupPath(groupId, 'points'), 'DELETE');
 export const revalidateCheckout = (groupId: string) =>
   mutate<ReturnType<JSON['parse']>>(groupPath(groupId, 'revalidate'), 'POST', {});
+export const createCheckoutOrder = (groupId: string) =>
+  mutate<ReturnType<JSON['parse']>>(groupPath(groupId, 'order'), 'POST', {});
+export const createPaymentAttempt = (
+  orderId: string,
+  body: { readonly payerEmail: string; readonly provider: 'FLOW' | 'WEBPAY' },
+) =>
+  mutate<ReturnType<JSON['parse']>>(
+    `/api/v1/orders/${encodeURIComponent(orderId)}/payment-attempts`,
+    'POST',
+    body,
+  );
