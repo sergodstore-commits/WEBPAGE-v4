@@ -3,13 +3,20 @@ import { CryptoUuidGenerator, SystemClock } from '@sergod/foundation';
 import { CatalogEntityAdminService } from './contexts/catalog/application/catalog-entity-admin-service.js';
 import { CartService } from './contexts/commerce-orders/application/cart-service.js';
 import { CheckoutService } from './contexts/commerce-orders/application/checkout-service.js';
+import { FulfillmentService } from './contexts/commerce-orders/application/fulfillment-service.js';
 import { OrderService } from './contexts/commerce-orders/application/order-service.js';
+import { PaymentService } from './contexts/commerce-orders/application/payment-service.js';
 import { PgCartRepository } from './contexts/commerce-orders/infrastructure/postgres-cart-repository.js';
 import { PgCheckoutRepository } from './contexts/commerce-orders/infrastructure/postgres-checkout-repository.js';
+import { PgFulfillmentRepository } from './contexts/commerce-orders/infrastructure/postgres-fulfillment-repository.js';
 import { PgOrderRepository } from './contexts/commerce-orders/infrastructure/postgres-order-repository.js';
+import { configuredPaymentGateways } from './contexts/commerce-orders/infrastructure/payment-gateways.js';
+import { PgPaymentRepository } from './contexts/commerce-orders/infrastructure/postgres-payment-repository.js';
 import { CartHttpApi } from './contexts/commerce-orders/presentation/cart-http-api.js';
 import { CheckoutHttpApi } from './contexts/commerce-orders/presentation/checkout-http-api.js';
+import { FulfillmentHttpApi } from './contexts/commerce-orders/presentation/fulfillment-http-api.js';
 import { OrderHttpApi } from './contexts/commerce-orders/presentation/order-http-api.js';
+import { PaymentHttpApi } from './contexts/commerce-orders/presentation/payment-http-api.js';
 import { CatalogPublicQueryService } from './contexts/catalog/application/catalog-public-query-service.js';
 import { CatalogPublicResourceService } from './contexts/catalog/application/catalog-public-resource-service.js';
 import { CatalogResourceAdminService } from './contexts/catalog/application/catalog-resource-admin-service.js';
@@ -28,6 +35,9 @@ import {
 import { CatalogPublicResourceHttpApi } from './contexts/catalog/presentation/catalog-public-resource-http-api.js';
 import { CatalogResourceAdminHttpApi } from './contexts/catalog/presentation/catalog-resource-admin-http-api.js';
 import { IdentityAccessService } from './contexts/identity-access/application/identity-access-service.js';
+import { EditorialService } from './contexts/editorial-content/application/editorial-service.js';
+import { PgEditorialRepository } from './contexts/editorial-content/infrastructure/postgres-editorial-repository.js';
+import { EditorialHttpApi } from './contexts/editorial-content/presentation/editorial-http-api.js';
 import { PgIdentityAccessRepository } from './contexts/identity-access/infrastructure/postgres-identity-access-repository.js';
 import { SupabaseIdentityProvider } from './contexts/identity-access/infrastructure/supabase-identity-provider.js';
 import { IdentityHttpApi } from './contexts/identity-access/presentation/identity-http-api.js';
@@ -173,6 +183,14 @@ if (identityConfig !== null && pool !== null) {
     new PgCheckoutRepository(pool, clock, uuids, serviceCoverageService),
   );
   const orderService = new OrderService(new PgOrderRepository(pool, clock, uuids));
+  const paymentService = new PaymentService(
+    new PgPaymentRepository(pool, clock, uuids),
+    configuredPaymentGateways(process.env),
+  );
+  const fulfillmentService = new FulfillmentService(
+    new PgFulfillmentRepository(pool, clock, uuids),
+  );
+  const editorialService = new EditorialService(new PgEditorialRepository(pool, clock, uuids));
   const systemConfigurationService = new SystemConfigurationService(
     new PgSystemConfigurationRepository(pool, clock, uuids),
     new PgSystemConfigurationAdminAuthorizer(pool),
@@ -180,6 +198,9 @@ if (identityConfig !== null && pool !== null) {
   routeHandlers.push(
     new SystemConfigurationHttpApi(identityService, systemConfigurationService, logger),
     new CheckoutHttpApi(identityService, checkoutService, logger),
+    new PaymentHttpApi(identityService, paymentService, logger),
+    new FulfillmentHttpApi(identityService, fulfillmentService),
+    new EditorialHttpApi(identityService, editorialService),
     new OrderHttpApi(identityService, orderService, logger),
     new CartHttpApi(identityService, cartService, logger),
     new PosHttpApi(identityService, posService),
@@ -204,7 +225,12 @@ if (identityConfig !== null && pool !== null) {
   );
 }
 if (routeHandlers.length > 0) routeHandler = new CompositeHttpRouteHandler(routeHandlers);
-const server = createServer(routeHandler);
+const server = createServer(routeHandler, {
+  allowedOrigins: (process.env.CORS_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin !== ''),
+});
 
 server.listen(config.port, config.host, () => {
   process.stdout.write('API technical availability check is running.\n');

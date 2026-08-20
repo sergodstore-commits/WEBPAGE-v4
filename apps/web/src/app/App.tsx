@@ -26,14 +26,24 @@ import {
 import { PosPanel } from '../pos/PosPanel.js';
 import { CheckoutPanel } from '../checkout/CheckoutPanel.js';
 import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.js';
+import { AccountHub } from '../account/AccountHub.js';
+import { AdminHub } from '../admin/AdminHub.js';
+import { EditorialPage, StorePage } from '../public-commerce/PublicPages.js';
 
 type Route =
   | '/'
   | '/account'
+  | '/account/overview'
+  | '/admin'
   | '/admin/accounts'
   | '/admin/pos'
   | '/admin/service-coverage'
   | '/checkout'
+  | '/shop'
+  | '/tournaments'
+  | '/news'
+  | '/community'
+  | '/comics'
   | '/auth/callback/confirm'
   | '/auth/callback/email-change'
   | '/auth/callback/recovery'
@@ -57,9 +67,21 @@ export function App() {
     <div className="app-shell">
       <header className="site-header">
         <button className="brand" onClick={() => navigate('/')} type="button">
-          Sergod Store
+          <img alt="Sergod Store" src="/assets/sergod/logo_sergod_store_oficial.png" />
         </button>
-        <nav aria-label="Identidad y cuenta">
+        <nav aria-label="Navegación principal">
+          <button onClick={() => navigate('/shop')} type="button">
+            Tienda
+          </button>
+          <button onClick={() => navigate('/tournaments')} type="button">
+            Torneos
+          </button>
+          <button onClick={() => navigate('/news')} type="button">
+            Noticias
+          </button>
+          <button onClick={() => navigate('/community')} type="button">
+            Comunidad
+          </button>
           <button onClick={() => navigate('/register')} type="button">
             Registro
           </button>
@@ -67,13 +89,19 @@ export function App() {
             Ingresar
           </button>
           <button onClick={() => navigate('/account')} type="button">
-            Cuenta
+            Seguridad
+          </button>
+          <button onClick={() => navigate('/account/overview')} type="button">
+            Mi cuenta
           </button>
           <button onClick={() => navigate('/checkout')} type="button">
             Checkout
           </button>
           <button onClick={() => navigate('/admin/pos')} type="button">
             Pseudo‑POS
+          </button>
+          <button onClick={() => navigate('/admin')} type="button">
+            Admin
           </button>
           <button onClick={() => navigate('/admin/service-coverage')} type="button">
             Atención y cobertura
@@ -89,6 +117,13 @@ export function App() {
         <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
       )}
       {route === '/account' && <Account navigate={navigate} />}
+      {route === '/account/overview' && <AccountHub />}
+      {route === '/shop' && <StorePage />}
+      {route === '/tournaments' && <EditorialPage title="Torneos" type="TOURNAMENT" />}
+      {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
+      {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
+      {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
+      {route === '/admin' && <AdminHub />}
       {route === '/checkout' && <CheckoutPanel />}
       {route === '/admin/accounts' && <AccountsPanel />}
       {route === '/admin/pos' && <PosPanel />}
@@ -99,18 +134,48 @@ export function App() {
 
 function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   return (
-    <main className="panel hero">
-      <p className="eyebrow">Base técnica · CURRENT</p>
-      <h1>Identidad y acceso</h1>
-      <p>Autenticación exclusiva mediante correo electrónico verificado.</p>
-      <div className="actions">
-        <button onClick={() => navigate('/register')} type="button">
-          Crear cuenta Cliente
-        </button>
-        <button className="secondary" onClick={() => navigate('/login')} type="button">
-          Iniciar sesión
-        </button>
-      </div>
+    <main className="home-page">
+      <section className="commerce-hero">
+        <div>
+          <p className="eyebrow">TCG · Comunidad · Competencia</p>
+          <h1>Tu próxima jugada comienza aquí.</h1>
+          <p>Productos, preventas, torneos informativos y comunidad Sergod en un solo lugar.</p>
+          <div className="actions">
+            <button onClick={() => navigate('/shop')} type="button">
+              Explorar tienda
+            </button>
+            <button className="secondary" onClick={() => navigate('/tournaments')} type="button">
+              Ver torneos
+            </button>
+          </div>
+        </div>
+        <div className="hero-mark" aria-hidden="true">
+          SG
+        </div>
+      </section>
+      <section className="home-strips">
+        <article>
+          <p className="card-kicker">Tienda</p>
+          <h2>Productos destacados</h2>
+          <button onClick={() => navigate('/shop')} type="button">
+            Comprar
+          </button>
+        </article>
+        <article>
+          <p className="card-kicker">Preventa</p>
+          <h2>Asegura tu próximo lanzamiento</h2>
+          <button onClick={() => navigate('/shop')} type="button">
+            Ver preventas
+          </button>
+        </article>
+        <article>
+          <p className="card-kicker">Editorial</p>
+          <h2>Noticias y comunidad</h2>
+          <button onClick={() => navigate('/news')} type="button">
+            Leer novedades
+          </button>
+        </article>
+      </section>
     </main>
   );
 }
@@ -531,9 +596,17 @@ function routeFromLocation(): Route {
   const routes: readonly Route[] = [
     '/',
     '/account',
+    '/account/overview',
+    '/admin',
     '/admin/accounts',
     '/admin/pos',
     '/admin/service-coverage',
+    '/checkout',
+    '/shop',
+    '/tournaments',
+    '/news',
+    '/community',
+    '/comics',
     '/auth/callback/confirm',
     '/auth/callback/email-change',
     '/auth/callback/recovery',

@@ -1,4 +1,8 @@
-import type { AppliedPromotionSnapshotV1, CheckoutDeliveryIntent, OrderState } from '@sergod/contracts';
+import type {
+  AppliedPromotionSnapshotV1,
+  CheckoutDeliveryIntent,
+  OrderState,
+} from '@sergod/contracts';
 import type { ExecutionContext } from '@sergod/foundation';
 
 import type { StoredCartDeliveryIntent } from '../domain/checkout.js';
@@ -55,7 +59,6 @@ export interface CheckoutSummaryView {
   readonly totalAmountClp: number;
   readonly validationErrorCodes: readonly string[];
 }
-
 
 export interface CheckoutOrderCreationView {
   readonly orderId: string;

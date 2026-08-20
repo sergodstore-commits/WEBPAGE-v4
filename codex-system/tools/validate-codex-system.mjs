@@ -68,7 +68,7 @@ if (exists('.codex-mission/STATE.json') && exists('codex-system/CONTEXT-ROUTING.
   const routing = readJson('codex-system/CONTEXT-ROUTING.json');
   const queueIds = state.queue.map((x) => x.id);
   const routeIds = Object.keys(routing.stages);
-  check(queueIds.length === 21, `mission-stage-count:${queueIds.length}`);
+  check(queueIds.length === 7, `mission-stage-count:${queueIds.length}`);
   check(JSON.stringify(queueIds) === JSON.stringify(routeIds), 'routing-stage-order-and-set');
   check(state.currentStageId === queueIds[0], 'mission-current-is-first');
   for (const item of state.queue) {

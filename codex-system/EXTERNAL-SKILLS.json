@@ -20,7 +20,7 @@
       "name": "webapp-testing",
       "path": "webapp-testing",
       "status": "APPROVED_ON_DEMAND",
-      "allowedStages": ["12-public-commerce", "16-e2e-integration", "17-visual-qa"],
+      "allowedStages": ["04-remote-e2e-hardening"],
       "riskClass": "LOCAL_EXECUTION",
       "expectedBlobs": {
         "SKILL.md": "4726215301db64a0cc4d41fc3219c61f37a30f4a",

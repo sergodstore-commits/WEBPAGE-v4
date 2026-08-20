@@ -6,10 +6,11 @@ import { App } from './App';
 describe('IdentityAccess presentation', () => {
   beforeEach(() => window.history.replaceState({}, '', '/'));
 
-  it('identifies the email-only Phase 2 technical base', () => {
+  it('presents the public commerce home while preserving account access', () => {
     render(<App />);
-    expect(screen.getByText('Base técnica · CURRENT')).toBeInTheDocument();
-    expect(screen.getByText(/correo electrónico verificado/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /tu próxima jugada/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Explorar tienda' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument();
   });
 
   it('offers only verified email login and exposes no phone authentication controls', () => {

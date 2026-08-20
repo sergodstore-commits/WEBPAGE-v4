@@ -1,47 +1,24 @@
-# Sergod Store V1 — misión progresiva temporal
+# Sergod Store V1 V2 — auditoría, aceptación externa y release
 
-## Naturaleza
+## Autoridad y punto de partida
 
-Este directorio existe únicamente para completar y validar Sergod Store Web V1. No es una segunda especificación de producto: CURRENT manda siempre.
+`docs/CURRENT/` manda. El código preimplementado por Work es solamente un punto de partida: Codex debe inspeccionarlo, contrastarlo con CURRENT, corregirlo y ejecutar sus gates. Un test verde aislado no prueba conformidad funcional ni seguridad.
 
-## Regla de progressive disclosure
+## Reglas invariantes
 
-- Leer `STATE.json`.
-- Leer únicamente `currentStageFile`.
-- No abrir deliberadamente stages futuros antes de que pasen a `currentStageFile`.
-- Un stage grande puede subdividirse en un plan temporal bajo `.runtime/codex/`, que nunca amplía su alcance.
+- No modificar las migraciones protegidas de `codex-system/MIGRATION-BASELINE.json`; cualquier cambio de datos usa una migración prospectiva nueva.
+- Flow y Webpay siguen siendo adapters de Payments Core agnóstico. No integrar POS físico Transbank.
+- `FREIGHT_COLLECT` cuesta 0 y no exige domicilio.
+- Torneos son contenido editorial/informativo, nunca un gestor de rondas.
+- Conservar las 8 Skills locales. Skills externas: solo ON-DEMAND, revisión de seguridad y commit fijado.
+- No declarar PASS de PostgreSQL, proveedores, email, staging o producción sin evidencia real.
 
-## Ciclo obligatorio
+## Ciclo obligatorio por stage
 
-```text
-INSPECT → IMPLEMENT → TEST → FIX → TEST → DIFF/SECURITY REVIEW → UPDATE STATUS → COMMIT → COMPLETE STAGE
-```
+`INSPECT → CURRENT CONFORMANCE → IMPLEMENT/FIX → TEST → SECURITY/DIFF REVIEW → EVIDENCE → COMMIT → COMPLETE`
 
-## Estados
+Leer `STATE.json` y solo el stage actual. El trabajo independiente continúa aunque existan credenciales pendientes; se registra `DEFERRED_EXTERNAL` con precisión.
 
-- `PASS`: stage y validaciones requeridas completadas.
-- `PASS_LOCAL`: stage definido como local completado.
-- `DEFERRED_EXTERNAL`: implementación local completa; validación externa pendiente por credencial/acceso. Avanza y registra deuda.
-- `FAIL`: problema real; no avanzar.
+## Cierre
 
-## Credenciales
-
-No interrumpir la misión por credenciales si existe trabajo independiente. Acumular `DEFERRED_EXTERNAL`. La única intervención manual agrupada ocurre en el stage final de aceptación externa mediante `scripts/codex/FINAL-EXTERNAL-ACCEPTANCE.ps1`.
-
-## Stage completion
-
-Antes de cerrar un stage:
-
-1. actualizar `docs/CURRENT/IMPLEMENTATION-STATUS.md` con evidencia real;
-2. tener working tree controlado y commit(s) coherentes;
-3. ejecutar `scripts/codex/mission/complete-stage.ps1` con el estado correcto.
-
-El helper elimina físicamente el archivo del stage completado y avanza `STATE.json`.
-
-## Producción
-
-No desplegar/promover producción antes del stage Release. Staging/preview/sandbox pueden usarse conforme al stage.
-
-## Cierre final
-
-Después de Release, `scripts/codex/finalize-mission.ps1` elimina este directorio y helpers exclusivamente temporales. La trazabilidad útil permanece en Git y `IMPLEMENTATION-STATUS.md`.
+Antes de Release deben estar aceptados los proveedores y entornos externos, resueltos los hallazgos, actualizado `docs/CURRENT/IMPLEMENTATION-STATUS.md`, verificada la historia de migraciones y limpio Git. La misión solo se finaliza después de evidencia real de release.

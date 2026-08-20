@@ -11,7 +11,9 @@ describe('Order domain', () => {
   it('expires only pending-payment orders whose deadline elapsed', () => {
     const now = new Date('2026-08-20T04:00:00.000Z');
     expect(canExpireOrder('PENDING_PAYMENT', new Date('2026-08-20T03:59:59.000Z'), now)).toBe(true);
-    expect(canExpireOrder('PENDING_PAYMENT', new Date('2026-08-20T04:00:01.000Z'), now)).toBe(false);
+    expect(canExpireOrder('PENDING_PAYMENT', new Date('2026-08-20T04:00:01.000Z'), now)).toBe(
+      false,
+    );
     expect(canExpireOrder('PAID', new Date('2026-08-20T03:59:59.000Z'), now)).toBe(false);
   });
 });

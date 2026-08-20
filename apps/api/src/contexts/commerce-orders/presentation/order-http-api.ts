@@ -7,7 +7,11 @@ import { z } from 'zod';
 import type { IdentityAccessService } from '../../identity-access/application/identity-access-service.js';
 import { IdentityAccessError } from '../../identity-access/application/identity-access-service.js';
 import type { HttpRouteHandler } from '../../../presentation/http/create-server.js';
-import { HttpRequestError, readBearerToken, sendJson } from '../../../presentation/http/http-utils.js';
+import {
+  HttpRequestError,
+  readBearerToken,
+  sendJson,
+} from '../../../presentation/http/http-utils.js';
 import { OrderService } from '../application/order-service.js';
 import { OrderError } from '../domain/order.js';
 
@@ -31,7 +35,10 @@ export class OrderHttpApi implements HttpRouteHandler {
 
   async handle(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
     const url = new URL(request.url ?? '/', 'http://local.invalid');
-    if (!url.pathname.startsWith('/api/v1/orders') && !url.pathname.startsWith('/api/v1/admin/orders')) {
+    if (
+      !url.pathname.startsWith('/api/v1/orders') &&
+      !url.pathname.startsWith('/api/v1/admin/orders')
+    ) {
       return false;
     }
     const correlationId = randomUUID();
@@ -100,7 +107,8 @@ function matchRoute(method: string | undefined, pathname: string): Route | null 
   if (pathname === '/api/v1/orders') return { audience: 'ACCOUNT', operation: 'LIST' };
   if (pathname === '/api/v1/admin/orders') return { audience: 'ADMIN', operation: 'LIST' };
   const account = /^\/api\/v1\/orders\/([^/]+)$/u.exec(pathname);
-  if (account?.[1] !== undefined) return { audience: 'ACCOUNT', operation: 'GET', orderId: account[1] };
+  if (account?.[1] !== undefined)
+    return { audience: 'ACCOUNT', operation: 'GET', orderId: account[1] };
   const admin = /^\/api\/v1\/admin\/orders\/([^/]+)$/u.exec(pathname);
   if (admin?.[1] !== undefined) return { audience: 'ADMIN', operation: 'GET', orderId: admin[1] };
   return null;
@@ -109,7 +117,8 @@ function matchRoute(method: string | undefined, pathname: string): Route | null 
 function queryObject(url: URL): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of url.searchParams.entries()) {
-    if (result[key] !== undefined) throw new HttpRequestError('VALIDATION_FAILED', 422, 'Duplicate query parameter.');
+    if (result[key] !== undefined)
+      throw new HttpRequestError('VALIDATION_FAILED', 422, 'Duplicate query parameter.');
     result[key] = value;
   }
   return result;
@@ -121,7 +130,10 @@ function assertNoQuery(url: URL): void {
 }
 function assertNoBody(request: IncomingMessage): void {
   const length = request.headers['content-length'];
-  if ((length !== undefined && length !== '0') || request.headers['transfer-encoding'] !== undefined) {
+  if (
+    (length !== undefined && length !== '0') ||
+    request.headers['transfer-encoding'] !== undefined
+  ) {
     throw new HttpRequestError('VALIDATION_FAILED', 422, 'Request body is not accepted.');
   }
 }

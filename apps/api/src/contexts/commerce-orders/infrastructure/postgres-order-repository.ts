@@ -34,7 +34,11 @@ export class PgOrderRepository implements OrderRepository {
     return this.list({ ...input, admin: false });
   }
 
-  listForAdmin(input: { readonly cursor?: string; readonly limit: number; readonly state?: OrderState }) {
+  listForAdmin(input: {
+    readonly cursor?: string;
+    readonly limit: number;
+    readonly state?: OrderState;
+  }) {
     return this.list({ ...input, admin: true });
   }
 
@@ -177,7 +181,9 @@ export class PgOrderRepository implements OrderRepository {
     );
     const page = ids.rows.slice(0, input.limit);
     const items = await Promise.all(
-      page.map((row) => loadOrder(this.pool, row.order_id, input.admin ? undefined : input.accountId)),
+      page.map((row) =>
+        loadOrder(this.pool, row.order_id, input.admin ? undefined : input.accountId),
+      ),
     );
     return {
       items,
@@ -192,7 +198,8 @@ async function loadOrder(pool: Pool, orderId: string, accountId?: string): Promi
     accountId === undefined ? [orderId] : [orderId, accountId],
   );
   const row = order.rows[0];
-  if (row === undefined) throw new OrderError('ORDER_NOT_FOUND', 'NOT_FOUND', 'Order was not found.');
+  if (row === undefined)
+    throw new OrderError('ORDER_NOT_FOUND', 'NOT_FOUND', 'Order was not found.');
   const lines = await pool.query<OrderLineRow>(
     `SELECT * FROM order_lines WHERE order_id=$1 ORDER BY created_at,order_line_id`,
     [orderId],

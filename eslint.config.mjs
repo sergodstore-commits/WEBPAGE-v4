@@ -25,7 +25,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/api/**/*.ts', 'vitest.config.ts', 'codex-system/**/*.mjs'],
+    files: ['apps/api/**/*.ts', 'vitest.config.ts', 'codex-system/**/*.mjs', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: globals.node,
     },

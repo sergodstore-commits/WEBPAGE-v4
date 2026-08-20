@@ -1,6 +1,9 @@
 const { readFileSync } = process.getBuiltinModule('node:fs');
 const { resolve } = process.getBuiltinModule('node:path');
-const path = resolve(__dirname, '../../../supabase/migrations/20260820043000_orders_checkout_advance.sql');
+const path = resolve(
+  __dirname,
+  '../../../supabase/migrations/20260820043000_orders_checkout_advance.sql',
+);
 const upSql = readFileSync(path, 'utf8');
 const downSql = `
 DROP TABLE checkout_order_idempotency_results;

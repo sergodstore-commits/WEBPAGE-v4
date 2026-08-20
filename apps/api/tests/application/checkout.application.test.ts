@@ -63,7 +63,7 @@ function subject() {
         orderId: '0198a8be-6677-7000-8000-000000000010',
         publicNumber: 'SG-2026-000001',
         requiresExternalPayment: false,
-        state: 'PENDING_PAYMENT',
+        state: 'PENDING_PAYMENT' as const,
         totalAmountClp: 0,
       },
     })),

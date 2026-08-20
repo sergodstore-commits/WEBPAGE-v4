@@ -82,7 +82,9 @@ export class CheckoutService {
       context,
       idempotencyKey,
       requestFingerprint: createHash('sha256')
-        .update(JSON.stringify({ accountId, cartGroupId: normalizedGroupId, operation: 'CREATE_ORDER' }))
+        .update(
+          JSON.stringify({ accountId, cartGroupId: normalizedGroupId, operation: 'CREATE_ORDER' }),
+        )
         .digest('hex'),
     });
     return {

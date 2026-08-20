@@ -1,29 +1,42 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "project": "SERGOD-STORE-WEB-V1",
-  "deliveryProfile": "PREIMPLEMENTATION_WORKING_SNAPSHOT",
+  "deliveryProfile": "CODEX_READY_V2_LOCAL_COMPLETE_EXTERNAL_DEFERRED",
+  "createdUtc": "2026-08-20T07:22:46.850Z",
   "productAuthority": "docs/CURRENT/",
-  "missionStageCount": 21,
+  "missionStageCount": 7,
   "initialStage": "00-baseline",
   "sergodLocalSkills": 8,
-  "externalSkillsPolicy": "APPROVED_ON_DEMAND_ONLY",
-  "externalSkillsPinnedRepository": "composio-community/awesome-codex-skills",
-  "externalSkillsPinnedCommit": "0930e1373789d2eda449039f7ac154b33031de89",
-  "codexSystemValidation": "PASS_264_CHECKS",
+  "externalSkillsPolicy": "APPROVED_ON_DEMAND_ONLY_PINNED",
+  "codexSystemValidation": "PASS_138_CHECKS",
   "protectedMigrationHistory": "PASS_31_FILES",
-  "deliverySecrets": "NO_REAL_ENV_FILES_DETECTED",
-  "deliveryRuntimeArtifacts": "NONE_EXPECTED",
-  "gitPolicy": "NEW_LOCAL_MAIN_NO_REMOTE",
-  "requiredFirstMachineValidation": {
-    "platform": "Windows",
-    "node": "24.x per package.json",
-    "npm": "11.x per package.json",
-    "action": "Stage 00 must run npm ci, PostgreSQL local preparation and the complete official gates before implementation advances."
+  "localGates": {
+    "format": "PASS",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "unit": "PASS_185",
+    "application": "PASS_43",
+    "contract": "PASS_47_SKIP_1",
+    "web": "PASS_17",
+    "build": "PASS",
+    "npmAudit": "PASS_0_VULNERABILITIES",
+    "deliveryAudit": "PASS"
   },
-  "packagingNote": "The package manifest excludes .git and PACKAGE-MANIFEST.json itself. ZIP and final Git integrity are verified outside this file after packaging.",
-  "preimplementation": {
-    "ordersCheckout": "IMPLEMENTED_FOR_CODEX_AUDIT_NOT_STAGE_ACCEPTED",
-    "officialMissionStateUnchanged": true,
-    "validationLimit": "Codex must run official Windows Node 24 npm 11 PostgreSQL gates before acceptance"
-  }
+  "deferredExternal": [
+    "PostgreSQL real integration",
+    "Flow sandbox",
+    "Webpay integration environment",
+    "transactional email provider",
+    "staging/production and remote E2E"
+  ],
+  "assertions": {
+    "noExternalPassWithoutCredentials": true,
+    "noPhysicalTransbankPos": true,
+    "prospectiveMigrationsOnlyForV2": true,
+    "freightCollectShippingZeroWithoutAddress": true,
+    "tournamentsEditorialOnly": true,
+    "noEmptyFilesOrDirectories": true,
+    "noRealEnvironmentFiles": true
+  },
+  "packagingNote": "Content manifest excludes .git, dependencies, builds, runtime directories and itself. ZIP integrity is recorded by the companion external SHA256 file."
 }

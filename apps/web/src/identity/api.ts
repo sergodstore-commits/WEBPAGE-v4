@@ -192,6 +192,10 @@ async function request<Value = void>(path: string, init: RequestInit = {}): Prom
   return (await response.json()) as Value;
 }
 
+export function publicRequest<Value>(path: string, init: RequestInit = {}): Promise<Value> {
+  return request<Value>(path, init);
+}
+
 export class ApiError extends Error {
   constructor(
     readonly code: string,

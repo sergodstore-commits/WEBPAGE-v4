@@ -1,96 +1,50 @@
 {
-  "schemaVersion": 1,
-  "mission": "SERGOD_STORE_WEB_V1_COMPLETION",
+  "schemaVersion": 2,
+  "mission": "SERGOD_STORE_WEB_V1_V2_AUDIT_AND_RELEASE",
   "status": "ACTIVE",
   "currentStageId": "00-baseline",
   "currentStageFile": ".codex-mission/stages/00-baseline.md",
   "queue": [
+    { "id": "00-baseline", "file": ".codex-mission/stages/00-baseline.md" },
     {
-      "id": "00-baseline",
-      "file": ".codex-mission/stages/00-baseline.md"
+      "id": "01-local-final-verification",
+      "file": ".codex-mission/stages/01-local-final-verification.md"
     },
+    { "id": "02-external-providers", "file": ".codex-mission/stages/02-external-providers.md" },
+    { "id": "03-staging", "file": ".codex-mission/stages/03-staging.md" },
+    { "id": "04-remote-e2e-hardening", "file": ".codex-mission/stages/04-remote-e2e-hardening.md" },
     {
-      "id": "01-conformance",
-      "file": ".codex-mission/stages/01-conformance.md"
+      "id": "05-final-external-acceptance",
+      "file": ".codex-mission/stages/05-final-external-acceptance.md"
     },
-    {
-      "id": "02-design-inventory",
-      "file": ".codex-mission/stages/02-design-inventory.md"
-    },
-    {
-      "id": "03-design-system",
-      "file": ".codex-mission/stages/03-design-system.md"
-    },
-    {
-      "id": "04-orders-domain-data",
-      "file": ".codex-mission/stages/04-orders-domain-data.md"
-    },
-    {
-      "id": "05-orders-checkout-api",
-      "file": ".codex-mission/stages/05-orders-checkout-api.md"
-    },
-    {
-      "id": "06-payments-core",
-      "file": ".codex-mission/stages/06-payments-core.md"
-    },
-    {
-      "id": "07-flow",
-      "file": ".codex-mission/stages/07-flow.md"
-    },
-    {
-      "id": "08-webpay",
-      "file": ".codex-mission/stages/08-webpay.md"
-    },
-    {
-      "id": "09-fulfillment",
-      "file": ".codex-mission/stages/09-fulfillment.md"
-    },
-    {
-      "id": "10-customer-account",
-      "file": ".codex-mission/stages/10-customer-account.md"
-    },
-    {
-      "id": "11-admin",
-      "file": ".codex-mission/stages/11-admin.md"
-    },
-    {
-      "id": "12-public-commerce",
-      "file": ".codex-mission/stages/12-public-commerce.md"
-    },
-    {
-      "id": "13-editorial-content",
-      "file": ".codex-mission/stages/13-editorial-content.md"
-    },
-    {
-      "id": "14-visual-integration",
-      "file": ".codex-mission/stages/14-visual-integration.md"
-    },
-    {
-      "id": "15-notifications",
-      "file": ".codex-mission/stages/15-notifications.md"
-    },
-    {
-      "id": "16-e2e-integration",
-      "file": ".codex-mission/stages/16-e2e-integration.md"
-    },
-    {
-      "id": "17-visual-qa",
-      "file": ".codex-mission/stages/17-visual-qa.md"
-    },
-    {
-      "id": "18-hardening",
-      "file": ".codex-mission/stages/18-hardening.md"
-    },
-    {
-      "id": "19-final-external",
-      "file": ".codex-mission/stages/19-final-external.md"
-    },
-    {
-      "id": "20-release",
-      "file": ".codex-mission/stages/20-release.md"
-    }
+    { "id": "06-release", "file": ".codex-mission/stages/06-release.md" }
   ],
   "completedStages": [],
-  "deferredExternal": [],
-  "notes": ["Read only the current stage file. CURRENT defines product scope."]
+  "deferredExternal": [
+    {
+      "stageId": "00-baseline",
+      "capability": "PostgreSQL real integration",
+      "reason": "Portable PostgreSQL could not be downloaded in the Work environment; integration tests remain unaccepted."
+    },
+    {
+      "stageId": "02-external-providers",
+      "capability": "Flow and Webpay sandbox",
+      "reason": "No sandbox credentials or reachable acceptance environment were supplied."
+    },
+    {
+      "stageId": "02-external-providers",
+      "capability": "Transactional email provider",
+      "reason": "No email provider credentials or verified sending domain were supplied."
+    },
+    {
+      "stageId": "03-staging",
+      "capability": "Staging and production",
+      "reason": "No deployment target, credentials, domains, or production authorization were supplied."
+    }
+  ],
+  "notes": [
+    "CURRENT is the sole product authority.",
+    "All Work preimplementation is untrusted until Codex inspects, tests, fixes, and records evidence.",
+    "Never convert DEFERRED_EXTERNAL to PASS without real provider or environment evidence."
+  ]
 }

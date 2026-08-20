@@ -143,7 +143,12 @@ export class PgCheckoutRepository implements CheckoutRepository {
         }
 
         await assertEligibleAccount(transaction, input.accountId);
-        const group = await requireOwnedGroup(transaction, input.accountId, input.cartGroupId, true);
+        const group = await requireOwnedGroup(
+          transaction,
+          input.accountId,
+          input.cartGroupId,
+          true,
+        );
         const alreadyOrdered = await transaction.query<{ order_id: string }>(
           `SELECT order_id FROM orders WHERE cart_group_id=$1 FOR UPDATE`,
           [group.cart_group_id],
@@ -167,7 +172,11 @@ export class PgCheckoutRepository implements CheckoutRepository {
           throw conflict('CHECKOUT_ORDER_ALREADY_CREATED');
         }
         const summary = await this.evaluate(transaction, group, input.accountId, now);
-        if (!summary.canCreateOrder || summary.branchId === null || summary.deliveryIntent === null) {
+        if (
+          !summary.canCreateOrder ||
+          summary.branchId === null ||
+          summary.deliveryIntent === null
+        ) {
           throw conflict(summary.validationErrorCodes[0] ?? 'CHECKOUT_NOT_READY');
         }
 
@@ -201,7 +210,8 @@ export class PgCheckoutRepository implements CheckoutRepository {
         const allocated = Number(sequence.rows[0]?.allocated);
         const publicNumber = formatOrderPublicNumber(year, allocated);
         const pointsDiscountClp = summary.loyalty.pointsDiscountClp;
-        const deliveryMode = summary.deliveryIntent.mode === 'PICKUP' ? 'PICKUP' : 'FREIGHT_COLLECT';
+        const deliveryMode =
+          summary.deliveryIntent.mode === 'PICKUP' ? 'PICKUP' : 'FREIGHT_COLLECT';
 
         await transaction.query(
           `INSERT INTO orders(order_id,public_number,account_id,cart_group_id,branch_id,order_type,state,

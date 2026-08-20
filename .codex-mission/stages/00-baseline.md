@@ -1,32 +1,15 @@
-# Stage 00-baseline — Validar baseline y entorno
+# Stage 00-baseline — revalidar el V2 entregado
 
 ## Objetivo
 
-No modificar funcionalidad. Instalar dependencias, ejecutar preflight y gates locales, preparar PostgreSQL local y verificar que el workspace coincide con CURRENT antes de comenzar implementación. Las validaciones externas que requieran credenciales pueden diferirse.
-
-## Límites
-
-- CURRENT manda.
-- No leer deliberadamente stages futuros.
-- No ampliar alcance por recomendación de Skills/frameworks.
-- No tocar producción salvo que este stage sea Release.
-- Si una credencial externa falta y el trabajo local está completo, registrar `DEFERRED_EXTERNAL` y continuar.
+Tratar toda la preimplementación como no confiable: instalar desde lockfile, inspeccionar el diff y la arquitectura contra CURRENT, verificar el entorno y corregir cualquier defecto local reproducible.
 
 ## Gates mínimos
 
-- preflight PASS
-- `npm run codex:prepare` PASS, incluida la integridad de migraciones históricas protegidas
-- npm ci en Windows
-- format/lint/typecheck/unit/application/contract/web/build
-- integration local sin tests *remote
-- Git limpio/sin remote al cierre
+- Node 24/npm 11 compatibles; `npm ci` sin mutar el lockfile.
+- `npm run codex:prepare`, formato, lint y typecheck.
+- Revisar las migraciones prospectivas sin modificar las 31 protegidas.
+- Revisar secretos, permisos, adapters de pago y límites de alcance.
+- Git limpio al cierre.
 
-Además aplicar `docs/CURRENT/07-PRUEBAS-Y-CALIDAD.md` según los archivos/capas afectados.
-
-## Cierre
-
-1. corregir fallos hasta verde;
-2. revisar diff/seguridad/regresiones;
-3. actualizar `IMPLEMENTATION-STATUS.md`;
-4. commit(s) local(es) coherentes;
-5. ejecutar `scripts/codex/mission/complete-stage.ps1` con `PASS`, `PASS_LOCAL` o `DEFERRED_EXTERNAL` según corresponda.
+No aceptar PostgreSQL ni servicios externos sin evidencia real. Registrar `DEFERRED_EXTERNAL` y continuar con el trabajo independiente.

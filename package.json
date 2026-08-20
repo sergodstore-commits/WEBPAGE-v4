@@ -53,7 +53,10 @@
     "codex:prepare": "npm run codex:validate && npm run codex:migrations:verify && npm run codex:index",
     "codex:handoff": "node codex-system/tools/write-session-handoff.mjs",
     "codex:migrations:verify": "node codex-system/tools/validate-migration-history.mjs",
-    "orders:expire": "tsx scripts/run-order-expiration.ts"
+    "orders:expire": "tsx scripts/run-order-expiration.ts",
+    "test:e2e:smoke": "node scripts/e2e-smoke.mjs",
+    "delivery:audit": "node scripts/codex/audit-delivery.mjs",
+    "delivery:manifest": "node scripts/codex/build-delivery-manifest.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

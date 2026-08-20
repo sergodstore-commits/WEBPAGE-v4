@@ -6,6 +6,8 @@ Tu primera acción es leer AGENTS.md y obedecer desde allí el protocolo del pro
 
 Prioridad operativa: completar Sergod Store Web V1 con máxima eficiencia de contexto, créditos/tokens y tiempo, sin reducir calidad, seguridad, pruebas ni cumplimiento de CURRENT.
 
+Este V2 contiene preimplementación de Work. No la des por correcta: comienza por auditarla contra CURRENT, reproduce los gates, corrige defectos y exige evidencia real antes de aceptar proveedores o entornos externos.
+
 Ejecuta tú mismo terminal, PowerShell, Git, npm, PostgreSQL local, pruebas, diagnósticos, correcciones, commits y scripts que el entorno permita. No me delegues trabajo técnico que puedas realizar directamente.
 
 Usa un solo agente por defecto. No uses subagentes, worktrees paralelos ni orquestadores multiagente salvo que AGENTS.md y codex-system/AGENT-POLICY.md permitan una excepción crítica y la ganancia justifique el costo de contexto.

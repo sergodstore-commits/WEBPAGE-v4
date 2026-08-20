@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "purpose": "Minimum-context routing for the current mission stage. Product authority remains docs/CURRENT.",
+  "schemaVersion": 2,
+  "purpose": "Minimum-context routing for V2 audit, external acceptance, and release. Product authority remains docs/CURRENT.",
   "alwaysRead": ["AGENTS.md", "docs/CURRENT/INDEX.md", ".codex-mission/STATE.json"],
   "stages": {
     "00-baseline": {
@@ -9,282 +9,74 @@
         "07-PRUEBAS-Y-CALIDAD.md",
         "10-PROTOCOLO-DE-EJECUCION-CODEX.md"
       ],
-      "searchRoots": ["package.json", "scripts", "apps", "packages"],
+      "searchRoots": ["package.json", "apps", "packages", "scripts", "supabase"],
       "targetedGates": [
+        "npm ci",
         "npm run codex:prepare",
         "npm run format:check",
         "npm run lint",
-        "npm run typecheck",
-        "npm run test:unit",
-        "npm run test:application",
-        "npm run test:contract",
-        "npm run test:web",
-        "npm run test:integration:local",
-        "npm run build"
+        "npm run typecheck"
       ]
     },
-    "01-conformance": {
+    "01-local-final-verification": {
       "docs": [
         "01-ARBOL-FUNCIONAL-V1.md",
         "02-ALCANCE-CERRADO-V1.md",
-        "03-REGLAS-DE-NEGOCIO.md",
-        "04-ARQUITECTURA-Y-LIMITES.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": ["apps", "packages/contracts", "tests"],
-      "targetedGates": [
-        "npm run typecheck",
-        "npm run test:unit",
-        "npm run test:application",
-        "npm run test:contract"
-      ]
-    },
-    "02-design-inventory": {
-      "docs": ["11-DISENO-E-IDENTIDAD-VISUAL.md", "07-PRUEBAS-Y-CALIDAD.md"],
-      "searchRoots": ["design"],
-      "targetedGates": ["npm run codex:validate"]
-    },
-    "03-design-system": {
-      "docs": [
-        "06-UX-Y-PRESENTATION.md",
-        "11-DISENO-E-IDENTIDAD-VISUAL.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": ["apps/web/src", "design/approved"],
-      "targetedGates": ["npm run test:web", "npm run build --workspace=@sergod/web"]
-    },
-    "04-orders-domain-data": {
-      "docs": [
         "03-REGLAS-DE-NEGOCIO.md",
         "04-ARQUITECTURA-Y-LIMITES.md",
         "05-DATOS-Y-PERSISTENCIA.md",
-        "13-ORDERS-PAGOS-Y-FULFILLMENT.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
+        "06-UX-Y-PRESENTATION.md",
+        "07-PRUEBAS-Y-CALIDAD.md",
+        "13-ORDERS-PAGOS-Y-FULFILLMENT.md"
       ],
-      "searchRoots": [
-        "apps/api/src/contexts/commerce-orders",
-        "apps/api/migrations",
-        "supabase/migrations",
-        "packages/contracts",
-        "apps/api/tests"
-      ],
+      "searchRoots": ["apps", "packages", "tests", "scripts", "supabase"],
       "targetedGates": [
         "npm run test:unit",
-        "npm run test:application",
-        "npm run test:integration:local",
-        "npm run typecheck"
-      ]
-    },
-    "05-orders-checkout-api": {
-      "docs": [
-        "03-REGLAS-DE-NEGOCIO.md",
-        "06-UX-Y-PRESENTATION.md",
-        "13-ORDERS-PAGOS-Y-FULFILLMENT.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/api/src/contexts/commerce-orders",
-        "apps/api/src/contexts/inventory",
-        "packages/contracts",
-        "apps/api/tests"
-      ],
-      "targetedGates": [
-        "npm run test:application",
-        "npm run test:contract",
-        "npm run test:integration:local",
-        "npm run typecheck"
-      ]
-    },
-    "06-payments-core": {
-      "docs": [
-        "03-REGLAS-DE-NEGOCIO.md",
-        "04-ARQUITECTURA-Y-LIMITES.md",
-        "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md",
-        "13-ORDERS-PAGOS-Y-FULFILLMENT.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/api/src/contexts/commerce-orders",
-        "packages/contracts",
-        "apps/api/tests"
-      ],
-      "targetedGates": [
-        "npm run test:unit",
-        "npm run test:application",
-        "npm run test:contract",
-        "npm run typecheck"
-      ]
-    },
-    "07-flow": {
-      "docs": [
-        "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md",
-        "13-ORDERS-PAGOS-Y-FULFILLMENT.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/api/src/contexts/commerce-orders",
-        "packages/contracts",
-        "apps/api/tests"
-      ],
-      "targetedGates": [
-        "npm run test:application",
-        "npm run test:contract",
-        "npm run test:integration:local"
-      ]
-    },
-    "08-webpay": {
-      "docs": [
-        "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md",
-        "13-ORDERS-PAGOS-Y-FULFILLMENT.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/api/src/contexts/commerce-orders",
-        "packages/contracts",
-        "apps/api/tests"
-      ],
-      "targetedGates": [
-        "npm run test:application",
-        "npm run test:contract",
-        "npm run test:integration:local"
-      ]
-    },
-    "09-fulfillment": {
-      "docs": [
-        "03-REGLAS-DE-NEGOCIO.md",
-        "13-ORDERS-PAGOS-Y-FULFILLMENT.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/api/src/contexts/commerce-orders",
-        "apps/api/src/contexts/inventory",
-        "packages/contracts",
-        "apps/api/tests"
-      ],
-      "targetedGates": [
-        "npm run test:unit",
-        "npm run test:application",
-        "npm run test:integration:local"
-      ]
-    },
-    "10-customer-account": {
-      "docs": [
-        "01-ARBOL-FUNCIONAL-V1.md",
-        "06-UX-Y-PRESENTATION.md",
-        "03-REGLAS-DE-NEGOCIO.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/web/src/identity",
-        "apps/web/src/checkout",
-        "apps/api/src/contexts/identity-access",
-        "apps/api/src/contexts/commerce-orders",
-        "apps/api/src/contexts/loyalty"
-      ],
-      "targetedGates": ["npm run test:web", "npm run test:application", "npm run typecheck"]
-    },
-    "11-admin": {
-      "docs": [
-        "01-ARBOL-FUNCIONAL-V1.md",
-        "06-UX-Y-PRESENTATION.md",
-        "03-REGLAS-DE-NEGOCIO.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": ["apps/web/src", "apps/api/src/contexts", "packages/contracts"],
-      "targetedGates": ["npm run test:web", "npm run test:contract", "npm run typecheck"]
-    },
-    "12-public-commerce": {
-      "docs": [
-        "01-ARBOL-FUNCIONAL-V1.md",
-        "03-REGLAS-DE-NEGOCIO.md",
-        "06-UX-Y-PRESENTATION.md",
-        "11-DISENO-E-IDENTIDAD-VISUAL.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/web/src",
-        "apps/api/src/contexts/catalog",
-        "apps/api/src/contexts/commerce-orders",
-        "design/approved"
-      ],
-      "targetedGates": [
-        "npm run test:web",
-        "npm run test:contract",
-        "npm run build --workspace=@sergod/web"
-      ]
-    },
-    "13-editorial-content": {
-      "docs": [
-        "01-ARBOL-FUNCIONAL-V1.md",
-        "02-ALCANCE-CERRADO-V1.md",
-        "06-UX-Y-PRESENTATION.md",
-        "11-DISENO-E-IDENTIDAD-VISUAL.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": [
-        "apps/api/src/contexts",
-        "apps/web/src",
-        "packages/contracts",
-        "design/approved"
-      ],
-      "targetedGates": [
         "npm run test:application",
         "npm run test:contract",
         "npm run test:web",
-        "npm run typecheck"
+        "npm run test:integration:local",
+        "npm run build",
+        "npm run delivery:audit"
       ]
     },
-    "14-visual-integration": {
+    "02-external-providers": {
       "docs": [
-        "06-UX-Y-PRESENTATION.md",
-        "11-DISENO-E-IDENTIDAD-VISUAL.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": ["apps/web/src", "design/approved", "design/references"],
-      "targetedGates": ["npm run test:web", "npm run build --workspace=@sergod/web"]
-    },
-    "15-notifications": {
-      "docs": [
-        "04-ARQUITECTURA-Y-LIMITES.md",
-        "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md",
-        "13-ORDERS-PAGOS-Y-FULFILLMENT.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": ["apps/api/src", "packages/contracts", "apps/api/tests"],
-      "targetedGates": ["npm run test:application", "npm run test:contract", "npm run typecheck"]
-    },
-    "16-e2e-integration": {
-      "docs": [
-        "03-REGLAS-DE-NEGOCIO.md",
-        "06-UX-Y-PRESENTATION.md",
         "07-PRUEBAS-Y-CALIDAD.md",
         "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md",
         "13-ORDERS-PAGOS-Y-FULFILLMENT.md"
       ],
-      "searchRoots": ["tests/e2e", "apps/web/src", "apps/api/src"],
-      "targetedGates": ["npm run verify", "npm run test:integration:local"]
+      "searchRoots": ["apps/api/src", "scripts/codex", "ops"],
+      "targetedGates": [
+        "Flow sandbox acceptance",
+        "Webpay sandbox acceptance",
+        "transactional email acceptance"
+      ]
     },
-    "17-visual-qa": {
+    "03-staging": {
       "docs": [
-        "06-UX-Y-PRESENTATION.md",
-        "11-DISENO-E-IDENTIDAD-VISUAL.md",
-        "07-PRUEBAS-Y-CALIDAD.md"
-      ],
-      "searchRoots": ["apps/web/src", "tests/e2e", "design/approved"],
-      "targetedGates": ["npm run test:web", "npm run build --workspace=@sergod/web"]
-    },
-    "18-hardening": {
-      "docs": [
-        "04-ARQUITECTURA-Y-LIMITES.md",
-        "05-DATOS-Y-PERSISTENCIA.md",
         "07-PRUEBAS-Y-CALIDAD.md",
         "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md",
         "12-INFRAESTRUCTURA-Y-DEPLOYMENT.md"
       ],
-      "searchRoots": ["apps", "packages", "scripts", "supabase", "ops"],
-      "targetedGates": ["npm run verify", "npm audit"]
+      "searchRoots": ["ops", "scripts", "apps"],
+      "targetedGates": ["staging migration", "staging smoke", "staging observability and rollback"]
     },
-    "19-final-external": {
+    "04-remote-e2e-hardening": {
+      "docs": [
+        "03-REGLAS-DE-NEGOCIO.md",
+        "06-UX-Y-PRESENTATION.md",
+        "07-PRUEBAS-Y-CALIDAD.md",
+        "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md"
+      ],
+      "searchRoots": ["tests/e2e", "apps", "scripts", "ops", "design/approved"],
+      "targetedGates": [
+        "npm run test:e2e:smoke",
+        "remote role and commerce E2E",
+        "security and visual review"
+      ]
+    },
+    "05-final-external-acceptance": {
       "docs": [
         "07-PRUEBAS-Y-CALIDAD.md",
         "09-SERVICIOS-EXTERNOS-Y-SECRETOS.md",
@@ -296,7 +88,7 @@
         "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/codex/FINAL-EXTERNAL-ACCEPTANCE.ps1"
       ]
     },
-    "20-release": {
+    "06-release": {
       "docs": [
         "05-DATOS-Y-PERSISTENCIA.md",
         "07-PRUEBAS-Y-CALIDAD.md",
@@ -304,8 +96,13 @@
         "12-INFRAESTRUCTURA-Y-DEPLOYMENT.md",
         "13-ORDERS-PAGOS-Y-FULFILLMENT.md"
       ],
-      "searchRoots": ["scripts/codex", "ops", "supabase", "apps"],
-      "targetedGates": ["npm run verify"]
+      "searchRoots": ["apps", "packages", "scripts", "supabase", "ops"],
+      "targetedGates": [
+        "npm run codex:prepare",
+        "npm run verify",
+        "production migration and smoke",
+        "rollback evidence"
+      ]
     }
   }
 }
