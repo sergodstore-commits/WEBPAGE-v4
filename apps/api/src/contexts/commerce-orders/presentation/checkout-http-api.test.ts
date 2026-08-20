@@ -55,6 +55,17 @@ const identity = {
 } as unknown as IdentityAccessService;
 const mutationResult = { item, replayed: false };
 const checkout = {
+  createOrder: vi.fn().mockResolvedValue({
+    item: {
+      expiresAt: '2026-08-13T12:15:00.000Z',
+      orderId: '0198a8be-6677-7000-8000-000000000010',
+      publicNumber: 'SG-2026-000001',
+      requiresExternalPayment: false,
+      state: 'PENDING_PAYMENT',
+      totalAmountClp: 0,
+    },
+    replayed: false,
+  }),
   clearCoupon: vi.fn().mockResolvedValue(mutationResult),
   clearIntent: vi.fn().mockResolvedValue(mutationResult),
   clearPoints: vi.fn().mockResolvedValue(mutationResult),
@@ -129,6 +140,7 @@ describe('Phase 9B Checkout HTTP API', () => {
         { body: JSON.stringify({ points: 10 }), method: 'PUT' },
       ],
       [`/api/v1/checkout/groups/${groupId}/revalidate`, { body: '{}', method: 'POST' }],
+      [`/api/v1/checkout/groups/${groupId}/order`, { body: '{}', method: 'POST' }],
       [`/api/v1/checkout/groups/${groupId}/delivery-intent`, { method: 'DELETE' }],
       [`/api/v1/checkout/groups/${groupId}/coupon`, { method: 'DELETE' }],
       [`/api/v1/checkout/groups/${groupId}/points`, { method: 'DELETE' }],
@@ -145,6 +157,7 @@ describe('Phase 9B Checkout HTTP API', () => {
     expect(checkout.selectCoupon).toHaveBeenCalled();
     expect(checkout.selectPoints).toHaveBeenCalled();
     expect(checkout.revalidate).toHaveBeenCalled();
+    expect(checkout.createOrder).toHaveBeenCalled();
     expect(checkout.clearIntent).toHaveBeenCalled();
     expect(checkout.clearCoupon).toHaveBeenCalled();
     expect(checkout.clearPoints).toHaveBeenCalled();

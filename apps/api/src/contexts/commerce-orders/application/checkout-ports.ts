@@ -1,4 +1,4 @@
-import type { AppliedPromotionSnapshotV1, CheckoutDeliveryIntent } from '@sergod/contracts';
+import type { AppliedPromotionSnapshotV1, CheckoutDeliveryIntent, OrderState } from '@sergod/contracts';
 import type { ExecutionContext } from '@sergod/foundation';
 
 import type { StoredCartDeliveryIntent } from '../domain/checkout.js';
@@ -56,6 +56,16 @@ export interface CheckoutSummaryView {
   readonly validationErrorCodes: readonly string[];
 }
 
+
+export interface CheckoutOrderCreationView {
+  readonly orderId: string;
+  readonly publicNumber: string;
+  readonly state: OrderState;
+  readonly totalAmountClp: number;
+  readonly requiresExternalPayment: boolean;
+  readonly expiresAt: Date | null;
+}
+
 export type CheckoutMutationOperation =
   | { readonly intent: CheckoutDeliveryIntent; readonly kind: 'REPLACE_INTENT' }
   | { readonly kind: 'CLEAR_INTENT' }
@@ -67,6 +77,13 @@ export type CheckoutMutationOperation =
 
 export interface CheckoutRepository {
   getSummary(accountId: string, cartGroupId: string): Promise<CheckoutSummaryView>;
+  createOrder(input: {
+    readonly accountId: string;
+    readonly cartGroupId: string;
+    readonly context: ExecutionContext;
+    readonly idempotencyKey: string;
+    readonly requestFingerprint: string;
+  }): Promise<{ readonly replayed: boolean; readonly order: CheckoutOrderCreationView }>;
   mutate(input: {
     readonly accountId: string;
     readonly cartGroupId: string;

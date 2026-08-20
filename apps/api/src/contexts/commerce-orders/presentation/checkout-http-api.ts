@@ -26,6 +26,7 @@ type Operation =
   | 'CLEAR_COUPON'
   | 'CLEAR_INTENT'
   | 'CLEAR_POINTS'
+  | 'CREATE_ORDER'
   | 'GET_INTENT'
   | 'GET_SUMMARY'
   | 'REPLACE_INTENT'
@@ -147,6 +148,10 @@ export class CheckoutHttpApi implements HttpRouteHandler {
         checkoutPointsSelectionSchema.parse(await json(request)),
       );
     }
+    if (route.operation === 'CREATE_ORDER') {
+      checkoutEmptyMutationSchema.parse(await json(request));
+      return this.checkout.createOrder(context, accountId, groupId);
+    }
     if (route.operation === 'REVALIDATE') {
       checkoutEmptyMutationSchema.parse(await json(request));
       return this.checkout.revalidate(context, accountId, groupId);
@@ -167,7 +172,7 @@ function matchRoute(
   pathname: string,
 ): { readonly cartGroupId: string; readonly operation: Operation } | null {
   const match =
-    /^\/api\/v1\/checkout\/groups\/([^/]+)\/(summary|delivery-intent|coupon|points|revalidate)$/u.exec(
+    /^\/api\/v1\/checkout\/groups\/([^/]+)\/(summary|delivery-intent|coupon|points|revalidate|order)$/u.exec(
       pathname,
     );
   if (match?.[1] === undefined || match[2] === undefined) return null;
@@ -199,6 +204,9 @@ function matchRoute(
   if (suffix === 'revalidate' && method === 'POST') {
     return { cartGroupId: match[1], operation: 'REVALIDATE' };
   }
+  if (suffix === 'order' && method === 'POST') {
+    return { cartGroupId: match[1], operation: 'CREATE_ORDER' };
+  }
   return null;
 }
 
@@ -229,6 +237,8 @@ const messages: Readonly<Record<string, string>> = Object.freeze({
   CHECKOUT_GROUP_NOT_ACTIVE: 'The selected cart group is not eligible for checkout.',
   CHECKOUT_GROUP_NOT_FOUND: 'The selected cart group was not found.',
   CHECKOUT_IDEMPOTENCY_CONFLICT: 'Idempotency-Key was already used with different data.',
+  CHECKOUT_ORDER_ALREADY_CREATED: 'An order already exists for this cart group.',
+  CHECKOUT_NOT_READY: 'Checkout is not ready to create an order.',
   CHECKOUT_ROLE_NOT_ALLOWED: 'The account is not eligible for checkout.',
   COUPON_INVALID: 'The coupon is invalid or unavailable.',
   COUPON_LIMIT_REACHED: 'The coupon limit has been reached.',
@@ -243,6 +253,7 @@ const messages: Readonly<Record<string, string>> = Object.freeze({
   LOYALTY_REDEEM_LIMIT_EXCEEDED: 'The requested points exceed the current maximum.',
   PICKUP_BRANCH_NOT_ACTIVE: 'Pickup is not available for the selected branch.',
   PICKUP_INFORMATION_NOT_PUBLISHED: 'Pickup information is unavailable.',
+  PAYMENT_RESERVATION_CONFIGURATION_REQUIRED: 'Payment reservation is temporarily unavailable.',
   ROUTE_NOT_FOUND: 'Route was not found.',
   SHIPPING_BRANCH_NOT_ACTIVE: 'Shipping is not available for the selected branch.',
   STATE_CONFLICT: 'The requested operation conflicts with checkout requirements.',

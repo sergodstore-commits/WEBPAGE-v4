@@ -12,11 +12,13 @@ import { PgTransaction, PgTransactionExecutor } from '../../../platform/persiste
 import type {
   CheckoutDeliveryReadPort,
   CheckoutLineView,
+  CheckoutOrderCreationView,
   CheckoutMutationOperation,
   CheckoutRepository,
   CheckoutSummaryView,
 } from '../application/checkout-ports.js';
 import { CheckoutError, type StoredCartDeliveryIntent } from '../domain/checkout.js';
+import { formatOrderPublicNumber } from '../domain/order.js';
 
 const IDEMPOTENCY_SCOPE = 'CHECKOUT_PROVISIONAL';
 
@@ -107,6 +109,261 @@ export class PgCheckoutRepository implements CheckoutRepository {
           [recordId, input.cartGroupId, JSON.stringify(summary), now],
         );
         return { replayed: false, summary };
+      });
+    } catch (error) {
+      throw mapError(error);
+    }
+  }
+
+  async createOrder(input: {
+    readonly accountId: string;
+    readonly cartGroupId: string;
+    readonly context: ExecutionContext;
+    readonly idempotencyKey: string;
+    readonly requestFingerprint: string;
+  }): Promise<{ readonly replayed: boolean; readonly order: CheckoutOrderCreationView }> {
+    try {
+      return await this.#transactions.execute(async (transaction) => {
+        const now = this.clock.now();
+        const replay = await transaction.query<CheckoutOrderReplayRow>(
+          `SELECT result.request_fingerprint,result.order_id,orders.public_number,orders.state,
+                  orders.total_amount_clp,orders.requires_external_payment,orders.expires_at
+             FROM checkout_order_idempotency_results result
+             JOIN orders USING(order_id)
+            WHERE result.account_id=$1 AND result.idempotency_key=$2
+            FOR UPDATE OF result`,
+          [input.accountId, input.idempotencyKey],
+        );
+        const replayRow = replay.rows[0];
+        if (replayRow !== undefined) {
+          if (replayRow.request_fingerprint !== input.requestFingerprint) {
+            throw conflict('CHECKOUT_IDEMPOTENCY_CONFLICT');
+          }
+          return { replayed: true, order: checkoutCreatedOrder(replayRow) };
+        }
+
+        await assertEligibleAccount(transaction, input.accountId);
+        const group = await requireOwnedGroup(transaction, input.accountId, input.cartGroupId, true);
+        const alreadyOrdered = await transaction.query<{ order_id: string }>(
+          `SELECT order_id FROM orders WHERE cart_group_id=$1 FOR UPDATE`,
+          [group.cart_group_id],
+        );
+        if (alreadyOrdered.rows[0] !== undefined) {
+          const concurrentReplay = await transaction.query<CheckoutOrderReplayRow>(
+            `SELECT result.request_fingerprint,result.order_id,orders.public_number,orders.state,
+                    orders.total_amount_clp,orders.requires_external_payment,orders.expires_at
+               FROM checkout_order_idempotency_results result
+               JOIN orders USING(order_id)
+              WHERE result.account_id=$1 AND result.idempotency_key=$2`,
+            [input.accountId, input.idempotencyKey],
+          );
+          const concurrentReplayRow = concurrentReplay.rows[0];
+          if (
+            concurrentReplayRow !== undefined &&
+            concurrentReplayRow.request_fingerprint === input.requestFingerprint
+          ) {
+            return { replayed: true, order: checkoutCreatedOrder(concurrentReplayRow) };
+          }
+          throw conflict('CHECKOUT_ORDER_ALREADY_CREATED');
+        }
+        const summary = await this.evaluate(transaction, group, input.accountId, now);
+        if (!summary.canCreateOrder || summary.branchId === null || summary.deliveryIntent === null) {
+          throw conflict(summary.validationErrorCodes[0] ?? 'CHECKOUT_NOT_READY');
+        }
+
+        const duration = await transaction.query<{ integer_value: string | number }>(
+          `SELECT integer_value FROM system_configurations
+            WHERE configuration_key='PAYMENT_RESERVATION_DURATION_MINUTES'
+              AND scope='GLOBAL' AND state='ACTIVE'`,
+        );
+        const durationMinutes = Number(duration.rows[0]?.integer_value);
+        if (!Number.isSafeInteger(durationMinutes) || durationMinutes < 1) {
+          throw new CheckoutError(
+            'PAYMENT_RESERVATION_CONFIGURATION_REQUIRED',
+            'INFRASTRUCTURE',
+            'Payment reservation duration is not configured.',
+          );
+        }
+        const expiresAt = new Date(now.getTime() + durationMinutes * 60_000);
+        const orderId = this.uuids.generate();
+        const year = now.getUTCFullYear();
+        await transaction.query(
+          `INSERT INTO order_public_number_sequences(order_year,next_number)
+           VALUES($1,1) ON CONFLICT(order_year) DO NOTHING`,
+          [year],
+        );
+        const sequence = await transaction.query<{ allocated: string | number }>(
+          `UPDATE order_public_number_sequences SET next_number=next_number+1
+            WHERE order_year=$1 AND next_number <= 999999
+            RETURNING next_number-1 allocated`,
+          [year],
+        );
+        const allocated = Number(sequence.rows[0]?.allocated);
+        const publicNumber = formatOrderPublicNumber(year, allocated);
+        const pointsDiscountClp = summary.loyalty.pointsDiscountClp;
+        const deliveryMode = summary.deliveryIntent.mode === 'PICKUP' ? 'PICKUP' : 'FREIGHT_COLLECT';
+
+        await transaction.query(
+          `INSERT INTO orders(order_id,public_number,account_id,cart_group_id,branch_id,order_type,state,
+             delivery_mode,delivery_snapshot,merchandise_subtotal_clp,promotion_discount_clp,
+             points_discount_clp,total_amount_clp,shipping_included_in_order_total,currency,
+             checkout_version,applied_promotions_snapshot,coupon_snapshot,loyalty_snapshot,
+             requires_external_payment,expires_at,created_at,updated_at,correlation_id)
+           VALUES($1,$2,$3,$4,$5,$6,'PENDING_PAYMENT',$7,$8,$9,$10,$11,$12,false,'CLP',$13,$14,$15,$16,$17,$18,$19,$19,$20)`,
+          [
+            orderId,
+            publicNumber,
+            input.accountId,
+            group.cart_group_id,
+            summary.branchId,
+            summary.groupType,
+            deliveryMode,
+            JSON.stringify(summary.deliveryIntent),
+            summary.merchandiseSubtotalClp,
+            summary.promotionDiscountClp,
+            pointsDiscountClp,
+            summary.totalAmountClp,
+            summary.checkoutVersion,
+            JSON.stringify(summary.appliedPromotions),
+            summary.coupon === null ? null : JSON.stringify(summary.coupon),
+            JSON.stringify(summary.loyalty),
+            summary.requiresExternalPayment,
+            expiresAt,
+            now,
+            input.context.correlationId,
+          ],
+        );
+
+        for (const line of summary.lines) {
+          const orderLineId = this.uuids.generate();
+          await transaction.query(
+            `INSERT INTO order_lines(order_line_id,order_id,product_id,preorder_campaign_id,sale_type,
+               sku_snapshot,product_name_snapshot,language_snapshot,edition_snapshot,condition_snapshot,
+               unit_price_clp,quantity,line_subtotal_clp,created_at)
+             VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+            [
+              orderLineId,
+              orderId,
+              line.productId,
+              line.preorderCampaignId,
+              line.saleType,
+              line.sku,
+              line.productName,
+              line.language,
+              line.edition,
+              line.condition,
+              line.unitPriceClp,
+              line.quantity,
+              line.lineSubtotalClp,
+              now,
+            ],
+          );
+          if (line.saleType === 'REGULAR') {
+            const reserved = await transaction.query<{ inventory_position_id: string }>(
+              `UPDATE inventory_positions
+                  SET reserved=reserved+$3,version=version+1,updated_at=$4
+                WHERE product_id=$1 AND branch_id=$2 AND on_hand-reserved >= $3
+                RETURNING inventory_position_id`,
+              [line.productId, summary.branchId, line.quantity, now],
+            );
+            const positionId = reserved.rows[0]?.inventory_position_id;
+            if (positionId === undefined) throw conflict('INVENTORY_INSUFFICIENT_AVAILABLE');
+            const reservationId = this.uuids.generate();
+            await transaction.query(
+              `INSERT INTO order_inventory_reservations(order_inventory_reservation_id,order_id,
+                 order_line_id,inventory_position_id,quantity,status,created_at)
+               VALUES($1,$2,$3,$4,$5,'ACTIVE',$6)`,
+              [reservationId, orderId, orderLineId, positionId, line.quantity, now],
+            );
+            await transaction.query(
+              `INSERT INTO inventory_movements(movement_id,inventory_position_id,movement_type,quantity,
+                 source_type,source_id,actor_id,reason,idempotency_key,correlation_id,occurred_at)
+               VALUES($1,$2,'RESERVATION_CREATED',$3,'ORDER',$4,$5,'PENDING_PAYMENT',$6,$7,$8)`,
+              [
+                this.uuids.generate(),
+                positionId,
+                line.quantity,
+                orderId,
+                input.context.actorId ?? null,
+                `order-reserve:${orderId}:${orderLineId}`,
+                input.context.correlationId,
+                now,
+              ],
+            );
+          } else {
+            if (line.preorderCampaignId === null) throw conflict('PREORDER_CAMPAIGN_NOT_AVAILABLE');
+            const reserved = await transaction.query(
+              `UPDATE preorder_campaigns
+                  SET temporarily_reserved=temporarily_reserved+$2,updated_at=$3,version=version+1
+                WHERE preorder_campaign_id=$1 AND operational_state='OPEN'
+                  AND publication_status='PUBLISHED'
+                  AND opens_at <= $3 AND closes_at > $3
+                  AND capacity-temporarily_reserved-committed >= $2`,
+              [line.preorderCampaignId, line.quantity, now],
+            );
+            if (reserved.rowCount !== 1) throw conflict('PREORDER_CAMPAIGN_NOT_AVAILABLE');
+            await transaction.query(
+              `INSERT INTO order_preorder_reservations(order_preorder_reservation_id,order_id,
+                 order_line_id,preorder_campaign_id,quantity,status,created_at)
+               VALUES($1,$2,$3,$4,$5,'ACTIVE',$6)`,
+              [
+                this.uuids.generate(),
+                orderId,
+                orderLineId,
+                line.preorderCampaignId,
+                line.quantity,
+                now,
+              ],
+            );
+          }
+        }
+
+        await transaction.query(
+          `INSERT INTO order_state_history(order_state_history_id,order_id,from_state,to_state,reason,
+             actor_id,correlation_id,occurred_at)
+           VALUES($1,$2,NULL,'PENDING_PAYMENT','CHECKOUT_CONFIRMED',$3,$4,$5)`,
+          [
+            this.uuids.generate(),
+            orderId,
+            input.context.actorId ?? null,
+            input.context.correlationId,
+            now,
+          ],
+        );
+        await transaction.query(
+          `INSERT INTO checkout_order_idempotency_results(checkout_order_idempotency_result_id,
+             account_id,cart_group_id,idempotency_key,request_fingerprint,order_id,created_at)
+           VALUES($1,$2,$3,$4,$5,$6,$7)`,
+          [
+            this.uuids.generate(),
+            input.accountId,
+            group.cart_group_id,
+            input.idempotencyKey,
+            input.requestFingerprint,
+            orderId,
+            now,
+          ],
+        );
+        await this.audit(
+          transaction,
+          input.context,
+          'CHECKOUT_ORDER_CREATED',
+          group.cart_group_id,
+          input.idempotencyKey,
+          'CHECKOUT_CONFIRMED',
+          now,
+        );
+        return {
+          replayed: false,
+          order: {
+            expiresAt,
+            orderId,
+            publicNumber,
+            requiresExternalPayment: summary.requiresExternalPayment,
+            state: 'PENDING_PAYMENT',
+            totalAmountClp: summary.totalAmountClp,
+          },
+        };
       });
     } catch (error) {
       throw mapError(error);
@@ -970,6 +1227,27 @@ function mapError(error: unknown): unknown {
     }
   }
   return error;
+}
+
+interface CheckoutOrderReplayRow extends QueryResultRow {
+  request_fingerprint: string;
+  order_id: string;
+  public_number: string;
+  state: import('@sergod/contracts').OrderState;
+  total_amount_clp: string | number;
+  requires_external_payment: boolean;
+  expires_at: Date | null;
+}
+
+function checkoutCreatedOrder(row: CheckoutOrderReplayRow): CheckoutOrderCreationView {
+  return {
+    expiresAt: row.expires_at,
+    orderId: row.order_id,
+    publicNumber: row.public_number,
+    requiresExternalPayment: row.requires_external_payment,
+    state: row.state,
+    totalAmountClp: safeNonnegative(row.total_amount_clp),
+  };
 }
 
 interface Queryable {

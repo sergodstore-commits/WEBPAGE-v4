@@ -73,6 +73,27 @@ export class CheckoutService {
     return this.mutate(context, accountId, cartGroupId, { kind: 'REVALIDATE' });
   }
 
+  async createOrder(context: ExecutionContext, accountId: string, cartGroupId: string) {
+    const idempotencyKey = requiredCheckoutIdempotencyKey(context.idempotencyKey);
+    const normalizedGroupId = cartGroupId.toLowerCase();
+    const result = await this.repository.createOrder({
+      accountId,
+      cartGroupId: normalizedGroupId,
+      context,
+      idempotencyKey,
+      requestFingerprint: createHash('sha256')
+        .update(JSON.stringify({ accountId, cartGroupId: normalizedGroupId, operation: 'CREATE_ORDER' }))
+        .digest('hex'),
+    });
+    return {
+      item: {
+        ...result.order,
+        expiresAt: result.order.expiresAt?.toISOString() ?? null,
+      },
+      replayed: result.replayed,
+    };
+  }
+
   private async mutate(
     context: ExecutionContext,
     accountId: string,

@@ -3,10 +3,13 @@ import { CryptoUuidGenerator, SystemClock } from '@sergod/foundation';
 import { CatalogEntityAdminService } from './contexts/catalog/application/catalog-entity-admin-service.js';
 import { CartService } from './contexts/commerce-orders/application/cart-service.js';
 import { CheckoutService } from './contexts/commerce-orders/application/checkout-service.js';
+import { OrderService } from './contexts/commerce-orders/application/order-service.js';
 import { PgCartRepository } from './contexts/commerce-orders/infrastructure/postgres-cart-repository.js';
 import { PgCheckoutRepository } from './contexts/commerce-orders/infrastructure/postgres-checkout-repository.js';
+import { PgOrderRepository } from './contexts/commerce-orders/infrastructure/postgres-order-repository.js';
 import { CartHttpApi } from './contexts/commerce-orders/presentation/cart-http-api.js';
 import { CheckoutHttpApi } from './contexts/commerce-orders/presentation/checkout-http-api.js';
+import { OrderHttpApi } from './contexts/commerce-orders/presentation/order-http-api.js';
 import { CatalogPublicQueryService } from './contexts/catalog/application/catalog-public-query-service.js';
 import { CatalogPublicResourceService } from './contexts/catalog/application/catalog-public-resource-service.js';
 import { CatalogResourceAdminService } from './contexts/catalog/application/catalog-resource-admin-service.js';
@@ -169,6 +172,7 @@ if (identityConfig !== null && pool !== null) {
   const checkoutService = new CheckoutService(
     new PgCheckoutRepository(pool, clock, uuids, serviceCoverageService),
   );
+  const orderService = new OrderService(new PgOrderRepository(pool, clock, uuids));
   const systemConfigurationService = new SystemConfigurationService(
     new PgSystemConfigurationRepository(pool, clock, uuids),
     new PgSystemConfigurationAdminAuthorizer(pool),
@@ -176,6 +180,7 @@ if (identityConfig !== null && pool !== null) {
   routeHandlers.push(
     new SystemConfigurationHttpApi(identityService, systemConfigurationService, logger),
     new CheckoutHttpApi(identityService, checkoutService, logger),
+    new OrderHttpApi(identityService, orderService, logger),
     new CartHttpApi(identityService, cartService, logger),
     new PosHttpApi(identityService, posService),
     new ServiceCoverageHttpApi(identityService, serviceCoverageService, logger),

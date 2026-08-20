@@ -7,6 +7,7 @@ export * from './catalog-resource-admin.js';
 export * from './configuration-registry.js';
 export * from './inventory-admin.js';
 export * from './loyalty.js';
+export * from './orders.js';
 export * from './metadata-registry.js';
 export * from './promotions-admin.js';
 export * from './preorders-admin.js';

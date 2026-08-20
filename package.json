@@ -52,7 +52,8 @@
     "codex:index": "node codex-system/tools/build-context-index.mjs",
     "codex:prepare": "npm run codex:validate && npm run codex:migrations:verify && npm run codex:index",
     "codex:handoff": "node codex-system/tools/write-session-handoff.mjs",
-    "codex:migrations:verify": "node codex-system/tools/validate-migration-history.mjs"
+    "codex:migrations:verify": "node codex-system/tools/validate-migration-history.mjs",
+    "orders:expire": "tsx scripts/run-order-expiration.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

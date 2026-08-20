@@ -56,6 +56,17 @@ const summary: CheckoutSummaryView = {
 
 function subject() {
   const repository: CheckoutRepository = {
+    createOrder: vi.fn(async () => ({
+      replayed: false,
+      order: {
+        expiresAt: new Date('2026-08-13T12:15:00.000Z'),
+        orderId: '0198a8be-6677-7000-8000-000000000010',
+        publicNumber: 'SG-2026-000001',
+        requiresExternalPayment: false,
+        state: 'PENDING_PAYMENT',
+        totalAmountClp: 0,
+      },
+    })),
     getSummary: vi.fn(async () => summary),
     mutate: vi.fn(async () => ({ replayed: false, summary })),
   };
@@ -94,6 +105,17 @@ describe('Phase 9B checkout application service', () => {
       code: 'CHECKOUT_IDEMPOTENCY_KEY_REQUIRED',
     });
     expect(repository.mutate).not.toHaveBeenCalled();
+  });
+
+  it('creates an idempotent Order command with a stable checkout fingerprint', async () => {
+    const { repository, service } = subject();
+    const result = await service.createOrder(context, accountId, groupId.toUpperCase());
+    expect(result.item.publicNumber).toBe('SG-2026-000001');
+    expect(result.item.expiresAt).toBe('2026-08-13T12:15:00.000Z');
+    const input = vi.mocked(repository.createOrder).mock.calls[0]?.[0];
+    expect(input?.cartGroupId).toBe(groupId);
+    expect(input?.idempotencyKey).toBe(context.idempotencyKey);
+    expect(input?.requestFingerprint).toHaveLength(64);
   });
 
   it('serializes provisional dates without creating a delivery snapshot', async () => {
