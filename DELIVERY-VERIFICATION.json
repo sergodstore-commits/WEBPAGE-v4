@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "project": "SERGOD-STORE-WEB-V1",
-  "deliveryProfile": "CODEX_READY_NEW_ACCOUNT",
+  "deliveryProfile": "PREIMPLEMENTATION_WORKING_SNAPSHOT",
   "productAuthority": "docs/CURRENT/",
   "missionStageCount": 21,
   "initialStage": "00-baseline",
@@ -20,5 +20,10 @@
     "npm": "11.x per package.json",
     "action": "Stage 00 must run npm ci, PostgreSQL local preparation and the complete official gates before implementation advances."
   },
-  "packagingNote": "The package manifest excludes .git and PACKAGE-MANIFEST.json itself. ZIP and final Git integrity are verified outside this file after packaging."
+  "packagingNote": "The package manifest excludes .git and PACKAGE-MANIFEST.json itself. ZIP and final Git integrity are verified outside this file after packaging.",
+  "preimplementation": {
+    "ordersCheckout": "IMPLEMENTED_FOR_CODEX_AUDIT_NOT_STAGE_ACCEPTED",
+    "officialMissionStateUnchanged": true,
+    "validationLimit": "Codex must run official Windows Node 24 npm 11 PostgreSQL gates before acceptance"
+  }
 }

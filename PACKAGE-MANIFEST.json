@@ -1,8 +1,8 @@
 {
   "schemaVersion": 3,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-08-20T01:38:41.338094+00:00",
-  "fileCount": 408,
+  "createdUtc": "2026-08-20T04:34:03.538754+00:00",
+  "fileCount": 421,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -206,8 +206,8 @@
     },
     {
       "path": "DELIVERY-VERIFICATION.json",
-      "bytes": 1122,
-      "sha256": "9cd47705665ed06462946517ce95f342e87714e1d85931a285555739eb384fef"
+      "bytes": 1385,
+      "sha256": "9ee50d91bedc428d99fe600e1fa93a3f2844638085b1d27006927670a115d82c"
     },
     {
       "path": "INICIO-CODEX.txt",
@@ -221,8 +221,8 @@
     },
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
-      "bytes": 47745,
-      "sha256": "b2e0684c8323916d8327ea2a09db4cbb6e6f6696d7e32af0bf241da481e8d0c5"
+      "bytes": 49364,
+      "sha256": "c9c8d4af0d5e0ff721ecdff3518247f630cc137cdd331bfc058f527ddeded6ca"
     },
     {
       "path": "README.md",
@@ -303,6 +303,11 @@
       "path": "apps/api/migrations/015_r6_nationwide_freight_collect.cjs",
       "bytes": 7170,
       "sha256": "bd7eb553258a9c7de1cde314e2f4073d0e8337e15d97896b73fa5ce3c80902a0"
+    },
+    {
+      "path": "apps/api/migrations/016_orders_checkout_advance.cjs",
+      "bytes": 667,
+      "sha256": "575a848a02123601bf476a37b0e721be42747bfbaa3cd42d486c38133aa2ffbb"
     },
     {
       "path": "apps/api/package.json",
@@ -451,13 +456,23 @@
     },
     {
       "path": "apps/api/src/contexts/commerce-orders/application/checkout-ports.ts",
-      "bytes": 3239,
-      "sha256": "5bd363d66e11e0215641e9354055e4074a531abb812cb5c03999a0ebc7784fd2"
+      "bytes": 3803,
+      "sha256": "9e24d9abfdd4dbd423c18c61698cc771a0ad1877ce9ebef8d397ca9bb486f601"
     },
     {
       "path": "apps/api/src/contexts/commerce-orders/application/checkout-service.ts",
-      "bytes": 3289,
-      "sha256": "2d42a445ebbc9e84c97672d3c08c422f099336c5ca7692b74d09f0f737650cca"
+      "bytes": 4022,
+      "sha256": "305cc63f98dd990467ca06b553fc8cfca31f8bb88466aaacb0f5d7edfe58181c"
+    },
+    {
+      "path": "apps/api/src/contexts/commerce-orders/application/order-ports.ts",
+      "bytes": 2133,
+      "sha256": "5a350a022b88c17cb04d4c89ba4c4977d32d84597585724103b224a00c19c926"
+    },
+    {
+      "path": "apps/api/src/contexts/commerce-orders/application/order-service.ts",
+      "bytes": 1447,
+      "sha256": "51ff3bc40a92b6608cad69755680bb45cd98623783536927ca57ba36f8780879"
     },
     {
       "path": "apps/api/src/contexts/commerce-orders/application/ports.ts",
@@ -485,14 +500,29 @@
       "sha256": "8ec9ba6ac3a045615a4e87969163c415d06b25bce1f0f397c2f4b0928a35e173"
     },
     {
+      "path": "apps/api/src/contexts/commerce-orders/domain/order.ts",
+      "bytes": 1098,
+      "sha256": "595a22b570690599610ee05fd9976ddc5f4b77f134dc343237dcdef54058ce90"
+    },
+    {
+      "path": "apps/api/src/contexts/commerce-orders/domain/order.unit.test.ts",
+      "bytes": 826,
+      "sha256": "45cf487d703f68d8efab7fad39b1c3ba9d6f8e87b74e49decbc569530851d30a"
+    },
+    {
       "path": "apps/api/src/contexts/commerce-orders/infrastructure/postgres-cart-repository.ts",
       "bytes": 38811,
       "sha256": "519d80b8040756ad24fe1e0d4ca35d2cec98b3c499fdf23278af9d1f61f2cefc"
     },
     {
       "path": "apps/api/src/contexts/commerce-orders/infrastructure/postgres-checkout-repository.ts",
-      "bytes": 43130,
-      "sha256": "2875787c4450bd4128aef16dac5e95f7414b37ab2642765dac8c8392da53ff2a"
+      "bytes": 55272,
+      "sha256": "03fe69c2ee87439d7df8fc0a438afb50aa21f84b15d13548d17319f5dd2682ee"
+    },
+    {
+      "path": "apps/api/src/contexts/commerce-orders/infrastructure/postgres-order-repository.ts",
+      "bytes": 10541,
+      "sha256": "4a3755dab5782b088033cfc6ac606a40f00493c12042426752c56f01cc13f165"
     },
     {
       "path": "apps/api/src/contexts/commerce-orders/presentation/cart-http-api.test.ts",
@@ -506,13 +536,23 @@
     },
     {
       "path": "apps/api/src/contexts/commerce-orders/presentation/checkout-http-api.test.ts",
-      "bytes": 8822,
-      "sha256": "7253be93f4e99d370ffa1ebe1f49e1e60e41b2323cf491e35f7d437465ead485"
+      "bytes": 9281,
+      "sha256": "56c3643d73b4bb9c5d1cdc6198a188ba5a4209df451ee0538036ca8f94c0f2fd"
     },
     {
       "path": "apps/api/src/contexts/commerce-orders/presentation/checkout-http-api.ts",
-      "bytes": 11542,
-      "sha256": "2a0864601a6343713380797b02bdb0f2d0933cb50ca43affd1d062913d2e9d70"
+      "bytes": 12114,
+      "sha256": "9d8ea4cb93f960ae9f24ccc2ffa490a8458f17626b176d91eb426bf994c4b943"
+    },
+    {
+      "path": "apps/api/src/contexts/commerce-orders/presentation/order-http-api.test.ts",
+      "bytes": 3466,
+      "sha256": "aee5cc9fd7f03c30573af34a2aa1b16db234758b7dab256782e2e8f81ab99372"
+    },
+    {
+      "path": "apps/api/src/contexts/commerce-orders/presentation/order-http-api.ts",
+      "bytes": 7235,
+      "sha256": "11aa602db5e49ee7b33fc806b659cf5cafedb8d87ef38a03813e8093d35f796c"
     },
     {
       "path": "apps/api/src/contexts/identity-access/application/identity-access-service.ts",
@@ -806,8 +846,8 @@
     },
     {
       "path": "apps/api/src/main.ts",
-      "bytes": 12075,
-      "sha256": "7777b847c879429594a185dd9b67a64832844a649dfef9467868ee9608a9f200"
+      "bytes": 12506,
+      "sha256": "845a1c7e2e71ea344a06c889c6973bcda9305294cd948c5c3d0efaa2a21aa4ca"
     },
     {
       "path": "apps/api/src/platform/config/catalog-public-runtime-config.ts",
@@ -946,8 +986,8 @@
     },
     {
       "path": "apps/api/tests/application/checkout.application.test.ts",
-      "bytes": 3709,
-      "sha256": "6717b6aa5d700ca13c07491d3842fa1db0afe59ce26d5ffdb8fc8501cf715ba3"
+      "bytes": 4661,
+      "sha256": "85e3838160c0f7686e5ce2d33792c5cc09fe88e73c2838ab327a983eabb60a36"
     },
     {
       "path": "apps/api/tests/application/identity-access.application.test.ts",
@@ -1596,13 +1636,18 @@
     },
     {
       "path": "docs/CURRENT/IMPLEMENTATION-STATUS.md",
-      "bytes": 3023,
-      "sha256": "8112d38e3d4026abe94d25a337036c2a25070925ca7447ff8d9b6ce9ffba09e4"
+      "bytes": 3415,
+      "sha256": "d55ef93f6d8d270e0aabe2c9319825b83acbf31d2e51f32be89b4680255c9328"
     },
     {
       "path": "docs/CURRENT/INDEX.md",
       "bytes": 780,
       "sha256": "57072564e61b760c1dc6b92400cad1781df40317d9b7c4b0d5a63a7cb31c2d4f"
+    },
+    {
+      "path": "docs/IMPLEMENTATION-AUDIT/ORDERS-CHECKOUT-PREIMPLEMENTATION.md",
+      "bytes": 3557,
+      "sha256": "9de27cc536701215610814d31d6cf0bfd2fda920258c236d5797dc2315632d12"
     },
     {
       "path": "eslint.config.mjs",
@@ -1621,8 +1666,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 4144,
-      "sha256": "9e0410909118202b5959aff3ed8cc209ff26e8a5d565e798a2d71db2ed8377b7"
+      "bytes": 4204,
+      "sha256": "3012bb0fae94503e3288f145aa0bf8f5c88f8f1bc6f4ccf5c3456740235c2c9b"
     },
     {
       "path": "packages/contracts/package.json",
@@ -1686,8 +1731,8 @@
     },
     {
       "path": "packages/contracts/src/index.ts",
-      "bytes": 660,
-      "sha256": "4aac035c9e9992a6e8c43c2b0e2fde3e67b8254d244b16c76f7b6fe2bf87c64b"
+      "bytes": 689,
+      "sha256": "81e909fea784791060be9e21705fe5b01d0fa80c385430c25230c35547231690"
     },
     {
       "path": "packages/contracts/src/inventory-admin.ts",
@@ -1703,6 +1748,16 @@
       "path": "packages/contracts/src/metadata-registry.ts",
       "bytes": 2631,
       "sha256": "7d1d0f123fa05c93ac52d1807aaa3cc8bcead55be1a533d3f88b7ddc8ade7337"
+    },
+    {
+      "path": "packages/contracts/src/orders.ts",
+      "bytes": 515,
+      "sha256": "29b4580ab4dbbe9ec58cf80457783c4e79e8eb6790beea613fbc1bf375b32cc9"
+    },
+    {
+      "path": "packages/contracts/src/orders.unit.test.ts",
+      "bytes": 735,
+      "sha256": "ebdc593d5f337841c020aaf7a9d8ec64f40e05e4e0f498082e54aaefcd82e378"
     },
     {
       "path": "packages/contracts/src/payload-registry.ts",
@@ -1930,6 +1985,11 @@
       "sha256": "be5cd8b92385ed42b005e6af96d526193d73265e57dc6ba965a20c03d64456b0"
     },
     {
+      "path": "scripts/run-order-expiration.ts",
+      "bytes": 1077,
+      "sha256": "6ca9d77dde6b76ec8b1311902d44b3a30f6681e4a478e4c475970fa0ef938afc"
+    },
+    {
       "path": "scripts/run-preorder-lifecycle.ts",
       "bytes": 2100,
       "sha256": "aae8b27f12c393b87e8d4f0098b5efc789e228c0133acfb564b832ada4b2feed"
@@ -2028,6 +2088,11 @@
       "path": "supabase/migrations/20260813223544_phase_r6_nationwide_freight_collect.sql",
       "bytes": 12313,
       "sha256": "db31f0a6860ccab59f24a983839cdb4f2e3b9d091b6ad4c1fc8074518f23f7fb"
+    },
+    {
+      "path": "supabase/migrations/20260820043000_orders_checkout_advance.sql",
+      "bytes": 8800,
+      "sha256": "30c9bb1743b3d1cd072ae6f5f834ad40c1736467014869d988aec6dff52b1607"
     },
     {
       "path": "tests/e2e/.gitkeep",
