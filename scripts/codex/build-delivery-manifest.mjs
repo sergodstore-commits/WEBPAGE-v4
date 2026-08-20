@@ -38,7 +38,7 @@ async function describe(absolute) {
 const verification = {
   schemaVersion: 4,
   project: 'SERGOD-STORE-WEB-V1',
-  deliveryProfile: 'CODEX_READY_V4_LOCAL_POSTGRES_VERIFIED_EXTERNAL_DEFERRED',
+  deliveryProfile: 'CODEX_READY_V4_HANDOFF_VERIFIED_WITH_KNOWN_LOCAL_RUNNER_WARNING',
   createdUtc: new Date().toISOString(),
   productAuthority: 'docs/CURRENT/',
   missionStageCount: 7,
@@ -54,8 +54,9 @@ const verification = {
     unit: 'PASS_216',
     application: 'PASS_43',
     contract: 'PASS_53_SKIP_1',
-    web: 'PASS_19',
-    integrationLocal: 'PASS_163_POSTGRESQL_18_4',
+    web: 'PASS_22',
+    integrationLocalAssertions: 'PASS_163_POSTGRESQL_18_4',
+    integrationLocalRunnerExit: 'WARN_MANUAL_TERMINATION_AFTER_PASS_SUMMARY',
     build: 'PASS',
     npmAudit: 'PASS_0_VULNERABILITIES',
     deliveryAudit: 'PASS',
@@ -63,8 +64,8 @@ const verification = {
   deferredExternal: [
     'Flow sandbox',
     'Webpay integration environment',
-    'transactional email provider',
-    'staging/production and remote E2E',
+    'real transactional email delivery and worker activation',
+    'Git-connected Vercel deployment, remote E2E and production promotion',
   ],
   assertions: {
     noExternalPassWithoutCredentials: true,

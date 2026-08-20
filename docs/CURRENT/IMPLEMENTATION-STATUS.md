@@ -14,9 +14,11 @@
 | Fulfillment                                                                                 | Corregido                      | Cada transición mantiene `fulfillment_events` y `order_state_history`                | E2E en staging                                         |
 | Cuenta cliente                                                                              | Superficie real acotada        | Perfil, pedidos y preferencias de despacho con repo/API                              | UX autenticada remota; otras áreas no se sobredeclaran |
 | Admin                                                                                       | Superficie real acotada        | Operaciones enlazadas a APIs; se retiró la lista decorativa de módulos               | Matriz por rol en staging                              |
-| Comercio público                                                                            | Corregido                      | Catálogo y botón Agregar al carrito con creación/reintento de carrito anónimo        | E2E navegador remoto                                   |
+| Comercio público                                                                            | Corregido y ampliado           | Shell responsive, catálogo, carrito, checkout y pago; deep links preservados         | Catálogo/contenido real y E2E navegador remoto         |
 | Editorial                                                                                   | Implementado                   | Repo/API y transición publish/archive/draft corregida; torneos solo informativos     | Operación y contenido real                             |
-| Notificaciones                                                                              | Pipeline local ejecutable      | Outbox, lease acotado, idempotencia de proveedor, worker y wiring probados           | Dominio remitente y credenciales reales                |
+| Notificaciones                                                                              | Pipeline local ejecutable      | Outbox, lease acotado, idempotencia de proveedor, worker y wiring probados           | Envío real Resend y activación controlada del worker   |
+| Despliegue API                                                                              | Destino técnico disponible     | Render responde `/health`; Supabase está configurado                                 | E2E remoto, observabilidad y aceptación de operación   |
+| Despliegue web                                                                              | Preview V4 separado disponible | Proyecto Vercel V4 y preview del commit con deep links corregidos                    | Conexión Git, promoción y cambio de dominio            |
 | Aceptación externa final                                                                    | Explícitamente no ejecutada    | Script de reporte devuelve `DEFERRED_EXTERNAL` y no muta estado                      | Procedimientos y accesos reales                        |
 
 ## Gates locales reproducidos
@@ -27,8 +29,8 @@
 - Unit: 59 archivos / 216 pruebas PASS.
 - Application: 8 archivos / 43 pruebas PASS.
 - Contract: 19 archivos / 53 PASS y 1 SKIP documentado.
-- Web: 7 archivos / 19 pruebas PASS.
-- Integration local: 12 archivos / 163 pruebas PASS sobre PostgreSQL 18.4; upgrade `020`→`021` y fresh install `001`→`021` reproducidos.
+- Web: 8 archivos / 22 pruebas PASS.
+- Integration local: 12 archivos / 163 aserciones PASS sobre PostgreSQL 18.4; en la repetición final el proceso no salió después del resumen PASS y requirió terminación manual. El runner debe diagnosticarse antes de declarar el gate completamente verde.
 - `codex:prepare`: 138 checks PASS; 8 Skills locales válidas.
 - Migraciones protegidas: 31 intactas; `016`–`021` y mirrors Supabase son prospectivas.
 - `npm audit`: 0 vulnerabilidades.
@@ -38,7 +40,12 @@
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 - Flow sandbox y Webpay Integración.
-- Envío real de email mediante dominio verificado.
-- Supabase/staging/producción, E2E remoto, observabilidad, backup/restore y rollback.
+- Envío real de email mediante Resend y activación del worker de notificaciones.
+- Flow/Webpay con credenciales oficiales suficientes para aceptación.
+- Vercel conectado a Git, E2E remoto, promoción, cambio de dominio, observabilidad, backup/restore y rollback.
 
 Los hallazgos locales conocidos de V3 y los defectos adicionales expuestos por PostgreSQL real fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.
+
+## Advertencia local conocida al handoff
+
+- `test:integration:local` detecta PostgreSQL ausente una sola vez correctamente. Con PostgreSQL activo, las 12 suites y 163 pruebas terminaron PASS, pero la última ejecución no cerró el proceso después de imprimir el resumen. Se terminó manualmente. Esto no invalida las aserciones, pero impide llamar PASS limpio al comando completo hasta diagnosticar el handle/proceso pendiente.

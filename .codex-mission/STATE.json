@@ -29,12 +29,12 @@
     {
       "stageId": "02-external-providers",
       "capability": "Transactional email provider",
-      "reason": "No email provider credentials or verified sending domain were supplied."
+      "reason": "Resend and sergodstore.cl are configured, but no real transactional send or delivery acceptance has been executed; the notification worker remains disabled."
     },
     {
       "stageId": "03-staging",
       "capability": "Staging and production",
-      "reason": "No deployment target, credentials, domains, or production authorization were supplied."
+      "reason": "Render API, Supabase and a separate Vercel V4 preview exist, but Git auto-deploy, complete remote E2E, production promotion and domain cutover have not been accepted."
     }
   ],
   "notes": [

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 4,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-08-20T10:32:03.978Z",
-  "fileCount": 474,
-  "totalBytes": 45448330,
+  "createdUtc": "2026-08-20T19:16:12.273Z",
+  "fileCount": 481,
+  "totalBytes": 45484373,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -87,8 +87,8 @@
     },
     {
       "path": ".codex-mission/STATE.json",
-      "bytes": 1796,
-      "sha256": "26989f5925e72f2b559f6741d14ea3ab1bf745a1a342102e6e40c35d111929b0"
+      "bytes": 1961,
+      "sha256": "01e959e14c37fdaffe48ce0c88bff83d0a8b734b96be2f9a4347105c97c579fe"
     },
     {
       "path": ".editorconfig",
@@ -1312,8 +1312,8 @@
     },
     {
       "path": "apps/web/index.html",
-      "bytes": 311,
-      "sha256": "4b01a4beb34dce1afce23d209ab5d216863d567f883275e91f2054614679da05"
+      "bytes": 490,
+      "sha256": "b25a832772b94ab1d1768aaadf8212ff2b6d3f0229368f203f38a7d2f7a175ee"
     },
     {
       "path": "apps/web/package.json",
@@ -1332,8 +1332,8 @@
     },
     {
       "path": "apps/web/src/admin/AdminHub.tsx",
-      "bytes": 5586,
-      "sha256": "4703726520ab266a2747430b38ca9157179d4c60f5b4a725114b97cf2d69a9f4"
+      "bytes": 5936,
+      "sha256": "4978671aa8eaef324ff531215e0e4444b131cb295d81bc99efd7e8f125c86f79"
     },
     {
       "path": "apps/web/src/app/App.email-callback.test.tsx",
@@ -1342,28 +1342,43 @@
     },
     {
       "path": "apps/web/src/app/App.test.tsx",
-      "bytes": 1590,
-      "sha256": "992bf3fbc6ee267301e6a18a0e810d267dc96e4452fe12e36184e911ad4ad4c4"
+      "bytes": 1822,
+      "sha256": "7d1b759588865bc65d88171394b7dc36dfd46a3b34a23a7650ee7bad667dde1c"
     },
     {
       "path": "apps/web/src/app/App.tsx",
-      "bytes": 21352,
-      "sha256": "8f23ed75d6bf7e3dae9b15a959da58887fcf27e27f91e9919d916dc8888b5ebf"
+      "bytes": 21190,
+      "sha256": "898321ad2a9f8bae322729c8c70db398c9c65a2f5f417a0daa2f2e2e696e116b"
+    },
+    {
+      "path": "apps/web/src/app/SiteChrome.tsx",
+      "bytes": 4672,
+      "sha256": "04094280445aadceefb04b8efdfcd1361ed3a6a4ddca4eedc0b4e262524b9db4"
+    },
+    {
+      "path": "apps/web/src/cart/CartPage.test.tsx",
+      "bytes": 1827,
+      "sha256": "1d6bc92b5322c4ffbfb66d0d0eaf76569df42837925e26f68861bf0f70bfe7ff"
+    },
+    {
+      "path": "apps/web/src/cart/CartPage.tsx",
+      "bytes": 7288,
+      "sha256": "61e47c6eb2f6e92052d0ff6d26eaafe2b6b6e3c210f3913bc0a7793067917943"
     },
     {
       "path": "apps/web/src/checkout/api.ts",
-      "bytes": 1582,
-      "sha256": "106461c7c16dc63ad86f428e1fa32c9a0a47ae71529d22a5764095a919be4bf9"
+      "bytes": 1991,
+      "sha256": "62e7c0420e268c57e4fbc732dbdda0b9b84cae9191bee8f15028c22e4212c5c6"
     },
     {
       "path": "apps/web/src/checkout/CheckoutPanel.test.tsx",
-      "bytes": 906,
-      "sha256": "9a77ed672a276436a4cc8ffd8732157bfa282be324ab1b90370b4c00d494ddba"
+      "bytes": 2038,
+      "sha256": "acdc0708af22008d44787932e92a6045b04050a8b03344fe2532f3bde70d276c"
     },
     {
       "path": "apps/web/src/checkout/CheckoutPanel.tsx",
-      "bytes": 6558,
-      "sha256": "a55ee1eee73c6cabe624af3eb3ec0783d650caa62152d56ffa73c0c5d058b551"
+      "bytes": 10129,
+      "sha256": "66f57d49366e1c676fa4a499ac6b587ef9ff2c270e68d68cca3f7b0f1e3ab86a"
     },
     {
       "path": "apps/web/src/identity/api.ts",
@@ -1427,8 +1442,8 @@
     },
     {
       "path": "apps/web/src/styles/global.css",
-      "bytes": 7243,
-      "sha256": "17ac7820dcc57bd65cc5d78165eddb921826d6db71bc5183012a3afe41878e5d"
+      "bytes": 13477,
+      "sha256": "671e6c126603742a50cdef4ff0d5f65782b7c4a4ecb2e6833e0666c46eb44230"
     },
     {
       "path": "apps/web/src/test/setup.ts",
@@ -1522,8 +1537,8 @@
     },
     {
       "path": "DELIVERY-VERIFICATION.json",
-      "bytes": 1512,
-      "sha256": "64e4c0824ff71b08d8e75425e310099f57cfe904620f673bf7cdd7963599e7cd"
+      "bytes": 1671,
+      "sha256": "e978c9f2e034616149f1d211aff7aa9450813ccd5a3a6e88fd1884a25ed94294"
     },
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",
@@ -1807,8 +1822,8 @@
     },
     {
       "path": "docs/CURRENT/IMPLEMENTATION-STATUS.md",
-      "bytes": 6002,
-      "sha256": "8ac2ee8e191f22a8e5aab93902bbc2ae9be7430b1271ae0d646206535bc247cd"
+      "bytes": 7230,
+      "sha256": "ab24ca2de84397f550d048c30d837b36d5c5d60db52c52de14a4ea9010f13371"
     },
     {
       "path": "docs/CURRENT/INDEX.md",
@@ -1831,9 +1846,19 @@
       "sha256": "4d807ac85fae75e83fa4c7da6da79936a0839f71c54239d7c8752794c41ae026"
     },
     {
+      "path": "HANDOFF-NUEVA-CUENTA-CODEX-V4.md",
+      "bytes": 4745,
+      "sha256": "3e2aca7f347384b48340407aa21fb9abfb9eb441b74fca8ced18bc87674df406"
+    },
+    {
       "path": "INICIO-CODEX.txt",
       "bytes": 2040,
       "sha256": "83919f48ff75636b04f7f5a87acc955b8432d30ffa6d490680bafc1745dfff7d"
+    },
+    {
+      "path": "INICIO-NUEVA-CUENTA-CODEX-V4.txt",
+      "bytes": 2572,
+      "sha256": "5c27f8d631214eaeeefcac014cc43d7b50d803a45d91abe2dea08d2dbf1d8759"
     },
     {
       "path": "LEEME-PRIMERO.txt",
@@ -2092,8 +2117,8 @@
     },
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
-      "bytes": 56922,
-      "sha256": "2d37ce481ec88908fbb393f4be6ed4ffdf3ba73b09ddc4a9b16368a90b08be6d"
+      "bytes": 57587,
+      "sha256": "3e02cd556095617557015f3b70ff0cfa2f9162a07dccbd2726e5576737935d59"
     },
     {
       "path": "README.md",
@@ -2107,8 +2132,8 @@
     },
     {
       "path": "scripts/codex/build-delivery-manifest.mjs",
-      "bytes": 3862,
-      "sha256": "49050aacf739d41ed4e9d6e18288ef1c3e447abe6e6f8fea0110908cd81f8aa6"
+      "bytes": 4019,
+      "sha256": "a925178207649a2762a85c57f128c651d4b260b6c5283f2d7fe9094457124023"
     },
     {
       "path": "scripts/codex/FINAL-EXTERNAL-ACCEPTANCE.ps1",
@@ -2246,6 +2271,11 @@
       "sha256": "507699eb91144818edf61d3a079212cacf31d8db520eae428e3b48fcf0d6919c"
     },
     {
+      "path": "supabase/.temp/cli-latest",
+      "bytes": 8,
+      "sha256": "c9bc27863494f40747ca15f4ffc262af03b0d7a212c5344d0c94ad387436baac"
+    },
+    {
       "path": "supabase/config.toml",
       "bytes": 15864,
       "sha256": "1bde864e77f1eed52394f9674ed26ec8fdf101e248d85a7b27e4439796b3764f"
@@ -2369,6 +2399,11 @@
       "path": "tsconfig.base.json",
       "bytes": 526,
       "sha256": "77041dc056a1a9dc9880ddde57473f2eff33e9da4a21b397bbcde109dfecfc4b"
+    },
+    {
+      "path": "vercel.json",
+      "bytes": 612,
+      "sha256": "79af4ac55af1e1761f93108156ef80795a6d17fe14b2207eebafe85ed6725e52"
     },
     {
       "path": "vitest.config.ts",

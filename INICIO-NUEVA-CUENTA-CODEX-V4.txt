@@ -1,0 +1,30 @@
+Abre exclusivamente esta carpeta como workspace. Esta cuenta de Codex no necesita conversaciones anteriores.
+
+Lee completos y en este orden:
+1. AGENTS.md
+2. HANDOFF-NUEVA-CUENTA-CODEX-V4.md
+3. docs/CURRENT/ y su índice
+4. .codex-mission/STATE.json
+5. únicamente el archivo del stage actual indicado por STATE.json
+
+Trata este V4 como un checkpoint verificable de continuación, no como proyecto terminado. No declares LOCAL_IMPLEMENTATION_COMPLETE, producción lista, proveedor aceptado ni GO de release sin evidencia reproducida por ti.
+
+Primero haz una auditoría independiente sin modificar archivos: integridad del paquete y Git, manifiestos, 31 migraciones protegidas, seguridad, placeholders, contratos B–G, Orders/Payments/Flow/Webpay/Fulfillment, Cuenta/Admin/Web/Editorial, Notifications, pruebas focalizadas y documentación. Distingue PASS real, FAIL y DEFERRED_EXTERNAL.
+
+Después corrige autónomamente todos los FAIL locales que encuentres, usando migraciones nuevas prospectivas cuando sean indispensables y conservando intactas las 31 protegidas. Ejecuta los gates proporcionales y el gate final antes de cada declaración. No inventes resultados, datos, credenciales ni aceptación externa.
+
+Orden de continuidad esperado:
+- diagnosticar y corregir el cierre colgado de test:integration:local después del resumen de 163 PASS;
+- completar interfaces Admin faltantes para catálogo, inventario, preventas, promociones, loyalty, configuración y auditoría;
+- cargar contenido real y reemplazar enlaces legales de ejemplo;
+- aceptar Flow sandbox y Webpay Integración con credenciales reales;
+- probar envío real Resend y activar el worker solo si la entrega fue aceptada;
+- conectar Vercel V4 a Git, validar el preview correcto y ejecutar E2E remoto;
+- preparar observabilidad, backup/restore y rollback;
+- promover y mover el dominio únicamente en el stage Release y con autorización explícita.
+
+No borres fixtures ni datos remotos en bloque. Antes de cualquier limpieza irreversible, presenta alcance exacto, lista de preservación y vista previa; espera autorización explícita. Preserva cuentas, sucursal, configuración y datos reales. No elimines funcionalidad para hacer pasar pruebas.
+
+Los secretos no están en el paquete. Nunca pidas que se suba un .env a Git ni muestres valores sensibles. Si faltan credenciales, registra DEFERRED_EXTERNAL y continúa con todo lo que sea independiente.
+
+Usa un solo agente por defecto y trabaja directamente con terminal, Git, pruebas y documentación. Comienza ahora por la auditoría independiente.
