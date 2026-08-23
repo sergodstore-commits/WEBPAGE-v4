@@ -30,12 +30,11 @@
 - Application: 8 archivos / 43 pruebas PASS.
 - Contract: 19 archivos / 53 PASS y 1 SKIP documentado.
 - Web: 9 archivos / 27 pruebas PASS. Incluye restauración tras recarga, persistencia, renovación/reintento acotado y sincronización de cierre de sesión.
-- Integration local: 12 archivos / 163 aserciones PASS sobre PostgreSQL 18.4; en la repetición final el proceso no salió después del resumen PASS y requirió terminación manual. El runner debe diagnosticarse antes de declarar el gate completamente verde.
+- Integration local: 12 archivos / 163 aserciones PASS sobre PostgreSQL 18.4. `test:integration:local` espera el cierre completo de Vitest y terminó naturalmente con código 0, sin terminación manual, el 2026-08-23.
 - `codex:prepare`: 138 checks PASS; 8 Skills locales válidas.
 - Migraciones protegidas: 31 intactas; `016`–`021` y mirrors Supabase son prospectivas.
 - `npm audit`: 0 vulnerabilidades.
 - Auditoría de entrega: sin archivos/directorios vacíos, `.env` reales ni placeholders bloqueantes.
-- `test:integration:local`: PASS; el preflight único y la base portátil real fueron utilizados.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
@@ -46,7 +45,3 @@
 - Vercel conectado a Git, E2E remoto, promoción, cambio de dominio, observabilidad, backup/restore y rollback.
 
 Los hallazgos locales conocidos de V3 y los defectos adicionales expuestos por PostgreSQL real fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.
-
-## Advertencia local conocida al handoff
-
-- `test:integration:local` detecta PostgreSQL ausente una sola vez correctamente. Con PostgreSQL activo, las 12 suites y 163 pruebas terminaron PASS, pero la última ejecución no cerró el proceso después de imprimir el resumen. Se terminó manualmente. Esto no invalida las aserciones, pero impide llamar PASS limpio al comando completo hasta diagnosticar el handle/proceso pendiente.

@@ -34,12 +34,14 @@ const child = spawn(
     stdio: 'inherit',
   },
 );
-child.once('error', (error) => {
-  process.stderr.write(`Integration runner failed to start: ${error.message}\n`);
-  process.exitCode = 1;
-});
-child.once('exit', (code, signal) => {
-  process.exitCode = signal === null ? (code ?? 1) : 1;
+process.exitCode = await new Promise((resolveExitCode) => {
+  child.once('error', (error) => {
+    process.stderr.write(`Integration runner failed to start: ${error.message}\n`);
+    resolveExitCode(1);
+  });
+  child.once('close', (code, signal) => {
+    resolveExitCode(signal === null ? (code ?? 1) : 1);
+  });
 });
 
 async function resolveDatabaseUrl() {
