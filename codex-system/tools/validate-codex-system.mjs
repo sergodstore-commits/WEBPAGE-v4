@@ -8,7 +8,7 @@ function exists(p) {
   return fs.existsSync(path.join(root, p));
 }
 function readJson(p) {
-  return JSON.parse(fs.readFileSync(path.join(root, p), 'utf8'));
+  return JSON.parse(fs.readFileSync(path.join(root, p), 'utf8').replace(/^\uFEFF/u, ''));
 }
 function check(condition, message) {
   (condition ? ok : fail).push(message);
@@ -67,13 +67,21 @@ if (exists('.codex-mission/STATE.json') && exists('codex-system/CONTEXT-ROUTING.
   const state = readJson('.codex-mission/STATE.json');
   const routing = readJson('codex-system/CONTEXT-ROUTING.json');
   const queueIds = state.queue.map((x) => x.id);
+  const completedIds = state.completedStages.map((x) => x.id);
   const routeIds = Object.keys(routing.stages);
   check(queueIds.length === 7, `mission-stage-count:${queueIds.length}`);
   check(JSON.stringify(queueIds) === JSON.stringify(routeIds), 'routing-stage-order-and-set');
-  check(state.currentStageId === queueIds[0], 'mission-current-is-first');
-  for (const item of state.queue) {
-    check(exists(item.file), `stage-file:${item.id}`);
-    if (exists(item.file)) {
+  check(
+    JSON.stringify(completedIds) === JSON.stringify(queueIds.slice(0, completedIds.length)),
+    'mission-completed-is-prefix',
+  );
+  const remaining = state.queue.slice(completedIds.length);
+  check(state.currentStageId === (remaining[0]?.id ?? null), 'mission-current-is-first-pending');
+  check(state.currentStageFile === (remaining[0]?.file ?? null), 'mission-current-file');
+  for (const [index, item] of state.queue.entries()) {
+    const completed = index < completedIds.length;
+    check(completed ? !exists(item.file) : exists(item.file), `stage-file:${item.id}`);
+    if (!completed && exists(item.file)) {
       const first = fs.readFileSync(path.join(root, item.file), 'utf8').split(/\r?\n/)[0];
       check(first.includes(item.id), `stage-header:${item.id}`);
     }

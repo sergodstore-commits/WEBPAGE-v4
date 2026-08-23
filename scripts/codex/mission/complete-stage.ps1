@@ -50,7 +50,14 @@ if ($index + 1 -lt $queue.Count) {
 }
 $state.completedStages=$completed
 $state.deferredExternal=$deferred
-$state | ConvertTo-Json -Depth 12 | Set-Content -Encoding utf8 $statePath
+$stateJson=($state | ConvertTo-Json -Depth 12) + [Environment]::NewLine
+[System.IO.File]::WriteAllText($statePath,$stateJson,[System.Text.UTF8Encoding]::new($false))
+
+& npx.cmd prettier $statePath --write
+if ($LASTEXITCODE -ne 0) { throw 'Mission state formatting failed.' }
+
+& node (Join-Path $root 'codex-system\tools\validate-codex-system.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Mission bookkeeping validation failed.' }
 
 & git -C $root add -- '.codex-mission'
 if ($LASTEXITCODE -ne 0) { throw 'Could not stage mission bookkeeping.' }
