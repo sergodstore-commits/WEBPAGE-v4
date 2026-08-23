@@ -846,6 +846,11 @@ textarea {
   .account-nav {
     position: static;
   }
+  .account-nav nav a {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+  }
   .section-heading,
   .order-lines li {
     align-items: flex-start;
