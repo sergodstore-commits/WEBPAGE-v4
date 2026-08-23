@@ -1,5 +1,8 @@
 import { CryptoUuidGenerator, SystemClock } from '@sergod/foundation';
 
+import { AuditService } from './contexts/audit/application/audit-service.js';
+import { PgAuditRepository } from './contexts/audit/infrastructure/postgres-audit-repository.js';
+import { AuditHttpApi } from './contexts/audit/presentation/audit-http-api.js';
 import { AccountDeliveryPreferencesService } from './contexts/account-preferences/application/account-delivery-preferences-service.js';
 import { PgAccountDeliveryPreferencesRepository } from './contexts/account-preferences/infrastructure/postgres-account-delivery-preferences-repository.js';
 import { AccountDeliveryPreferencesHttpApi } from './contexts/account-preferences/presentation/account-delivery-preferences-http-api.js';
@@ -220,6 +223,7 @@ if (identityConfig !== null && pool !== null) {
     new PgSystemConfigurationAdminAuthorizer(pool),
   );
   routeHandlers.push(
+    new AuditHttpApi(identityService, new AuditService(new PgAuditRepository(pool))),
     new AccountDeliveryPreferencesHttpApi(identityService, accountDeliveryPreferencesService),
     new SystemConfigurationHttpApi(identityService, systemConfigurationService, logger),
     new CheckoutHttpApi(identityService, checkoutService, logger),

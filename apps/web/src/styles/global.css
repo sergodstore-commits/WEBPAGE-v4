@@ -640,6 +640,63 @@ textarea {
   gap: 0.6rem;
   margin-top: 1.5rem;
 }
+.admin-module-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  padding: 1rem 1.5rem;
+}
+.admin-module-nav a {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--panel-2);
+  border-left: 3px solid var(--red);
+}
+.admin-module {
+  margin-top: 1.5rem;
+}
+.admin-module .section-heading {
+  margin-bottom: 0.75rem;
+}
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+.admin-form-grid form {
+  margin: 0;
+  padding: 1rem;
+  background: var(--panel-2);
+  border-top: 3px solid var(--red);
+}
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.table-actions button.link {
+  min-height: 2.75rem;
+}
+.stacked-actions {
+  display: grid;
+  gap: 0.65rem;
+}
+.inline-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0;
+}
+.inline-action label {
+  margin: 0;
+}
+.inline-action input,
+.inline-action select,
+.inline-action button {
+  min-height: 2.75rem;
+}
 .admin-navigation a {
   background: var(--panel-2);
   border: 1px solid var(--line);
