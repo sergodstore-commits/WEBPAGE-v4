@@ -1,45 +1,68 @@
-{
-  "schemaVersion": 2,
-  "mission": "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
-  "status": "ACTIVE",
-  "currentStageId": "00-baseline",
-  "currentStageFile": ".codex-mission/stages/00-baseline.md",
-  "queue": [
-    { "id": "00-baseline", "file": ".codex-mission/stages/00-baseline.md" },
-    {
-      "id": "01-local-final-verification",
-      "file": ".codex-mission/stages/01-local-final-verification.md"
-    },
-    { "id": "02-external-providers", "file": ".codex-mission/stages/02-external-providers.md" },
-    { "id": "03-staging", "file": ".codex-mission/stages/03-staging.md" },
-    { "id": "04-remote-e2e-hardening", "file": ".codex-mission/stages/04-remote-e2e-hardening.md" },
-    {
-      "id": "05-final-external-acceptance",
-      "file": ".codex-mission/stages/05-final-external-acceptance.md"
-    },
-    { "id": "06-release", "file": ".codex-mission/stages/06-release.md" }
-  ],
-  "completedStages": [],
-  "deferredExternal": [
-    {
-      "stageId": "02-external-providers",
-      "capability": "Flow and Webpay sandbox",
-      "reason": "No sandbox credentials or reachable acceptance environment were supplied."
-    },
-    {
-      "stageId": "02-external-providers",
-      "capability": "Transactional email provider",
-      "reason": "Resend and sergodstore.cl are configured, but no real transactional send or delivery acceptance has been executed; the notification worker remains disabled."
-    },
-    {
-      "stageId": "03-staging",
-      "capability": "Staging and production",
-      "reason": "Render API, Supabase and a separate Vercel V4 preview exist, but Git auto-deploy, complete remote E2E, production promotion and domain cutover have not been accepted."
-    }
-  ],
-  "notes": [
-    "CURRENT is the sole product authority.",
-    "All Work preimplementation is untrusted until Codex inspects, tests, fixes, and records evidence.",
-    "Never convert DEFERRED_EXTERNAL to PASS without real provider or environment evidence."
-  ]
+﻿{
+    "schemaVersion":  2,
+    "mission":  "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
+    "status":  "ACTIVE",
+    "currentStageId":  "01-local-final-verification",
+    "currentStageFile":  ".codex-mission/stages/01-local-final-verification.md",
+    "queue":  [
+                  {
+                      "id":  "00-baseline",
+                      "file":  ".codex-mission/stages/00-baseline.md"
+                  },
+                  {
+                      "id":  "01-local-final-verification",
+                      "file":  ".codex-mission/stages/01-local-final-verification.md"
+                  },
+                  {
+                      "id":  "02-external-providers",
+                      "file":  ".codex-mission/stages/02-external-providers.md"
+                  },
+                  {
+                      "id":  "03-staging",
+                      "file":  ".codex-mission/stages/03-staging.md"
+                  },
+                  {
+                      "id":  "04-remote-e2e-hardening",
+                      "file":  ".codex-mission/stages/04-remote-e2e-hardening.md"
+                  },
+                  {
+                      "id":  "05-final-external-acceptance",
+                      "file":  ".codex-mission/stages/05-final-external-acceptance.md"
+                  },
+                  {
+                      "id":  "06-release",
+                      "file":  ".codex-mission/stages/06-release.md"
+                  }
+              ],
+    "completedStages":  [
+                            {
+                                "id":  "00-baseline",
+                                "status":  "PASS_LOCAL",
+                                "completedAtUtc":  "2026-08-23T21:38:20.0281487Z",
+                                "evidence":  "npm ci; codex:prepare 138; format/lint/typecheck; protected migrations 31; payment focal 13/13; delivery audit; integration 163/163",
+                                "commit":  "c436fcd8f8de7be93fd3b3ead43eef207e7f43b1"
+                            }
+                        ],
+    "deferredExternal":  [
+                             {
+                                 "stageId":  "02-external-providers",
+                                 "capability":  "Flow and Webpay sandbox",
+                                 "reason":  "No sandbox credentials or reachable acceptance environment were supplied."
+                             },
+                             {
+                                 "stageId":  "02-external-providers",
+                                 "capability":  "Transactional email provider",
+                                 "reason":  "Resend and sergodstore.cl are configured, but no real transactional send or delivery acceptance has been executed; the notification worker remains disabled."
+                             },
+                             {
+                                 "stageId":  "03-staging",
+                                 "capability":  "Staging and production",
+                                 "reason":  "Render API, Supabase and a separate Vercel V4 preview exist, but Git auto-deploy, complete remote E2E, production promotion and domain cutover have not been accepted."
+                             }
+                         ],
+    "notes":  [
+                  "CURRENT is the sole product authority.",
+                  "All Work preimplementation is untrusted until Codex inspects, tests, fixes, and records evidence.",
+                  "Never convert DEFERRED_EXTERNAL to PASS without real provider or environment evidence."
+              ]
 }
