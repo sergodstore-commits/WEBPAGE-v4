@@ -11,7 +11,12 @@ describe('order contracts', () => {
 
   it('normalizes list limits and rejects unknown query fields', () => {
     expect(orderListQuerySchema.parse({ limit: '25' })).toEqual({ limit: 25 });
+    expect(orderListQuerySchema.parse({ limit: '25', orderType: 'PREORDER' })).toEqual({
+      limit: 25,
+      orderType: 'PREORDER',
+    });
     expect(() => orderListQuerySchema.parse({ limit: '101' })).toThrow();
+    expect(() => orderListQuerySchema.parse({ orderType: 'SUBSCRIPTION' })).toThrow();
     expect(() => orderListQuerySchema.parse({ unexpected: 'x' })).toThrow();
   });
 });

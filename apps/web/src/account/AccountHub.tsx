@@ -1,15 +1,29 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
-import { authorizedRequest, ownAccount, type AccountView } from '../identity/api.js';
+import { ApiError, authorizedRequest, ownAccount, type AccountView } from '../identity/api.js';
 
+interface OrderLine {
+  readonly condition: string | null;
+  readonly edition: string | null;
+  readonly language: string | null;
+  readonly lineSubtotalClp: number;
+  readonly productName: string;
+  readonly quantity: number;
+  readonly sku: string;
+}
 interface Order {
+  readonly createdAt: string;
+  readonly deliveryMode: 'FREIGHT_COLLECT' | 'PICKUP';
+  readonly lines: readonly OrderLine[];
   readonly orderId: string;
   readonly publicNumber: string;
   readonly state: string;
   readonly totalAmountClp: number;
-  readonly deliveryMode: string;
 }
-
+interface Page<Item> {
+  readonly items: readonly Item[];
+  readonly nextCursor: string | null;
+}
 interface DeliveryPreferences {
   readonly agencyDestination: string | null;
   readonly carrier: 'CHILEXPRESS' | 'STARKEN' | null;
@@ -17,31 +31,138 @@ interface DeliveryPreferences {
   readonly recipientName: string | null;
   readonly recipientPhone: string | null;
 }
+interface LoyaltyAccount {
+  readonly availablePoints: number;
+  readonly balance: number;
+  readonly debt: boolean;
+  readonly reservedPoints: number;
+}
+interface LoyaltyMovement {
+  readonly balanceAfter: number;
+  readonly movementId: string;
+  readonly occurredAt: string;
+  readonly pointsSigned: number;
+  readonly reason: string | null;
+  readonly type: string;
+}
+type LoadState = 'error' | 'loading' | 'ready';
 
 export function AccountHub() {
   const [account, setAccount] = useState<AccountView | null>(null);
+  const [profileState, setProfileState] = useState<LoadState>('loading');
+  const [profileMessage, setProfileMessage] = useState('Cargando tus datos…');
   const [orders, setOrders] = useState<readonly Order[]>([]);
+  const [ordersCursor, setOrdersCursor] = useState<string | null>(null);
+  const [ordersState, setOrdersState] = useState<LoadState>('loading');
+  const [ordersMessage, setOrdersMessage] = useState('Cargando pedidos…');
+  const [preorders, setPreorders] = useState<readonly Order[]>([]);
+  const [preordersCursor, setPreordersCursor] = useState<string | null>(null);
+  const [preordersState, setPreordersState] = useState<LoadState>('loading');
+  const [preordersMessage, setPreordersMessage] = useState('Cargando preventas…');
+  const [loyalty, setLoyalty] = useState<LoyaltyAccount | null>(null);
+  const [movements, setMovements] = useState<readonly LoyaltyMovement[]>([]);
+  const [movementsCursor, setMovementsCursor] = useState<string | null>(null);
+  const [loyaltyState, setLoyaltyState] = useState<LoadState>('loading');
+  const [loyaltyMessage, setLoyaltyMessage] = useState('Cargando tus puntos…');
   const [preferences, setPreferences] = useState<DeliveryPreferences | null>(null);
-  const [message, setMessage] = useState('Cargando tu resumen…');
+  const [preferencesState, setPreferencesState] = useState<LoadState>('loading');
+  const [preferencesMessage, setPreferencesMessage] = useState('Cargando preferencias…');
+
+  const applyOrders = (page: Page<Order>) => {
+    setOrders((current) => [...current, ...page.items]);
+    setOrdersCursor(page.nextCursor);
+    setOrdersState('ready');
+    setOrdersMessage(page.items.length === 0 ? 'Aún no tienes pedidos.' : '');
+  };
+  const failOrders = (error: unknown) => {
+    setOrdersState('error');
+    setOrdersMessage(messageOf(error, 'No fue posible cargar tus pedidos.'));
+  };
+  const applyPreorders = (page: Page<Order>) => {
+    setPreorders((current) => [...current, ...page.items]);
+    setPreordersCursor(page.nextCursor);
+    setPreordersState('ready');
+    setPreordersMessage(page.items.length === 0 ? 'Aún no tienes preventas.' : '');
+  };
+  const failPreorders = (error: unknown) => {
+    setPreordersState('error');
+    setPreordersMessage(messageOf(error, 'No fue posible cargar tus preventas.'));
+  };
+
   useEffect(() => {
-    void Promise.all([
-      ownAccount(),
-      authorizedRequest<{ items: Order[] }>('/api/v1/orders?limit=25'),
-      authorizedRequest<{ item: DeliveryPreferences | null }>(
-        '/api/v1/account/delivery-preferences',
-      ),
-    ])
-      .then(([profile, history, delivery]) => {
+    void ownAccount()
+      .then((profile) => {
         setAccount(profile);
-        setOrders(history.items);
-        setPreferences(delivery.item);
-        setMessage(history.items.length === 0 ? 'Aún no tienes pedidos.' : '');
+        setProfileState('ready');
+        setProfileMessage('');
       })
-      .catch((error: unknown) => setMessage(messageOf(error)));
+      .catch((error: unknown) => {
+        setProfileState('error');
+        setProfileMessage(messageOf(error, 'No fue posible cargar tus datos.'));
+      });
+    void loadOrders('REGULAR').then(applyOrders).catch(failOrders);
+    void loadOrders('PREORDER').then(applyPreorders).catch(failPreorders);
+    void Promise.all([
+      authorizedRequest<LoyaltyAccount>('/api/v1/loyalty/account'),
+      authorizedRequest<Page<LoyaltyMovement>>('/api/v1/loyalty/movements?limit=25'),
+    ])
+      .then(([summary, history]) => {
+        setLoyalty(summary);
+        setMovements(history.items);
+        setMovementsCursor(history.nextCursor);
+        setLoyaltyState('ready');
+        setLoyaltyMessage(history.items.length === 0 ? 'Aún no tienes movimientos de puntos.' : '');
+      })
+      .catch((error: unknown) => {
+        setLoyaltyState('error');
+        setLoyaltyMessage(loyaltyErrorMessage(error));
+      });
+    void authorizedRequest<{ item: DeliveryPreferences | null }>(
+      '/api/v1/account/delivery-preferences',
+    )
+      .then((delivery) => {
+        setPreferences(delivery.item);
+        setPreferencesState('ready');
+        setPreferencesMessage('');
+      })
+      .catch((error: unknown) => {
+        setPreferencesState('error');
+        setPreferencesMessage(messageOf(error, 'No fue posible cargar tus preferencias.'));
+      });
   }, []);
+
+  const loadMoreOrders = async (type: 'PREORDER' | 'REGULAR', cursor: string) => {
+    if (type === 'REGULAR') {
+      setOrdersState('loading');
+      setOrdersMessage('Cargando más pedidos…');
+      await loadOrders(type, cursor).then(applyOrders).catch(failOrders);
+      return;
+    }
+    setPreordersState('loading');
+    setPreordersMessage('Cargando más preventas…');
+    await loadOrders(type, cursor).then(applyPreorders).catch(failPreorders);
+  };
+  const loadMoreMovements = async () => {
+    if (movementsCursor === null) return;
+    setLoyaltyState('loading');
+    setLoyaltyMessage('Cargando más movimientos…');
+    try {
+      const page = await authorizedRequest<Page<LoyaltyMovement>>(
+        `/api/v1/loyalty/movements?limit=25&cursor=${encodeURIComponent(movementsCursor)}`,
+      );
+      setMovements((current) => [...current, ...page.items]);
+      setMovementsCursor(page.nextCursor);
+      setLoyaltyState('ready');
+      setLoyaltyMessage('');
+    } catch (error) {
+      setLoyaltyState('error');
+      setLoyaltyMessage(messageOf(error, 'No fue posible cargar más movimientos.'));
+    }
+  };
   const savePreferences = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    setPreferencesMessage('Guardando preferencias…');
     try {
       const result = await authorizedRequest<{ item: DeliveryPreferences }>(
         '/api/v1/account/delivery-preferences',
@@ -57,11 +178,14 @@ export function AccountHub() {
         },
       );
       setPreferences(result.item);
-      setMessage('Preferencias guardadas.');
+      setPreferencesState('ready');
+      setPreferencesMessage('Preferencias guardadas.');
     } catch (error) {
-      setMessage(messageOf(error));
+      setPreferencesState('error');
+      setPreferencesMessage(messageOf(error, 'No fue posible guardar tus preferencias.'));
     }
   };
+
   return (
     <main className="page-frame account-layout">
       <aside className="account-nav cut-panel" aria-label="Secciones de cuenta">
@@ -69,105 +193,308 @@ export function AccountHub() {
         <h1>Resumen</h1>
         <nav>
           <a href="#orders">Pedidos</a>
-          <a href="#profile">Perfil</a>
+          <a href="#preorders">Preventas</a>
+          <a href="#loyalty">Puntos</a>
+          <a href="#profile">Datos personales</a>
           <a href="#delivery">Preferencias</a>
           <a href="/account">Seguridad</a>
         </nav>
       </aside>
       <section className="account-content">
-        <article className="metric-grid" id="profile">
-          <div className="metric">
-            <span>Cuenta</span>
-            <strong>{account?.currentEmail ?? '—'}</strong>
+        <section className="cut-panel" id="profile">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Datos personales</p>
+              <h2>Tu perfil</h2>
+            </div>
+            <a className="button-link" href="/account">
+              Editar perfil y seguridad
+            </a>
           </div>
-          <div className="metric">
-            <span>Estado</span>
-            <strong>{account?.status ?? '—'}</strong>
-          </div>
-          <div className="metric">
-            <span>Pedidos</span>
-            <strong>{orders.length}</strong>
-          </div>
-        </article>
-        <section className="cut-panel" id="orders">
-          <h2>Mis pedidos</h2>
-          <p className="status" role="status">
-            {message}
+          <p className="status" role={profileState === 'error' ? 'alert' : 'status'}>
+            {profileMessage}
           </p>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Pedido</th>
-                  <th>Estado</th>
-                  <th>Entrega</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.orderId}>
-                    <td>{order.publicNumber}</td>
-                    <td>{order.state}</td>
-                    <td>{order.deliveryMode}</td>
-                    <td>${order.totalAmountClp.toLocaleString('es-CL')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {account && (
+            <div className="metric-grid account-metrics">
+              <Metric label="Correo" value={account.currentEmail} />
+              <Metric label="Teléfono" value={account.currentPhone ?? 'No registrado'} />
+              <Metric
+                label="Verificación"
+                value={account.emailVerificationStatus === 'VERIFIED' ? 'Verificado' : 'Pendiente'}
+              />
+              <Metric
+                label="Estado"
+                value={account.status === 'ACTIVE' ? 'Activa' : 'Desactivada'}
+              />
+            </div>
+          )}
+        </section>
+        <OrderHistory
+          cursor={ordersCursor}
+          id="orders"
+          items={orders}
+          message={ordersMessage}
+          onLoadMore={() => ordersCursor && void loadMoreOrders('REGULAR', ordersCursor)}
+          state={ordersState}
+          title="Mis pedidos"
+        />
+        <OrderHistory
+          cursor={preordersCursor}
+          id="preorders"
+          items={preorders}
+          message={preordersMessage}
+          onLoadMore={() => preordersCursor && void loadMoreOrders('PREORDER', preordersCursor)}
+          state={preordersState}
+          title="Mis preventas"
+        />
+        <section className="cut-panel" id="loyalty">
+          <p className="eyebrow">Fidelización</p>
+          <h2>Mis puntos</h2>
+          <p className="status" role={loyaltyState === 'error' ? 'alert' : 'status'}>
+            {loyaltyMessage}
+          </p>
+          {loyalty && (
+            <>
+              <div className="metric-grid account-metrics">
+                <Metric
+                  label="Disponibles"
+                  value={loyalty.availablePoints.toLocaleString('es-CL')}
+                />
+                <Metric label="Saldo" value={loyalty.balance.toLocaleString('es-CL')} />
+                <Metric label="Reservados" value={loyalty.reservedPoints.toLocaleString('es-CL')} />
+                <Metric label="Situación" value={loyalty.debt ? 'Saldo en deuda' : 'Al día'} />
+              </div>
+              {movements.length > 0 && (
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Movimiento</th>
+                        <th>Puntos</th>
+                        <th>Saldo</th>
+                        <th>Motivo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {movements.map((movement) => (
+                        <tr key={movement.movementId}>
+                          <td>{formatDate(movement.occurredAt)}</td>
+                          <td>{movementLabel(movement.type)}</td>
+                          <td
+                            className={
+                              movement.pointsSigned < 0 ? 'negative-value' : 'positive-value'
+                            }
+                          >
+                            {formatSigned(movement.pointsSigned)}
+                          </td>
+                          <td>{movement.balanceAfter.toLocaleString('es-CL')}</td>
+                          <td>{movement.reason ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {movementsCursor && (
+                <button
+                  disabled={loyaltyState === 'loading'}
+                  onClick={() => void loadMoreMovements()}
+                  type="button"
+                >
+                  Cargar más movimientos
+                </button>
+              )}
+            </>
+          )}
         </section>
         <section className="cut-panel" id="delivery">
-          <h2>Preferencias de despacho</h2>
+          <p className="eyebrow">Despacho</p>
+          <h2>Preferencias de entrega</h2>
           <p>Despacho por pagar a agencia Chilexpress o Starken; el domicilio no es obligatorio.</p>
-          <form
-            key={preferences === null ? 'empty' : JSON.stringify(preferences)}
-            onSubmit={(event) => void savePreferences(event)}
-          >
-            <label>
-              Destinatario
-              <input defaultValue={preferences?.recipientName ?? ''} name="recipientName" />
-            </label>
-            <label>
-              Teléfono de contacto
-              <input
-                defaultValue={preferences?.recipientPhone ?? ''}
-                name="recipientPhone"
-                placeholder="+569…"
-              />
-            </label>
-            <label>
-              Transportista
-              <select defaultValue={preferences?.carrier ?? ''} name="carrier">
-                <option value="">Sin preferencia</option>
-                <option value="CHILEXPRESS">Chilexpress</option>
-                <option value="STARKEN">Starken</option>
-              </select>
-            </label>
-            <label>
-              Comuna de destino
-              <input
-                defaultValue={preferences?.destinationCommune ?? ''}
-                name="destinationCommune"
-              />
-            </label>
-            <label>
-              Agencia de destino
-              <input defaultValue={preferences?.agencyDestination ?? ''} name="agencyDestination" />
-            </label>
-            <button type="submit">Guardar preferencias</button>
-          </form>
+          <p className="status" role={preferencesState === 'error' ? 'alert' : 'status'}>
+            {preferencesMessage}
+          </p>
+          {preferencesState === 'ready' && (
+            <form
+              key={preferences === null ? 'empty' : JSON.stringify(preferences)}
+              onSubmit={(event) => void savePreferences(event)}
+            >
+              <label>
+                Destinatario
+                <input defaultValue={preferences?.recipientName ?? ''} name="recipientName" />
+              </label>
+              <label>
+                Teléfono de contacto
+                <input
+                  defaultValue={preferences?.recipientPhone ?? ''}
+                  name="recipientPhone"
+                  placeholder="+569…"
+                />
+              </label>
+              <label>
+                Transportista
+                <select defaultValue={preferences?.carrier ?? ''} name="carrier">
+                  <option value="">Sin preferencia</option>
+                  <option value="CHILEXPRESS">Chilexpress</option>
+                  <option value="STARKEN">Starken</option>
+                </select>
+              </label>
+              <label>
+                Comuna de destino
+                <input
+                  defaultValue={preferences?.destinationCommune ?? ''}
+                  name="destinationCommune"
+                />
+              </label>
+              <label>
+                Agencia de destino
+                <input
+                  defaultValue={preferences?.agencyDestination ?? ''}
+                  name="agencyDestination"
+                />
+              </label>
+              <button type="submit">Guardar preferencias</button>
+            </form>
+          )}
         </section>
       </section>
     </main>
   );
 }
 
+function Metric({ label, value }: { readonly label: string; readonly value: string }) {
+  return (
+    <div className="metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+function OrderHistory(props: {
+  readonly cursor: string | null;
+  readonly id: string;
+  readonly items: readonly Order[];
+  readonly message: string;
+  readonly onLoadMore: () => void;
+  readonly state: LoadState;
+  readonly title: string;
+}) {
+  return (
+    <section className="cut-panel" id={props.id}>
+      <h2>{props.title}</h2>
+      <p className="status" role={props.state === 'error' ? 'alert' : 'status'}>
+        {props.message}
+      </p>
+      <div className="order-history">
+        {props.items.map((order) => (
+          <article className="order-summary" key={order.orderId}>
+            <div className="order-heading">
+              <div>
+                <span>Pedido</span>
+                <strong>{order.publicNumber}</strong>
+              </div>
+              <div>
+                <span>Fecha</span>
+                <strong>{formatDate(order.createdAt)}</strong>
+              </div>
+              <div>
+                <span>Estado</span>
+                <strong>{orderStateLabel(order.state)}</strong>
+              </div>
+              <div>
+                <span>Entrega</span>
+                <strong>
+                  {order.deliveryMode === 'PICKUP' ? 'Retiro en tienda' : 'Despacho por pagar'}
+                </strong>
+              </div>
+              <div>
+                <span>Total</span>
+                <strong>{formatClp(order.totalAmountClp)}</strong>
+              </div>
+            </div>
+            <details>
+              <summary>Ver productos ({order.lines.length})</summary>
+              <ul className="order-lines">
+                {order.lines.map((line) => (
+                  <li key={`${order.orderId}-${line.sku}`}>
+                    <div>
+                      <strong>{line.productName}</strong>
+                      <small>
+                        {[line.sku, line.language, line.edition, line.condition]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </small>
+                    </div>
+                    <span>
+                      {line.quantity} × {formatClp(line.lineSubtotalClp / line.quantity)}
+                    </span>
+                    <strong>{formatClp(line.lineSubtotalClp)}</strong>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </article>
+        ))}
+      </div>
+      {props.cursor && (
+        <button disabled={props.state === 'loading'} onClick={props.onLoadMore} type="button">
+          Cargar más
+        </button>
+      )}
+    </section>
+  );
+}
+function loadOrders(type: 'PREORDER' | 'REGULAR', cursor?: string): Promise<Page<Order>> {
+  const suffix = cursor === undefined ? '' : `&cursor=${encodeURIComponent(cursor)}`;
+  return authorizedRequest<Page<Order>>(`/api/v1/orders?limit=25&orderType=${type}${suffix}`);
+}
 function nullable(value: FormDataEntryValue | null): string | null {
   const normalized = String(value ?? '').trim();
   return normalized === '' ? null : normalized;
 }
-
-function messageOf(error: unknown) {
-  return error instanceof Error ? error.message : 'No fue posible cargar la cuenta.';
+function messageOf(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message.trim() !== '' ? error.message : fallback;
+}
+function loyaltyErrorMessage(error: unknown): string {
+  return error instanceof ApiError && error.code === 'LOYALTY_ACCOUNT_NOT_FOUND'
+    ? 'Aún no tienes una cuenta de puntos habilitada.'
+    : messageOf(error, 'No fue posible cargar tus puntos.');
+}
+function formatClp(value: number): string {
+  return `$${Math.round(value).toLocaleString('es-CL')}`;
+}
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' }).format(new Date(value));
+}
+function formatSigned(value: number): string {
+  return `${value > 0 ? '+' : ''}${value.toLocaleString('es-CL')}`;
+}
+function orderStateLabel(value: string): string {
+  return (
+    (
+      {
+        CANCELLED: 'Cancelado',
+        FULFILLED: 'Completado',
+        PAID: 'Pagado',
+        PENDING_PAYMENT: 'Pendiente de pago',
+        PREPARING: 'En preparación',
+        READY_FOR_PICKUP: 'Listo para retiro',
+        SHIPPED: 'Despachado',
+      } as Record<string, string>
+    )[value] ?? value
+  );
+}
+function movementLabel(value: string): string {
+  return (
+    (
+      {
+        ADMIN_CORRECTION: 'Ajuste',
+        EARN: 'Acumulación',
+        EARN_REVERSAL: 'Reverso de acumulación',
+        REDEEM: 'Canje',
+        REDEEM_RESTORE: 'Restitución de canje',
+      } as Record<string, string>
+    )[value] ?? value
+  );
 }

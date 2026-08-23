@@ -1,4 +1,4 @@
-import type { OrderState } from '@sergod/contracts';
+import type { OrderState, OrderType } from '@sergod/contracts';
 import type { ExecutionContext } from '@sergod/foundation';
 
 import type { OrderRepository, OrderView } from './order-ports.js';
@@ -16,7 +16,12 @@ export class OrderService {
 
   async listForAccount(
     accountId: string,
-    input: { readonly cursor?: string; readonly limit: number; readonly state?: OrderState },
+    input: {
+      readonly cursor?: string;
+      readonly limit: number;
+      readonly orderType?: OrderType;
+      readonly state?: OrderState;
+    },
   ) {
     const result = await this.repository.listForAccount({ accountId, ...input });
     return { ...result, items: result.items.map(serialize) };
@@ -25,6 +30,7 @@ export class OrderService {
   async listForAdmin(input: {
     readonly cursor?: string;
     readonly limit: number;
+    readonly orderType?: OrderType;
     readonly state?: OrderState;
   }) {
     const result = await this.repository.listForAdmin(input);

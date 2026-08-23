@@ -14,9 +14,11 @@ export const orderListQuerySchema = z
   .object({
     limit: z.coerce.number().int().min(1).max(100).default(25),
     cursor: z.uuid().optional(),
+    orderType: z.enum(['PREORDER', 'REGULAR']).optional(),
     state: orderStateSchema.optional(),
   })
   .strict();
 
 export type OrderState = z.infer<typeof orderStateSchema>;
+export type OrderType = 'PREORDER' | 'REGULAR';
 export type OrderListQuery = z.infer<typeof orderListQuerySchema>;

@@ -1,4 +1,4 @@
-import type { OrderState } from '@sergod/contracts';
+import type { OrderState, OrderType } from '@sergod/contracts';
 import type { Clock, ExecutionContext, UuidGenerator } from '@sergod/foundation';
 import type { Pool, QueryResultRow } from 'pg';
 
@@ -29,6 +29,7 @@ export class PgOrderRepository implements OrderRepository {
     readonly accountId: string;
     readonly cursor?: string;
     readonly limit: number;
+    readonly orderType?: OrderType;
     readonly state?: OrderState;
   }) {
     return this.list({ ...input, admin: false });
@@ -37,6 +38,7 @@ export class PgOrderRepository implements OrderRepository {
   listForAdmin(input: {
     readonly cursor?: string;
     readonly limit: number;
+    readonly orderType?: OrderType;
     readonly state?: OrderState;
   }) {
     return this.list({ ...input, admin: true });
@@ -188,6 +190,7 @@ export class PgOrderRepository implements OrderRepository {
     readonly admin: boolean;
     readonly cursor?: string;
     readonly limit: number;
+    readonly orderType?: OrderType;
     readonly state?: OrderState;
   }): Promise<{ readonly items: readonly OrderView[]; readonly nextCursor: string | null }> {
     const values: unknown[] = [];
@@ -199,6 +202,10 @@ export class PgOrderRepository implements OrderRepository {
     if (input.state !== undefined) {
       values.push(input.state);
       conditions.push(`state=$${values.length}`);
+    }
+    if (input.orderType !== undefined) {
+      values.push(input.orderType);
+      conditions.push(`order_type=$${values.length}`);
     }
     if (input.cursor !== undefined) {
       values.push(input.cursor);

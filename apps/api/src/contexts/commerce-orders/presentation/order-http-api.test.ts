@@ -75,9 +75,15 @@ describe('Orders HTTP API', () => {
   });
 
   it('uses ADMIN authorization for admin history', async () => {
-    const response = await request('/api/v1/admin/orders?limit=10&state=PENDING_PAYMENT');
+    const response = await request(
+      '/api/v1/admin/orders?limit=10&state=PENDING_PAYMENT&orderType=PREORDER',
+    );
     expect(response.status).toBe(200);
-    expect(orders.listForAdmin).toHaveBeenCalledWith({ limit: 10, state: 'PENDING_PAYMENT' });
+    expect(orders.listForAdmin).toHaveBeenCalledWith({
+      limit: 10,
+      orderType: 'PREORDER',
+      state: 'PENDING_PAYMENT',
+    });
     expect(identity.authorize).toHaveBeenCalledWith({
       accessToken: 'private-token',
       capability: { kind: 'ADMIN' },

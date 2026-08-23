@@ -1,4 +1,4 @@
-import type { OrderState } from '@sergod/contracts';
+import type { OrderState, OrderType } from '@sergod/contracts';
 import type { ExecutionContext } from '@sergod/foundation';
 
 export interface OrderLineView {
@@ -47,11 +47,13 @@ export interface OrderRepository {
     readonly accountId: string;
     readonly cursor?: string;
     readonly limit: number;
+    readonly orderType?: OrderType;
     readonly state?: OrderState;
   }): Promise<{ readonly items: readonly OrderView[]; readonly nextCursor: string | null }>;
   listForAdmin(input: {
     readonly cursor?: string;
     readonly limit: number;
+    readonly orderType?: OrderType;
     readonly state?: OrderState;
   }): Promise<{ readonly items: readonly OrderView[]; readonly nextCursor: string | null }>;
   expirePending(input: {

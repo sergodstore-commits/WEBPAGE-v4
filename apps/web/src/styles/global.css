@@ -532,6 +532,73 @@ pre {
   font-size: clamp(1.2rem, 3vw, 2rem);
   overflow-wrap: anywhere;
 }
+.section-heading,
+.order-lines li {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-heading h2 {
+  margin-bottom: 0;
+}
+.account-metrics {
+  margin-top: 1rem;
+}
+.order-history {
+  display: grid;
+  gap: 1rem;
+}
+.order-summary {
+  padding: 1rem;
+  background: var(--panel-2);
+  border-left: 4px solid var(--red);
+}
+.order-heading {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+.order-heading > div {
+  display: grid;
+  gap: 0.35rem;
+}
+.order-heading span,
+.order-lines small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.order-summary details {
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.8rem;
+}
+.order-summary summary {
+  color: var(--cyan);
+  cursor: pointer;
+  font-weight: 800;
+}
+.order-lines {
+  display: grid;
+  gap: 0;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.order-lines li {
+  border-top: 1px solid var(--line);
+  padding: 0.75rem 0;
+}
+.order-lines li > div {
+  display: grid;
+  flex: 1;
+}
+.positive-value {
+  color: var(--cyan);
+}
+.negative-value {
+  color: #ff7c88;
+}
 .table-scroll {
   overflow-x: auto;
 }
@@ -778,6 +845,14 @@ textarea {
   }
   .account-nav {
     position: static;
+  }
+  .section-heading,
+  .order-lines li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .order-heading {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .catalog-filters {
     position: static;

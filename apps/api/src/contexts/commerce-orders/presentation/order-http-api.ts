@@ -88,6 +88,7 @@ export class OrderHttpApi implements HttpRouteHandler {
       const input = {
         limit: query.limit,
         ...(query.cursor === undefined ? {} : { cursor: query.cursor.toLowerCase() }),
+        ...(query.orderType === undefined ? {} : { orderType: query.orderType }),
         ...(query.state === undefined ? {} : { state: query.state }),
       };
       return route.audience === 'ADMIN'
