@@ -13,15 +13,31 @@ describe('Public catalog contracts', () => {
   it('accepts the closed filters and applies NEWEST by default', () => {
     expect(
       catalogPublicProductListQuerySchema.parse({
+        availabilityStatus: 'LAST_UNITS',
         categoryId: id,
         condition: 'NEAR MINT',
         edition: 'FIRST EDITION',
         language: 'es-CL',
         limit: '20',
+        maximumPriceClp: '10000',
+        minimumPriceClp: '1000',
         q: 'Pokémon base',
         saleType: 'REGULAR',
       }),
-    ).toMatchObject({ limit: 20, sort: 'NEWEST' });
+    ).toMatchObject({
+      availabilityStatus: 'LAST_UNITS',
+      limit: 20,
+      maximumPriceClp: 10000,
+      minimumPriceClp: 1000,
+      sort: 'NEWEST',
+    });
+    expect(() =>
+      catalogPublicProductListQuerySchema.parse({
+        limit: 20,
+        maximumPriceClp: 999,
+        minimumPriceClp: 1000,
+      }),
+    ).toThrow();
   });
 
   it('rejects unknown filters, invalid q and non-normalized attributes', () => {
@@ -57,6 +73,33 @@ describe('Public catalog contracts', () => {
         },
         productId: id,
         saleType: 'REGULAR',
+      }),
+    ).toThrow();
+  });
+
+  it('keeps the purchase boolean consistent with the public availability state', () => {
+    const card = {
+      availabilityStatus: 'LAST_UNITS' as const,
+      availableForPurchase: true,
+      game: { gameId: id, name: 'Juego', slug: 'juego' },
+      name: 'Producto',
+      priceAmountClp: 1000,
+      preorderCampaignId: null,
+      primaryResource: {
+        altText: 'Imagen',
+        heightPx: 320,
+        mimeType: 'image/png' as const,
+        resourceId: id,
+        widthPx: 320,
+      },
+      productId: id,
+      saleType: 'REGULAR' as const,
+    };
+    expect(catalogPublicProductCardSchema.parse(card)).toEqual(card);
+    expect(() =>
+      catalogPublicProductCardSchema.parse({
+        ...card,
+        availabilityStatus: 'OUT_OF_STOCK',
       }),
     ).toThrow();
   });

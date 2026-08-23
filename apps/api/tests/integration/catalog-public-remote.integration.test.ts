@@ -31,7 +31,7 @@ describe.skipIf(!enabled)('Remote public catalog acceptance', () => {
     const detail = (await detailResponse.json()) as { item: PublicProductDetail };
     expect(detail.item.productId).toBe(productId);
     expect(JSON.stringify(detail)).not.toMatch(
-      /secureStorageKey|publicationStatus|uploadedBy|sha256|stock|availability/u,
+      /secureStorageKey|publicationStatus|uploadedBy|sha256|stockQuantity|onHand|reserved/u,
     );
     const etag = detailResponse.headers.get('etag');
     expect(etag).toBeTruthy();

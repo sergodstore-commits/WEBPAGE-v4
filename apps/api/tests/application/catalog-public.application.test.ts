@@ -12,6 +12,7 @@ const record: CatalogPublicProductRecord = {
   createdAt: new Date('2026-08-01T12:00:00.000Z'),
   item: {
     availableForPurchase: false,
+    availabilityStatus: 'OUT_OF_STOCK',
     game: { gameId: secondId, name: 'Pokémon', slug: 'pokemon' },
     name: 'Álbum Base',
     priceAmountClp: 5000,

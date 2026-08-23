@@ -106,6 +106,11 @@ describe('PostgreSQL public catalog queries', () => {
       ids.productFirst,
     ]);
     expect(products.items.map((item) => item.availableForPurchase)).toEqual([false, false, true]);
+    expect(products.items.map((item) => item.availabilityStatus)).toEqual([
+      'OUT_OF_STOCK',
+      'OUT_OF_STOCK',
+      'AVAILABLE',
+    ]);
     expect(JSON.stringify(products)).not.toMatch(
       /secureStorageKey|publicationStatus|uploadedBy|sha256|description/u,
     );
@@ -212,6 +217,10 @@ describe('PostgreSQL public catalog queries', () => {
   });
 
   it('applies every closed filter and exposes normalized public filter values', async () => {
+    await pool.query(
+      `UPDATE inventory_positions SET low_stock_threshold_override=3 WHERE product_id=$1`,
+      [ids.productFirst],
+    );
     expect(
       (
         await service.listProducts({
@@ -236,6 +245,34 @@ describe('PostgreSQL public catalog queries', () => {
         })
       ).items.map((item) => item.productId),
     ).toEqual([ids.productSecond]);
+    expect(
+      (
+        await service.listProducts({
+          availabilityStatus: 'LAST_UNITS',
+          limit: 100,
+          sort: 'NEWEST',
+        })
+      ).items.map((item) => item.productId),
+    ).toEqual([ids.productFirst]);
+    expect(
+      (
+        await service.listProducts({
+          availabilityStatus: 'OUT_OF_STOCK',
+          limit: 100,
+          sort: 'NEWEST',
+        })
+      ).items.map((item) => item.productId),
+    ).toEqual([ids.productThird, ids.productSecond]);
+    expect(
+      (
+        await service.listProducts({
+          limit: 100,
+          maximumPriceClp: 3000,
+          minimumPriceClp: 3000,
+          sort: 'NEWEST',
+        })
+      ).items.map((item) => item.productId),
+    ).toEqual([ids.productThird, ids.productSecond]);
     await expect(
       service.listFilterValues({ attribute: 'language', limit: 100 }),
     ).resolves.toMatchObject({ items: ['en-US', 'es-CL'] });

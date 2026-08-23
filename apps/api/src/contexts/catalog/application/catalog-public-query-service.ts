@@ -58,12 +58,15 @@ export class CatalogPublicQueryService {
   async listProducts(input: CatalogPublicProductListQuery) {
     const normalizedQuery = input.q === undefined ? null : normalizeSearchQuery(input.q);
     const filters = {
+      availabilityStatus: input.availabilityStatus ?? null,
       categoryId: input.categoryId ?? null,
       collectionId: input.collectionId ?? null,
       condition: input.condition ?? null,
       edition: input.edition ?? null,
       gameId: input.gameId ?? null,
       language: input.language ?? null,
+      maximumPriceClp: input.maximumPriceClp ?? null,
+      minimumPriceClp: input.minimumPriceClp ?? null,
       q: normalizedQuery,
       saleType: input.saleType ?? null,
       sort: input.sort,
@@ -74,6 +77,9 @@ export class CatalogPublicQueryService {
       limit: input.limit,
       searchTerms: normalizedQuery === null ? [] : normalizedQuery.split(' '),
       sort: input.sort,
+      ...(input.availabilityStatus === undefined
+        ? {}
+        : { availabilityStatus: input.availabilityStatus }),
       ...(input.categoryId === undefined ? {} : { categoryId: input.categoryId }),
       ...(input.collectionId === undefined ? {} : { collectionId: input.collectionId }),
       ...(input.condition === undefined ? {} : { condition: input.condition }),
@@ -81,6 +87,8 @@ export class CatalogPublicQueryService {
       ...(input.edition === undefined ? {} : { edition: input.edition }),
       ...(input.gameId === undefined ? {} : { gameId: input.gameId }),
       ...(input.language === undefined ? {} : { language: input.language }),
+      ...(input.maximumPriceClp === undefined ? {} : { maximumPriceClp: input.maximumPriceClp }),
+      ...(input.minimumPriceClp === undefined ? {} : { minimumPriceClp: input.minimumPriceClp }),
       ...(input.saleType === undefined ? {} : { saleType: input.saleType }),
     });
     const last = page.items.at(-1);

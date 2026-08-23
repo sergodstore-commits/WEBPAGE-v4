@@ -121,6 +121,18 @@ export class PgCatalogPublicQueryRepository
     addTextFilter(clauses, parameters, 'p.edition', input.edition);
     addTextFilter(clauses, parameters, 'p.condition', input.condition);
     addTextFilter(clauses, parameters, 'p.sale_type', input.saleType);
+    if (input.minimumPriceClp !== undefined) {
+      parameters.push(input.minimumPriceClp);
+      clauses.push(`p.price_amount_clp >= $${parameters.length}::bigint`);
+    }
+    if (input.maximumPriceClp !== undefined) {
+      parameters.push(input.maximumPriceClp);
+      clauses.push(`p.price_amount_clp <= $${parameters.length}::bigint`);
+    }
+    if (input.availabilityStatus !== undefined) {
+      parameters.push(input.availabilityStatus);
+      clauses.push(`${publicAvailabilityStatusExpression} = $${parameters.length}::text`);
+    }
     for (const term of input.searchTerms) {
       parameters.push(`%${escapeLikeTerm(term)}%`);
       clauses.push(
@@ -300,6 +312,7 @@ interface CollectionListRow extends NamedRow {
 
 interface ProductListRow extends QueryResultRow {
   readonly available_for_purchase: boolean;
+  readonly availability_status: CatalogPublicProductCard['availabilityStatus'];
   readonly created_at: Date;
   readonly game_id: string;
   readonly game_name: string;
@@ -358,16 +371,36 @@ const publicProductFrom = `FROM products p
      ORDER BY campaign.opens_at,campaign.preorder_campaign_id
      LIMIT 1
   ) preorder ON p.sale_type='PREORDER'
+  LEFT JOIN LATERAL (
+    SELECT COALESCE(sum(position.on_hand-position.reserved),0)::bigint AS available_quantity,
+           COALESCE(bool_and(
+             (position.on_hand-position.reserved) <= COALESCE(
+               position.low_stock_threshold_override,
+               (SELECT configuration.integer_value
+                  FROM system_configurations configuration
+                 WHERE configuration.configuration_key='DEFAULT_LOW_STOCK_THRESHOLD'
+                   AND configuration.scope='GLOBAL' AND configuration.state='ACTIVE'),
+               0
+             )
+           ) FILTER (WHERE position.on_hand-position.reserved > 0),false) AS low_stock
+      FROM inventory_positions position
+      JOIN branches inventory_branch
+        ON inventory_branch.branch_id=position.branch_id AND inventory_branch.state='ACTIVE'
+     WHERE position.product_id=p.product_id
+  ) inventory ON p.sale_type='REGULAR'
   JOIN product_media pm ON pm.product_id = p.product_id AND pm.is_primary
   JOIN resource_assets resource ON resource.resource_id = pm.resource_id AND resource.state = 'ACTIVE'`;
 
+const publicAvailabilityStatusExpression = `(CASE
+  WHEN p.sale_type='REGULAR' AND inventory.available_quantity > 0
+    THEN CASE WHEN inventory.low_stock THEN 'LAST_UNITS' ELSE 'AVAILABLE' END
+  WHEN p.sale_type='PREORDER' AND preorder.preorder_campaign_id IS NOT NULL THEN 'AVAILABLE'
+  ELSE 'OUT_OF_STOCK'
+END)`;
+
 const publicProductCardColumns = `p.product_id, p.name, p.price_amount_clp, p.sale_type,
-  ((p.sale_type = 'REGULAR' AND EXISTS (
-      SELECT 1 FROM inventory_positions inventory
-      JOIN branches branch ON branch.branch_id = inventory.branch_id AND branch.state = 'ACTIVE'
-      WHERE inventory.product_id = p.product_id AND inventory.on_hand > inventory.reserved
-    )) OR (p.sale_type='PREORDER' AND preorder.preorder_campaign_id IS NOT NULL))
-    AS available_for_purchase,
+  ${publicAvailabilityStatusExpression} AS availability_status,
+  (${publicAvailabilityStatusExpression} <> 'OUT_OF_STOCK') AS available_for_purchase,
   preorder.preorder_campaign_id,
   p.created_at, public.sergod_catalog_search_normalize(p.name) AS normalized_name,
   g.game_id, g.slug AS game_slug, g.name AS game_name,
@@ -504,6 +537,7 @@ function productPage(
 function mapProductCard(row: ProductListRow): CatalogPublicProductCard {
   return {
     availableForPurchase: row.available_for_purchase,
+    availabilityStatus: row.availability_status,
     game: { gameId: row.game_id, name: row.game_name, slug: row.game_slug },
     name: row.name,
     priceAmountClp: safeInteger(row.price_amount_clp),

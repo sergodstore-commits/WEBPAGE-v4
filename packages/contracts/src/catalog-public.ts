@@ -5,6 +5,11 @@ const cursorSchema = z.string().min(1).max(2048);
 const limitSchema = z.coerce.number().int().min(1).max(100);
 
 export const catalogPublicSortSchema = z.enum(['NEWEST', 'NAME_ASC', 'PRICE_ASC', 'PRICE_DESC']);
+export const catalogPublicAvailabilityStatusSchema = z.enum([
+  'AVAILABLE',
+  'LAST_UNITS',
+  'OUT_OF_STOCK',
+]);
 
 export const catalogPublicResourceIdSchema = normalizedUuidSchema;
 
@@ -18,17 +23,27 @@ export const catalogPublicCollectionListQuerySchema = catalogPublicReferenceList
 
 export const catalogPublicProductListQuerySchema = catalogPublicReferenceListQuerySchema
   .extend({
+    availabilityStatus: catalogPublicAvailabilityStatusSchema.optional(),
     categoryId: normalizedUuidSchema.optional(),
     collectionId: normalizedUuidSchema.optional(),
     condition: normalizedConditionSchema().optional(),
     edition: normalizedEditionSchema().optional(),
     gameId: normalizedUuidSchema.optional(),
     language: normalizedLanguageSchema().optional(),
+    maximumPriceClp: z.coerce.number().int().nonnegative().safe().optional(),
+    minimumPriceClp: z.coerce.number().int().nonnegative().safe().optional(),
     q: z.string().trim().min(2).max(80).optional(),
     saleType: z.enum(['REGULAR', 'PREORDER']).optional(),
     sort: catalogPublicSortSchema.default('NEWEST'),
   })
-  .strict();
+  .strict()
+  .refine(
+    ({ maximumPriceClp, minimumPriceClp }) =>
+      maximumPriceClp === undefined ||
+      minimumPriceClp === undefined ||
+      minimumPriceClp <= maximumPriceClp,
+    { message: 'Minimum price must not exceed maximum price.' },
+  );
 
 export const catalogPublicFilterValuesQuerySchema = z
   .object({
@@ -73,6 +88,7 @@ export const catalogPublicCollectionItemSchema = z
 export const catalogPublicProductCardSchema = z
   .object({
     availableForPurchase: z.boolean(),
+    availabilityStatus: catalogPublicAvailabilityStatusSchema,
     game: catalogPublicGameReferenceSchema,
     name: z.string().min(1),
     priceAmountClp: z.number().int().nonnegative().safe(),
@@ -81,10 +97,15 @@ export const catalogPublicProductCardSchema = z
     productId: z.uuid(),
     saleType: z.enum(['REGULAR', 'PREORDER']),
   })
-  .strict();
+  .strict()
+  .refine(
+    ({ availabilityStatus, availableForPurchase }) =>
+      availableForPurchase === (availabilityStatus !== 'OUT_OF_STOCK'),
+    { message: 'Purchase availability must match the public availability status.' },
+  );
 
 export const catalogPublicProductDetailSchema = catalogPublicProductCardSchema
-  .extend({
+  .safeExtend({
     category: catalogPublicCategoryReferenceSchema,
     collection: catalogPublicCollectionReferenceSchema.nullable(),
     condition: z.string().nullable(),
@@ -117,6 +138,7 @@ export const catalogPublicErrorCodeSchema = z.enum([
 ]);
 
 export type CatalogPublicSort = z.infer<typeof catalogPublicSortSchema>;
+export type CatalogPublicAvailabilityStatus = z.infer<typeof catalogPublicAvailabilityStatusSchema>;
 export type CatalogPublicProductListQuery = z.infer<typeof catalogPublicProductListQuerySchema>;
 export type CatalogPublicFilterAttribute = z.infer<
   typeof catalogPublicFilterValuesQuerySchema

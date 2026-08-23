@@ -1,5 +1,6 @@
 import type {
   CatalogPublicCategoryItem,
+  CatalogPublicAvailabilityStatus,
   CatalogPublicCollectionItem,
   CatalogPublicFilterAttribute,
   CatalogPublicGameItem,
@@ -85,6 +86,7 @@ export interface CatalogPublicQueryPort {
     readonly limit: number;
   }): Promise<CatalogPublicQueryPage<CatalogPublicNameRecord<CatalogPublicGameItem>>>;
   listProducts(input: {
+    readonly availabilityStatus?: CatalogPublicAvailabilityStatus;
     readonly categoryId?: string;
     readonly collectionId?: string;
     readonly condition?: string;
@@ -93,6 +95,8 @@ export interface CatalogPublicQueryPort {
     readonly gameId?: string;
     readonly language?: string;
     readonly limit: number;
+    readonly maximumPriceClp?: number;
+    readonly minimumPriceClp?: number;
     readonly saleType?: 'REGULAR' | 'PREORDER';
     readonly searchTerms: readonly string[];
     readonly sort: CatalogPublicSort;

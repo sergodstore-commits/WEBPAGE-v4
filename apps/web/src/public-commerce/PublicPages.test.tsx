@@ -24,14 +24,26 @@ describe('public Store cart action', () => {
           items: [
             {
               availableForPurchase: true,
-              game: { name: 'Pokémon' },
+              availabilityStatus: 'AVAILABLE',
+              game: {
+                gameId: '0198a8be-6677-7000-8000-000000000030',
+                name: 'Pokémon',
+                slug: 'pokemon',
+              },
               name: 'Booster regular',
               priceAmountClp: 4990,
               preorderCampaignId: null,
+              primaryResource: {
+                altText: 'Booster regular',
+                heightPx: 800,
+                resourceId: '0198a8be-6677-7000-8000-000000000040',
+                widthPx: 600,
+              },
               productId: '0198a8be-6677-7000-8000-000000000010',
               saleType: 'REGULAR',
             },
           ],
+          nextCursor: null,
         } as never;
       }
       const lineCalls = vi
@@ -40,6 +52,7 @@ describe('public Store cart action', () => {
       if (path === '/api/v1/cart/lines' && lineCalls === 1) {
         throw new ApiError('CART_SESSION_REQUIRED', 'Cart session required.');
       }
+      if (path.startsWith('/api/v1/catalog/')) return { items: [], nextCursor: null } as never;
       return {} as never;
     });
 
@@ -63,16 +76,29 @@ describe('public Store cart action', () => {
           items: [
             {
               availableForPurchase: true,
-              game: { name: 'Pokémon' },
+              availabilityStatus: 'LAST_UNITS',
+              game: {
+                gameId: '0198a8be-6677-7000-8000-000000000030',
+                name: 'Pokémon',
+                slug: 'pokemon',
+              },
               name: 'Caja en preventa',
               priceAmountClp: 49_990,
               preorderCampaignId,
+              primaryResource: {
+                altText: 'Caja en preventa',
+                heightPx: 800,
+                resourceId: '0198a8be-6677-7000-8000-000000000041',
+                widthPx: 600,
+              },
               productId: '0198a8be-6677-7000-8000-000000000011',
               saleType: 'PREORDER',
             },
           ],
+          nextCursor: null,
         } as never;
       }
+      if (path.startsWith('/api/v1/catalog/')) return { items: [], nextCursor: null } as never;
       return {} as never;
     });
 
@@ -84,5 +110,76 @@ describe('public Store cart action', () => {
       .mocked(publicRequest)
       .mock.calls.find(([path]) => path === '/api/v1/cart/lines');
     expect(JSON.parse(String(lineCall?.[1]?.body))).toMatchObject({ preorderCampaignId });
+  });
+
+  it('sends server-side filters and opens the real product detail', async () => {
+    const productId = '0198a8be-6677-7000-8000-000000000012';
+    const card = {
+      availableForPurchase: true,
+      availabilityStatus: 'LAST_UNITS',
+      game: {
+        gameId: '0198a8be-6677-7000-8000-000000000030',
+        name: 'Pokémon',
+        slug: 'pokemon',
+      },
+      name: 'Colección especial',
+      priceAmountClp: 19_990,
+      preorderCampaignId: null,
+      primaryResource: {
+        altText: 'Colección especial',
+        heightPx: 800,
+        resourceId: '0198a8be-6677-7000-8000-000000000042',
+        widthPx: 600,
+      },
+      productId,
+      saleType: 'REGULAR',
+    } as const;
+    vi.mocked(publicRequest).mockImplementation(async (path) => {
+      if (path === `/api/v1/catalog/products/${productId}`) {
+        return {
+          item: {
+            ...card,
+            category: { categoryId: crypto.randomUUID(), name: 'Sellados' },
+            collection: { collectionId: crypto.randomUUID(), name: 'Edición especial' },
+            condition: 'SEALED',
+            description: 'Descripción pública',
+            edition: 'FIRST EDITION',
+            language: 'es-CL',
+            sku: 'SKU-001',
+          },
+        } as never;
+      }
+      if (path.startsWith('/api/v1/catalog/products?')) {
+        return { items: [card], nextCursor: null } as never;
+      }
+      return { items: [], nextCursor: null } as never;
+    });
+
+    render(<StorePage />);
+    await screen.findByText('Colección especial');
+    fireEvent.change(screen.getByLabelText('Disponibilidad'), {
+      target: { value: 'LAST_UNITS' },
+    });
+    fireEvent.change(screen.getByLabelText('Precio mínimo'), { target: { value: '10000' } });
+    fireEvent.change(screen.getByLabelText('Ordenar'), { target: { value: 'PRICE_ASC' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }));
+
+    await waitFor(() => {
+      const productPaths = vi
+        .mocked(publicRequest)
+        .mock.calls.map(([path]) => path)
+        .filter((path) => path.startsWith('/api/v1/catalog/products?'));
+      expect(productPaths.at(-1)).toContain('availabilityStatus=LAST_UNITS');
+      expect(productPaths.at(-1)).toContain('minimumPriceClp=10000');
+      expect(productPaths.at(-1)).toContain('sort=PRICE_ASC');
+    });
+    expect(
+      screen.getByRole('button', { name: /Disponibilidad: Últimas unidades/iu }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Precio mínimo: \$10\.000/iu })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver detalle' }));
+    expect(await screen.findByText('SKU-001')).toBeInTheDocument();
+    expect(screen.getByText('Descripción pública')).toBeInTheDocument();
   });
 });

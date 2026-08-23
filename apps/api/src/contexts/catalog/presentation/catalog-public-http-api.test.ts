@@ -20,6 +20,8 @@ const game = { gameId: id, name: 'Pokémon', slug: 'pokemon' };
 const category = { categoryId: id, name: 'Cartas' };
 const collection = { collectionId: id, game, name: 'Base' };
 const card = {
+  availabilityStatus: 'LAST_UNITS' as const,
+  availableForPurchase: true,
   game,
   name: 'Pikachu',
   priceAmountClp: 5000,
@@ -80,7 +82,7 @@ describe('Public catalog HTTP API', () => {
       '/api/v1/catalog/tcg-games?limit=10',
       '/api/v1/catalog/categories?limit=10',
       `/api/v1/catalog/collections?gameId=${id}&limit=10`,
-      '/api/v1/catalog/products?limit=10&sort=PRICE_ASC&q=Pokemon',
+      '/api/v1/catalog/products?availabilityStatus=LAST_UNITS&limit=10&maximumPriceClp=9000&minimumPriceClp=1000&sort=PRICE_ASC&q=Pokemon',
       `/api/v1/catalog/products/${id}`,
       '/api/v1/catalog/product-filter-values?attribute=condition&limit=10',
     ];
@@ -92,7 +94,14 @@ describe('Public catalog HTTP API', () => {
       expect(response.headers.get('x-correlation-id')).toMatch(/^[0-9a-f-]{36}$/u);
     }
     expect(catalog.listProducts).toHaveBeenCalledWith(
-      expect.objectContaining({ limit: 10, q: 'Pokemon', sort: 'PRICE_ASC' }),
+      expect.objectContaining({
+        availabilityStatus: 'LAST_UNITS',
+        limit: 10,
+        maximumPriceClp: 9000,
+        minimumPriceClp: 1000,
+        q: 'Pokemon',
+        sort: 'PRICE_ASC',
+      }),
     );
   });
 
@@ -100,16 +109,27 @@ describe('Public catalog HTTP API', () => {
     let response = await fetch(`${origin}/api/v1/catalog/products?limit=10`);
     const listed = (await response.json()) as { items: readonly Record<string, unknown>[] };
     expect(Object.keys(listed.items[0] ?? {}).sort()).toEqual(
-      ['game', 'name', 'priceAmountClp', 'primaryResource', 'productId', 'saleType'].sort(),
+      [
+        'availabilityStatus',
+        'availableForPurchase',
+        'game',
+        'name',
+        'priceAmountClp',
+        'primaryResource',
+        'productId',
+        'saleType',
+      ].sort(),
     );
     expect(JSON.stringify(listed)).not.toMatch(
-      /secureStorageKey|publicationStatus|uploadedBy|sha256|availability|stock/u,
+      /secureStorageKey|publicationStatus|uploadedBy|sha256|onHand|reserved|stockQuantity/u,
     );
 
     response = await fetch(`${origin}/api/v1/catalog/products/${id}`);
     const detailed = (await response.json()) as { item: Record<string, unknown> };
     expect(Object.keys(detailed.item).sort()).toEqual(
       [
+        'availabilityStatus',
+        'availableForPurchase',
         'category',
         'collection',
         'condition',
