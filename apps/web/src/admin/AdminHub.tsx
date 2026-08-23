@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useState } from 'react';
 
 import { authorizedRequest } from '../identity/api.js';
+import { CatalogEditors, CatalogResourceManager, RecordEditors } from './AdminEditors.js';
 
 type Item = Record<string, unknown>;
 type LoadState = 'error' | 'loading' | 'ready';
@@ -160,11 +161,33 @@ export function AdminHub() {
         games={data.games?.items ?? []}
         onAction={mutate}
       />
+      <CatalogEditors
+        categories={data.categories?.items ?? []}
+        collections={data.collections?.items ?? []}
+        games={data.games?.items ?? []}
+        onAction={mutate}
+        products={data.catalog?.items ?? []}
+      />
+      <CatalogResourceManager
+        categories={data.categories?.items ?? []}
+        collections={data.collections?.items ?? []}
+        games={data.games?.items ?? []}
+        products={data.catalog?.items ?? []}
+      />
       <PreorderComposer onAction={mutate} products={data.catalog?.items ?? []} />
       <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
       <LoyaltyOperations onAction={mutate} />
       <ConfigurationComposer onAction={mutate} />
       <EditorialComposer onAction={mutate} />
+      <RecordEditors
+        configurations={data.configurations?.items ?? []}
+        content={data.content?.items ?? []}
+        loyalty={data.loyalty?.items ?? []}
+        onAction={mutate}
+        preorders={data.preorders?.items ?? []}
+        products={data.catalog?.items ?? []}
+        promotions={data.promotions?.items ?? []}
+      />
     </main>
   );
 }

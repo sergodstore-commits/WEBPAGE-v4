@@ -671,6 +671,23 @@ textarea {
   background: var(--panel-2);
   border-top: 3px solid var(--red);
 }
+.admin-resource {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--panel-2);
+  border-left: 3px solid var(--cyan);
+}
+.admin-resource form,
+.admin-resource p {
+  margin: 0;
+}
+.admin-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
 .table-actions {
   display: flex;
   flex-wrap: wrap;

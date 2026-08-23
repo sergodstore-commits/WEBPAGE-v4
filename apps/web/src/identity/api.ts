@@ -216,22 +216,35 @@ export async function authorizedRequest<Value>(
   path: string,
   init: RequestInit = {},
 ): Promise<Value> {
+  return (await authorizedResponse<Value>(path, init)).body;
+}
+
+export interface AuthorizedResponse<Value> {
+  readonly body: Value;
+  readonly headers: Headers;
+  readonly status: number;
+}
+
+export async function authorizedResponse<Value>(
+  path: string,
+  init: RequestInit = {},
+): Promise<AuthorizedResponse<Value>> {
   const active = await activeSession();
   try {
-    return await authorizedRequestOnce<Value>(path, init, active);
+    return await authorizedResponseOnce<Value>(path, init, active);
   } catch (error) {
     if (!(error instanceof ApiError) || !refreshableAuthenticationError(error.code)) throw error;
     const refreshed = await refreshSession();
-    return authorizedRequestOnce<Value>(path, init, refreshed);
+    return authorizedResponseOnce<Value>(path, init, refreshed);
   }
 }
 
-async function authorizedRequestOnce<Value>(
+async function authorizedResponseOnce<Value>(
   path: string,
   init: RequestInit,
   active: SessionTokens,
-): Promise<Value> {
-  return request<Value>(path, {
+): Promise<AuthorizedResponse<Value>> {
+  return requestResponse<Value>(path, {
     ...init,
     headers: { ...init.headers, authorization: `Bearer ${active.accessToken}` },
   });
@@ -328,6 +341,13 @@ function refreshableAuthenticationError(code: string): boolean {
 }
 
 async function request<Value = void>(path: string, init: RequestInit = {}): Promise<Value> {
+  return (await requestResponse<Value>(path, init)).body;
+}
+
+async function requestResponse<Value = void>(
+  path: string,
+  init: RequestInit = {},
+): Promise<AuthorizedResponse<Value>> {
   const contentHeaders =
     init.body instanceof FormData ? {} : { 'content-type': 'application/json' };
   const response = await fetch(path, {
@@ -343,8 +363,8 @@ async function request<Value = void>(path: string, init: RequestInit = {}): Prom
       payload?.error?.message ?? 'No fue posible completar la solicitud.',
     );
   }
-  if (response.status === 204) return undefined as Value;
-  return (await response.json()) as Value;
+  const body = response.status === 204 ? (undefined as Value) : ((await response.json()) as Value);
+  return { body, headers: response.headers, status: response.status };
 }
 
 export function publicRequest<Value>(path: string, init: RequestInit = {}): Promise<Value> {

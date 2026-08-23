@@ -20,6 +20,7 @@ vi.mock('@supabase/supabase-js', () => ({
 
 import {
   authorizedRequest,
+  authorizedResponse,
   clearSession,
   currentSession,
   initializeSession,
@@ -118,6 +119,42 @@ describe('browser session lifecycle', () => {
       '/api/v1/account',
       expect.objectContaining({
         headers: expect.objectContaining({ authorization: 'Bearer restored-access' }),
+      }),
+    );
+  });
+
+  it('preserves response metadata and lets the browser set multipart boundaries', async () => {
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: providerSession('restored-access', 'restored-refresh') },
+      error: null,
+    });
+    const fetchMock = vi.fn().mockImplementation(async () =>
+      Promise.resolve(
+        new Response(JSON.stringify({ items: [] }), {
+          headers: { etag: '"resources-v2"' },
+          status: 200,
+        }),
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const form = new FormData();
+    form.set('altText', 'Vista frontal');
+
+    await expect(
+      authorizedResponse<{ items: unknown[] }>('/api/v1/admin/catalog/products/id/resources', {
+        body: form,
+        method: 'POST',
+      }),
+    ).resolves.toMatchObject({ body: { items: [] }, status: 200 });
+
+    const response = await authorizedResponse<{ items: unknown[] }>(
+      '/api/v1/admin/catalog/products/id/resources',
+    );
+    expect(response.headers.get('etag')).toBe('"resources-v2"');
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        body: form,
+        headers: expect.not.objectContaining({ 'content-type': expect.anything() }),
       }),
     );
   });
