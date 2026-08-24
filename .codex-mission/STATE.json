@@ -80,7 +80,7 @@
     {
       "stageId": "02-external-providers",
       "capability": "Flow and Webpay sandbox",
-      "reason": "Flow sandbox credentials passed a signed read-only provider request on 2026-08-24. Full Flow transaction/callback cases remain pending because FLOW_BASE_URL and API_PUBLIC_URL are absent locally and the audited HEAD is not deployed; Webpay Integration credentials remain absent.",
+      "reason": "Flow sandbox credentials and local FLOW_BASE_URL/API_PUBLIC_URL passed validation on 2026-08-24. The deployed Render callback returned PAYMENT_PROVIDER_NOT_CONFIGURED, so the same sandbox variables must be configured remotely before full transaction/callback cases; Webpay Integration credentials remain absent.",
       "recordedAtUtc": "2026-08-24T05:41:50.0670848Z"
     },
     {
