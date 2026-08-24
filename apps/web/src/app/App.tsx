@@ -99,10 +99,11 @@ export function App() {
 
 function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   return (
-    <main className="home-page">
+    <main className="home-page visual-public">
       <section className="commerce-hero">
         <div className="hero-copy">
           <p className="eyebrow">TCG · Comunidad · Competencia</p>
+          <span aria-hidden="true" className="hero-rule" />
           <h1>Tu próxima jugada comienza aquí.</h1>
           <p className="hero-lead">
             Compra productos TCG, asegura preventas y mantente al día con la comunidad Sergod.
@@ -117,7 +118,10 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
           </div>
         </div>
         <aside className="hero-service cut-panel">
-          <p className="card-kicker">Compra con claridad</p>
+          <div className="service-heading">
+            <span aria-hidden="true">!</span>
+            <p className="card-kicker">Compra con claridad</p>
+          </div>
           <ul>
             <li>Stock y precios confirmados por el servidor</li>
             <li>Retiro en tienda</li>
@@ -126,49 +130,76 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
           </ul>
         </aside>
       </section>
-      <section className="home-strips">
-        <article>
-          <p className="card-kicker">Tienda</p>
-          <h2>Productos destacados</h2>
-          <button onClick={() => navigate('/shop')} type="button">
-            Comprar
-          </button>
-        </article>
-        <article>
-          <p className="card-kicker">Preventa</p>
-          <h2>Asegura tu próximo lanzamiento</h2>
-          <button onClick={() => navigate('/shop')} type="button">
-            Ver preventas
-          </button>
-        </article>
-        <article>
-          <p className="card-kicker">Editorial</p>
-          <h2>Noticias del mundo TCG</h2>
-          <button onClick={() => navigate('/news')} type="button">
-            Leer novedades
-          </button>
-        </article>
-        <article>
-          <p className="card-kicker">Torneos</p>
-          <h2>Fechas, resultados y podios</h2>
-          <button onClick={() => navigate('/tournaments')} type="button">
-            Ver calendario
-          </button>
-        </article>
-        <article>
-          <p className="card-kicker">Comunidad</p>
-          <h2>Actividades y novedades locales</h2>
-          <button onClick={() => navigate('/community')} type="button">
-            Ir a comunidad
-          </button>
-        </article>
-        <article>
-          <p className="card-kicker">Historias</p>
-          <h2>Cómics y contenido Sergod</h2>
-          <button onClick={() => navigate('/comics')} type="button">
-            Descubrir historias
-          </button>
-        </article>
+      <section aria-labelledby="home-sections-title" className="home-sections">
+        <header className="section-banner">
+          <div>
+            <p className="eyebrow">Elige tu próxima ruta</p>
+            <h2 id="home-sections-title">Explora Sergod</h2>
+          </div>
+          <p>Tienda, comunidad y contenido editorial conectados en una misma experiencia.</p>
+        </header>
+        <div className="home-strips">
+          <article className="feature-strip feature-store">
+            <span aria-hidden="true" className="feature-index">
+              01
+            </span>
+            <p className="card-kicker">Tienda</p>
+            <h2>Productos destacados</h2>
+            <button onClick={() => navigate('/shop')} type="button">
+              Comprar
+            </button>
+          </article>
+          <article className="feature-strip feature-preorder">
+            <span aria-hidden="true" className="feature-index">
+              02
+            </span>
+            <p className="card-kicker">Preventa</p>
+            <h2>Asegura tu próximo lanzamiento</h2>
+            <button onClick={() => navigate('/shop')} type="button">
+              Ver preventas
+            </button>
+          </article>
+          <article className="feature-strip">
+            <span aria-hidden="true" className="feature-index">
+              03
+            </span>
+            <p className="card-kicker">Editorial</p>
+            <h2>Noticias del mundo TCG</h2>
+            <button onClick={() => navigate('/news')} type="button">
+              Leer novedades
+            </button>
+          </article>
+          <article className="feature-strip">
+            <span aria-hidden="true" className="feature-index">
+              04
+            </span>
+            <p className="card-kicker">Torneos</p>
+            <h2>Fechas, resultados y podios</h2>
+            <button onClick={() => navigate('/tournaments')} type="button">
+              Ver calendario
+            </button>
+          </article>
+          <article className="feature-strip">
+            <span aria-hidden="true" className="feature-index">
+              05
+            </span>
+            <p className="card-kicker">Comunidad</p>
+            <h2>Actividades y novedades locales</h2>
+            <button onClick={() => navigate('/community')} type="button">
+              Ir a comunidad
+            </button>
+          </article>
+          <article className="feature-strip">
+            <span aria-hidden="true" className="feature-index">
+              06
+            </span>
+            <p className="card-kicker">Historias</p>
+            <h2>Cómics y contenido Sergod</h2>
+            <button onClick={() => navigate('/comics')} type="button">
+              Descubrir historias
+            </button>
+          </article>
+        </div>
       </section>
     </main>
   );

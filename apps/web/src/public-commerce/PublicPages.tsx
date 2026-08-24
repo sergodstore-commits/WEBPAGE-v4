@@ -184,11 +184,19 @@ export function StorePage() {
     }
   };
   return (
-    <main className="page-frame">
-      <header className="section-heading cut-panel">
-        <p className="eyebrow">Tienda TCG</p>
-        <h1>Catálogo</h1>
-        <p>Productos regulares y preventas. Precio, stock y descuentos se confirman en servidor.</p>
+    <main className="page-frame store-page visual-public">
+      <header className="section-heading catalog-heading cut-panel">
+        <div>
+          <p className="eyebrow">Tienda TCG</p>
+          <h1>Catálogo</h1>
+          <p>
+            Productos regulares y preventas. Precio, stock y descuentos se confirman en servidor.
+          </p>
+        </div>
+        <div aria-label="Garantías del catálogo" className="heading-stats">
+          <span>Stock confirmado</span>
+          <span>Precio de servidor</span>
+        </div>
       </header>
       <p aria-live="polite" className="status">
         {message}
@@ -305,7 +313,7 @@ export function StorePage() {
             </button>
           </form>
         </aside>
-        <div className="catalog-results">
+        <div aria-busy={loading} className="catalog-results">
           <ActiveFilters
             displayValue={(key, value) =>
               filterDisplayValue(key, value, { categories, collections, games })
@@ -320,6 +328,13 @@ export function StorePage() {
               onClose={() => setDetail(null)}
               pending={addingProductId === detail.productId}
             />
+          )}
+          {!loading && items.length === 0 && (
+            <section className="catalog-empty cut-panel" role="status">
+              <p className="eyebrow">Catálogo sin resultados</p>
+              <h2>No hay productos para mostrar</h2>
+              <p>Revisa los filtros o intenta nuevamente cuando el catálogo esté disponible.</p>
+            </section>
           )}
           <section className="card-grid" aria-label="Productos">
             {items.map((product) => (
@@ -415,27 +430,31 @@ function ProductCardView({
 }) {
   return (
     <article className="commerce-card">
-      <img
-        alt={product.primaryResource.altText}
-        height={product.primaryResource.heightPx}
-        loading="lazy"
-        src={resourceUrl(product.primaryResource.resourceId)}
-        width={product.primaryResource.widthPx}
-      />
-      <span className="status-chip">
-        {product.saleType === 'PREORDER' ? 'Preventa' : 'Producto'}
-      </span>
-      <p className="card-kicker">{product.game.name}</p>
-      <h2>{product.name}</h2>
-      <p className="price">${product.priceAmountClp.toLocaleString('es-CL')}</p>
-      <p>{availabilityLabel(product.availabilityStatus)}</p>
-      <div className="card-actions">
-        <button className="secondary" onClick={onDetail} type="button">
-          Ver detalle
-        </button>
-        <button disabled={!product.availableForPurchase || pending} onClick={onAdd} type="button">
-          {pending ? 'Agregando…' : 'Agregar al carrito'}
-        </button>
+      <div className="product-media">
+        <img
+          alt={product.primaryResource.altText}
+          height={product.primaryResource.heightPx}
+          loading="lazy"
+          src={resourceUrl(product.primaryResource.resourceId)}
+          width={product.primaryResource.widthPx}
+        />
+        <span className="status-chip">
+          {product.saleType === 'PREORDER' ? 'Preventa' : 'Producto'}
+        </span>
+      </div>
+      <div className="product-card-body">
+        <p className="card-kicker">{product.game.name}</p>
+        <h2>{product.name}</h2>
+        <p className="price">${product.priceAmountClp.toLocaleString('es-CL')}</p>
+        <p>{availabilityLabel(product.availabilityStatus)}</p>
+        <div className="card-actions">
+          <button className="secondary" onClick={onDetail} type="button">
+            Ver detalle
+          </button>
+          <button disabled={!product.availableForPurchase || pending} onClick={onAdd} type="button">
+            {pending ? 'Agregando…' : 'Agregar al carrito'}
+          </button>
+        </div>
       </div>
     </article>
   );

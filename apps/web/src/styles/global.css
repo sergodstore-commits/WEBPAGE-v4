@@ -10,6 +10,11 @@
   --muted: #a7abb3;
   --line: #3a3d45;
   --content: 82rem;
+  --display-font: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --cut-small: 0.7rem;
+  --cut-medium: 1.1rem;
+  --stroke-strong: 2px solid var(--paper);
+  --shadow-red: 0.5rem 0.5rem 0 var(--red-dark);
   color: var(--paper);
   background: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
@@ -233,6 +238,7 @@ textarea {
 }
 input:focus,
 select:focus,
+textarea:focus,
 button:focus-visible,
 a:focus-visible {
   outline: 3px solid var(--cyan);
@@ -850,6 +856,333 @@ textarea {
   justify-self: end;
   text-align: right;
 }
+
+/* DESIGN-1: sistema visual base derivado de CURRENT y referencias internas. */
+.site-header {
+  isolation: isolate;
+  box-shadow: 0 0.35rem 0 #050607;
+}
+.site-header::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 0.25rem;
+  background: linear-gradient(
+    90deg,
+    var(--red) 0 58%,
+    var(--paper) 58% 72%,
+    var(--cyan) 72% 78%,
+    transparent 78%
+  );
+}
+.site-header nav button[aria-current='page'] {
+  background: linear-gradient(110deg, var(--red-dark), rgb(8 9 11 / 20%));
+  clip-path: polygon(0.45rem 0, 100% 0, calc(100% - 0.45rem) 100%, 0 100%);
+}
+.site-footer {
+  background:
+    radial-gradient(circle at 90% 20%, rgb(226 29 47 / 16%) 0 1.5px, transparent 2px) 0 0 / 12px
+      12px,
+    #050607;
+}
+.visual-public h1,
+.visual-public h2,
+.section-banner h2 {
+  font-family: var(--display-font);
+  font-style: italic;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+.visual-public button,
+.section-banner,
+.heading-stats span {
+  clip-path: polygon(var(--cut-small) 0, 100% 0, calc(100% - var(--cut-small)) 100%, 0 100%);
+}
+.visual-public button {
+  border: 1px solid rgb(255 255 255 / 28%);
+  padding-inline: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+.visual-public button.secondary {
+  border-color: var(--paper);
+}
+.status:empty {
+  display: none;
+}
+.commerce-hero {
+  isolation: isolate;
+  border: var(--stroke-strong);
+  box-shadow:
+    var(--shadow-red),
+    -0.25rem -0.25rem 0 rgb(49 215 229 / 48%);
+  clip-path: polygon(
+    0 0,
+    calc(100% - 3rem) 0,
+    100% 3rem,
+    100% 100%,
+    2rem 100%,
+    0 calc(100% - 2rem)
+  );
+}
+.commerce-hero::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -12%;
+  right: 5%;
+  width: min(32rem, 50vw);
+  aspect-ratio: 1.8;
+  background:
+    radial-gradient(circle, rgb(8 9 11 / 55%) 0 1.5px, transparent 2px) 0 0 / 9px 9px,
+    var(--red);
+  clip-path: polygon(12% 8%, 100% 0, 85% 40%, 100% 64%, 58% 74%, 25% 100%, 36% 58%, 0 45%);
+  transform: rotate(-7deg);
+}
+.commerce-hero h1 {
+  margin-block: 0.8rem 1.1rem;
+  max-width: 11ch;
+  text-wrap: balance;
+  text-shadow: 0.12em 0.12em 0 #000;
+}
+.hero-rule {
+  display: block;
+  width: min(18rem, 70%);
+  height: 0.45rem;
+  margin-top: 0.75rem;
+  background: linear-gradient(90deg, var(--red) 0 70%, var(--paper) 70% 84%, var(--cyan) 84%);
+  transform: skewX(-28deg);
+}
+.service-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.service-heading > span {
+  display: grid;
+  width: 2rem;
+  aspect-ratio: 1;
+  place-items: center;
+  background: var(--red);
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  font-family: var(--display-font);
+}
+.service-heading p {
+  margin: 0;
+  color: var(--paper);
+}
+.home-sections {
+  margin-top: clamp(2rem, 5vw, 4rem);
+}
+.section-banner {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  min-height: 8rem;
+  padding: 1.4rem clamp(1.25rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(circle, rgb(255 255 255 / 10%) 0 1.5px, transparent 2px) 95% 50% / 10px 10px,
+    linear-gradient(105deg, var(--red) 0 46%, #0c0d10 46%);
+  border-block: 2px solid var(--paper);
+}
+.section-banner h2 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+}
+.section-banner .eyebrow {
+  color: var(--paper);
+}
+.section-banner > p {
+  max-width: 42ch;
+  margin: 0;
+  color: #dedfe1;
+}
+.feature-strip {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  isolation: isolate;
+  min-height: 14rem;
+  overflow: hidden;
+  border-top: 3px solid var(--red);
+}
+.feature-strip::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -2rem;
+  bottom: -2rem;
+  width: 9rem;
+  aspect-ratio: 1;
+  background:
+    repeating-linear-gradient(115deg, transparent 0 9px, rgb(255 255 255 / 8%) 9px 12px),
+    var(--red-dark);
+  clip-path: polygon(35% 0, 100% 18%, 68% 50%, 100% 82%, 30% 100%, 0 58%);
+  transform: rotate(10deg);
+}
+.feature-strip.feature-store,
+.feature-strip.feature-preorder {
+  border-top-color: var(--cyan);
+}
+.feature-index {
+  position: absolute;
+  top: 0.7rem;
+  right: 1rem;
+  color: rgb(255 255 255 / 12%);
+  font-family: var(--display-font);
+  font-size: 3.5rem;
+  font-style: italic;
+  line-height: 1;
+}
+.feature-strip h2 {
+  max-width: 14ch;
+  min-height: 2.5em;
+  font-size: 1.35rem;
+}
+.feature-strip button {
+  margin-top: auto;
+}
+.catalog-heading {
+  position: relative;
+  overflow: hidden;
+  border-top: 3px solid var(--red);
+}
+.catalog-heading::after {
+  content: '';
+  position: absolute;
+  inset: auto -3rem -4rem auto;
+  width: 20rem;
+  aspect-ratio: 1.6;
+  background:
+    repeating-linear-gradient(120deg, transparent 0 14px, rgb(255 255 255 / 7%) 14px 18px),
+    var(--red-dark);
+  clip-path: polygon(18% 0, 100% 15%, 78% 48%, 100% 76%, 20% 100%, 0 48%);
+  transform: rotate(-8deg);
+}
+.catalog-heading > * {
+  position: relative;
+  z-index: 1;
+}
+.catalog-heading > div:first-child {
+  max-width: 48rem;
+}
+.catalog-heading p:last-child {
+  max-width: 58ch;
+  margin-bottom: 0;
+}
+.heading-stats {
+  display: grid;
+  gap: 0.6rem;
+  min-width: min(15rem, 100%);
+}
+.heading-stats span {
+  padding: 0.65rem 1rem;
+  background: #050607;
+  border-left: 4px solid var(--cyan);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.catalog-filters {
+  border-top: 3px solid var(--red);
+  box-shadow: 0.45rem 0.45rem 0 #050607;
+}
+.catalog-filters h2 {
+  padding-bottom: 0.7rem;
+  border-bottom: 2px solid var(--red);
+}
+.commerce-card {
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid #3a3d45;
+  box-shadow: 0.45rem 0.45rem 0 #050607;
+}
+.product-media {
+  position: relative;
+  height: 14rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 70% 25%, rgb(226 29 47 / 22%) 0 2px, transparent 2.5px) 0 0 / 12px
+      12px,
+    var(--panel-3);
+  border-bottom: 3px solid var(--red);
+}
+.product-media::after {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  bottom: -2.5rem;
+  width: 8rem;
+  aspect-ratio: 1;
+  background: var(--red);
+  clip-path: polygon(
+    50% 0,
+    64% 33%,
+    100% 16%,
+    78% 53%,
+    100% 74%,
+    61% 67%,
+    48% 100%,
+    34% 70%,
+    0 86%,
+    23% 51%,
+    0 30%,
+    38% 34%
+  );
+  opacity: 0.35;
+}
+.product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.product-media .status-chip {
+  position: absolute;
+  z-index: 1;
+  left: 0.8rem;
+  bottom: 0.8rem;
+}
+.product-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.25rem;
+}
+.product-card-body h2 {
+  min-height: 2.5em;
+  font-size: 1.35rem;
+}
+.product-card-body .price {
+  margin-top: auto;
+}
+.catalog-results[aria-busy='true'] {
+  cursor: progress;
+}
+.catalog-empty {
+  min-height: 18rem;
+  display: grid;
+  align-content: center;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border-top: 3px solid var(--red);
+  background:
+    radial-gradient(circle, rgb(226 29 47 / 20%) 0 1.5px, transparent 2px) 100% 0 / 12px 12px,
+    var(--panel);
+}
+.catalog-empty h2 {
+  max-width: 14ch;
+  margin-top: 0.5rem;
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
+}
+.catalog-empty p:last-child {
+  max-width: 42ch;
+  color: var(--muted);
+}
 @media (prefers-reduced-motion: no-preference) {
   button {
     transition:
@@ -955,5 +1288,20 @@ textarea {
   }
   .footer-note {
     grid-column: auto;
+  }
+  .section-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+    background:
+      radial-gradient(circle, rgb(255 255 255 / 9%) 0 1.5px, transparent 2px) 95% 50% / 10px 10px,
+      linear-gradient(160deg, var(--red) 0 52%, #0c0d10 52%);
+  }
+  .heading-stats {
+    width: 100%;
+  }
+  .feature-strip h2,
+  .product-card-body h2 {
+    min-height: 0;
   }
 }

@@ -17,6 +17,17 @@ vi.mock('../identity/api.js', async (importOriginal) => {
 beforeEach(() => vi.clearAllMocks());
 
 describe('public Store cart action', () => {
+  it('shows an explicit empty state when the catalog cannot return products', async () => {
+    vi.mocked(publicRequest).mockRejectedValue(new Error('Catálogo temporalmente no disponible.'));
+
+    render(<StorePage />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'No hay productos para mostrar' }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('Catálogo temporalmente no disponible.')).toBeInTheDocument();
+  });
+
   it('creates an anonymous cart when required and retries the line command', async () => {
     vi.mocked(publicRequest).mockImplementation(async (path) => {
       if (path.startsWith('/api/v1/catalog/products?')) {
