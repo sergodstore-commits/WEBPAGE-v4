@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
+import { currentSession } from '../identity/api.js';
 import {
   clearCheckoutCoupon,
   clearCheckoutPoints,
@@ -15,13 +16,15 @@ import {
 
 export function CheckoutPanel() {
   const initialGroupId = new URLSearchParams(window.location.search).get('group')?.trim() ?? '';
-  const [groupId, setGroupId] = useState(initialGroupId);
+  const groupId = initialGroupId;
+  const isAuthenticated = currentSession() !== null;
   const [summary, setSummary] = useState<ReturnType<JSON['parse']> | null>(null);
   const [order, setOrder] = useState<ReturnType<JSON['parse']> | null>(null);
   const [message, setMessage] = useState('');
+  const [deliveryMode, setDeliveryMode] = useState<'PICKUP' | 'SHIPPING'>('PICKUP');
   const refresh = async (id = groupId) => setSummary((await readCheckoutSummary(id)).item);
   useEffect(() => {
-    if (initialGroupId === '') return;
+    if (!isAuthenticated || initialGroupId === '') return;
     let active = true;
     void readCheckoutSummary(initialGroupId)
       .then((result) => {
@@ -39,18 +42,7 @@ export function CheckoutPanel() {
     return () => {
       active = false;
     };
-  }, [initialGroupId]);
-  const load = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const id = String(new FormData(event.currentTarget).get('groupId')).trim();
-    try {
-      setGroupId(id);
-      await refresh(id);
-      setMessage('Resumen recalculado.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No fue posible cargar el checkout.');
-    }
-  };
+  }, [initialGroupId, isAuthenticated]);
   const run = async (event: FormEvent<HTMLFormElement>, action: string) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -128,82 +120,151 @@ export function CheckoutPanel() {
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <main className="page-frame checkout-page visual-public">
+        <section className="checkout-access cut-panel">
+          <p className="eyebrow">Checkout protegido</p>
+          <h1>Ingresa para continuar tu compra</h1>
+          <p>La creación de pedidos está disponible únicamente para clientes autenticados.</p>
+          <div className="actions">
+            <a className="button-link" href="/login">
+              Ingresar
+            </a>
+            <a className="button-link secondary-link" href="/cart">
+              Volver al carrito
+            </a>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
-    <main className="page-frame checkout-page">
-      <header className="section-heading cut-panel">
-        <p className="eyebrow">Compra · Checkout</p>
-        <h1>Revisión, entrega y beneficios</h1>
-        <p>Confirma cada dato antes de crear el pedido. El flete por pagar no se cobra aquí.</p>
+    <main className="page-frame checkout-page visual-public">
+      <header className="section-heading checkout-heading cut-panel">
+        <div>
+          <p className="eyebrow">Compra · Checkout</p>
+          <h1>Revisión, entrega y beneficios</h1>
+          <p>Confirma cada dato antes de crear el pedido. El flete por pagar no se cobra aquí.</p>
+        </div>
+        <div aria-label="Condiciones del checkout" className="heading-stats">
+          <span>Total confirmado por servidor</span>
+          <span>Pago externo verificado</span>
+        </div>
       </header>
       {initialGroupId === '' ? (
-        <form className="inline-form" onSubmit={(event) => void load(event)}>
-          <label>
-            Grupo del carrito
-            <input name="groupId" required />
-          </label>
-          <button>Cargar resumen</button>
-        </form>
+        <section className="checkout-access compact cut-panel">
+          <p className="eyebrow">Falta seleccionar la compra</p>
+          <h2>Continúa desde un grupo válido del carrito</h2>
+          <p>El checkout no solicita identificadores internos escritos manualmente.</p>
+          <a className="button-link" href="/cart">
+            Revisar carrito
+          </a>
+        </section>
       ) : null}
       {summary && (
         <>
           <section className="checkout-summary cut-panel">
-            <h2>Resumen recalculado</h2>
+            <div className="checkout-summary-heading">
+              <div>
+                <p className="card-kicker">Resumen del pedido</p>
+                <h2>Total recalculado</h2>
+              </div>
+              <span className="status-chip">Servidor</span>
+            </div>
             <p className="checkout-total">
-              <span>Total comercial</span>
+              <span>Total Sergod Store</span>
               <strong>${Number(summary.totalAmountClp).toLocaleString('es-CL')} CLP</strong>
             </p>
             {summary.shippingPaymentMode === 'FREIGHT_COLLECT' && (
-              <p>
-                <strong>NO INCLUIDO — ENVÍO POR PAGAR</strong>
+              <p className="freight-notice">
+                <strong>Envío por pagar — no incluido en este total</strong>
+                <span>El flete se paga directamente al transportista.</span>
               </p>
             )}
           </section>
-          <div className="pos-grid">
-            <form onSubmit={(event) => void run(event, 'DELIVERY')}>
-              <h2>Entrega</h2>
+          <div className="checkout-options">
+            <form
+              className="checkout-option delivery-option"
+              onSubmit={(event) => void run(event, 'DELIVERY')}
+            >
+              <div className="option-heading">
+                <span aria-hidden="true">01</span>
+                <div>
+                  <p className="card-kicker">Modalidad</p>
+                  <h2>Entrega</h2>
+                </div>
+              </div>
               <label>
                 Modalidad
-                <select name="mode">
-                  <option>PICKUP</option>
-                  <option>SHIPPING</option>
+                <select
+                  name="mode"
+                  onChange={(event) =>
+                    setDeliveryMode(event.currentTarget.value as 'PICKUP' | 'SHIPPING')
+                  }
+                  value={deliveryMode}
+                >
+                  <option value="PICKUP">Retiro en tienda</option>
+                  <option value="SHIPPING">Despacho por pagar a agencia</option>
                 </select>
               </label>
-              <label>
-                Sucursal de retiro
-                <input name="branchId" />
-              </label>
-              <label>
-                Destinatario
-                <input name="recipientName" />
-              </label>
-              <label>
-                Transportista
-                <select name="carrier">
-                  <option>CHILEXPRESS</option>
-                  <option>STARKEN</option>
-                </select>
-              </label>
-              <label>
-                Comuna o ciudad
-                <input name="destinationCommune" />
-              </label>
-              <label>
-                Agencia de destino
-                <input name="agencyDestination" />
-              </label>
-              <p>SHIPPING es exclusivamente hacia agencia; no se admite domicilio.</p>
+              {deliveryMode === 'PICKUP' ? (
+                <label>
+                  Sucursal de retiro
+                  <input name="branchId" />
+                </label>
+              ) : (
+                <div className="delivery-fields">
+                  <p className="freight-notice compact">
+                    <strong>Despacho exclusivamente a agencia</strong>
+                    <span>No se solicita ni admite domicilio.</span>
+                  </p>
+                  <label>
+                    Destinatario
+                    <input name="recipientName" />
+                  </label>
+                  <label>
+                    Transportista
+                    <select name="carrier">
+                      <option value="CHILEXPRESS">Chilexpress</option>
+                      <option value="STARKEN">Starken</option>
+                    </select>
+                  </label>
+                  <label>
+                    Comuna o ciudad
+                    <input name="destinationCommune" />
+                  </label>
+                  <label>
+                    Agencia de destino
+                    <input name="agencyDestination" />
+                  </label>
+                </div>
+              )}
               <button>Guardar entrega</button>
             </form>
-            <form onSubmit={(event) => void run(event, 'COUPON')}>
-              <h2>Cupón</h2>
+            <form className="checkout-option" onSubmit={(event) => void run(event, 'COUPON')}>
+              <div className="option-heading">
+                <span aria-hidden="true">02</span>
+                <div>
+                  <p className="card-kicker">Beneficio</p>
+                  <h2>Cupón</h2>
+                </div>
+              </div>
               <label>
                 Código
                 <input name="coupon" required />
               </label>
               <button>Evaluar cupón</button>
             </form>
-            <form onSubmit={(event) => void run(event, 'POINTS')}>
-              <h2>Puntos</h2>
+            <form className="checkout-option" onSubmit={(event) => void run(event, 'POINTS')}>
+              <div className="option-heading">
+                <span aria-hidden="true">03</span>
+                <div>
+                  <p className="card-kicker">Loyalty</p>
+                  <h2>Puntos</h2>
+                </div>
+              </div>
               <label>
                 Puntos a canjear
                 <input name="points" min="1" type="number" required />
@@ -211,7 +272,7 @@ export function CheckoutPanel() {
               <button>Evaluar puntos</button>
             </form>
           </div>
-          <div className="actions">
+          <div aria-label="Acciones del checkout" className="actions checkout-actions">
             <button onClick={() => void runWithoutForm('REVALIDATE')} type="button">
               Revalidar
             </button>
@@ -255,6 +316,7 @@ export function CheckoutPanel() {
               <div>
                 <p className="eyebrow">Pago online</p>
                 <h2>Elige un proveedor</h2>
+                <p>El regreso desde el proveedor no confirma el pago por sí solo.</p>
               </div>
               <label>
                 Correo del pagador

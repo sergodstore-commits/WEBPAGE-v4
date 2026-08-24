@@ -681,27 +681,46 @@ export function EditorialPage({ type, title }: { readonly type: string; readonly
       })
       .catch((error: unknown) => setMessage(messageOf(error)));
   }, [type]);
+  const sectionDescription =
+    type === 'TOURNAMENT'
+      ? 'Calendario, resultados y podios informativos; no administra rondas.'
+      : 'Publicaciones de Sergod Store para mantenerte al día con la comunidad TCG.';
   return (
-    <main className="page-frame">
-      <header className="section-heading cut-panel">
-        <p className="eyebrow">Sergod editorial</p>
-        <h1>{title}</h1>
-        {type === 'TOURNAMENT' && (
-          <p>Calendario, resultados y podios informativos; no administra rondas.</p>
-        )}
+    <main className="page-frame editorial-page visual-public">
+      <header className="section-heading editorial-heading cut-panel">
+        <div>
+          <p className="eyebrow">Sergod editorial</p>
+          <h1>{title}</h1>
+          <p>{sectionDescription}</p>
+        </div>
+        <div aria-label="Características de la sección" className="heading-stats">
+          <span>Contenido oficial</span>
+          <span>Lectura pública</span>
+        </div>
       </header>
       <p aria-live="polite" className="status">
         {message}
       </p>
-      <section className="editorial-grid">
-        {items.map((item) => (
-          <article className="editorial-card" key={item.editorialEntryId}>
-            <p className="card-kicker">{item.type.replaceAll('_', ' ')}</p>
-            <h2>{item.title}</h2>
-            <p>{item.excerpt}</p>
-          </article>
-        ))}
-      </section>
+      {items.length > 0 ? (
+        <section aria-label={`Publicaciones de ${title}`} className="editorial-grid">
+          {items.map((item, index) => (
+            <article className="editorial-card" key={item.editorialEntryId}>
+              <span aria-hidden="true" className="editorial-index">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <p className="card-kicker">{item.type.replaceAll('_', ' ')}</p>
+              <h2>{item.title}</h2>
+              <p>{item.excerpt}</p>
+            </article>
+          ))}
+        </section>
+      ) : message !== 'Cargando contenido…' ? (
+        <section className="editorial-empty cut-panel" role="status">
+          <p className="eyebrow">Archivo editorial</p>
+          <h2>Aún no hay publicaciones para mostrar</h2>
+          <p>Vuelve pronto para revisar las novedades oficiales de Sergod Store.</p>
+        </section>
+      ) : null}
     </main>
   );
 }

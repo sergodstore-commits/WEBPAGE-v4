@@ -93,15 +93,21 @@ export function CartPage() {
   );
 
   return (
-    <main className="page-frame cart-page">
-      <header className="section-heading cut-panel">
-        <p className="eyebrow">Tu compra</p>
-        <h1>Carrito</h1>
-        <p>
-          {lineCount === 0
-            ? 'Aquí aparecerán los productos que elijas.'
-            : `${lineCount} ${lineCount === 1 ? 'producto' : 'productos'} en revisión.`}
-        </p>
+    <main className="page-frame cart-page visual-public">
+      <header className="section-heading cart-heading cut-panel">
+        <div>
+          <p className="eyebrow">Tu compra</p>
+          <h1>Carrito</h1>
+          <p>
+            {lineCount === 0
+              ? 'Aquí aparecerán los productos que elijas.'
+              : `${lineCount} ${lineCount === 1 ? 'producto' : 'productos'} en revisión.`}
+          </p>
+        </div>
+        <div aria-label="Garantías del carrito" className="heading-stats">
+          <span>Intención guardada</span>
+          <span>Validación en checkout</span>
+        </div>
       </header>
       <p aria-live="polite" className="status">
         {message}
@@ -117,7 +123,10 @@ export function CartPage() {
                 </p>
                 <h2>{group.groupType === 'CONFLICT' ? 'Requiere revisión' : 'Productos'}</h2>
               </div>
-              <strong>${groupTotal.toLocaleString('es-CL')}</strong>
+              <div className="cart-group-total">
+                <span>Subtotal estimado</span>
+                <strong>${groupTotal.toLocaleString('es-CL')}</strong>
+              </div>
             </div>
             <div className="cart-lines">
               {group.lines.map((line) => (
@@ -162,7 +171,7 @@ export function CartPage() {
               ))}
             </div>
             {group.groupType === 'CONFLICT' ? (
-              <p className="status">Este grupo debe resolverse antes de continuar.</p>
+              <p className="status cart-conflict">Este grupo debe resolverse antes de continuar.</p>
             ) : currentSession() === null ? (
               <a className="button-link" href="/login">
                 Ingresar para continuar
@@ -179,6 +188,7 @@ export function CartPage() {
         <section className="empty-state cut-panel">
           <p className="eyebrow">Sin productos</p>
           <h2>Tu próxima jugada comienza en la tienda.</h2>
+          <p>Explora el catálogo y agrega productos regulares o preventas a tu carrito.</p>
           <a className="button-link" href="/shop">
             Explorar catálogo
           </a>

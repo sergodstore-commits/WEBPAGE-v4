@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError, publicRequest } from '../identity/api.js';
-import { StorePage } from './PublicPages.js';
+import { EditorialPage, StorePage } from './PublicPages.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -192,5 +192,19 @@ describe('public Store cart action', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ver detalle' }));
     expect(await screen.findByText('SKU-001')).toBeInTheDocument();
     expect(screen.getByText('Descripción pública')).toBeInTheDocument();
+  });
+});
+
+describe('public editorial sections', () => {
+  it('keeps tournaments informational and renders an explicit empty state', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({ items: [] } as never);
+
+    render(<EditorialPage title="Torneos" type="TOURNAMENT" />);
+
+    expect(screen.getByText(/no administra rondas/iu)).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Aún no hay publicaciones para mostrar' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
   });
 });
