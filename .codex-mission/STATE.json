@@ -80,13 +80,13 @@
     {
       "stageId": "02-external-providers",
       "capability": "Flow and Webpay sandbox",
-      "reason": "No sandbox credentials or reachable acceptance environment were supplied; local contracts pass but mocks do not constitute official acceptance.",
+      "reason": "Flow sandbox credentials passed a signed read-only provider request on 2026-08-24. Full Flow transaction/callback cases remain pending because FLOW_BASE_URL and API_PUBLIC_URL are absent locally and the audited HEAD is not deployed; Webpay Integration credentials remain absent.",
       "recordedAtUtc": "2026-08-24T05:41:50.0670848Z"
     },
     {
       "stageId": "03-staging",
       "capability": "Staging and production",
-      "reason": "Render public smoke and CORS passed, but managed Supabase migration/RLS verification, authenticated role smoke, Vercel preview acceptance, observability, backup/restore and rollback remain unverified because the required secure access and preview target are not available.",
+      "reason": "Render public smoke and CORS passed. Supabase public configuration returned 200, but DATABASE_URL authentication was rejected; managed migrations/RLS, authenticated role smoke, Vercel preview acceptance, observability, backup/restore and rollback remain unverified.",
       "recordedAtUtc": "2026-08-24T05:46:52.2115511Z"
     },
     {
