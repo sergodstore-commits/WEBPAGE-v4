@@ -20,10 +20,11 @@ if ($Status -eq 'DEFERRED_EXTERNAL') {
 }
 
 # Require a clean committed state before moving the mission pointer.
-$dirty=@(& git -C $root status --porcelain)
+$gitSafety="safe.directory=$root"
+$dirty=@(& git -c $gitSafety -C $root status --porcelain)
 if ($dirty.Count -ne 0) { throw 'Commit/stabilize all stage changes before complete-stage; working tree is not clean.' }
 
-$entry=[ordered]@{ id=$currentId; status=$Status; completedAtUtc=(Get-Date).ToUniversalTime().ToString('o'); evidence=$Evidence; commit=(& git -C $root rev-parse HEAD).Trim() }
+$entry=[ordered]@{ id=$currentId; status=$Status; completedAtUtc=(Get-Date).ToUniversalTime().ToString('o'); evidence=$Evidence; commit=(& git -c $gitSafety -C $root rev-parse HEAD).Trim() }
 $completed=@($state.completedStages) + [pscustomobject]$entry
 $deferred=@($state.deferredExternal)
 if ($Status -eq 'DEFERRED_EXTERNAL') {
@@ -59,9 +60,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Mission state formatting failed.' }
 & node (Join-Path $root 'codex-system\tools\validate-codex-system.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Mission bookkeeping validation failed.' }
 
-& git -C $root add -- '.codex-mission'
+& git -c $gitSafety -C $root add -- '.codex-mission'
 if ($LASTEXITCODE -ne 0) { throw 'Could not stage mission bookkeeping.' }
-& git -C $root commit -m "chore(mission): close stage $currentId"
+& git -c $gitSafety -C $root commit -m "chore(mission): close stage $currentId"
 if ($LASTEXITCODE -ne 0) { throw 'Could not commit mission bookkeeping.' }
 
 Write-Output "STAGE_COMPLETED=$currentId::$Status"
