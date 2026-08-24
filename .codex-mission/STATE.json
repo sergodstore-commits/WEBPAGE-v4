@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "mission": "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
   "status": "ACTIVE",
-  "currentStageId": "02-external-providers",
-  "currentStageFile": ".codex-mission/stages/02-external-providers.md",
+  "currentStageId": "03-staging",
+  "currentStageFile": ".codex-mission/stages/03-staging.md",
   "queue": [
     {
       "id": "00-baseline",
@@ -48,14 +48,16 @@
       "completedAtUtc": "2026-08-24T02:30:21.0269159Z",
       "evidence": "codex:prepare 139 PASS; npm audit 0; official LOCAL_VERIFICATION=PASS; unit 223/223; application 43/43; contract 53 PASS + 1 documented skip; web 41/41; PostgreSQL integration 164/164; build and delivery audit PASS; manual security/accessibility/error review PASS",
       "commit": "c82f0b9608c50aa8e72e8c0fe2a57fd349cdef35"
+    },
+    {
+      "id": "02-external-providers",
+      "status": "DEFERRED_EXTERNAL",
+      "completedAtUtc": "2026-08-24T05:41:49.9440138Z",
+      "evidence": "Provider and notification adapters inspected; no credentials or private env found; 7 focused files and 21 tests PASS; delivery audit PASS; official Flow, Webpay and Resend acceptance not executed.",
+      "commit": "b5ab9a57317c2171d55b2cc1828f4b452180a7b1"
     }
   ],
   "deferredExternal": [
-    {
-      "stageId": "02-external-providers",
-      "capability": "Flow and Webpay sandbox",
-      "reason": "No sandbox credentials or reachable acceptance environment were supplied."
-    },
     {
       "stageId": "02-external-providers",
       "capability": "Transactional email provider",
@@ -65,6 +67,12 @@
       "stageId": "03-staging",
       "capability": "Staging and production",
       "reason": "Render API, Supabase and a separate Vercel V4 preview exist, but Git auto-deploy, complete remote E2E, production promotion and domain cutover have not been accepted."
+    },
+    {
+      "stageId": "02-external-providers",
+      "capability": "Flow and Webpay sandbox",
+      "reason": "No sandbox credentials or reachable acceptance environment were supplied; local contracts pass but mocks do not constitute official acceptance.",
+      "recordedAtUtc": "2026-08-24T05:41:50.0670848Z"
     }
   ],
   "notes": [
