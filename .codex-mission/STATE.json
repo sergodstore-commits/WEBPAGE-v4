@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "mission": "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
   "status": "ACTIVE",
-  "currentStageId": "03-staging",
-  "currentStageFile": ".codex-mission/stages/03-staging.md",
+  "currentStageId": "04-remote-e2e-hardening",
+  "currentStageFile": ".codex-mission/stages/04-remote-e2e-hardening.md",
   "queue": [
     {
       "id": "00-baseline",
@@ -55,6 +55,13 @@
       "completedAtUtc": "2026-08-24T05:41:49.9440138Z",
       "evidence": "Provider and notification adapters inspected; no credentials or private env found; 7 focused files and 21 tests PASS; delivery audit PASS; official Flow, Webpay and Resend acceptance not executed.",
       "commit": "b5ab9a57317c2171d55b2cc1828f4b452180a7b1"
+    },
+    {
+      "id": "03-staging",
+      "status": "DEFERRED_EXTERNAL",
+      "completedAtUtc": "2026-08-24T05:46:52.1140533Z",
+      "evidence": "Render staging health, catalog and editorial returned 200 with security headers; unauthenticated account/admin returned 401; empty Flow/Webpay returns returned 422; approved CORS origins returned 204 and an unapproved origin 403. Supabase host is TLS-reachable but protected. No credentials, Vercel preview URL, managed migration/RLS access, logs, backup/restore or rollback evidence were available.",
+      "commit": "1fbf5e48e601a9846fac511b22ec23ff406fe0ca"
     }
   ],
   "deferredExternal": [
@@ -64,15 +71,16 @@
       "reason": "Resend and sergodstore.cl are configured, but no real transactional send or delivery acceptance has been executed; the notification worker remains disabled."
     },
     {
-      "stageId": "03-staging",
-      "capability": "Staging and production",
-      "reason": "Render API, Supabase and a separate Vercel V4 preview exist, but Git auto-deploy, complete remote E2E, production promotion and domain cutover have not been accepted."
-    },
-    {
       "stageId": "02-external-providers",
       "capability": "Flow and Webpay sandbox",
       "reason": "No sandbox credentials or reachable acceptance environment were supplied; local contracts pass but mocks do not constitute official acceptance.",
       "recordedAtUtc": "2026-08-24T05:41:50.0670848Z"
+    },
+    {
+      "stageId": "03-staging",
+      "capability": "Staging and production",
+      "reason": "Render public smoke and CORS passed, but managed Supabase migration/RLS verification, authenticated role smoke, Vercel preview acceptance, observability, backup/restore and rollback remain unverified because the required secure access and preview target are not available.",
+      "recordedAtUtc": "2026-08-24T05:46:52.2115511Z"
     }
   ],
   "notes": [
