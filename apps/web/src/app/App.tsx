@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import {
   accounts,
@@ -6,6 +6,7 @@ import {
   changePassword,
   completeEmailCallback,
   completeRecovery,
+  currentSession,
   legalVersions,
   login,
   logout,
@@ -15,6 +16,7 @@ import {
   requestEmailChange,
   requestRecovery,
   resendEmailVerification,
+  subscribeSession,
   updatePhone,
   type AccountView,
   type LegalVersion,
@@ -78,22 +80,129 @@ export function App() {
         {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
           <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
         )}
-        {route === '/account' && <Account navigate={navigate} />}
-        {route === '/account/overview' && <AccountHub />}
+        {route === '/account' && (
+          <AccessGate>
+            <Account navigate={navigate} />
+          </AccessGate>
+        )}
+        {route === '/account/overview' && (
+          <AccessGate>
+            <AccountHub />
+          </AccessGate>
+        )}
         {route === '/shop' && <StorePage />}
         {route === '/cart' && <CartPage />}
         {route === '/tournaments' && <EditorialPage title="Torneos" type="TOURNAMENT" />}
         {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
         {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
         {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
-        {route === '/admin' && <AdminHub />}
+        {route === '/admin' && (
+          <AccessGate requiredRole="ADMIN">
+            <AdminHub />
+          </AccessGate>
+        )}
         {route === '/checkout' && <CheckoutPanel />}
-        {route === '/admin/accounts' && <AccountsPanel />}
-        {route === '/admin/pos' && <PosPanel />}
-        {route === '/admin/service-coverage' && <ServiceCoveragePanel />}
+        {route === '/admin/accounts' && (
+          <AccessGate requiredRole="ADMIN">
+            <AccountsPanel />
+          </AccessGate>
+        )}
+        {route === '/admin/pos' && (
+          <AccessGate requiredRole="ADMIN">
+            <PosPanel />
+          </AccessGate>
+        )}
+        {route === '/admin/service-coverage' && (
+          <AccessGate requiredRole="ADMIN">
+            <ServiceCoveragePanel />
+          </AccessGate>
+        )}
       </div>
       <SiteFooter navigate={navigate} />
     </div>
+  );
+}
+
+function AccessGate({
+  children,
+  requiredRole,
+}: {
+  readonly children: ReactNode;
+  readonly requiredRole?: AccountView['role'];
+}) {
+  const [activeSession, setActiveSession] = useState(() => currentSession());
+  const [state, setState] = useState<'allowed' | 'denied' | 'error' | 'loading'>('loading');
+
+  useEffect(
+    () =>
+      subscribeSession((session) => {
+        setActiveSession(session);
+        if (session !== null) setState('loading');
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    if (activeSession === null) return;
+    let active = true;
+    void ownAccount()
+      .then((account) => {
+        if (!active) return;
+        setState(
+          requiredRole !== undefined && account.role !== requiredRole ? 'denied' : 'allowed',
+        );
+      })
+      .catch(() => {
+        if (active) setState('error');
+      });
+    return () => {
+      active = false;
+    };
+  }, [activeSession, requiredRole]);
+
+  const visibleState = activeSession === null ? 'signed-out' : state;
+  if (visibleState === 'allowed') return children;
+
+  const copy = {
+    denied: {
+      description: 'Tu cuenta no tiene permisos para utilizar las herramientas de operación.',
+      eyebrow: 'Permiso insuficiente',
+      title: 'Acceso administrativo restringido',
+    },
+    error: {
+      description: 'No fue posible confirmar la sesión y los permisos actuales.',
+      eyebrow: 'Verificación pendiente',
+      title: 'No pudimos verificar tu acceso',
+    },
+    loading: {
+      description: 'Estamos confirmando tu sesión y permisos con el servidor.',
+      eyebrow: 'Acceso protegido',
+      title: 'Verificando acceso',
+    },
+    'signed-out': {
+      description: 'Esta sección requiere una cuenta autenticada.',
+      eyebrow: 'Acceso protegido',
+      title: 'Ingresa para continuar',
+    },
+  }[visibleState];
+
+  return (
+    <main aria-busy={visibleState === 'loading'} className="page-frame visual-public">
+      <section className="access-gate cut-panel">
+        <p className="eyebrow">{copy.eyebrow}</p>
+        <h1>{copy.title}</h1>
+        <p>{copy.description}</p>
+        {visibleState === 'signed-out' ? (
+          <a className="button-link" href="/login">
+            Ingresar
+          </a>
+        ) : visibleState !== 'loading' ? (
+          <a className="button-link secondary-link" href="/">
+            Volver al inicio
+          </a>
+        ) : null}
+      </section>
+    </main>
   );
 }
 

@@ -107,21 +107,27 @@ export function AdminHub() {
   };
 
   return (
-    <main className="page-frame admin-shell">
-      <header className="section-heading cut-panel">
+    <main className="page-frame admin-shell visual-public">
+      <header className="section-heading admin-heading cut-panel">
         <div>
           <p className="eyebrow">Operación Admin</p>
           <h1>Centro de control</h1>
           <p>Herramientas conectadas a datos y acciones reales del servidor.</p>
         </div>
-        <nav aria-label="Herramientas administrativas" className="admin-navigation">
-          <a aria-current="page" href="/admin">
-            Operación
-          </a>
-          <a href="/admin/accounts">Cuentas</a>
-          <a href="/admin/pos">Pseudo-POS</a>
-          <a href="/admin/service-coverage">Atención y cobertura</a>
-        </nav>
+        <div className="admin-heading-tools">
+          <div aria-label="Garantías de operación" className="heading-stats">
+            <span>Datos de servidor</span>
+            <span>Acciones auditables</span>
+          </div>
+          <nav aria-label="Herramientas administrativas" className="admin-navigation">
+            <a aria-current="page" href="/admin">
+              Operación
+            </a>
+            <a href="/admin/accounts">Cuentas</a>
+            <a href="/admin/pos">Pseudo-POS</a>
+            <a href="/admin/service-coverage">Atención y cobertura</a>
+          </nav>
+        </div>
       </header>
       <nav aria-label="Módulos operativos" className="admin-module-nav cut-panel">
         {modules.map((module) => (
@@ -134,7 +140,7 @@ export function AdminHub() {
       <p className="status" role="status">
         {actionMessage}
       </p>
-      <section className="metric-grid">
+      <section aria-label="Resumen operativo visible" className="metric-grid admin-snapshot">
         {modules.slice(0, 6).map((module) => (
           <div className="metric" key={module.anchor}>
             <span>{module.label} en página</span>
@@ -209,7 +215,7 @@ function AdminModule({
   readonly onLoadMore: () => void;
 }) {
   return (
-    <section className="cut-panel admin-module" id={definition.anchor}>
+    <section className="cut-panel admin-module admin-operational-panel" id={definition.anchor}>
       <div className="section-heading">
         <h2>{definition.label}</h2>
         <span className="status-chip">{module.items.length} visibles</span>

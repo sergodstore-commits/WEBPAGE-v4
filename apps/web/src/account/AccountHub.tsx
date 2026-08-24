@@ -187,10 +187,11 @@ export function AccountHub() {
   };
 
   return (
-    <main className="page-frame account-layout">
+    <main className="page-frame account-layout visual-public">
       <aside className="account-nav cut-panel" aria-label="Secciones de cuenta">
         <p className="eyebrow">Mi cuenta</p>
         <h1>Resumen</h1>
+        <p className="account-nav-copy">Pedidos, beneficios y preferencias en un solo lugar.</p>
         <nav>
           <a href="#orders">Pedidos</a>
           <a href="#preorders">Preventas</a>
@@ -201,7 +202,7 @@ export function AccountHub() {
         </nav>
       </aside>
       <section className="account-content">
-        <section className="cut-panel" id="profile">
+        <section className="account-panel cut-panel" id="profile">
           <div className="section-heading">
             <div>
               <p className="eyebrow">Datos personales</p>
@@ -247,7 +248,7 @@ export function AccountHub() {
           state={preordersState}
           title="Mis preventas"
         />
-        <section className="cut-panel" id="loyalty">
+        <section className="account-panel cut-panel" id="loyalty">
           <p className="eyebrow">Fidelización</p>
           <h2>Mis puntos</h2>
           <p className="status" role={loyaltyState === 'error' ? 'alert' : 'status'}>
@@ -308,7 +309,7 @@ export function AccountHub() {
             </>
           )}
         </section>
-        <section className="cut-panel" id="delivery">
+        <section className="account-panel cut-panel" id="delivery">
           <p className="eyebrow">Despacho</p>
           <h2>Preferencias de entrega</h2>
           <p>Despacho por pagar a agencia Chilexpress o Starken; el domicilio no es obligatorio.</p>
@@ -317,6 +318,7 @@ export function AccountHub() {
           </p>
           {preferencesState === 'ready' && (
             <form
+              className="account-delivery-form"
               key={preferences === null ? 'empty' : JSON.stringify(preferences)}
               onSubmit={(event) => void savePreferences(event)}
             >
@@ -381,8 +383,14 @@ function OrderHistory(props: {
   readonly title: string;
 }) {
   return (
-    <section className="cut-panel" id={props.id}>
-      <h2>{props.title}</h2>
+    <section className="account-panel cut-panel" id={props.id}>
+      <div className="account-panel-heading">
+        <div>
+          <p className="card-kicker">Historial de compra</p>
+          <h2>{props.title}</h2>
+        </div>
+        <span className="status-chip">{props.items.length} visibles</span>
+      </div>
       <p className="status" role={props.state === 'error' ? 'alert' : 'status'}>
         {props.message}
       </p>

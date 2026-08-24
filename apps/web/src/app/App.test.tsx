@@ -1,10 +1,20 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { currentSession, ownAccount } from '../identity/api.js';
 import { App } from './App';
 
+vi.mock('../identity/api.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../identity/api.js')>();
+  return { ...original, currentSession: vi.fn(() => null), ownAccount: vi.fn() };
+});
+
 describe('IdentityAccess presentation', () => {
-  beforeEach(() => window.history.replaceState({}, '', '/'));
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(currentSession).mockReturnValue(null);
+    window.history.replaceState({}, '', '/');
+  });
 
   it('presents the public commerce home while preserving account access', () => {
     render(<App />);
@@ -37,5 +47,33 @@ describe('IdentityAccess presentation', () => {
     window.history.replaceState({}, '', '/cart');
     render(<App />);
     expect(screen.getByRole('heading', { name: 'Carrito' })).toBeInTheDocument();
+  });
+
+  it('does not mount account tools for an anonymous direct visit', () => {
+    window.history.replaceState({}, '', '/account/overview');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Ingresa para continuar' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Mis pedidos' })).not.toBeInTheDocument();
+    expect(ownAccount).not.toHaveBeenCalled();
+  });
+
+  it('does not mount admin tools for an authenticated customer', async () => {
+    vi.mocked(currentSession).mockReturnValue({ accessToken: 'customer-access' } as never);
+    vi.mocked(ownAccount).mockResolvedValue({
+      accountId: 'account-1',
+      currentEmail: 'cliente@sergod.cl',
+      currentPhone: null,
+      emailVerificationStatus: 'VERIFIED',
+      role: 'CLIENTE',
+      status: 'ACTIVE',
+    });
+    window.history.replaceState({}, '', '/admin');
+    render(<App />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Acceso administrativo restringido' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Centro de control' })).not.toBeInTheDocument();
   });
 });
