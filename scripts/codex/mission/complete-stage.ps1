@@ -28,6 +28,9 @@ $entry=[ordered]@{ id=$currentId; status=$Status; completedAtUtc=(Get-Date).ToUn
 $completed=@($state.completedStages) + [pscustomobject]$entry
 $deferred=@($state.deferredExternal)
 if ($Status -eq 'DEFERRED_EXTERNAL') {
+  $deferred=@($deferred | Where-Object {
+    -not ([string]$_.stageId -eq $currentId -and [string]$_.capability -eq $DeferredCapability)
+  })
   $deferred += [pscustomobject]([ordered]@{ stageId=$currentId; capability=$DeferredCapability; reason=$DeferredReason; recordedAtUtc=(Get-Date).ToUniversalTime().ToString('o') })
 }
 
