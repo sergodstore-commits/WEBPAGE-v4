@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado el 2026-08-23. Es evidencia de código, PostgreSQL local real y gates reproducidos; no es aceptación de proveedores oficiales, staging ni producción. Se declara `LOCAL_IMPLEMENTATION_COMPLETE` únicamente para el alcance local verificable descrito aquí.
+> Estado auditado el 2026-08-24. Es evidencia de código, PostgreSQL local real y gates reproducidos; no es aceptación de proveedores oficiales, staging ni producción. Se declara `LOCAL_IMPLEMENTATION_COMPLETE` únicamente para el alcance local verificable descrito aquí.
 
 | Área                                                                                        | Estado local verificable       | Evidencia                                                                            | Pendiente separado                                   |
 | ------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------- |
@@ -19,7 +19,7 @@
 | Diseño y accesibilidad                                                                      | Verificado localmente          | Sistema visual aprobado; logo inmutable; QA escritorio/móvil, estados y controles    | Regresión visual en entorno remoto                   |
 | Notificaciones                                                                              | Pipeline local ejecutable      | Outbox, lease acotado, idempotencia de proveedor, worker y wiring probados           | Envío real Resend y activación controlada del worker |
 | Despliegue API                                                                              | Destino técnico disponible     | Render responde `/health`; Supabase está configurado                                 | E2E remoto, observabilidad y aceptación de operación |
-| Despliegue web                                                                              | Preview V4 separado disponible | Proyecto Vercel V4 y preview del commit con deep links corregidos                    | Conexión Git, promoción y cambio de dominio          |
+| Despliegue web                                                                              | Dominio público V4 desfasado   | Vercel sirve una versión V4, pero sus bundles no corresponden al HEAD auditado       | Desplegar HEAD, aceptar preview y luego promover     |
 | Aceptación externa final                                                                    | Explícitamente no ejecutada    | Script de reporte devuelve `DEFERRED_EXTERNAL` y no muta estado                      | Procedimientos y accesos reales                      |
 
 ## Gates locales reproducidos
@@ -31,7 +31,7 @@
 - Unit: 63 archivos / 223 pruebas PASS.
 - Application: 8 archivos / 43 pruebas PASS.
 - Contract: 19 archivos / 53 PASS y 1 SKIP documentado.
-- Web: 11 archivos / 41 pruebas PASS. Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado y sincronización de cierre de sesión.
+- Web: 11 archivos / 42 pruebas PASS. Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, sincronización de cierre de sesión y estado 404 explícito.
 - Integration local: 13 archivos / 164 pruebas PASS sobre PostgreSQL 18.4. `test:integration:local` terminó naturalmente con código 0 el 2026-08-23.
 - `codex:prepare`: 139 checks PASS; 8 Skills locales válidas.
 - Migraciones protegidas: 31 intactas; `016`–`021` y mirrors Supabase son prospectivas.
@@ -47,5 +47,7 @@
 - Flow/Webpay con credenciales oficiales suficientes para aceptación.
 - Sesión autenticada real en navegador remoto, incluyendo recarga y renovación de token.
 - Vercel conectado a Git, E2E remoto, promoción, cambio de dominio, observabilidad, backup/restore y rollback.
+- El dominio público usa bundles anteriores al HEAD: `/cart` y rutas desconocidas caen en Inicio, y Cuenta/Admin no incorporan todavía las barreras de montaje del build local actual.
+- El catálogo remoto conserva fixtures de integración visibles y al menos un texto con codificación dañada; requieren limpieza remota trazable, no edición manual sin acceso administrado.
 
 Los hallazgos locales conocidos de V3 y los defectos adicionales expuestos por PostgreSQL real fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.
