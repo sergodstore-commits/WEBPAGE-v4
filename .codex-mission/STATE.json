@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "mission": "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
   "status": "ACTIVE",
-  "currentStageId": "01-local-final-verification",
-  "currentStageFile": ".codex-mission/stages/01-local-final-verification.md",
+  "currentStageId": "02-external-providers",
+  "currentStageFile": ".codex-mission/stages/02-external-providers.md",
   "queue": [
     {
       "id": "00-baseline",
@@ -41,6 +41,13 @@
       "completedAtUtc": "2026-08-23T21:38:20.0281487Z",
       "evidence": "npm ci; codex:prepare 138; format/lint/typecheck; protected migrations 31; payment focal 13/13; delivery audit; integration 163/163",
       "commit": "c436fcd8f8de7be93fd3b3ead43eef207e7f43b1"
+    },
+    {
+      "id": "01-local-final-verification",
+      "status": "PASS_LOCAL",
+      "completedAtUtc": "2026-08-24T02:30:21.0269159Z",
+      "evidence": "codex:prepare 139 PASS; npm audit 0; official LOCAL_VERIFICATION=PASS; unit 223/223; application 43/43; contract 53 PASS + 1 documented skip; web 41/41; PostgreSQL integration 164/164; build and delivery audit PASS; manual security/accessibility/error review PASS",
+      "commit": "c82f0b9608c50aa8e72e8c0fe2a57fd349cdef35"
     }
   ],
   "deferredExternal": [
