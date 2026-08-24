@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "mission": "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
   "status": "ACTIVE",
-  "currentStageId": "04-remote-e2e-hardening",
-  "currentStageFile": ".codex-mission/stages/04-remote-e2e-hardening.md",
+  "currentStageId": "05-final-external-acceptance",
+  "currentStageFile": ".codex-mission/stages/05-final-external-acceptance.md",
   "queue": [
     {
       "id": "00-baseline",
@@ -62,6 +62,13 @@
       "completedAtUtc": "2026-08-24T05:46:52.1140533Z",
       "evidence": "Render staging health, catalog and editorial returned 200 with security headers; unauthenticated account/admin returned 401; empty Flow/Webpay returns returned 422; approved CORS origins returned 204 and an unapproved origin 403. Supabase host is TLS-reachable but protected. No credentials, Vercel preview URL, managed migration/RLS access, logs, backup/restore or rollback evidence were available.",
       "commit": "1fbf5e48e601a9846fac511b22ec23ff406fe0ca"
+    },
+    {
+      "id": "04-remote-e2e-hardening",
+      "status": "DEFERRED_EXTERNAL",
+      "completedAtUtc": "2026-08-24T07:00:10.4083336Z",
+      "evidence": "Remote public browser QA covered Home, Store, Editorial, Cart, Checkout, Account, Admin and unknown routes; mobile Store had no overflow, no sub-44px actions and no console errors. Current domain bundles differ from audited HEAD: remote Cart/unknown routes fall back to Home and remote Account/Admin lack current pre-mount gates. Remote catalog exposes integration fixtures and mojibake. Local explicit 404 fixed; focused 8/8, web 42/42, web typecheck and production build PASS.",
+      "commit": "bc69337085ddf5497c605019cb2b0bacd9b998c5"
     }
   ],
   "deferredExternal": [
@@ -81,6 +88,12 @@
       "capability": "Staging and production",
       "reason": "Render public smoke and CORS passed, but managed Supabase migration/RLS verification, authenticated role smoke, Vercel preview acceptance, observability, backup/restore and rollback remain unverified because the required secure access and preview target are not available.",
       "recordedAtUtc": "2026-08-24T05:46:52.2115511Z"
+    },
+    {
+      "stageId": "04-remote-e2e-hardening",
+      "capability": "Authenticated remote E2E and deployment parity",
+      "reason": "The audited HEAD is not deployed and no secure CLIENTE/ADMIN sessions or provider/email credentials are available. Normal/preorder/FREIGHT_COLLECT purchases, account isolation, role operations, payment/fulfillment/notification retries and idempotency cannot be accepted against the stale public bundle.",
+      "recordedAtUtc": "2026-08-24T07:00:10.5029511Z"
     }
   ],
   "notes": [
