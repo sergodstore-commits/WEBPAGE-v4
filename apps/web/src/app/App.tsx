@@ -53,6 +53,7 @@ export type Route =
   | '/auth/callback/email-change'
   | '/auth/callback/recovery'
   | '/login'
+  | '/not-found'
   | '/recover'
   | '/register';
 
@@ -117,9 +118,25 @@ export function App() {
             <ServiceCoveragePanel />
           </AccessGate>
         )}
+        {route === '/not-found' && <NotFound navigate={navigate} />}
       </div>
       <SiteFooter navigate={navigate} />
     </div>
+  );
+}
+
+function NotFound({ navigate }: { readonly navigate: (route: Route) => void }) {
+  return (
+    <main className="page-frame visual-public">
+      <section className="access-gate cut-panel">
+        <p className="eyebrow">Error 404</p>
+        <h1>Página no encontrada</h1>
+        <p>La dirección solicitada no existe o ya no está disponible.</p>
+        <button onClick={() => navigate('/')} type="button">
+          Volver al inicio
+        </button>
+      </section>
+    </main>
   );
 }
 
@@ -749,5 +766,5 @@ function routeFromLocation(): Route {
     '/recover',
     '/register',
   ];
-  return routes.includes(path as Route) ? (path as Route) : '/';
+  return routes.includes(path as Route) ? (path as Route) : '/not-found';
 }

@@ -49,6 +49,16 @@ describe('IdentityAccess presentation', () => {
     expect(screen.getByRole('heading', { name: 'Carrito' })).toBeInTheDocument();
   });
 
+  it('presents an explicit 404 state for an unknown direct link', () => {
+    window.history.replaceState({}, '', '/unknown-page');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /tu próxima jugada/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Volver al inicio' }));
+    expect(screen.getByRole('heading', { name: /tu próxima jugada/i })).toBeInTheDocument();
+  });
+
   it('does not mount account tools for an anonymous direct visit', () => {
     window.history.replaceState({}, '', '/account/overview');
     render(<App />);
