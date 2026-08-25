@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import { Component, type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import {
   accounts,
@@ -72,57 +72,95 @@ export function App() {
   return (
     <div className="app-shell">
       <SiteChrome navigate={navigate} route={route} />
-      <div id="main-content" tabIndex={-1}>
-        {route === '/' && <Home navigate={navigate} />}
-        {route === '/register' && <Registration navigate={navigate} />}
-        {route === '/login' && <Login navigate={navigate} />}
-        {route === '/recover' && <Recovery navigate={navigate} />}
-        {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
-        {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
-          <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
-        )}
-        {route === '/account' && (
-          <AccessGate>
-            <Account navigate={navigate} />
-          </AccessGate>
-        )}
-        {route === '/account/overview' && (
-          <AccessGate>
-            <AccountHub />
-          </AccessGate>
-        )}
-        {route === '/shop' && <StorePage />}
-        {route === '/cart' && <CartPage />}
-        {route === '/tournaments' && <EditorialPage title="Torneos" type="TOURNAMENT" />}
-        {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
-        {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
-        {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
-        {route === '/admin' && (
-          <AccessGate requiredRole="ADMIN">
-            <AdminHub />
-          </AccessGate>
-        )}
-        {route === '/checkout' && <CheckoutPanel />}
-        {route === '/admin/accounts' && (
-          <AccessGate requiredRole="ADMIN">
-            <AccountsPanel />
-          </AccessGate>
-        )}
-        {route === '/admin/pos' && (
-          <AccessGate requiredRole="ADMIN">
-            <PosPanel />
-          </AccessGate>
-        )}
-        {route === '/admin/service-coverage' && (
-          <AccessGate requiredRole="ADMIN">
-            <ServiceCoveragePanel />
-          </AccessGate>
-        )}
-        {route === '/not-found' && <NotFound navigate={navigate} />}
-      </div>
+      <RouteErrorBoundary key={route}>
+        <div id="main-content" tabIndex={-1}>
+          {route === '/' && <Home navigate={navigate} />}
+          {route === '/register' && <Registration navigate={navigate} />}
+          {route === '/login' && <Login navigate={navigate} />}
+          {route === '/recover' && <Recovery navigate={navigate} />}
+          {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
+          {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
+            <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
+          )}
+          {route === '/account' && (
+            <AccessGate>
+              <Account navigate={navigate} />
+            </AccessGate>
+          )}
+          {route === '/account/overview' && (
+            <AccessGate>
+              <AccountHub />
+            </AccessGate>
+          )}
+          {route === '/shop' && <StorePage />}
+          {route === '/cart' && <CartPage />}
+          {route === '/tournaments' && <EditorialPage title="Torneos" type="TOURNAMENT" />}
+          {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
+          {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
+          {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
+          {route === '/admin' && (
+            <AccessGate requiredRole="ADMIN">
+              <AdminHub />
+            </AccessGate>
+          )}
+          {route === '/checkout' && <CheckoutPanel />}
+          {route === '/admin/accounts' && (
+            <AccessGate requiredRole="ADMIN">
+              <AccountsPanel />
+            </AccessGate>
+          )}
+          {route === '/admin/pos' && (
+            <AccessGate requiredRole="ADMIN">
+              <PosPanel />
+            </AccessGate>
+          )}
+          {route === '/admin/service-coverage' && (
+            <AccessGate requiredRole="ADMIN">
+              <ServiceCoveragePanel />
+            </AccessGate>
+          )}
+          {route === '/not-found' && <NotFound navigate={navigate} />}
+        </div>
+      </RouteErrorBoundary>
       <SiteFooter navigate={navigate} />
     </div>
   );
+}
+
+interface RouteErrorBoundaryState {
+  readonly failed: boolean;
+}
+
+export class RouteErrorBoundary extends Component<
+  { readonly children: ReactNode },
+  RouteErrorBoundaryState
+> {
+  override state: RouteErrorBoundaryState = { failed: false };
+
+  static getDerivedStateFromError(): RouteErrorBoundaryState {
+    return { failed: true };
+  }
+
+  override render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <main className="page-frame visual-public">
+        <section className="access-gate cut-panel" role="alert">
+          <p className="eyebrow">Recuperación de pantalla</p>
+          <h1>No pudimos mostrar esta sección</h1>
+          <p>Vuelve a intentarlo. Si el problema continúa, regresa al inicio de forma segura.</p>
+          <div className="actions">
+            <button onClick={() => window.location.reload()} type="button">
+              Reintentar
+            </button>
+            <a className="button-link secondary-link" href="/">
+              Volver al inicio
+            </a>
+          </div>
+        </section>
+      </main>
+    );
+  }
 }
 
 function NotFound({ navigate }: { readonly navigate: (route: Route) => void }) {

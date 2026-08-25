@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { currentSession, ownAccount } from '../identity/api.js';
-import { App } from './App';
+import { App, RouteErrorBoundary } from './App';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -85,5 +85,25 @@ describe('IdentityAccess presentation', () => {
       await screen.findByRole('heading', { name: 'Acceso administrativo restringido' }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Centro de control' })).not.toBeInTheDocument();
+  });
+
+  it('shows a recoverable route error instead of leaving the application blank', () => {
+    const errorOutput = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const BrokenRoute = () => {
+      throw new Error('Unexpected route rendering failure.');
+    };
+
+    render(
+      <RouteErrorBoundary>
+        <BrokenRoute />
+      </RouteErrorBoundary>,
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'No pudimos mostrar esta sección' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/');
+    errorOutput.mockRestore();
   });
 });

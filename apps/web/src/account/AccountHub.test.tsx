@@ -51,7 +51,9 @@ beforeEach(() => {
     if (path.includes('orderType=PREORDER'))
       return { items: [preorder], nextCursor: null } as never;
     if (path === '/api/v1/loyalty/account')
-      return { availablePoints: 120, balance: 150, debt: false, reservedPoints: 30 } as never;
+      return {
+        item: { availablePoints: 120, balance: 150, debt: false, reservedPoints: 30 },
+      } as never;
     if (path === '/api/v1/loyalty/movements?limit=25')
       return {
         items: [

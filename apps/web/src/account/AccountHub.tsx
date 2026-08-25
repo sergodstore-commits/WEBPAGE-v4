@@ -37,6 +37,9 @@ interface LoyaltyAccount {
   readonly debt: boolean;
   readonly reservedPoints: number;
 }
+interface LoyaltyAccountResponse {
+  readonly item: LoyaltyAccount;
+}
 interface LoyaltyMovement {
   readonly balanceAfter: number;
   readonly movementId: string;
@@ -103,11 +106,11 @@ export function AccountHub() {
     void loadOrders('REGULAR').then(applyOrders).catch(failOrders);
     void loadOrders('PREORDER').then(applyPreorders).catch(failPreorders);
     void Promise.all([
-      authorizedRequest<LoyaltyAccount>('/api/v1/loyalty/account'),
+      authorizedRequest<LoyaltyAccountResponse>('/api/v1/loyalty/account'),
       authorizedRequest<Page<LoyaltyMovement>>('/api/v1/loyalty/movements?limit=25'),
     ])
       .then(([summary, history]) => {
-        setLoyalty(summary);
+        setLoyalty(summary.item);
         setMovements(history.items);
         setMovementsCursor(history.nextCursor);
         setLoyaltyState('ready');
