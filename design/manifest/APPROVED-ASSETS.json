@@ -1,5 +1,6 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "includedManifests": ["design/manifest/APPROVED-UI-ASSETS.json"],
   "assets": [
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",

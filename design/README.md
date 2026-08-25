@@ -5,4 +5,11 @@
 - `references/`: composiciones/mockups de referencia; no deben publicarse como assets finales por defecto.
 - `manifest/`: procedencia y SHA-256.
 
+La biblioteca aprobada se controla mediante:
+
+- `manifest/APPROVED-ASSETS.json`: logo oficial y manifiestos incluidos.
+- `manifest/APPROVED-UI-ASSETS.json`: 106 recursos UI sin texto aprobados por el propietario el 2026-08-25.
+
+El texto visible, los estados, la navegación y los números de página se construyen como contenido web dinámico; las variantes con texto horneado no están aprobadas.
+
 Las reglas visuales normativas viven en `docs/CURRENT/11-DISENO-E-IDENTIDAD-VISUAL.md`.
