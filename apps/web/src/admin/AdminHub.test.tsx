@@ -68,6 +68,35 @@ beforeEach(() => {
 });
 
 describe('AdminHub', () => {
+  it('organizes every operational module in an accessible sidebar', async () => {
+    render(<AdminHub />);
+
+    const sidebar = screen.getByRole('complementary', { name: 'Navegación administrativa' });
+    const navigation = within(sidebar).getByRole('navigation', { name: 'Módulos operativos' });
+    expect(within(navigation).getByRole('link', { name: 'Resumen' })).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+    expect(within(navigation).getByRole('link', { name: 'Inventario' })).toHaveAttribute(
+      'href',
+      '#inventory',
+    );
+    expect(within(navigation).getByRole('link', { name: 'Auditoría' })).toHaveAttribute(
+      'href',
+      '#audit',
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Menú de administración' });
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(within(navigation).getByRole('link', { name: 'Pagos' }));
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(within(navigation).getByRole('link', { name: 'Pagos' })).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+  });
+
   it('loads every operational module and exposes real actions', async () => {
     render(<AdminHub />);
     expect(await screen.findByText('SG-2026-000010')).toBeInTheDocument();

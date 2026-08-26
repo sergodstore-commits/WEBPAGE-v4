@@ -615,8 +615,7 @@ th {
 textarea {
   resize: vertical;
 }
-.button-link,
-.admin-navigation a {
+.button-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -627,26 +626,6 @@ textarea {
   padding: 0.7rem 1rem;
   font-weight: 800;
   text-decoration: none;
-}
-.admin-navigation {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1.5rem;
-}
-.admin-module-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  padding: 1rem 1.5rem;
-}
-.admin-module-nav a {
-  min-height: 2.75rem;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  background: var(--panel-2);
-  border-left: 3px solid var(--red);
 }
 .admin-module {
   margin-top: 1.5rem;
@@ -707,14 +686,6 @@ textarea {
 .inline-action select,
 .inline-action button {
   min-height: 2.75rem;
-}
-.admin-navigation a {
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-}
-.admin-navigation a[aria-current='page'] {
-  border-color: var(--red);
-  box-shadow: inset 0 -3px 0 var(--red);
 }
 .cart-page,
 .checkout-page {
@@ -1629,23 +1600,96 @@ textarea {
   justify-items: end;
   min-width: min(32rem, 100%);
 }
-.admin-heading .admin-navigation {
-  justify-content: flex-end;
-  margin-top: 0;
+.admin-sidebar-toggle {
+  display: none;
+  width: 100%;
+  margin-bottom: 1rem;
+  border-left: 4px solid var(--cyan);
+  text-align: left;
 }
-.admin-module-nav {
+.admin-workspace {
+  display: grid;
+  grid-template-columns: minmax(15.5rem, 17rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.admin-sidebar {
   position: sticky;
   z-index: 10;
-  top: 5.3rem;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  top: 6.25rem;
+  max-height: calc(100vh - 7.5rem);
+  overflow-y: auto;
+  padding: 1rem;
+  border-top: 3px solid var(--red);
   background: rgb(13 15 18 / 96%);
-  box-shadow: 0 0.35rem 0 #050607;
+  box-shadow: 0.4rem 0.4rem 0 var(--color-neutral-1000);
   scrollbar-color: var(--red) #090a0c;
 }
-.admin-module-nav a {
-  flex: 0 0 auto;
+.admin-sidebar-heading {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.admin-sidebar-heading strong {
+  font-family: var(--display-font);
+  font-size: 1.1rem;
+  text-transform: uppercase;
+}
+.admin-sidebar-links,
+.admin-area-navigation,
+.admin-module-navigation,
+.admin-nav-group {
+  display: grid;
+}
+.admin-sidebar-links {
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.admin-area-navigation,
+.admin-module-navigation,
+.admin-nav-group {
+  gap: 0.35rem;
+}
+.admin-area-navigation {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.admin-sidebar a {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid transparent;
+  color: var(--paper);
+  font-weight: 760;
   text-decoration: none;
+}
+.admin-sidebar a:hover {
+  background: var(--panel-2);
+  border-left-color: var(--cyan);
+}
+.admin-sidebar a[aria-current] {
+  background: var(--panel-2);
+  border-left-color: var(--red);
+  box-shadow: inset -3px 0 0 var(--red);
+}
+.admin-nav-group {
+  margin-top: 0.65rem;
+}
+.admin-nav-group h2 {
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.25rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.admin-content {
+  min-width: 0;
+}
+#admin-overview {
+  scroll-margin-top: 7rem;
 }
 .admin-snapshot {
   margin-top: 0;
@@ -1712,6 +1756,22 @@ textarea {
     grid-column: 1 / -1;
     justify-self: start;
     text-align: left;
+  }
+  .admin-sidebar-toggle {
+    display: block;
+  }
+  .admin-workspace {
+    grid-template-columns: 1fr;
+  }
+  .admin-sidebar {
+    position: static;
+    max-height: none;
+  }
+  .admin-sidebar-links {
+    display: none;
+  }
+  .admin-sidebar-links.is-open {
+    display: grid;
   }
 }
 @media (max-width: 640px) {
@@ -1815,16 +1875,7 @@ textarea {
     width: 100%;
     justify-items: stretch;
   }
-  .admin-heading .admin-navigation {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .admin-heading .admin-navigation a {
-    width: 100%;
-  }
-  .admin-module-nav {
-    top: 5rem;
-    margin-inline: -1rem;
-    width: calc(100% + 2rem);
+  .admin-area-navigation {
+    grid-template-columns: 1fr;
   }
 }

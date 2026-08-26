@@ -46,9 +46,18 @@ const initialModules = Object.fromEntries(
   modules.map(({ anchor }) => [anchor, emptyModule()]),
 ) as Record<string, ModuleState>;
 
+const moduleGroups = [
+  { anchors: ['orders', 'payments', 'fulfillments'], label: 'Ventas y entregas' },
+  { anchors: ['catalog', 'games', 'categories', 'collections', 'inventory'], label: 'Catálogo' },
+  { anchors: ['preorders', 'promotions', 'coupons', 'loyalty'], label: 'Beneficios' },
+  { anchors: ['configurations', 'content', 'audit'], label: 'Control' },
+] as const;
+
 export function AdminHub() {
   const [data, setData] = useState<Record<string, ModuleState>>(initialModules);
   const [actionMessage, setActionMessage] = useState('');
+  const [activeSection, setActiveSection] = useState('admin-overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const load = useCallback(async (definition: ModuleDefinition, cursor?: string | null) => {
     const append = cursor !== undefined && cursor !== null;
@@ -119,81 +128,135 @@ export function AdminHub() {
             <span>Datos de servidor</span>
             <span>Acciones auditables</span>
           </div>
-          <nav aria-label="Herramientas administrativas" className="admin-navigation">
-            <a aria-current="page" href="/admin">
-              Operación
-            </a>
-            <a href="/admin/accounts">Cuentas</a>
-            <a href="/admin/pos">Pseudo-POS</a>
-            <a href="/admin/service-coverage">Atención y cobertura</a>
-          </nav>
         </div>
       </header>
-      <nav aria-label="Módulos operativos" className="admin-module-nav cut-panel">
-        {modules.map((module) => (
-          <a href={`#${module.anchor}`} key={module.anchor}>
-            {module.label}
-          </a>
-        ))}
-        <a href="#inventory">Inventario</a>
-      </nav>
-      <p className="status" role="status">
-        {actionMessage}
-      </p>
-      <section aria-label="Resumen operativo visible" className="metric-grid admin-snapshot">
-        {modules.slice(0, 6).map((module) => (
-          <div className="metric" key={module.anchor}>
-            <span>{module.label} en página</span>
-            <strong>
-              {data[module.anchor]?.state === 'ready' ? data[module.anchor]?.items.length : '—'}
-            </strong>
+      <button
+        aria-controls="admin-sidebar-links"
+        aria-expanded={sidebarOpen}
+        className="admin-sidebar-toggle"
+        onClick={() => setSidebarOpen((current) => !current)}
+        type="button"
+      >
+        Menú de administración
+      </button>
+      <div className="admin-workspace">
+        <aside aria-label="Navegación administrativa" className="admin-sidebar cut-panel">
+          <div className="admin-sidebar-heading">
+            <p className="eyebrow">Panel administrativo</p>
+            <strong>Áreas de trabajo</strong>
           </div>
-        ))}
-      </section>
+          <div
+            className={`admin-sidebar-links${sidebarOpen ? ' is-open' : ''}`}
+            id="admin-sidebar-links"
+          >
+            <nav aria-label="Herramientas administrativas" className="admin-area-navigation">
+              <a aria-current="page" href="/admin">
+                Operación
+              </a>
+              <a href="/admin/accounts">Cuentas</a>
+              <a href="/admin/pos">Pseudo-POS</a>
+              <a href="/admin/service-coverage">Atención y cobertura</a>
+            </nav>
+            <nav aria-label="Módulos operativos" className="admin-module-navigation">
+              <a
+                aria-current={activeSection === 'admin-overview' ? 'location' : undefined}
+                href="#admin-overview"
+                onClick={() => {
+                  setActiveSection('admin-overview');
+                  setSidebarOpen(false);
+                }}
+              >
+                Resumen
+              </a>
+              {moduleGroups.map((group) => (
+                <section className="admin-nav-group" key={group.label}>
+                  <h2>{group.label}</h2>
+                  {group.anchors.map((anchor) => {
+                    const definition = modules.find((module) => module.anchor === anchor);
+                    const label = anchor === 'inventory' ? 'Inventario' : definition?.label;
+                    return (
+                      <a
+                        aria-current={activeSection === anchor ? 'location' : undefined}
+                        href={`#${anchor}`}
+                        key={anchor}
+                        onClick={() => {
+                          setActiveSection(anchor);
+                          setSidebarOpen(false);
+                        }}
+                      >
+                        {label}
+                      </a>
+                    );
+                  })}
+                </section>
+              ))}
+            </nav>
+          </div>
+        </aside>
+        <div className="admin-content">
+          <section id="admin-overview">
+            <p className="status" role="status">
+              {actionMessage}
+            </p>
+            <section aria-label="Resumen operativo visible" className="metric-grid admin-snapshot">
+              {modules.slice(0, 6).map((module) => (
+                <div className="metric" key={module.anchor}>
+                  <span>{module.label} en página</span>
+                  <strong>
+                    {data[module.anchor]?.state === 'ready'
+                      ? data[module.anchor]?.items.length
+                      : '—'}
+                  </strong>
+                </div>
+              ))}
+            </section>
+          </section>
 
-      {modules.map((module) => (
-        <AdminModule
-          definition={module}
-          key={module.anchor}
-          module={data[module.anchor] ?? emptyModule()}
-          onAction={mutate}
-          onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
-        />
-      ))}
-      <InventoryPanel onAction={mutate} products={data.catalog?.items ?? []} />
-      <CatalogComposer
-        categories={data.categories?.items ?? []}
-        collections={data.collections?.items ?? []}
-        games={data.games?.items ?? []}
-        onAction={mutate}
-      />
-      <CatalogEditors
-        categories={data.categories?.items ?? []}
-        collections={data.collections?.items ?? []}
-        games={data.games?.items ?? []}
-        onAction={mutate}
-        products={data.catalog?.items ?? []}
-      />
-      <CatalogResourceManager
-        categories={data.categories?.items ?? []}
-        collections={data.collections?.items ?? []}
-        games={data.games?.items ?? []}
-        products={data.catalog?.items ?? []}
-      />
-      <PreorderComposer onAction={mutate} products={data.catalog?.items ?? []} />
-      <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
-      <LoyaltyOperations onAction={mutate} />
-      <ConfigurationComposer onAction={mutate} />
-      <EditorialComposer onAction={mutate} />
-      <RecordEditors
-        configurations={data.configurations?.items ?? []}
-        content={data.content?.items ?? []}
-        loyalty={data.loyalty?.items ?? []}
-        onAction={mutate}
-        preorders={data.preorders?.items ?? []}
-        products={data.catalog?.items ?? []}
-        promotions={data.promotions?.items ?? []}
-      />
+          {modules.map((module) => (
+            <AdminModule
+              definition={module}
+              key={module.anchor}
+              module={data[module.anchor] ?? emptyModule()}
+              onAction={mutate}
+              onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
+            />
+          ))}
+          <InventoryPanel onAction={mutate} products={data.catalog?.items ?? []} />
+          <CatalogComposer
+            categories={data.categories?.items ?? []}
+            collections={data.collections?.items ?? []}
+            games={data.games?.items ?? []}
+            onAction={mutate}
+          />
+          <CatalogEditors
+            categories={data.categories?.items ?? []}
+            collections={data.collections?.items ?? []}
+            games={data.games?.items ?? []}
+            onAction={mutate}
+            products={data.catalog?.items ?? []}
+          />
+          <CatalogResourceManager
+            categories={data.categories?.items ?? []}
+            collections={data.collections?.items ?? []}
+            games={data.games?.items ?? []}
+            products={data.catalog?.items ?? []}
+          />
+          <PreorderComposer onAction={mutate} products={data.catalog?.items ?? []} />
+          <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
+          <LoyaltyOperations onAction={mutate} />
+          <ConfigurationComposer onAction={mutate} />
+          <EditorialComposer onAction={mutate} />
+          <RecordEditors
+            configurations={data.configurations?.items ?? []}
+            content={data.content?.items ?? []}
+            loyalty={data.loyalty?.items ?? []}
+            onAction={mutate}
+            preorders={data.preorders?.items ?? []}
+            products={data.catalog?.items ?? []}
+            promotions={data.promotions?.items ?? []}
+          />
+        </div>
+      </div>
     </main>
   );
 }
