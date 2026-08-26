@@ -29,7 +29,7 @@ import { PosPanel } from '../pos/PosPanel.js';
 import { CheckoutPanel } from '../checkout/CheckoutPanel.js';
 import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.js';
 import { AccountHub } from '../account/AccountHub.js';
-import { AdminHub } from '../admin/AdminHub.js';
+import { AdminHub, type AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
 import { EditorialPage, StorePage } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
@@ -40,7 +40,16 @@ export type Route =
   | '/account/overview'
   | '/admin'
   | '/admin/accounts'
+  | '/admin/audit'
+  | '/admin/catalog'
+  | '/admin/configuration'
+  | '/admin/content'
+  | '/admin/inventory'
+  | '/admin/loyalty'
+  | '/admin/orders'
   | '/admin/pos'
+  | '/admin/preorders'
+  | '/admin/promotions'
   | '/admin/service-coverage'
   | '/checkout'
   | '/cart'
@@ -59,6 +68,7 @@ export type Route =
 
 export function App() {
   const [route, setRoute] = useState<Route>(routeFromLocation());
+  const adminArea = adminAreaFromRoute(route);
   useEffect(() => {
     const listener = () => setRoute(routeFromLocation());
     window.addEventListener('popstate', listener);
@@ -98,9 +108,9 @@ export function App() {
           {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
           {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
           {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
-          {route === '/admin' && (
+          {adminArea && (
             <AccessGate requiredRole="ADMIN">
-              <AdminHub />
+              <AdminHub area={adminArea} navigate={navigate} />
             </AccessGate>
           )}
           {route === '/checkout' && <CheckoutPanel />}
@@ -788,7 +798,16 @@ function routeFromLocation(): Route {
     '/account/overview',
     '/admin',
     '/admin/accounts',
+    '/admin/audit',
+    '/admin/catalog',
+    '/admin/configuration',
+    '/admin/content',
+    '/admin/inventory',
+    '/admin/loyalty',
+    '/admin/orders',
     '/admin/pos',
+    '/admin/preorders',
+    '/admin/promotions',
     '/admin/service-coverage',
     '/cart',
     '/checkout',
@@ -805,4 +824,20 @@ function routeFromLocation(): Route {
     '/register',
   ];
   return routes.includes(path as Route) ? (path as Route) : '/not-found';
+}
+
+function adminAreaFromRoute(route: Route): AdminArea | null {
+  const areas: Partial<Record<Route, AdminArea>> = {
+    '/admin': 'dashboard',
+    '/admin/audit': 'audit',
+    '/admin/catalog': 'catalog',
+    '/admin/configuration': 'configuration',
+    '/admin/content': 'content',
+    '/admin/inventory': 'inventory',
+    '/admin/loyalty': 'loyalty',
+    '/admin/orders': 'orders',
+    '/admin/preorders': 'preorders',
+    '/admin/promotions': 'promotions',
+  };
+  return areas[route] ?? null;
 }

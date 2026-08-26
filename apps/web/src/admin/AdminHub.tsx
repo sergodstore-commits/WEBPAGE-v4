@@ -17,6 +17,41 @@ interface ModuleDefinition {
   readonly path: string;
 }
 
+export type AdminArea =
+  | 'audit'
+  | 'catalog'
+  | 'configuration'
+  | 'content'
+  | 'dashboard'
+  | 'inventory'
+  | 'loyalty'
+  | 'orders'
+  | 'preorders'
+  | 'promotions';
+
+export type AdminRoute =
+  | '/admin'
+  | '/admin/accounts'
+  | '/admin/audit'
+  | '/admin/catalog'
+  | '/admin/configuration'
+  | '/admin/content'
+  | '/admin/inventory'
+  | '/admin/loyalty'
+  | '/admin/orders'
+  | '/admin/pos'
+  | '/admin/preorders'
+  | '/admin/promotions'
+  | '/admin/service-coverage';
+
+interface AdminAreaDefinition {
+  readonly area: AdminArea;
+  readonly description: string;
+  readonly label: string;
+  readonly route: AdminRoute;
+  readonly title: string;
+}
+
 const modules = [
   { anchor: 'orders', label: 'Pedidos', path: '/api/v1/admin/orders?limit=25' },
   { anchor: 'payments', label: 'Pagos', path: '/api/v1/admin/payment-attempts?limit=25' },
@@ -46,18 +81,122 @@ const initialModules = Object.fromEntries(
   modules.map(({ anchor }) => [anchor, emptyModule()]),
 ) as Record<string, ModuleState>;
 
-const moduleGroups = [
-  { anchors: ['orders', 'payments', 'fulfillments'], label: 'Ventas y entregas' },
-  { anchors: ['catalog', 'games', 'categories', 'collections', 'inventory'], label: 'Catálogo' },
-  { anchors: ['preorders', 'promotions', 'coupons', 'loyalty'], label: 'Beneficios' },
-  { anchors: ['configurations', 'content', 'audit'], label: 'Control' },
-] as const;
+const adminAreas = [
+  {
+    area: 'dashboard',
+    description: 'Resumen de actividad para orientar la operación diaria.',
+    label: 'Resumen',
+    route: '/admin',
+    title: 'Centro de control',
+  },
+  {
+    area: 'orders',
+    description: 'Pedidos, intentos de pago y cumplimiento en una sola secuencia operativa.',
+    label: 'Pedidos y pagos',
+    route: '/admin/orders',
+    title: 'Pedidos y entregas',
+  },
+  {
+    area: 'catalog',
+    description: 'Productos, juegos, categorías, colecciones e imágenes comerciales.',
+    label: 'Catálogo',
+    route: '/admin/catalog',
+    title: 'Gestión de catálogo',
+  },
+  {
+    area: 'inventory',
+    description: 'Entradas, ajustes y umbrales sobre el inventario compartido.',
+    label: 'Inventario',
+    route: '/admin/inventory',
+    title: 'Control de inventario',
+  },
+  {
+    area: 'preorders',
+    description: 'Campañas, capacidad, apertura, cierre y publicación de preventas.',
+    label: 'Preventas',
+    route: '/admin/preorders',
+    title: 'Gestión de preventas',
+  },
+  {
+    area: 'promotions',
+    description: 'Promociones automáticas, cupones, límites y vigencias.',
+    label: 'Promociones y cupones',
+    route: '/admin/promotions',
+    title: 'Promociones y cupones',
+  },
+  {
+    area: 'loyalty',
+    description: 'Configuración de puntos y correcciones administrativas controladas.',
+    label: 'Loyalty',
+    route: '/admin/loyalty',
+    title: 'Programa de puntos',
+  },
+  {
+    area: 'content',
+    description: 'Noticias, torneos, comunidad y cómics administrados por la tienda.',
+    label: 'Contenido editorial',
+    route: '/admin/content',
+    title: 'Contenido editorial',
+  },
+  {
+    area: 'configuration',
+    description: 'Versiones y valores operativos con motivo auditable.',
+    label: 'Configuración',
+    route: '/admin/configuration',
+    title: 'Configuración del sistema',
+  },
+  {
+    area: 'audit',
+    description: 'Trazabilidad de acciones y resultados administrativos.',
+    label: 'Auditoría',
+    route: '/admin/audit',
+    title: 'Registro de auditoría',
+  },
+] as const satisfies readonly AdminAreaDefinition[];
 
-export function AdminHub() {
+const requiredModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
+  audit: ['audit'],
+  catalog: ['catalog', 'games', 'categories', 'collections'],
+  configuration: ['configurations'],
+  content: ['content'],
+  dashboard: ['orders', 'payments', 'fulfillments', 'catalog', 'games', 'categories'],
+  inventory: ['catalog'],
+  loyalty: ['loyalty'],
+  orders: ['orders', 'payments', 'fulfillments'],
+  preorders: ['preorders', 'catalog'],
+  promotions: ['promotions', 'coupons'],
+};
+
+const visibleModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
+  audit: ['audit'],
+  catalog: ['catalog', 'games', 'categories', 'collections'],
+  configuration: ['configurations'],
+  content: ['content'],
+  dashboard: [],
+  inventory: [],
+  loyalty: ['loyalty'],
+  orders: ['orders', 'payments', 'fulfillments'],
+  preorders: ['preorders'],
+  promotions: ['promotions', 'coupons'],
+};
+
+export function AdminHub({
+  area,
+  navigate,
+}: {
+  readonly area: AdminArea;
+  readonly navigate: (route: AdminRoute) => void;
+}) {
   const [data, setData] = useState<Record<string, ModuleState>>(initialModules);
   const [actionMessage, setActionMessage] = useState('');
-  const [activeSection, setActiveSection] = useState('admin-overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const areaDefinition = adminAreas.find((definition) => definition.area === area) ?? adminAreas[0];
+  const requiredModules = modules.filter(({ anchor }) =>
+    requiredModulesByArea[area].includes(anchor),
+  );
+  const visibleModules = modules.filter(({ anchor }) =>
+    visibleModulesByArea[area].includes(anchor),
+  );
 
   const load = useCallback(async (definition: ModuleDefinition, cursor?: string | null) => {
     const append = cursor !== undefined && cursor !== null;
@@ -96,8 +235,11 @@ export function AdminHub() {
   }, []);
 
   useEffect(() => {
-    for (const definition of modules) void load(definition);
-  }, [load]);
+    for (const anchor of requiredModulesByArea[area]) {
+      const definition = modules.find((module) => module.anchor === anchor);
+      if (definition) void load(definition);
+    }
+  }, [area, load]);
 
   const mutate = async (path: string, body: unknown, method = 'POST', reload?: string) => {
     setActionMessage('Guardando operación…');
@@ -119,9 +261,9 @@ export function AdminHub() {
     <main className="page-frame admin-shell visual-public">
       <header className="section-heading admin-heading cut-panel">
         <div>
-          <p className="eyebrow">Operación Admin</p>
-          <h1>Centro de control</h1>
-          <p>Herramientas conectadas a datos y acciones reales del servidor.</p>
+          <p className="eyebrow">Panel administrativo</p>
+          <h1>{areaDefinition.title}</h1>
+          <p>{areaDefinition.description}</p>
         </div>
         <div className="admin-heading-tools">
           <div aria-label="Garantías de operación" className="heading-stats">
@@ -150,69 +292,67 @@ export function AdminHub() {
             id="admin-sidebar-links"
           >
             <nav aria-label="Herramientas administrativas" className="admin-area-navigation">
-              <a aria-current="page" href="/admin">
-                Operación
-              </a>
-              <a href="/admin/accounts">Cuentas</a>
-              <a href="/admin/pos">Pseudo-POS</a>
-              <a href="/admin/service-coverage">Atención y cobertura</a>
+              {adminAreas.map((definition) => (
+                <a
+                  aria-current={area === definition.area ? 'page' : undefined}
+                  href={definition.route}
+                  key={definition.area}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigate(definition.route);
+                    setSidebarOpen(false);
+                  }}
+                >
+                  {definition.label}
+                </a>
+              ))}
             </nav>
-            <nav aria-label="Módulos operativos" className="admin-module-navigation">
-              <a
-                aria-current={activeSection === 'admin-overview' ? 'location' : undefined}
-                href="#admin-overview"
-                onClick={() => {
-                  setActiveSection('admin-overview');
-                  setSidebarOpen(false);
-                }}
-              >
-                Resumen
-              </a>
-              {moduleGroups.map((group) => (
-                <section className="admin-nav-group" key={group.label}>
-                  <h2>{group.label}</h2>
-                  {group.anchors.map((anchor) => {
-                    const definition = modules.find((module) => module.anchor === anchor);
-                    const label = anchor === 'inventory' ? 'Inventario' : definition?.label;
-                    return (
-                      <a
-                        aria-current={activeSection === anchor ? 'location' : undefined}
-                        href={`#${anchor}`}
-                        key={anchor}
-                        onClick={() => {
-                          setActiveSection(anchor);
-                          setSidebarOpen(false);
-                        }}
-                      >
-                        {label}
-                      </a>
-                    );
-                  })}
-                </section>
+            <nav aria-label="Herramientas complementarias" className="admin-module-navigation">
+              {[
+                ['/admin/accounts', 'Usuarios'],
+                ['/admin/pos', 'Pseudo-POS'],
+                ['/admin/service-coverage', 'Atención y cobertura'],
+              ].map(([route, label]) => (
+                <a
+                  href={route}
+                  key={route}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    navigate(route as AdminRoute);
+                    setSidebarOpen(false);
+                  }}
+                >
+                  {label}
+                </a>
               ))}
             </nav>
           </div>
         </aside>
         <div className="admin-content">
-          <section id="admin-overview">
+          <section id={`${area}-workspace`}>
             <p className="status" role="status">
               {actionMessage}
             </p>
-            <section aria-label="Resumen operativo visible" className="metric-grid admin-snapshot">
-              {modules.slice(0, 6).map((module) => (
-                <div className="metric" key={module.anchor}>
-                  <span>{module.label} en página</span>
-                  <strong>
-                    {data[module.anchor]?.state === 'ready'
-                      ? data[module.anchor]?.items.length
-                      : '—'}
-                  </strong>
-                </div>
-              ))}
-            </section>
+            {area === 'dashboard' && (
+              <section
+                aria-label="Resumen operativo visible"
+                className="metric-grid admin-snapshot"
+              >
+                {requiredModules.map((module) => (
+                  <div className="metric" key={module.anchor}>
+                    <span>{module.label} en página</span>
+                    <strong>
+                      {data[module.anchor]?.state === 'ready'
+                        ? data[module.anchor]?.items.length
+                        : '—'}
+                    </strong>
+                  </div>
+                ))}
+              </section>
+            )}
           </section>
 
-          {modules.map((module) => (
+          {visibleModules.map((module) => (
             <AdminModule
               definition={module}
               key={module.anchor}
@@ -221,40 +361,53 @@ export function AdminHub() {
               onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
             />
           ))}
-          <InventoryPanel onAction={mutate} products={data.catalog?.items ?? []} />
-          <CatalogComposer
-            categories={data.categories?.items ?? []}
-            collections={data.collections?.items ?? []}
-            games={data.games?.items ?? []}
-            onAction={mutate}
-          />
-          <CatalogEditors
-            categories={data.categories?.items ?? []}
-            collections={data.collections?.items ?? []}
-            games={data.games?.items ?? []}
-            onAction={mutate}
-            products={data.catalog?.items ?? []}
-          />
-          <CatalogResourceManager
-            categories={data.categories?.items ?? []}
-            collections={data.collections?.items ?? []}
-            games={data.games?.items ?? []}
-            products={data.catalog?.items ?? []}
-          />
-          <PreorderComposer onAction={mutate} products={data.catalog?.items ?? []} />
-          <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
-          <LoyaltyOperations onAction={mutate} />
-          <ConfigurationComposer onAction={mutate} />
-          <EditorialComposer onAction={mutate} />
-          <RecordEditors
-            configurations={data.configurations?.items ?? []}
-            content={data.content?.items ?? []}
-            loyalty={data.loyalty?.items ?? []}
-            onAction={mutate}
-            preorders={data.preorders?.items ?? []}
-            products={data.catalog?.items ?? []}
-            promotions={data.promotions?.items ?? []}
-          />
+          {area === 'inventory' && (
+            <InventoryPanel onAction={mutate} products={data.catalog?.items ?? []} />
+          )}
+          {area === 'catalog' && (
+            <>
+              <CatalogComposer
+                categories={data.categories?.items ?? []}
+                collections={data.collections?.items ?? []}
+                games={data.games?.items ?? []}
+                onAction={mutate}
+              />
+              <CatalogEditors
+                categories={data.categories?.items ?? []}
+                collections={data.collections?.items ?? []}
+                games={data.games?.items ?? []}
+                onAction={mutate}
+                products={data.catalog?.items ?? []}
+              />
+              <CatalogResourceManager
+                categories={data.categories?.items ?? []}
+                collections={data.collections?.items ?? []}
+                games={data.games?.items ?? []}
+                products={data.catalog?.items ?? []}
+              />
+            </>
+          )}
+          {area === 'preorders' && (
+            <PreorderComposer onAction={mutate} products={data.catalog?.items ?? []} />
+          )}
+          {area === 'promotions' && (
+            <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
+          )}
+          {area === 'loyalty' && <LoyaltyOperations onAction={mutate} />}
+          {area === 'configuration' && <ConfigurationComposer onAction={mutate} />}
+          {area === 'content' && <EditorialComposer onAction={mutate} />}
+          {['configuration', 'content', 'loyalty', 'preorders', 'promotions'].includes(area) && (
+            <RecordEditors
+              area={area as 'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions'}
+              configurations={data.configurations?.items ?? []}
+              content={data.content?.items ?? []}
+              loyalty={data.loyalty?.items ?? []}
+              onAction={mutate}
+              preorders={data.preorders?.items ?? []}
+              products={data.catalog?.items ?? []}
+              promotions={data.promotions?.items ?? []}
+            />
+          )}
         </div>
       </div>
     </main>

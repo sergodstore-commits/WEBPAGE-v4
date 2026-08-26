@@ -69,44 +69,47 @@ beforeEach(() => {
 
 describe('AdminHub', () => {
   it('organizes every operational module in an accessible sidebar', async () => {
-    render(<AdminHub />);
+    const navigate = vi.fn();
+    render(<AdminHub area="dashboard" navigate={navigate} />);
 
     const sidebar = screen.getByRole('complementary', { name: 'Navegación administrativa' });
-    const navigation = within(sidebar).getByRole('navigation', { name: 'Módulos operativos' });
+    const navigation = within(sidebar).getByRole('navigation', {
+      name: 'Herramientas administrativas',
+    });
     expect(within(navigation).getByRole('link', { name: 'Resumen' })).toHaveAttribute(
       'aria-current',
-      'location',
+      'page',
     );
     expect(within(navigation).getByRole('link', { name: 'Inventario' })).toHaveAttribute(
       'href',
-      '#inventory',
+      '/admin/inventory',
     );
     expect(within(navigation).getByRole('link', { name: 'Auditoría' })).toHaveAttribute(
       'href',
-      '#audit',
+      '/admin/audit',
     );
 
     const toggle = screen.getByRole('button', { name: 'Menú de administración' });
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    fireEvent.click(within(navigation).getByRole('link', { name: 'Pagos' }));
+    fireEvent.click(within(navigation).getByRole('link', { name: 'Pedidos y pagos' }));
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(within(navigation).getByRole('link', { name: 'Pagos' })).toHaveAttribute(
-      'aria-current',
-      'location',
-    );
+    expect(navigate).toHaveBeenCalledWith('/admin/orders');
   });
 
-  it('loads every operational module and exposes real actions', async () => {
-    render(<AdminHub />);
+  it('loads only the order area modules and exposes their real actions', async () => {
+    render(<AdminHub area="orders" navigate={vi.fn()} />);
     expect(await screen.findByText('SG-2026-000010')).toBeInTheDocument();
-    expect((await screen.findAllByText('Caja Pokémon')).length).toBeGreaterThan(0);
-    expect(await screen.findByText('ORDER_PAID')).toBeInTheDocument();
     expect(
       vi
         .mocked(authorizedRequest)
         .mock.calls.some(([path]) => path === '/api/v1/admin/loyalty/configurations?limit=25'),
-    ).toBe(true);
+    ).toBe(false);
+    expect(
+      vi
+        .mocked(authorizedRequest)
+        .mock.calls.some(([path]) => path === '/api/v1/admin/catalog/products?limit=25'),
+    ).toBe(false);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Conciliar' }));
     await screen.findByText('Operación guardada correctamente.');
@@ -127,13 +130,13 @@ describe('AdminHub', () => {
         } as never;
       return { items: [], nextCursor: null } as never;
     });
-    render(<AdminHub />);
+    render(<AdminHub area="orders" navigate={vi.fn()} />);
     await waitFor(() => expect(screen.getByText('SG-2026-000010')).toBeInTheDocument());
     expect(await screen.findByText('Pagos no disponibles.')).toBeInTheDocument();
   });
 
   it('sends a complete product edit with idempotency protection', async () => {
-    render(<AdminHub />);
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
     const section = (await screen.findByRole('heading', { name: 'Editar catálogo' })).closest(
       'section',
     );
@@ -195,7 +198,7 @@ describe('AdminHub', () => {
       headers: new Headers({ etag: '"resources-v1"' }),
       status: 200,
     } as never);
-    render(<AdminHub />);
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
     const section = (await screen.findByRole('heading', { name: 'Imágenes del catálogo' })).closest(
       'section',
     );

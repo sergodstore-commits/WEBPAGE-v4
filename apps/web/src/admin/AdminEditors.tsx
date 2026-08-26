@@ -465,6 +465,7 @@ export function CatalogResourceManager({
 }
 
 export function RecordEditors({
+  area,
   content,
   configurations,
   loyalty,
@@ -473,6 +474,7 @@ export function RecordEditors({
   products,
   promotions,
 }: {
+  readonly area: 'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions';
   readonly content: readonly Item[];
   readonly configurations: readonly Item[];
   readonly loyalty: readonly Item[];
@@ -581,7 +583,7 @@ export function RecordEditors({
     <section className="cut-panel admin-module" id="record-editors">
       <h2>Editar operaciones</h2>
       <div className="admin-form-grid">
-        <form onSubmit={(event) => void preorder(event)}>
+        <form hidden={area !== 'preorders'} onSubmit={(event) => void preorder(event)}>
           <h3>Campaña de preventa</h3>
           <ItemSelect
             items={preorders}
@@ -626,7 +628,7 @@ export function RecordEditors({
           </label>
           <button>Guardar preventa</button>
         </form>
-        <form onSubmit={(event) => void loyaltyEdit(event)}>
+        <form hidden={area !== 'loyalty'} onSubmit={(event) => void loyaltyEdit(event)}>
           <h3>Configuración loyalty</h3>
           <ItemSelect
             items={loyalty}
@@ -659,7 +661,7 @@ export function RecordEditors({
           </label>
           <button>Guardar loyalty</button>
         </form>
-        <form onSubmit={(event) => void configEdit(event)}>
+        <form hidden={area !== 'configuration'} onSubmit={(event) => void configEdit(event)}>
           <h3>Versión de configuración</h3>
           <ItemSelect
             items={configurations}
@@ -677,7 +679,7 @@ export function RecordEditors({
           </label>
           <button>Guardar configuración</button>
         </form>
-        <form onSubmit={(event) => void editorial(event)}>
+        <form hidden={area !== 'content'} onSubmit={(event) => void editorial(event)}>
           <h3>Contenido editorial</h3>
           <ItemSelect
             items={content}
@@ -723,7 +725,7 @@ export function RecordEditors({
           </label>
           <button>Guardar contenido</button>
         </form>
-        <form onSubmit={(event) => void promotion(event)}>
+        <form hidden={area !== 'promotions'} onSubmit={(event) => void promotion(event)}>
           <h3>Promoción porcentual general</h3>
           <ItemSelect
             items={promotions}
