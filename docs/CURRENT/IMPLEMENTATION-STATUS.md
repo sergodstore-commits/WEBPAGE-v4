@@ -13,7 +13,7 @@
 | Webpay Plus                                                                                 | Adapter online; sin POS físico | Create/commit/status, retorno anormal y replay probados localmente                      | Ambiente Integración con credenciales                |
 | Fulfillment                                                                                 | Corregido                      | Cada transición mantiene `fulfillment_events` y `order_state_history`                   | E2E en staging                                       |
 | Cuenta cliente                                                                              | Operativa en preview           | Perfil, pedidos, preventas, puntos, preferencias y seguridad renderizan con sesión real | Mutaciones E2E y renovación controlada del token     |
-| Admin                                                                                       | Superficie real completa V1    | Operaciones enlazadas a APIs; barrera de rol previa al montaje; acciones auditables     | Matriz por rol en staging                            |
+| Admin                                                                                       | Shell lateral en preview       | 20 accesos agrupados; operaciones reales conservadas; responsive sin overflow           | Separar módulos/rutas, traducir datos y E2E por rol  |
 | Comercio público                                                                            | Corregido y ampliado           | Shell responsive, catálogo, carrito, checkout protegido y pago; deep links estables     | Catálogo/contenido real y E2E navegador remoto       |
 | Editorial                                                                                   | Implementado                   | Repo/API y transición publish/archive/draft corregida; torneos solo informativos        | Operación y contenido real                           |
 | Diseño y accesibilidad                                                                      | Verificado localmente          | Sistema visual aprobado; logo inmutable; QA escritorio/móvil, estados y controles       | Regresión visual en entorno remoto                   |
@@ -40,7 +40,7 @@
 - QA manual local: Inicio, Tienda, Editorial, Carrito, Checkout, Cuenta y accesos Admin revisados en escritorio/móvil; sin overflow horizontal y con acciones móviles de al menos 44 px.
 - Invariantes focales: `FREIGHT_COLLECT` conserva costo `0`, no requiere domicilio y queda fuera del total; torneos siguen siendo contenido editorial sin motor competitivo.
 
-## Evidencia externa de staging — 2026-08-24
+## Evidencia externa de staging — 2026-08-24 a 2026-08-26
 
 - Render `srv-da3ij5flk1mc7380htcg` sirve el commit auditado `664f24c02b881672a8ebe196066749996f3b4d03` desde `codex/staging-acceptance`; branch, health check `/health` y Auto-Deploy `On Commit` fueron reconfirmados.
 - Smoke posterior al rollback: `GET /health` y `GET /api/v1/catalog/products?limit=1` respondieron HTTP 200.
@@ -49,6 +49,7 @@
 - Preview Vercel de `codex/staging-acceptance` sirve el build auditado; se verificó sesión Supabase real, persistencia tras recarga y acceso protegido. Producción y dominio permanecen sin promover.
 - El commit `87cf5f5` corrigió el contrato de loyalty en Cuenta y añadió recuperación por ruta. La preview volvió a renderizar `/account/overview` con perfil, pedidos, preventas, puntos y preferencias, sin errores de consola.
 - El propietario aprobó 106 recursos UI sin texto el 2026-08-25. Se incorporaron con sus bytes originales a `design/approved/ui/` y quedaron registrados por SHA-256 en `design/manifest/APPROVED-UI-ASSETS.json`; 50 variantes con texto horneado permanecen excluidas.
+- El commit `2fdc669` reorganizó Administración con una barra lateral fija en escritorio y menú desplegable en móvil. La preview verificó 20 accesos, ancho lateral de 272 px, cero overflow, cero controles menores de 44 px y cero errores de consola; la separación posterior por módulos/rutas sigue pendiente.
 - Los fixtures técnicos visibles fueron despublicados de forma trazable: 3 productos, 1 campaña, 1 colección, 1 categoría y 1 juego. El catálogo público queda vacío hasta que el propietario cargue productos reales desde Admin.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
