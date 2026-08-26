@@ -1,0 +1,82 @@
+:root {
+  /* Paleta normativa: negro, rojo y blanco dominantes; cian solo como acento. */
+  --color-neutral-1000: #050607;
+  --color-neutral-950: #08090b;
+  --color-neutral-900: #0d0f12;
+  --color-neutral-850: #15171b;
+  --color-neutral-800: #202329;
+  --color-neutral-750: #292d34;
+  --color-neutral-650: #3a3d45;
+  --color-neutral-500: #555b66;
+  --color-neutral-400: #a7abb3;
+  --color-neutral-50: #f7f7f4;
+  --color-brand-600: #a70e1d;
+  --color-brand-500: #e21d2f;
+  --color-accent-400: #31d7e5;
+
+  /* Roles semánticos compartidos por cliente y administración. */
+  --color-canvas: var(--color-neutral-950);
+  --color-surface: var(--color-neutral-850);
+  --color-surface-raised: var(--color-neutral-800);
+  --color-surface-strong: var(--color-neutral-750);
+  --color-field: var(--color-neutral-900);
+  --color-text: var(--color-neutral-50);
+  --color-text-muted: var(--color-neutral-400);
+  --color-border: var(--color-neutral-650);
+  --color-border-strong: var(--color-neutral-500);
+  --color-action: var(--color-brand-500);
+  --color-action-strong: var(--color-brand-600);
+  --color-focus: var(--color-accent-400);
+
+  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.15rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  --content-width: 82rem;
+  --control-height: 2.75rem;
+  --cut-sm: 0.7rem;
+  --cut-md: 1.1rem;
+  --border-subtle: 1px solid var(--color-border);
+  --border-emphasis: 2px solid var(--color-text);
+  --shadow-brand: 0.5rem 0.5rem 0 var(--color-action-strong);
+  --focus-ring: 3px solid var(--color-focus);
+
+  /* Fuentes aprobadas; el texto siempre se superpone como HTML. */
+  --asset-halftone-red: url('../../../../design/approved/ui/sheet_01/textures_02.png');
+
+  /* Alias temporales para componentes existentes durante la migración visual. */
+  --ink: var(--color-canvas);
+  --panel: var(--color-surface);
+  --panel-2: var(--color-surface-raised);
+  --panel-3: var(--color-surface-strong);
+  --paper: var(--color-text);
+  --red: var(--color-action);
+  --red-dark: var(--color-action-strong);
+  --cyan: var(--color-focus);
+  --muted: var(--color-text-muted);
+  --line: var(--color-border);
+  --content: var(--content-width);
+  --display-font: var(--font-display);
+  --cut-small: var(--cut-sm);
+  --cut-medium: var(--cut-md);
+  --stroke-strong: var(--border-emphasis);
+  --shadow-red: var(--shadow-brand);
+
+  color: var(--color-text);
+  background: var(--color-canvas);
+  font-family: var(--font-body);
+  font-synthesis: none;
+}

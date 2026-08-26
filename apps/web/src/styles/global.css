@@ -1,25 +1,5 @@
-:root {
-  --ink: #08090b;
-  --panel: #15171b;
-  --panel-2: #202329;
-  --panel-3: #292d34;
-  --paper: #f7f7f4;
-  --red: #e21d2f;
-  --red-dark: #a70e1d;
-  --cyan: #31d7e5;
-  --muted: #a7abb3;
-  --line: #3a3d45;
-  --content: 82rem;
-  --display-font: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
-  --cut-small: 0.7rem;
-  --cut-medium: 1.1rem;
-  --stroke-strong: 2px solid var(--paper);
-  --shadow-red: 0.5rem 0.5rem 0 var(--red-dark);
-  color: var(--paper);
-  background: var(--ink);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  font-synthesis: none;
-}
+@import './tokens.css';
+
 * {
   box-sizing: border-box;
 }
@@ -45,7 +25,7 @@ button {
   cursor: pointer;
   padding: 0.75rem 1rem;
   font-weight: 700;
-  min-height: 2.75rem;
+  min-height: var(--control-height);
 }
 button:disabled {
   cursor: not-allowed;
@@ -230,9 +210,9 @@ input,
 select,
 textarea {
   width: 100%;
-  border: 1px solid #555b66;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.15rem;
-  background: #0d0f12;
+  background: var(--color-field);
   padding: 0.75rem;
   color: var(--paper);
 }
@@ -241,7 +221,7 @@ select:focus,
 textarea:focus,
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid var(--cyan);
+  outline: var(--focus-ring);
   outline-offset: 2px;
 }
 .legal {
@@ -303,7 +283,7 @@ pre {
 .home-strips article,
 .metric {
   background: var(--panel);
-  border: 1px solid #3a3d45;
+  border: var(--border-subtle);
   box-shadow: 0.45rem 0.45rem 0 var(--red-dark);
   clip-path: polygon(
     0 0,
@@ -317,8 +297,16 @@ pre {
 .section-heading {
   padding: clamp(1.5rem, 5vw, 3.5rem);
   margin-bottom: 1.5rem;
-  background-image: radial-gradient(circle at 80% 20%, rgb(226 29 47 / 24%) 0 2px, transparent 2px);
-  background-size: 12px 12px;
+  background-image:
+    var(--asset-halftone-red),
+    radial-gradient(circle at 80% 20%, rgb(226 29 47 / 14%) 0 2px, transparent 2px);
+  background-position:
+    right 1rem center,
+    0 0;
+  background-repeat: no-repeat, repeat;
+  background-size:
+    min(24rem, 45%) auto,
+    12px 12px;
 }
 .section-heading h1,
 .commerce-hero h1 {
