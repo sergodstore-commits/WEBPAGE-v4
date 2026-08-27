@@ -2,6 +2,13 @@ import { type FormEvent, useCallback, useEffect, useState } from 'react';
 
 import { authorizedRequest } from '../identity/api.js';
 import { CatalogEditors, CatalogResourceManager, RecordEditors } from './AdminEditors.js';
+import {
+  itemDetail,
+  itemIdentifier,
+  itemReference,
+  itemStatus,
+  shortIdentifier,
+} from './presentation.js';
 
 type Item = Record<string, unknown>;
 type LoadState = 'error' | 'loading' | 'ready';
@@ -455,7 +462,7 @@ function AdminModule({
                 <AdminRow
                   anchor={definition.anchor}
                   item={item}
-                  key={identifier(item) ?? index}
+                  key={itemIdentifier(item) ?? index}
                   onAction={onAction}
                 />
               ))}
@@ -486,12 +493,20 @@ function AdminRow({
     reload?: string,
   ) => Promise<void>;
 }) {
-  const id = identifier(item);
+  const id = itemIdentifier(item);
+  const primaryReference = itemReference(item);
   return (
     <tr>
-      <td>{reference(item)}</td>
-      <td>{status(item)}</td>
-      <td>{detail(item)}</td>
+      <td>
+        <span className="admin-reference">{primaryReference}</span>
+        {id && primaryReference !== shortIdentifier(id) && (
+          <small className="admin-technical-reference" title={id}>
+            Código interno {shortIdentifier(id)}
+          </small>
+        )}
+      </td>
+      <td>{itemStatus(item)}</td>
+      <td>{itemDetail(item)}</td>
       <td>{id && <RowAction anchor={anchor} id={id} item={item} onAction={onAction} />}</td>
     </tr>
   );
@@ -1061,10 +1076,10 @@ function EntitySelect({
       <select name={name} required={!allowEmpty}>
         <option value="">{allowEmpty ? 'Sin asignar' : 'Selecciona'}</option>
         {items.map((item) => {
-          const id = identifier(item) ?? '';
+          const id = itemIdentifier(item) ?? '';
           return (
             <option key={id} value={id}>
-              {String(item.name ?? id)}
+              {itemReference(item)}
             </option>
           );
         })}
@@ -1514,61 +1529,6 @@ function EditorialComposer({
   );
 }
 
-function identifier(item: Item): string | null {
-  for (const key of [
-    'paymentAttemptId',
-    'fulfillmentId',
-    'orderId',
-    'tcgGameId',
-    'categoryId',
-    'collectionId',
-    'productId',
-    'preorderCampaignId',
-    'promotionId',
-    'couponId',
-    'loyaltyConfigurationId',
-    'systemConfigurationVersionId',
-    'editorialEntryId',
-    'auditEntryId',
-  ]) {
-    if (typeof item[key] === 'string') return item[key];
-  }
-  return null;
-}
-function reference(item: Item): string {
-  for (const key of [
-    'publicNumber',
-    'orderPublicNumber',
-    'name',
-    'title',
-    'code',
-    'configurationKey',
-    'action',
-    'sku',
-  ]) {
-    if (typeof item[key] === 'string') return item[key];
-  }
-  return identifier(item) ?? '—';
-}
-function status(item: Item): string {
-  for (const key of ['status', 'state', 'publicationStatus', 'operationalState', 'result']) {
-    if (typeof item[key] === 'string') return item[key];
-  }
-  return '—';
-}
-function detail(item: Item): string {
-  for (const key of [
-    'provider',
-    'type',
-    'resourceType',
-    'saleType',
-    'estimatedArrivalText',
-    'reason',
-  ]) {
-    if (typeof item[key] === 'string') return item[key];
-  }
-  return '—';
-}
 function nullable(value: FormDataEntryValue | null): string | null {
   const text = String(value ?? '').trim();
   return text === '' ? null : text;

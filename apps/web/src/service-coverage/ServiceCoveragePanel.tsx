@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
+import { OperationalDataView } from '../admin/OperationalDataView.js';
 import { readCoverage, savePublicServiceInfo, transitionServiceInfo } from './api.js';
 
 export function ServiceCoveragePanel() {
@@ -107,8 +108,8 @@ export function ServiceCoveragePanel() {
           <label>
             Estado
             <select name="nextState">
-              <option>PUBLISHED</option>
-              <option>WITHDRAWN</option>
+              <option value="PUBLISHED">Publicado</option>
+              <option value="WITHDRAWN">Retirado</option>
             </select>
           </label>
           <label>
@@ -118,7 +119,11 @@ export function ServiceCoveragePanel() {
           <button>Aplicar transición</button>
         </form>
       </div>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <OperationalDataView
+        data={data.serviceInfo}
+        emptyMessage="Aún no hay información pública de atención guardada."
+        title="Información de atención configurada"
+      />
       <p className="status" role="status">
         {message}
       </p>

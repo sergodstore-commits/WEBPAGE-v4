@@ -32,7 +32,7 @@ beforeEach(() => {
       return {
         items: [
           {
-            name: 'Caja Pokémon',
+            name: 'Preventa aceptaci�n Fase 7',
             priceAmountClp: 39990,
             productId: 'product-1',
             publicationStatus: 'PUBLISHED',
@@ -117,6 +117,16 @@ describe('AdminHub', () => {
       '/api/v1/admin/payment-attempts/payment-1/reconcile',
       expect.objectContaining({ method: 'POST' }),
     );
+    expect(screen.getByText('Pagado')).toBeInTheDocument();
+    expect(screen.getByText('Pendiente')).toBeInTheDocument();
+  });
+
+  it('presents operational labels and repairs only verified damaged text', async () => {
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
+
+    expect((await screen.findAllByText('Preventa aceptación Fase 7')).length).toBeGreaterThan(0);
+    expect(screen.getByText('Publicado')).toBeInTheDocument();
+    expect(screen.queryByText('PUBLISHED')).not.toBeInTheDocument();
   });
 
   it('keeps other modules available when one request fails', async () => {

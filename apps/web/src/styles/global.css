@@ -615,6 +615,54 @@ th {
   font-size: 0.72rem;
   letter-spacing: 0.1em;
 }
+.admin-reference,
+.admin-technical-reference {
+  display: block;
+}
+.operational-results {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--cyan);
+}
+.operational-result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.8rem;
+}
+.operational-result-card {
+  min-width: 0;
+  padding: 0.85rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.operational-facts {
+  display: block;
+  margin: 0;
+}
+.operational-fact {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.4fr) 1fr;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.operational-fact:last-child {
+  border-bottom: 0;
+}
+.operational-fact dd {
+  min-width: 0;
+}
+.admin-reference {
+  font-weight: 800;
+}
+.admin-technical-reference {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
 textarea {
   resize: vertical;
 }

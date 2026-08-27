@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react';
+import { OperationalDataView } from '../admin/OperationalDataView.js';
 import {
   addLine,
   completeSale,
@@ -24,11 +25,19 @@ import {
 
 export function PosPanel() {
   const [message, setMessage] = useState('');
+  const [result, setResult] = useState<{ readonly data: unknown; readonly title: string } | null>(
+    null,
+  );
   const [sale, setSale] = useState<ReturnType<JSON['parse']>>(null);
   const reload = async (id: string) => setSale(await getSale(id));
   const show = async (query: 'HISTORY' | 'METHODS') => {
     try {
-      setMessage(JSON.stringify(query === 'HISTORY' ? await sales() : await moneyMethods()));
+      const data = query === 'HISTORY' ? await sales() : await moneyMethods();
+      setResult({
+        data: isRecord(data) && Array.isArray(data.items) ? data.items : data,
+        title: query === 'HISTORY' ? 'Historial reciente' : 'Medios configurados',
+      });
+      setMessage('Consulta actualizada.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No fue posible completar la consulta.');
     }
@@ -152,10 +161,13 @@ export function PosPanel() {
         );
         setMessage('Estado del medio actualizado.');
       }
-      if (kind === 'DAILY')
-        setMessage(
-          JSON.stringify(await daily(String(form.get('branchId')), String(form.get('date')))),
-        );
+      if (kind === 'DAILY') {
+        setResult({
+          data: await daily(String(form.get('branchId')), String(form.get('date'))),
+          title: 'Resumen diario',
+        });
+        setMessage('Resumen diario actualizado.');
+      }
       if (kind === 'RETURN_DRAFT' && sale) {
         await returnSaleToDraft(sale.item.pos_sale_id, String(form.get('reason')));
         await reload(sale.item.pos_sale_id);
@@ -185,8 +197,8 @@ export function PosPanel() {
           <label>
             Tipo
             <select name="saleType">
-              <option>REGULAR</option>
-              <option>PREORDER</option>
+              <option value="REGULAR">Venta regular</option>
+              <option value="PREORDER">Preventa</option>
             </select>
           </label>
           <button>Crear borrador</button>
@@ -347,9 +359,9 @@ export function PosPanel() {
           <label>
             Estado
             <select name="nextState">
-              <option>ACTIVE</option>
-              <option>INACTIVE</option>
-              <option>RETIRED</option>
+              <option value="ACTIVE">Activo</option>
+              <option value="INACTIVE">Inactivo</option>
+              <option value="RETIRED">Retirado</option>
             </select>
           </label>
           <label>
@@ -359,7 +371,7 @@ export function PosPanel() {
           <button>Cambiar estado</button>
         </form>
         <form onSubmit={(event) => void action(event, 'METHOD_EDIT')}>
-          <h2>Editar medio DRAFT</h2>
+          <h2>Editar medio en borrador</h2>
           <label>
             Medio
             <input name="methodId" required />
@@ -379,7 +391,7 @@ export function PosPanel() {
           <button>Editar medio</button>
         </form>
         <form onSubmit={(event) => void action(event, 'METHOD_DELETE')}>
-          <h2>Eliminar medio DRAFT sin uso</h2>
+          <h2>Eliminar medio en borrador sin uso</h2>
           <label>
             Medio
             <input name="methodId" required />
@@ -405,7 +417,7 @@ export function PosPanel() {
               Motivo
               <input name="reason" required />
             </label>
-            <button>Volver a DRAFT</button>
+            <button>Volver a borrador</button>
           </form>
         )}
         {sale && (
@@ -427,10 +439,15 @@ export function PosPanel() {
           Medios configurados
         </button>
       </div>
-      {sale && <pre>{JSON.stringify(sale, null, 2)}</pre>}
+      {sale && <OperationalDataView data={sale} title="Venta en curso" />}
+      {result && <OperationalDataView data={result.data} title={result.title} />}
       <p className="status" role="status">
         {message}
       </p>
     </main>
   );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

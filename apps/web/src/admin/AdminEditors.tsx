@@ -1,6 +1,7 @@
 import { type FormEvent, useMemo, useState } from 'react';
 
 import { type AuthorizedResponse, authorizedRequest, authorizedResponse } from '../identity/api.js';
+import { itemIdentifier, itemReference } from './presentation.js';
 
 type Item = Record<string, unknown>;
 export type AdminAction = (
@@ -845,7 +846,7 @@ function ItemSelect({
         onChange={(event) => {
           onChange?.(event.target.value);
           const form = event.currentTarget.form;
-          const item = items.find((candidate) => identifier(candidate) === event.target.value);
+          const item = items.find((candidate) => itemIdentifier(candidate) === event.target.value);
           if (form && item) onSelect?.(item, form);
         }}
         required={!allowEmpty}
@@ -853,10 +854,10 @@ function ItemSelect({
       >
         {<option value="">{allowEmpty ? 'Sin asignar' : 'Selecciona'}</option>}
         {items.map((item) => {
-          const id = identifier(item);
+          const id = itemIdentifier(item);
           return id ? (
             <option key={id} value={id}>
-              {reference(item)}
+              {itemReference(item)}
             </option>
           ) : null;
         })}
@@ -882,26 +883,6 @@ function setField(form: HTMLFormElement, name: string, value: unknown) {
 }
 function isItem(value: unknown): value is Item {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-function identifier(item: Item): string | null {
-  for (const key of [
-    'tcgGameId',
-    'categoryId',
-    'collectionId',
-    'productId',
-    'preorderCampaignId',
-    'promotionId',
-    'loyaltyConfigurationId',
-    'systemConfigurationVersionId',
-    'editorialEntryId',
-  ])
-    if (typeof item[key] === 'string') return item[key];
-  return null;
-}
-function reference(item: Item): string {
-  for (const key of ['name', 'title', 'code', 'configurationKey', 'sku'])
-    if (typeof item[key] === 'string') return item[key];
-  return identifier(item) ?? '—';
 }
 function nullable(value: FormDataEntryValue | null): string | null {
   const text = String(value ?? '').trim();

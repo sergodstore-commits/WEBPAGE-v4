@@ -68,4 +68,6 @@ it('renders the productive Pseudo-POS controls without collecting card data', as
   expect(screen.queryByText(/número de tarjeta|cvv|pan/iu)).not.toBeInTheDocument();
   expect(screen.getByText(/NO INCLUIDO — ENVÍO POR PAGAR/iu)).toBeInTheDocument();
   expect(screen.queryByRole('textbox', { name: /^Dirección$/iu })).not.toBeInTheDocument();
+  expect(screen.getAllByText('Preventa').length).toBeGreaterThan(0);
+  expect(document.querySelector('pre')).not.toBeInTheDocument();
 });
