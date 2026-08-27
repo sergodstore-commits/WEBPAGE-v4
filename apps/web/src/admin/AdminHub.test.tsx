@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authorizedRequest, authorizedResponse } from '../identity/api.js';
 import { AdminHub } from './AdminHub.js';
+import { readableText } from './presentation.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -127,6 +128,8 @@ describe('AdminHub', () => {
     expect((await screen.findAllByText('Preventa aceptación Fase 7')).length).toBeGreaterThan(0);
     expect(screen.getByText('Publicado')).toBeInTheDocument();
     expect(screen.queryByText('PUBLISHED')).not.toBeInTheDocument();
+    expect(readableText('Categor�a aceptación')).toBe('Categoría aceptación');
+    expect(readableText('Colecci�n aceptación')).toBe('Colección aceptación');
   });
 
   it('keeps other modules available when one request fails', async () => {

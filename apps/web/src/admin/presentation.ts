@@ -35,11 +35,18 @@ const operationalLabels: Readonly<Record<string, string>> = {
 
 const verifiedTextRepairs: ReadonlyArray<readonly [RegExp, string]> = [
   [/aceptaci\uFFFDn/giu, 'aceptación'],
+  [/categor\uFFFDa/giu, 'categoría'],
+  [/colecci\uFFFDn/giu, 'colección'],
 ];
 
 export function readableText(value: string): string {
   return verifiedTextRepairs.reduce(
-    (text, [pattern, replacement]) => text.replace(pattern, replacement),
+    (text, [pattern, replacement]) =>
+      text.replace(pattern, (match) =>
+        match.charAt(0) === match.charAt(0).toLocaleUpperCase('es-CL')
+          ? `${replacement.charAt(0).toLocaleUpperCase('es-CL')}${replacement.slice(1)}`
+          : replacement,
+      ),
     value,
   );
 }
