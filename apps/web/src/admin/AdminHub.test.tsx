@@ -135,6 +135,19 @@ describe('AdminHub', () => {
     expect(await screen.findByText('Pagos no disponibles.')).toBeInTheDocument();
   });
 
+  it('shows only the editor that belongs to the selected area', async () => {
+    render(<AdminHub area="promotions" navigate={vi.fn()} />);
+
+    expect(
+      (await screen.findAllByRole('heading', { name: 'Promoción porcentual general' })).length,
+    ).toBeGreaterThan(0);
+    expect(screen.queryByRole('heading', { name: 'Campaña de preventa' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Configuración loyalty' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Contenido editorial' })).not.toBeInTheDocument();
+  });
+
   it('sends a complete product edit with idempotency protection', async () => {
     render(<AdminHub area="catalog" navigate={vi.fn()} />);
     const section = (await screen.findByRole('heading', { name: 'Editar catálogo' })).closest(
