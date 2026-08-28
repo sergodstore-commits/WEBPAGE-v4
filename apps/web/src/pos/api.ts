@@ -53,6 +53,10 @@ export const transitionMoneyMethod = (id: string, nextState: string, reason: str
   });
 export const sales = () =>
   authorizedRequest<ReturnType<JSON['parse']>>('/api/v1/admin/pos/sales?limit=25');
+export const preorderCampaigns = (productId: string) =>
+  authorizedRequest<ReturnType<JSON['parse']>>(
+    `/api/v1/admin/preorders/campaigns?limit=100&productId=${encodeURIComponent(productId)}&operationalState=OPEN&publicationStatus=PUBLISHED`,
+  );
 export const daily = (branchId: string, date: string) =>
   authorizedRequest<ReturnType<JSON['parse']>>(
     `/api/v1/admin/pos/daily-summary?branchId=${branchId}&date=${date}`,

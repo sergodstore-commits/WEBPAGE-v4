@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
 import { OperationalDataView } from '../admin/OperationalDataView.js';
+import { readableText, shortIdentifier } from '../admin/presentation.js';
 import { readCoverage, savePublicServiceInfo, transitionServiceInfo } from './api.js';
 
 export function ServiceCoveragePanel() {
@@ -8,18 +9,26 @@ export function ServiceCoveragePanel() {
     serviceInfo: [],
   });
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const serviceInfo = itemsOf(data.serviceInfo);
+  const branches = uniqueBranches(serviceInfo);
   const refresh = async () => setData(await readCoverage());
   useEffect(() => {
     let active = true;
     void readCoverage()
       .then((result) => {
-        if (active) setData(result);
+        if (active) {
+          setData(result);
+          setLoading(false);
+        }
       })
       .catch((error: unknown) => {
-        if (active)
+        if (active) {
           setMessage(
             error instanceof Error ? error.message : 'No fue posible cargar la cobertura.',
           );
+          setLoading(false);
+        }
       });
     return () => {
       active = false;
@@ -71,7 +80,20 @@ export function ServiceCoveragePanel() {
           <h2>Atención pública</h2>
           <label>
             Sucursal
-            <input name="branchId" required />
+            <select disabled={branches.length === 0} name="branchId" required>
+              <option value="">
+                {loading
+                  ? 'Cargando sucursal…'
+                  : branches.length === 0
+                    ? 'No hay sucursal configurada'
+                    : 'Selecciona una sucursal'}
+              </option>
+              {branches.map((branch) => (
+                <option key={String(branch.branch_id)} value={String(branch.branch_id)}>
+                  {branchLabel(branch)}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Dirección pública
@@ -97,13 +119,29 @@ export function ServiceCoveragePanel() {
             Motivo de edición
             <input name="reason" />
           </label>
-          <button>Guardar información</button>
+          <button disabled={branches.length === 0}>Guardar información</button>
         </form>
         <form onSubmit={(event) => void run(event, 'TRANSITION')}>
           <h2>Publicar o retirar atención</h2>
           <label>
-            Identificador
-            <input name="resourceId" required />
+            Información de atención
+            <select disabled={serviceInfo.length === 0} name="resourceId" required>
+              <option value="">
+                {loading
+                  ? 'Cargando información…'
+                  : serviceInfo.length === 0
+                    ? 'No hay información guardada'
+                    : 'Selecciona'}
+              </option>
+              {serviceInfo.map((item) => (
+                <option
+                  key={String(item.public_service_info_id)}
+                  value={String(item.public_service_info_id)}
+                >
+                  {branchLabel(item)}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Estado
@@ -116,7 +154,7 @@ export function ServiceCoveragePanel() {
             Motivo
             <input name="reason" required />
           </label>
-          <button>Aplicar transición</button>
+          <button disabled={serviceInfo.length === 0}>Aplicar transición</button>
         </form>
       </div>
       <OperationalDataView
@@ -129,4 +167,28 @@ export function ServiceCoveragePanel() {
       </p>
     </main>
   );
+}
+
+type Item = Readonly<Record<string, unknown>>;
+
+function isRecord(value: unknown): value is Item {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function itemsOf(value: unknown): readonly Item[] {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
+}
+
+function uniqueBranches(items: readonly Item[]): readonly Item[] {
+  return items.filter(
+    (item, index) =>
+      typeof item.branch_id === 'string' &&
+      items.findIndex((candidate) => candidate.branch_id === item.branch_id) === index,
+  );
+}
+
+function branchLabel(item: Item): string {
+  if (typeof item.public_address === 'string' && item.public_address.trim() !== '')
+    return readableText(item.public_address);
+  return `Sucursal ${shortIdentifier(String(item.branch_id ?? 'sin referencia'))}`;
 }

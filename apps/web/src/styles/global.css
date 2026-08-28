@@ -266,6 +266,22 @@ a:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   gap: 1rem;
 }
+.selected-operation-item {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+.selected-operation-item span {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.selected-operation-item strong {
+  min-height: 2.75rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
 pre {
   max-width: 100%;
   overflow: auto;
