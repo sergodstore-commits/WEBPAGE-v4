@@ -54,15 +54,23 @@ vi.mock('./api.js', () => ({
       pos_sale_id: saleId,
       sale_type: 'PREORDER',
     },
-    lines: [{ pos_sale_line_id: lineId, product_id: productId, quantity: 1 }],
+    lines: [
+      {
+        pos_sale_line_id: lineId,
+        product_id: productId,
+        product_name_snapshot: 'Caja Pokémon',
+        quantity: 1,
+        sku_snapshot: 'PKM-001',
+      },
+    ],
     settlements: [],
   }),
   moneyMethods: vi.fn().mockResolvedValue({
     items: [
       {
-        code: 'TRANSFER',
+        code_normalized: 'TRANSFER',
+        display_name: 'Transferencia bancaria',
         external_money_method_id: methodId,
-        name: 'Transferencia bancaria',
         state: 'ACTIVE',
       },
     ],
@@ -125,7 +133,7 @@ it('renders the productive Pseudo-POS controls without collecting card data', as
     0,
   );
   expect(
-    screen.getAllByRole('option', { name: /Producto 0198c500…0003/iu }).length,
+    screen.getAllByRole('option', { name: 'PKM-001 · Caja Pokémon · 1 unidad(es)' }).length,
   ).toBeGreaterThan(0);
   expect(document.querySelector('pre')).not.toBeInTheDocument();
 

@@ -601,7 +601,7 @@ function LineSelect({ lines, name }: { readonly lines: readonly Item[]; readonly
       <option value="">Selecciona un producto</option>
       {lines.map((line) => (
         <option key={String(line.pos_sale_line_id)} value={String(line.pos_sale_line_id)}>
-          Producto {shortIdentifier(String(line.product_id))} · {String(line.quantity)} unidad(es)
+          {lineLabel(line)}
         </option>
       ))}
     </select>
@@ -635,7 +635,9 @@ function MethodSelect({
           key={String(method.external_money_method_id)}
           value={String(method.external_money_method_id)}
         >
-          {readableText(String(method.name ?? method.code ?? 'Medio externo'))}
+          {readableText(
+            String(method.display_name ?? method.code_normalized ?? 'Medio sin nombre'),
+          )}
         </option>
       ))}
     </select>
@@ -644,6 +646,12 @@ function MethodSelect({
 
 function productOption(product: Item): string {
   return `${String(product.sku)} · ${readableText(String(product.name))}`;
+}
+
+function lineLabel(line: Item): string {
+  const name = readableText(String(line.product_name_snapshot ?? 'Producto'));
+  const sku = String(line.sku_snapshot ?? '').trim();
+  return `${sku ? `${sku} · ` : ''}${name} · ${String(line.quantity)} unidad(es)`;
 }
 
 function campaignOption(campaign: Item): string {
