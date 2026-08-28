@@ -46,7 +46,7 @@ beforeEach(() => {
       } as never;
     if (path.startsWith('/api/v1/admin/catalog/tcg-games'))
       return {
-        items: [{ name: 'Pokémon', tcgGameId: '0198a8be-6677-7000-8000-000000000101' }],
+        items: [{ gameId: '0198a8be-6677-7000-8000-000000000101', name: 'Pokémon' }],
         nextCursor: null,
       } as never;
     if (path.startsWith('/api/v1/admin/catalog/categories'))
@@ -83,6 +83,7 @@ describe('AdminHub', () => {
       'campaign-1',
     ],
     ['coupon', { couponId: 'coupon-1', promotionId: 'promotion-1' }, 'coupon-1'],
+    ['game', { gameId: 'game-1' }, 'game-1'],
     ['fulfillment', { fulfillmentId: 'fulfillment-1', orderId: 'order-1' }, 'fulfillment-1'],
     ['payment attempt', { orderId: 'order-1', paymentAttemptId: 'payment-1' }, 'payment-1'],
   ])('uses the %s primary identifier instead of a related record', (_kind, item, expected) => {

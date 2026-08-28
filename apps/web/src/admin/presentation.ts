@@ -65,6 +65,7 @@ export function itemIdentifier(item: Item): string | null {
     'productId',
     'collectionId',
     'categoryId',
+    'gameId',
     'tcgGameId',
     'promotionId',
     'loyaltyConfigurationId',
