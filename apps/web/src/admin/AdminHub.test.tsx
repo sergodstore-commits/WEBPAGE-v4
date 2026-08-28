@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authorizedRequest, authorizedResponse } from '../identity/api.js';
 import { AdminHub } from './AdminHub.js';
-import { readableText } from './presentation.js';
+import { itemIdentifier, readableText } from './presentation.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -33,6 +33,8 @@ beforeEach(() => {
       return {
         items: [
           {
+            categoryId: '0198a8be-6677-7000-8000-000000000102',
+            gameId: '0198a8be-6677-7000-8000-000000000101',
             name: 'Preventa aceptaci�n Fase 7',
             priceAmountClp: 39990,
             productId: 'product-1',
@@ -69,6 +71,24 @@ beforeEach(() => {
 });
 
 describe('AdminHub', () => {
+  it.each([
+    [
+      'product',
+      { categoryId: 'category-1', gameId: 'game-1', productId: 'product-1' },
+      'product-1',
+    ],
+    [
+      'preorder campaign',
+      { preorderCampaignId: 'campaign-1', productId: 'product-1' },
+      'campaign-1',
+    ],
+    ['coupon', { couponId: 'coupon-1', promotionId: 'promotion-1' }, 'coupon-1'],
+    ['fulfillment', { fulfillmentId: 'fulfillment-1', orderId: 'order-1' }, 'fulfillment-1'],
+    ['payment attempt', { orderId: 'order-1', paymentAttemptId: 'payment-1' }, 'payment-1'],
+  ])('uses the %s primary identifier instead of a related record', (_kind, item, expected) => {
+    expect(itemIdentifier(item)).toBe(expected);
+  });
+
   it('organizes every operational module in an accessible sidebar', async () => {
     const navigate = vi.fn();
     render(<AdminHub area="dashboard" navigate={navigate} />);
