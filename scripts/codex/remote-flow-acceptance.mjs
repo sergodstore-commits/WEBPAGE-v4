@@ -3,7 +3,8 @@ import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 const root = new URL('../../', import.meta.url);
 const stateUrl = new URL('.runtime/codex/remote-flow-acceptance-state.json', root);
 const mode = process.argv[2];
-if (!['--finalize', '--prepare'].includes(mode)) throw new Error('Use --prepare or --finalize.');
+if (!['--cleanup-failed', '--finalize', '--prepare'].includes(mode))
+  throw new Error('Use --prepare, --finalize or --cleanup-failed.');
 
 const env = {};
 for (const line of readFileSync(new URL('.env', root), 'utf8').split(/\r?\n/u)) {
@@ -297,4 +298,66 @@ async function finalize() {
   console.log('REMOTE_FLOW_CLEANUP=PASS');
 }
 
-await (mode === '--prepare' ? prepare() : finalize());
+async function cleanupFailed() {
+  const state = JSON.parse(readFileSync(stateUrl, 'utf8'));
+  if (state.orderId === undefined) throw new Error('The failed run has no order to clean up.');
+  if (state.paymentAttemptId !== undefined)
+    throw new Error('A payment attempt exists; use the terminal payment flow instead.');
+
+  const adminToken = await login(env.SERGOD_ADMIN_EMAIL, env.SERGOD_ADMIN_PASSWORD);
+  const clientToken = await login(env.SERGOD_CLIENT_EMAIL, env.SERGOD_CLIENT_PASSWORD);
+  const order = await request(`/api/v1/orders/${state.orderId}`, { token: clientToken });
+  if (order.item.state !== 'CANCELLED')
+    throw new Error(`The failed order is not safe to clean up: state=${order.item.state}.`);
+
+  const position = await request(`/api/v1/admin/inventory/products/${state.productId}`, {
+    token: adminToken,
+  });
+  const onHand = Number(position.item.onHand);
+  const reserved = Number(position.item.reserved);
+  const surplus = onHand - state.originalOnHand;
+  if (reserved !== state.originalReserved || surplus < 0 || surplus > 1)
+    throw new Error('Inventory cannot be restored automatically.');
+  if (surplus > 0) {
+    await request(`/api/v1/admin/inventory/products/${state.productId}/adjustments`, {
+      body: {
+        direction: 'NEGATIVE',
+        investigationReference: state.runId,
+        quantity: surplus,
+        reason: 'Restore stock after failed Flow acceptance attempt',
+      },
+      idempotencyKey: `${state.runId}:cleanup-failed-stock`,
+      method: 'POST',
+      token: adminToken,
+    });
+  }
+
+  const currentEntities = await selectFixture(adminToken);
+  for (const stored of [...state.entities].reverse()) {
+    const current = currentEntities.find(
+      (entity) => entity.kind === stored.kind && entity.id === stored.id,
+    );
+    if (current === undefined) throw new Error(`The ${stored.kind} fixture identity changed.`);
+    if (current.status === 'PUBLISHED')
+      await transition(adminToken, current, 'UNPUBLISHED', state.runId);
+    else if (current.status !== 'UNPUBLISHED')
+      throw new Error(`The ${stored.kind} fixture is in unexpected state ${current.status}.`);
+  }
+
+  const restored = await request(`/api/v1/admin/inventory/products/${state.productId}`, {
+    token: adminToken,
+  });
+  if (
+    Number(restored.item.onHand) !== state.originalOnHand ||
+    Number(restored.item.reserved) !== state.originalReserved
+  )
+    throw new Error('Inventory cleanup verification failed.');
+
+  unlinkSync(stateUrl);
+  console.log('REMOTE_FLOW_FAILED_CLEANUP=PASS');
+  console.log(`ACCEPTANCE_RUN_ID=${state.runId}`);
+  console.log(`ORDER_PUBLIC_NUMBER=${state.orderPublicNumber}`);
+  console.log('ORDER_STATUS=CANCELLED');
+}
+
+await (mode === '--prepare' ? prepare() : mode === '--finalize' ? finalize() : cleanupFailed());

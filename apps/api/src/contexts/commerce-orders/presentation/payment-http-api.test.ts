@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import type { IdentityAccessService } from '../../identity-access/application/identity-access-service.js';
 import { createServer } from '../../../presentation/http/create-server.js';
 import type { PaymentService } from '../application/payment-service.js';
+import { PaymentError } from '../domain/payment.js';
 import { PaymentHttpApi } from './payment-http-api.js';
 
 const processProviderResult = vi.fn().mockResolvedValue({ item: { status: 'SUCCEEDED' } });
@@ -72,6 +73,41 @@ describe('Payments HTTP provider routes', () => {
       expect.objectContaining({ actorType: 'SYSTEM' }),
       'WEBPAY',
       { mode: 'RECONCILE', token: 'aborted-token' },
+    );
+  });
+
+  it('logs the deepest controlled payment diagnostic without returning it to the client', async () => {
+    processProviderResult.mockRejectedValueOnce(
+      new PaymentError(
+        'PAYMENT_PROVIDER_UNAVAILABLE',
+        'INFRASTRUCTURE',
+        'Payment provider session could not be created.',
+        {
+          cause: new PaymentError(
+            'PAYMENT_PROVIDER_UNAVAILABLE',
+            'INFRASTRUCTURE',
+            'Provider returned HTTP 400.',
+          ),
+        },
+      ),
+    );
+
+    const response = await fetch(`${origin}/api/v1/payments/flow/return?token=opaque-token`);
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      error: {
+        code: 'PAYMENT_PROVIDER_UNAVAILABLE',
+        message: 'Payment request could not be completed.',
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        diagnostic: 'Provider returned HTTP 400.',
+        error: 'PAYMENT_PROVIDER_UNAVAILABLE',
+        operation: 'payments',
+      }),
+      'Payment request failed.',
     );
   });
 });

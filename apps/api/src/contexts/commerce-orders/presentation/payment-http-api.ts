@@ -63,7 +63,12 @@ export class PaymentHttpApi implements HttpRouteHandler {
     } catch (error) {
       const mapped = mapError(error);
       this.logger.error(
-        { correlation_id: correlationId, error: mapped.code, operation: 'payments' },
+        {
+          correlation_id: correlationId,
+          diagnostic: paymentDiagnostic(error),
+          error: mapped.code,
+          operation: 'payments',
+        },
         'Payment request failed.',
       );
       return sendJson(
@@ -139,6 +144,16 @@ export class PaymentHttpApi implements HttpRouteHandler {
       uuid(route.attemptId),
     );
   }
+}
+
+function paymentDiagnostic(error: unknown): string | undefined {
+  let current = error;
+  let diagnostic: string | undefined;
+  for (let depth = 0; depth < 4 && current instanceof PaymentError; depth += 1) {
+    diagnostic = current.message;
+    current = current.cause;
+  }
+  return diagnostic;
 }
 
 function match(method: string | undefined, pathname: string): Route | null {
