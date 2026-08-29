@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-08-28. Es evidencia de código, PostgreSQL local real y gates reproducidos; no es aceptación de proveedores oficiales, staging ni producción. Se declara `LOCAL_IMPLEMENTATION_COMPLETE` únicamente para el alcance local verificable descrito aquí.
+> Estado auditado hasta el 2026-08-29. Es evidencia de código, PostgreSQL local real y gates reproducidos; no es aceptación de proveedores oficiales, staging ni producción. Se declara `LOCAL_IMPLEMENTATION_COMPLETE` únicamente para el alcance local verificable descrito aquí.
 
 | Área                                                                                        | Estado local verificable       | Evidencia                                                                               | Pendiente separado                                   |
 | ------------------------------------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
@@ -18,7 +18,7 @@
 | Editorial                                                                                   | Implementado                   | Repo/API y transición publish/archive/draft corregida; torneos solo informativos        | Operación y contenido real                           |
 | Diseño y accesibilidad                                                                      | Verificado localmente          | Sistema visual aprobado; logo inmutable; QA escritorio/móvil, estados y controles       | Regresión visual en entorno remoto                   |
 | Notificaciones                                                                              | Pipeline local ejecutable      | Outbox, lease acotado, idempotencia de proveedor, worker y wiring probados              | Envío real Resend y activación controlada del worker |
-| Despliegue API                                                                              | Staging operativo              | Render sirve `664f24c`; `/health` y catálogo responden 200; rollback verificado         | E2E funcional, observabilidad sostenida y promoción  |
+| Despliegue API                                                                              | Staging operativo              | Render sirve `f44837c`; `/health`, cuenta y filtros de Orders responden 200             | E2E funcional, observabilidad sostenida y promoción  |
 | Despliegue web                                                                              | Preview de staging operativo   | Vercel sirve la rama auditada; sesión real, recarga y rutas protegidas verificadas      | E2E funcional, promoción y dominio                   |
 | Aceptación externa final                                                                    | En ejecución                   | Sesión, limpieza remota, backup/restore y rollback ya tienen evidencia externa          | Proveedores, email, E2E restante y observabilidad    |
 
@@ -40,9 +40,9 @@
 - QA manual local: Inicio, Tienda, Editorial, Carrito, Checkout, Cuenta y accesos Admin revisados en escritorio/móvil; sin overflow horizontal y con acciones móviles de al menos 44 px.
 - Invariantes focales: `FREIGHT_COLLECT` conserva costo `0`, no requiere domicilio y queda fuera del total; torneos siguen siendo contenido editorial sin motor competitivo.
 
-## Evidencia externa de staging — 2026-08-24 a 2026-08-28
+## Evidencia externa de staging — 2026-08-24 a 2026-08-29
 
-- Render `srv-da3ij5flk1mc7380htcg` sirve el commit auditado `664f24c02b881672a8ebe196066749996f3b4d03` desde `codex/staging-acceptance`; branch, health check `/health` y Auto-Deploy `On Commit` fueron reconfirmados.
+- Render `srv-da3ij5flk1mc7380htcg` sirve el commit auditado `f44837c0d258958ad1d13e078440e06990ba9b47` desde `codex/staging-acceptance`; branch, build de packages/API, health check `/health` y Auto-Deploy `On Commit` fueron reconfirmados.
 - Smoke posterior al rollback: `GET /health` y `GET /api/v1/catalog/products?limit=1` respondieron HTTP 200.
 - Rollback de código reproducible: `664f24c` → `eb9f084` (`dep-da61q53m8hqs73e9k8h0`) → `664f24c` (`dep-da61qvbncjis73aeu8ig`), con ambos despliegues `live` y smoke HTTP 200. El procedimiento aceptado es `Deploy a specific commit` seguido de restaurar Auto-Deploy; el rollback nativo se descartó porque no conservaba con certeza la configuración vigente.
 - Backup lógico de staging verificado mediante restauración desechable: archivo custom de 566.935 bytes, 875 entradas y SHA-256 `065BA71CE3DBADA4B68730A500D484A423B3A1F021533516D01F15154FFD5434`; 22 migraciones, 80 tablas, 80 con RLS, 0 grants públicos y comparación exacta de 673 filas sin diferencias. Los artefactos temporales fueron eliminados.
@@ -55,6 +55,7 @@
 - Los commits `149183d` y `bc354b0` reemplazaron en Pseudo-POS y Cobertura los identificadores editables por selectores alimentados con sucursales, productos, campañas, líneas de venta, cuentas y medios reales. Las pruebas focales verificaron que se conservan los identificadores exactos enviados a la API. La preview mostró la dirección y el medio de pago persistidos, cero campos editables de identificadores, cero errores de consola y cero overflow; a 359 px tampoco hubo controles menores de 44 px.
 - El E2E remoto trazable `ACCEPT-E2E-MTCV00OP` creó, editó y eliminó un medio externo temporal desde Pseudo-POS. La limpieza se comprobó mediante la ausencia del identificador en los selectores y en la consulta actualizada de medios; no hubo errores de consola. Este PASS cubre ese CRUD administrativo, no sustituye los recorridos pendientes de venta, cuenta, pedidos o proveedores.
 - Los commits `718dd77` y `a77b93a` corrigieron la selección de registros administrativos para priorizar el identificador propio ante relaciones como categoría, producto o promoción, y alinearon el juego con el `gameId` real del API. El runner restringido a staging completó `ACCEPT-POS-E2E-20260828145219`: publicó temporalmente la cadena técnica existente, registró una unidad, completó la venta regular con referencia auditable, verificó un único movimiento `POS_SALE_CONSUMED`, restauró stock/reservas a `0/0` y despublicó toda la cadena. El preflight posterior confirmó el estado restaurado.
+- Se detectó que el `.env` local y el runner POS aún apuntaban al servicio Render antiguo `sergod-api-6f8c2a91-2026.onrender.com`, cuyo contrato rechazaba `orderType`. El destino se alineó con `sergod-store-api-v4.onrender.com`, ya usado por el rewrite de Vercel. En el servicio vigente, login devolvió sesión y `GET /api/v1/orders` para `REGULAR`/`PREORDER`, además de la variante Admin, respondieron HTTP 200; perfil, preferencias y loyalty también respondieron 200. El preflight POS volvió a pasar con stock/reservas `0/0`.
 - Los fixtures técnicos visibles fueron despublicados de forma trazable: 3 productos, 1 campaña, 1 colección, 1 categoría y 1 juego. El catálogo público queda vacío hasta que el propietario cargue productos reales desde Admin.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
@@ -63,6 +64,7 @@
 - Envío real de email mediante Resend y activación del worker de notificaciones.
 - Flow/Webpay con credenciales oficiales suficientes para aceptación.
 - Renovación real del token de sesión bajo expiración controlada.
+- Reejecución remota autenticada como `CLIENTE` mediante `scripts/codex/remote-client-account-acceptance.ps1`; requiere una cuenta existente, activa y verificada en `SERGOD_CLIENT_EMAIL`/`SERGOD_CLIENT_PASSWORD`. No se creó una identidad desechable porque el entorno no ofrece limpieza completa de identidad y auditoría.
 - E2E funcional remoto completo, promoción de Vercel, cambio de dominio y observabilidad sostenida.
 
 Los hallazgos locales conocidos de V3 y los defectos adicionales expuestos por PostgreSQL real fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.

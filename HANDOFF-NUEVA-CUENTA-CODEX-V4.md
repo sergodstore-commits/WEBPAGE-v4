@@ -19,11 +19,11 @@ Este repositorio es un checkpoint autocontenido de continuación. No representa 
 
 ## Estado externo observado, sin secretos
 
-- GitHub: `https://github.com/sergodstore-commits/WEBPAGE-v4.git`, rama `main`. La copia entregada no conserva remotes.
-- API Render: `https://sergod-api-6f8c2a91-2026.onrender.com`; el plan gratuito puede dormir. Verificar `/health` de nuevo.
+- GitHub: `https://github.com/sergodstore-commits/WEBPAGE-v4.git`; `main` permanece en `95b5730` y la aceptación de staging usa `codex/staging-acceptance` en `f44837c`. La copia entregada no conserva remotes.
+- API Render de staging: `https://sergod-store-api-v4.onrender.com`; el plan gratuito puede dormir. Verificar `/health` de nuevo.
 - Supabase correcto: proyecto `skhsmsgmceldmapdvcqo`, URL `https://skhsmsgmceldmapdvcqo.supabase.co`, región `ca-central-1`.
 - Resend: dominio `sergodstore.cl` verificado en São Paulo. El worker permanece desactivado hasta probar un envío real.
-- Vercel: el dominio `sergodstore.cl` sigue conectado al proyecto antiguo. Existe un proyecto V4 separado (`sergod-store-v4`) y un preview del commit `f3e094a`, pero no está conectado a Git ni promovido al dominio.
+- Vercel: el dominio `sergodstore.cl` sigue sin promoverse a V4. El Preview de `codex/staging-acceptance` está conectado a Git y su rewrite `/api/*` apunta al servicio Render de staging vigente.
 - Flow: el propietario informó disponer de una API, pero no se verificó que estén todas las credenciales de sandbox requeridas.
 - Webpay: credenciales/aceptación de Integración pendientes.
 

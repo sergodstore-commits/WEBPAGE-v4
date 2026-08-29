@@ -1,6 +1,6 @@
 param(
   [string]$ApiBaseUrl = '',
-  [string]$ExpectedHost = 'sergod-api-6f8c2a91-2026.onrender.com',
+  [string]$ExpectedHost = 'sergod-store-api-v4.onrender.com',
   [switch]$Execute
 )
 
