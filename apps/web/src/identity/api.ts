@@ -302,7 +302,13 @@ function configuredSessionClient(): SupabaseClient | null {
       storageKey: 'sergod-store-auth-v1',
     },
   });
-  sessionClient.auth.onAuthStateChange((_event, value) => updateSession(mapSession(value)));
+  sessionClient.auth.onAuthStateChange((event, value) => {
+    if (event === 'SIGNED_OUT') {
+      updateSession(null);
+    } else if (value !== null) {
+      updateSession(mapSession(value));
+    }
+  });
   return sessionClient;
 }
 

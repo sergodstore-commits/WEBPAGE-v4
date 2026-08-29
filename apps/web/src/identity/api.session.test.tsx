@@ -100,6 +100,31 @@ describe('browser session lifecycle', () => {
     expect(currentSession()?.accessToken).toBe('stored-access');
   });
 
+  it('does not discard a successful login when a delayed initial event has no session', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            accessToken: 'api-access',
+            expiresAt: 1_900_000_000,
+            refreshToken: 'api-refresh',
+          }),
+          { headers: { 'content-type': 'application/json' }, status: 200 },
+        ),
+      ),
+    );
+    supabase.auth.setSession.mockResolvedValue({
+      data: { session: providerSession('stored-access', 'stored-refresh') },
+      error: null,
+    });
+
+    await login({ email: 'cliente@example.test', password: 'correct horse battery staple' });
+    supabase.authListener.current?.('INITIAL_SESSION', null);
+
+    expect(currentSession()?.accessToken).toBe('stored-access');
+  });
+
   it('uses the restored access token for protected API requests', async () => {
     supabase.auth.getSession.mockResolvedValue({
       data: { session: providerSession('restored-access', 'restored-refresh') },
