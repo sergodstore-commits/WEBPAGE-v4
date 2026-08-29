@@ -263,8 +263,136 @@ a:focus-visible {
 }
 .pos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+.admin-standalone-panel,
+.pos-workstation {
+  min-width: 0;
+}
+.pos-workstation {
+  display: grid;
+  gap: 1.25rem;
+}
+.pos-workstation-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 2px solid var(--line);
+  border-top: 4px solid var(--red);
+  background:
+    var(--asset-halftone-red) 115% 40% / 11rem auto no-repeat,
+    linear-gradient(135deg, var(--panel) 0 72%, #36080e 72%);
+  box-shadow: 0.35rem 0.35rem 0 #050607;
+}
+.pos-workstation-heading h2 {
+  margin-top: 0.45rem;
+  font-family: var(--display-font);
+  font-size: clamp(1.65rem, 4vw, 2.45rem);
+  text-transform: uppercase;
+}
+.pos-workstation-heading p:last-child {
+  max-width: 44rem;
+  margin-bottom: 0;
+}
+.pos-live-state {
+  display: grid;
+  min-width: 10rem;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border-left: 4px solid var(--cyan);
+  background: rgb(5 6 7 / 88%);
+}
+.pos-live-state span,
+.pos-sale-summary span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pos-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.pos-mode-switch button {
+  border-bottom: 3px solid transparent;
+}
+.pos-mode-switch button[aria-selected='true'] {
+  border-bottom-color: var(--cyan);
+  box-shadow: inset 0 -2px 0 #050607;
+}
+.pos-sale-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.pos-sale-summary > div {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+.pos-sale-summary strong {
+  font-family: var(--display-font);
+  font-size: 1.25rem;
+}
+.pos-card {
+  position: relative;
+  align-content: start;
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--red);
+  background: var(--panel-2);
+  box-shadow: 0.25rem 0.25rem 0 #050607;
+}
+.pos-card[data-step] {
+  padding-top: 1.15rem;
+}
+.pos-card[data-step]::before {
+  content: 'PASO ' attr(data-step);
+  width: fit-content;
+  padding: 0.2rem 0.45rem;
+  background: var(--red);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+}
+.pos-card-wide {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.pos-card-wide h2,
+.pos-card-wide p,
+.pos-card-wide button,
+.pos-card-wide::before {
+  grid-column: 1 / -1;
+}
+.pos-complete-card {
+  border-top-color: var(--cyan);
+  background: linear-gradient(145deg, var(--panel-2), #102126);
+}
+.pos-danger-card {
+  border-color: #6f2028;
+}
+.pos-technical-detail {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.pos-technical-detail summary {
+  cursor: pointer;
+  color: var(--cyan);
+  font-weight: 800;
 }
 .selected-operation-item {
   display: grid;
@@ -1727,19 +1855,23 @@ textarea {
   align-items: center;
   min-height: var(--control-height);
   padding: 0.65rem 0.75rem;
-  border-left: 3px solid transparent;
+  border: 1px solid #30343b;
+  border-left: 4px solid transparent;
+  background: #111317;
   color: var(--paper);
   font-weight: 760;
   text-decoration: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 0.45rem), calc(100% - 0.45rem) 100%, 0 100%);
 }
 .admin-sidebar a:hover {
   background: var(--panel-2);
   border-left-color: var(--cyan);
+  transform: translateX(2px);
 }
 .admin-sidebar a[aria-current] {
-  background: var(--panel-2);
+  background: linear-gradient(100deg, var(--red-dark), #251015 72%);
   border-left-color: var(--red);
-  box-shadow: inset -3px 0 0 var(--red);
+  box-shadow: inset -3px 0 0 var(--cyan);
 }
 .admin-nav-group {
   margin-top: 0.65rem;
@@ -1944,5 +2076,22 @@ textarea {
   }
   .admin-area-navigation {
     grid-template-columns: 1fr;
+  }
+  .pos-workstation-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .pos-mode-switch,
+  .pos-sale-summary,
+  .pos-grid,
+  .pos-card-wide {
+    grid-template-columns: 1fr;
+  }
+  .pos-card-wide,
+  .pos-card-wide h2,
+  .pos-card-wide p,
+  .pos-card-wide button,
+  .pos-card-wide::before {
+    grid-column: auto;
   }
 }

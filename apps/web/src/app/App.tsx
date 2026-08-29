@@ -29,7 +29,7 @@ import { PosPanel } from '../pos/PosPanel.js';
 import { CheckoutPanel } from '../checkout/CheckoutPanel.js';
 import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.js';
 import { AccountHub } from '../account/AccountHub.js';
-import { AdminHub, type AdminArea } from '../admin/AdminHub.js';
+import { AdminHub, AdminStandaloneLayout, type AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
 import { EditorialPage, StorePage } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
@@ -116,17 +116,38 @@ export function App() {
           {route === '/checkout' && <CheckoutPanel />}
           {route === '/admin/accounts' && (
             <AccessGate requiredRole="ADMIN">
-              <AccountsPanel />
+              <AdminStandaloneLayout
+                currentRoute="/admin/accounts"
+                description="Cuentas, roles, estados y verificación de acceso."
+                navigate={navigate}
+                title="Usuarios"
+              >
+                <AccountsPanel />
+              </AdminStandaloneLayout>
             </AccessGate>
           )}
           {route === '/admin/pos' && (
             <AccessGate requiredRole="ADMIN">
-              <PosPanel />
+              <AdminStandaloneLayout
+                currentRoute="/admin/pos"
+                description="Caja presencial, inventario compartido y registro auditable del dinero recibido."
+                navigate={navigate}
+                title="Pseudo-POS"
+              >
+                <PosPanel />
+              </AdminStandaloneLayout>
             </AccessGate>
           )}
           {route === '/admin/service-coverage' && (
             <AccessGate requiredRole="ADMIN">
-              <ServiceCoveragePanel />
+              <AdminStandaloneLayout
+                currentRoute="/admin/service-coverage"
+                description="Sucursales, retiro y cobertura pública de despacho."
+                navigate={navigate}
+                title="Sucursales y cobertura"
+              >
+                <ServiceCoveragePanel />
+              </AdminStandaloneLayout>
             </AccessGate>
           )}
           {route === '/not-found' && <NotFound navigate={navigate} />}
@@ -740,9 +761,7 @@ function AccountsPanel() {
     }
   };
   return (
-    <main className="wide-panel">
-      <p className="eyebrow">Administración</p>
-      <h1>Cuentas</h1>
+    <section className="admin-standalone-panel">
       <Status message={message} />
       {items.map((account) => (
         <article className="account-card" key={account.accountId}>
@@ -764,7 +783,7 @@ function AccountsPanel() {
           </form>
         </article>
       ))}
-    </main>
+    </section>
   );
 }
 

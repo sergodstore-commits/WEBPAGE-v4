@@ -1,4 +1,4 @@
-import { type FormEvent, useCallback, useEffect, useState } from 'react';
+import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { authorizedRequest } from '../identity/api.js';
 import { CatalogEditors, CatalogResourceManager, RecordEditors } from './AdminEditors.js';
@@ -161,6 +161,43 @@ const adminAreas = [
   },
 ] as const satisfies readonly AdminAreaDefinition[];
 
+const adminNavigationGroups = [
+  {
+    label: 'Operación diaria',
+    links: [
+      { label: 'Resumen', route: '/admin' },
+      { label: 'Pedidos y pagos', route: '/admin/orders' },
+      { label: 'Pseudo-POS', route: '/admin/pos' },
+      { label: 'Inventario', route: '/admin/inventory' },
+    ],
+  },
+  {
+    label: 'Comercio',
+    links: [
+      { label: 'Catálogo', route: '/admin/catalog' },
+      { label: 'Preventas', route: '/admin/preorders' },
+      { label: 'Promociones y cupones', route: '/admin/promotions' },
+      { label: 'Loyalty', route: '/admin/loyalty' },
+    ],
+  },
+  {
+    label: 'Contenido',
+    links: [{ label: 'Noticias, torneos, comunidad y cómics', route: '/admin/content' }],
+  },
+  {
+    label: 'Gestión',
+    links: [
+      { label: 'Usuarios', route: '/admin/accounts' },
+      { label: 'Sucursales y cobertura', route: '/admin/service-coverage' },
+      { label: 'Configuración', route: '/admin/configuration' },
+      { label: 'Auditoría', route: '/admin/audit' },
+    ],
+  },
+] as const satisfies readonly {
+  readonly label: string;
+  readonly links: readonly { readonly label: string; readonly route: AdminRoute }[];
+}[];
+
 const requiredModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
   audit: ['audit'],
   catalog: ['catalog', 'games', 'categories', 'collections'],
@@ -289,52 +326,12 @@ export function AdminHub({
         Menú de administración
       </button>
       <div className="admin-workspace">
-        <aside aria-label="Navegación administrativa" className="admin-sidebar cut-panel">
-          <div className="admin-sidebar-heading">
-            <p className="eyebrow">Panel administrativo</p>
-            <strong>Áreas de trabajo</strong>
-          </div>
-          <div
-            className={`admin-sidebar-links${sidebarOpen ? ' is-open' : ''}`}
-            id="admin-sidebar-links"
-          >
-            <nav aria-label="Herramientas administrativas" className="admin-area-navigation">
-              {adminAreas.map((definition) => (
-                <a
-                  aria-current={area === definition.area ? 'page' : undefined}
-                  href={definition.route}
-                  key={definition.area}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    navigate(definition.route);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  {definition.label}
-                </a>
-              ))}
-            </nav>
-            <nav aria-label="Herramientas complementarias" className="admin-module-navigation">
-              {[
-                ['/admin/accounts', 'Usuarios'],
-                ['/admin/pos', 'Pseudo-POS'],
-                ['/admin/service-coverage', 'Atención y cobertura'],
-              ].map(([route, label]) => (
-                <a
-                  href={route}
-                  key={route}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    navigate(route as AdminRoute);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  {label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </aside>
+        <AdminSidebar
+          currentRoute={areaDefinition.route}
+          navigate={navigate}
+          onNavigate={() => setSidebarOpen(false)}
+          open={sidebarOpen}
+        />
         <div className="admin-content">
           <section id={`${area}-workspace`}>
             <p className="status" role="status">
@@ -418,6 +415,102 @@ export function AdminHub({
         </div>
       </div>
     </main>
+  );
+}
+
+export function AdminStandaloneLayout({
+  children,
+  currentRoute,
+  description,
+  navigate,
+  title,
+}: {
+  readonly children: ReactNode;
+  readonly currentRoute: AdminRoute;
+  readonly description: string;
+  readonly navigate: (route: AdminRoute) => void;
+  readonly title: string;
+}) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  return (
+    <main className="page-frame admin-shell visual-public">
+      <header className="section-heading admin-heading cut-panel">
+        <div>
+          <p className="eyebrow">Panel administrativo</p>
+          <h1>{title}</h1>
+          <p>{description}</p>
+        </div>
+        <div className="admin-heading-tools">
+          <div aria-label="Garantías de operación" className="heading-stats">
+            <span>Datos de servidor</span>
+            <span>Acciones auditables</span>
+          </div>
+        </div>
+      </header>
+      <button
+        aria-controls="admin-sidebar-links"
+        aria-expanded={sidebarOpen}
+        className="admin-sidebar-toggle"
+        onClick={() => setSidebarOpen((current) => !current)}
+        type="button"
+      >
+        Menú de administración
+      </button>
+      <div className="admin-workspace">
+        <AdminSidebar
+          currentRoute={currentRoute}
+          navigate={navigate}
+          onNavigate={() => setSidebarOpen(false)}
+          open={sidebarOpen}
+        />
+        <div className="admin-content">{children}</div>
+      </div>
+    </main>
+  );
+}
+
+function AdminSidebar({
+  currentRoute,
+  navigate,
+  onNavigate,
+  open,
+}: {
+  readonly currentRoute: AdminRoute;
+  readonly navigate: (route: AdminRoute) => void;
+  readonly onNavigate: () => void;
+  readonly open: boolean;
+}) {
+  const link = (route: AdminRoute, label: string) => (
+    <a
+      aria-current={currentRoute === route ? 'page' : undefined}
+      href={route}
+      key={route}
+      onClick={(event) => {
+        event.preventDefault();
+        navigate(route);
+        onNavigate();
+      }}
+    >
+      {label}
+    </a>
+  );
+  return (
+    <aside aria-label="Navegación administrativa" className="admin-sidebar cut-panel">
+      <div className="admin-sidebar-heading">
+        <p className="eyebrow">Sergod operación</p>
+        <strong>Áreas de trabajo</strong>
+      </div>
+      <div className={`admin-sidebar-links${open ? ' is-open' : ''}`} id="admin-sidebar-links">
+        <nav aria-label="Herramientas administrativas" className="admin-area-navigation">
+          {adminNavigationGroups.map((group) => (
+            <section className="admin-nav-group" key={group.label}>
+              <h2>{group.label}</h2>
+              {group.links.map((definition) => link(definition.route, definition.label))}
+            </section>
+          ))}
+        </nav>
+      </div>
+    </aside>
   );
 }
 

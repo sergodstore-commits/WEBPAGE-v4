@@ -28,6 +28,7 @@ import {
 } from './api.js';
 
 export function PosPanel() {
+  const [workspace, setWorkspace] = useState<'METHODS' | 'REPORTS' | 'SALE'>('SALE');
   const [message, setMessage] = useState('');
   const [result, setResult] = useState<{ readonly data: unknown; readonly title: string } | null>(
     null,
@@ -234,14 +235,59 @@ export function PosPanel() {
     }
   };
   return (
-    <main className="wide-panel">
-      <p className="eyebrow">Administración · Pseudo-POS</p>
-      <h1>Venta presencial</h1>
-      <p>
-        Registra dinero recibido por medios externos. No procesa pagos ni solicita datos de tarjeta.
-      </p>
+    <section className="admin-standalone-panel pos-workstation">
+      <header className="pos-workstation-heading">
+        <div>
+          <p className="eyebrow">Caja presencial</p>
+          <h2>Venta presencial</h2>
+          <p>Registra dinero recibido por medios externos. Nunca solicita datos de tarjeta.</p>
+        </div>
+        <div className="pos-live-state" aria-label="Estado de la caja">
+          <span>{sale ? 'Venta abierta' : 'Sin venta abierta'}</span>
+          <strong>{sale ? shortIdentifier(String(sale.item.pos_sale_id)) : '—'}</strong>
+        </div>
+      </header>
+      <div aria-label="Secciones del Pseudo-POS" className="pos-mode-switch" role="tablist">
+        {[
+          ['SALE', 'Caja'],
+          ['REPORTS', 'Historial y cierre'],
+          ['METHODS', 'Medios de pago'],
+        ].map(([value, label]) => (
+          <button
+            aria-selected={workspace === value}
+            className={workspace === value ? '' : 'secondary'}
+            key={value}
+            onClick={() => setWorkspace(value as 'METHODS' | 'REPORTS' | 'SALE')}
+            role="tab"
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {workspace === 'SALE' && sale && (
+        <section aria-label="Resumen de venta en curso" className="pos-sale-summary">
+          <div>
+            <span>Estado</span>
+            <strong>{readableText(String(sale.item.state ?? 'BORRADOR'))}</strong>
+          </div>
+          <div>
+            <span>Productos</span>
+            <strong>{saleLines(sale).length}</strong>
+          </div>
+          <div>
+            <span>Total</span>
+            <strong>{formatClp(sale.item.total_amount_clp)}</strong>
+          </div>
+        </section>
+      )}
       <div className="pos-grid">
-        <form onSubmit={(event) => void action(event, 'CREATE')}>
+        <form
+          className="pos-card"
+          data-step="1"
+          hidden={workspace !== 'SALE'}
+          onSubmit={(event) => void action(event, 'CREATE')}
+        >
           <h2>Nueva venta</h2>
           <label>
             Sucursal
@@ -256,7 +302,12 @@ export function PosPanel() {
           </label>
           <button disabled={branches.length === 0}>Crear borrador</button>
         </form>
-        <form onSubmit={(event) => void action(event, 'SKU')}>
+        <form
+          className="pos-card"
+          data-step="2"
+          hidden={workspace !== 'SALE'}
+          onSubmit={(event) => void action(event, 'SKU')}
+        >
           <h2>Buscar por SKU</h2>
           <label>
             SKU
@@ -265,7 +316,12 @@ export function PosPanel() {
           <button>Buscar</button>
         </form>
         {sale && (
-          <form onSubmit={(event) => void action(event, 'LINE')}>
+          <form
+            className="pos-card"
+            data-step="3"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'LINE')}
+          >
             <h2>Agregar línea</h2>
             <div className="selected-operation-item">
               <span>Producto</span>
@@ -312,7 +368,12 @@ export function PosPanel() {
           </form>
         )}
         {sale && (
-          <form onSubmit={(event) => void action(event, 'BUYER')}>
+          <form
+            className="pos-card pos-card-wide"
+            data-step="4"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'BUYER')}
+          >
             <h2>Comprador y entrega</h2>
             <label>
               Cuenta vinculada
@@ -366,7 +427,11 @@ export function PosPanel() {
           </form>
         )}
         {sale && saleLines(sale).length > 0 && (
-          <form onSubmit={(event) => void action(event, 'LINE_UPDATE')}>
+          <form
+            className="pos-card"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'LINE_UPDATE')}
+          >
             <h2>Modificar línea</h2>
             <label>
               Línea
@@ -380,7 +445,11 @@ export function PosPanel() {
           </form>
         )}
         {sale && saleLines(sale).length > 0 && (
-          <form onSubmit={(event) => void action(event, 'LINE_REMOVE')}>
+          <form
+            className="pos-card"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'LINE_REMOVE')}
+          >
             <h2>Eliminar línea</h2>
             <label>
               Línea
@@ -390,7 +459,12 @@ export function PosPanel() {
           </form>
         )}
         {sale && (
-          <form onSubmit={(event) => void action(event, 'BENEFITS')}>
+          <form
+            className="pos-card"
+            data-step="5"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'BENEFITS')}
+          >
             <h2>Beneficios</h2>
             <label>
               Cupón
@@ -404,7 +478,12 @@ export function PosPanel() {
           </form>
         )}
         {sale && (
-          <form onSubmit={(event) => void action(event, 'COMPLETE')}>
+          <form
+            className="pos-card pos-complete-card"
+            data-step="6"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'COMPLETE')}
+          >
             <h2>Preparar y completar</h2>
             <label>
               Medio externo
@@ -430,7 +509,11 @@ export function PosPanel() {
             </button>
           </form>
         )}
-        <form onSubmit={(event) => void action(event, 'METHOD')}>
+        <form
+          className="pos-card"
+          hidden={workspace !== 'METHODS'}
+          onSubmit={(event) => void action(event, 'METHOD')}
+        >
           <h2>Nuevo medio externo</h2>
           <label>
             Código
@@ -450,7 +533,11 @@ export function PosPanel() {
           </label>
           <button>Crear medio</button>
         </form>
-        <form onSubmit={(event) => void action(event, 'METHOD_STATE')}>
+        <form
+          className="pos-card"
+          hidden={workspace !== 'METHODS'}
+          onSubmit={(event) => void action(event, 'METHOD_STATE')}
+        >
           <h2>Estado del medio</h2>
           <label>
             Medio
@@ -470,7 +557,11 @@ export function PosPanel() {
           </label>
           <button disabled={methodOptions.length === 0}>Cambiar estado</button>
         </form>
-        <form onSubmit={(event) => void action(event, 'METHOD_EDIT')}>
+        <form
+          className="pos-card"
+          hidden={workspace !== 'METHODS'}
+          onSubmit={(event) => void action(event, 'METHOD_EDIT')}
+        >
           <h2>Editar medio en borrador</h2>
           <label>
             Medio
@@ -490,7 +581,11 @@ export function PosPanel() {
           </label>
           <button disabled={draftMethods.length === 0}>Editar medio</button>
         </form>
-        <form onSubmit={(event) => void action(event, 'METHOD_DELETE')}>
+        <form
+          className="pos-card pos-danger-card"
+          hidden={workspace !== 'METHODS'}
+          onSubmit={(event) => void action(event, 'METHOD_DELETE')}
+        >
           <h2>Eliminar medio en borrador sin uso</h2>
           <label>
             Medio
@@ -498,7 +593,11 @@ export function PosPanel() {
           </label>
           <button disabled={draftMethods.length === 0}>Eliminar medio</button>
         </form>
-        <form onSubmit={(event) => void action(event, 'DAILY')}>
+        <form
+          className="pos-card"
+          hidden={workspace !== 'REPORTS'}
+          onSubmit={(event) => void action(event, 'DAILY')}
+        >
           <h2>Total diario</h2>
           <label>
             Sucursal
@@ -511,7 +610,11 @@ export function PosPanel() {
           <button disabled={branches.length === 0}>Consultar</button>
         </form>
         {sale && (
-          <form onSubmit={(event) => void action(event, 'RETURN_DRAFT')}>
+          <form
+            className="pos-card"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'RETURN_DRAFT')}
+          >
             <h2>Volver a borrador</h2>
             <label>
               Motivo
@@ -521,7 +624,11 @@ export function PosPanel() {
           </form>
         )}
         {sale && (
-          <form onSubmit={(event) => void action(event, 'DISCARD')}>
+          <form
+            className="pos-card pos-danger-card"
+            hidden={workspace !== 'SALE'}
+            onSubmit={(event) => void action(event, 'DISCARD')}
+          >
             <h2>Descartar venta</h2>
             <label>
               Motivo
@@ -531,7 +638,7 @@ export function PosPanel() {
           </form>
         )}
       </div>
-      <div className="actions">
+      <div className="actions" hidden={workspace === 'SALE'}>
         <button className="secondary" onClick={() => void show('HISTORY')}>
           Historial reciente
         </button>
@@ -539,17 +646,31 @@ export function PosPanel() {
           Medios configurados
         </button>
       </div>
-      {sale && <OperationalDataView data={sale} title="Venta en curso" />}
-      {result && <OperationalDataView data={result.data} title={result.title} />}
+      {workspace === 'SALE' && sale && (
+        <details className="pos-technical-detail">
+          <summary>Ver detalle completo de la venta</summary>
+          <OperationalDataView data={sale} title="Venta en curso" />
+        </details>
+      )}
+      {workspace !== 'SALE' && result && (
+        <OperationalDataView data={result.data} title={result.title} />
+      )}
       <p className="status" role="status">
         {message}
       </p>
-    </main>
+    </section>
   );
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function formatClp(value: unknown): string {
+  const amount = Number(value ?? 0);
+  return Number.isFinite(amount)
+    ? new Intl.NumberFormat('es-CL', { currency: 'CLP', style: 'currency' }).format(amount)
+    : '$0';
 }
 
 type Item = Readonly<Record<string, unknown>>;

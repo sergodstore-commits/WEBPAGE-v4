@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authorizedRequest, authorizedResponse } from '../identity/api.js';
-import { AdminHub } from './AdminHub.js';
+import { AdminHub, AdminStandaloneLayout } from './AdminHub.js';
 import { itemIdentifier, readableText } from './presentation.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
@@ -110,6 +110,22 @@ describe('AdminHub', () => {
       'href',
       '/admin/audit',
     );
+    for (const name of [
+      'Resumen',
+      'Pedidos y pagos',
+      'Pseudo-POS',
+      'Inventario',
+      'Catálogo',
+      'Preventas',
+      'Promociones y cupones',
+      'Loyalty',
+      'Noticias, torneos, comunidad y cómics',
+      'Usuarios',
+      'Sucursales y cobertura',
+      'Configuración',
+      'Auditoría',
+    ])
+      expect(within(navigation).getByRole('link', { name })).toBeInTheDocument();
 
     const toggle = screen.getByRole('button', { name: 'Menú de administración' });
     fireEvent.click(toggle);
@@ -117,6 +133,33 @@ describe('AdminHub', () => {
     fireEvent.click(within(navigation).getByRole('link', { name: 'Pedidos y pagos' }));
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(navigate).toHaveBeenCalledWith('/admin/orders');
+  });
+
+  it('keeps the same sidebar visible in complementary admin tools', () => {
+    render(
+      <AdminStandaloneLayout
+        currentRoute="/admin/pos"
+        description="Caja"
+        navigate={vi.fn()}
+        title="Pseudo-POS"
+      >
+        <p>Contenido de caja</p>
+      </AdminStandaloneLayout>,
+    );
+
+    const sidebar = screen.getByRole('complementary', { name: 'Navegación administrativa' });
+    expect(within(sidebar).getByRole('link', { name: 'Pseudo-POS' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(within(sidebar).getByRole('link', { name: 'Usuarios' })).toHaveAttribute(
+      'href',
+      '/admin/accounts',
+    );
+    expect(within(sidebar).getByRole('link', { name: 'Sucursales y cobertura' })).toHaveAttribute(
+      'href',
+      '/admin/service-coverage',
+    );
   });
 
   it('loads only the order area modules and exposes their real actions', async () => {

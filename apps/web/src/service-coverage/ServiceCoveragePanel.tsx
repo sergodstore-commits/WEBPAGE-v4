@@ -64,9 +64,7 @@ export function ServiceCoveragePanel() {
   };
 
   return (
-    <main className="wide-panel">
-      <p className="eyebrow">Administración · Atención y cobertura</p>
-      <h1>Atención pública, retiro y despacho</h1>
+    <section className="admin-standalone-panel">
       <section className="technical-card">
         <h2>Despacho nacional</h2>
         <p>
@@ -165,7 +163,7 @@ export function ServiceCoveragePanel() {
       <p className="status" role="status">
         {message}
       </p>
-    </main>
+    </section>
   );
 }
 

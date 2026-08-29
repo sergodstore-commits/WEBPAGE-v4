@@ -100,8 +100,16 @@ vi.mock('./api.js', () => ({
 it('renders the productive Pseudo-POS controls without collecting card data', async () => {
   render(<PosPanel />);
   expect(screen.getByRole('heading', { name: 'Venta presencial' })).toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: 'Caja' })).toHaveAttribute('aria-selected', 'true');
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Medios de pago' }));
   expect(screen.getByRole('heading', { name: 'Nuevo medio externo' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Nueva venta' })).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Historial y cierre' }));
   expect(screen.getByRole('heading', { name: 'Total diario' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Caja' }));
 
   const createButton = screen.getByRole('button', { name: 'Crear borrador' });
   const form = createButton.closest('form');
