@@ -12,7 +12,7 @@
 | Flow                                                                                        | Adapter y rutas coherentes     | Firma, status, callback y retorno `/api/v1/payments/flow/return` probados localmente    | Sandbox con credenciales                             |
 | Webpay Plus                                                                                 | Adapter online; sin POS físico | Create/commit/status, retorno anormal y replay probados localmente                      | Ambiente Integración con credenciales                |
 | Fulfillment                                                                                 | Corregido                      | Cada transición mantiene `fulfillment_events` y `order_state_history`                   | E2E en staging                                       |
-| Cuenta cliente                                                                              | Operativa en preview           | Perfil, pedidos, preventas, puntos, preferencias y seguridad renderizan con sesión real | Mutaciones E2E y renovación controlada del token     |
+| Cuenta cliente                                                                              | Aceptación remota base PASS    | Identidad verificada, perfil, pedidos, preventas, puntos y preferencias con sesión real | Mutaciones E2E y renovación controlada del token     |
 | Admin                                                                                       | Pseudo-POS aceptado en staging | 10 rutas, selectores operativos, CRUD de medios y venta presencial remota               | Completar E2E de las demás operaciones críticas      |
 | Comercio público                                                                            | Corregido y ampliado           | Shell responsive, catálogo, carrito, checkout protegido y pago; deep links estables     | Catálogo/contenido real y E2E navegador remoto       |
 | Editorial                                                                                   | Implementado                   | Repo/API y transición publish/archive/draft corregida; torneos solo informativos        | Operación y contenido real                           |
@@ -28,12 +28,12 @@
 - `npm ci`: PASS.
 - Runner oficial `scripts/codex/verify-local.ps1 -RunLocalIntegration`: `LOCAL_VERIFICATION=PASS` y salida natural `0` el 2026-08-23.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit: 63 archivos / 223 pruebas PASS.
+- Unit: 64 archivos / 226 pruebas PASS.
 - Application: 8 archivos / 43 pruebas PASS.
 - Contract: 19 archivos / 53 PASS y 1 SKIP documentado.
-- Web: 11 archivos / 52 pruebas PASS. Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, sincronización de cierre de sesión, estado 404 explícito y presentación operativa de Admin.
+- Web: 11 archivos / 53 pruebas PASS. Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro idempotente ante doble envío, sincronización de cierre de sesión, estado 404 explícito y presentación operativa de Admin.
 - Integration local: 13 archivos / 164 pruebas PASS sobre PostgreSQL 18.4. `test:integration:local` terminó naturalmente con código 0 el 2026-08-23.
-- `codex:prepare`: 139 checks PASS; 8 Skills locales válidas.
+- `codex:prepare`: 135 checks PASS; 8 Skills locales válidas.
 - Migraciones protegidas: 31 intactas; `016`–`021` y mirrors Supabase son prospectivas.
 - `npm audit`: 0 vulnerabilidades.
 - Auditoría de entrega: sin archivos/directorios vacíos, `.env` reales ni placeholders bloqueantes.
@@ -57,6 +57,8 @@
 - Los commits `718dd77` y `a77b93a` corrigieron la selección de registros administrativos para priorizar el identificador propio ante relaciones como categoría, producto o promoción, y alinearon el juego con el `gameId` real del API. El runner restringido a staging completó `ACCEPT-POS-E2E-20260828145219`: publicó temporalmente la cadena técnica existente, registró una unidad, completó la venta regular con referencia auditable, verificó un único movimiento `POS_SALE_CONSUMED`, restauró stock/reservas a `0/0` y despublicó toda la cadena. El preflight posterior confirmó el estado restaurado.
 - Se detectó que el `.env` local y el runner POS aún apuntaban al servicio Render antiguo `sergod-api-6f8c2a91-2026.onrender.com`, cuyo contrato rechazaba `orderType`. El destino se alineó con `sergod-store-api-v4.onrender.com`, ya usado por el rewrite de Vercel. En el servicio vigente, login devolvió sesión y `GET /api/v1/orders` para `REGULAR`/`PREORDER`, además de la variante Admin, respondieron HTTP 200; perfil, preferencias y loyalty también respondieron 200. El preflight POS volvió a pasar con stock/reservas `0/0`.
 - Los fixtures técnicos visibles fueron despublicados de forma trazable: 3 productos, 1 campaña, 1 colección, 1 categoría y 1 juego. El catálogo público queda vacío hasta que el propietario cargue productos reales desde Admin.
+- La identidad `CLIENTE` preparada por el propietario estaba confirmada en Supabase, pero la verificación interna seguía `PENDING`. Se reconcilió mediante el callback oficial de la aplicación, sin escritura SQL directa, y quedó `VERIFIED`, enlazada a una única cuenta `CLIENTE` activa y sin reconciliaciones abiertas.
+- `scripts/codex/remote-client-account-acceptance.ps1` completó `CLIENT_ACCOUNT_ACCEPTANCE=PASS` contra `sergod-store-api-v4.onrender.com`: pedidos regulares `0`, preventas `0`, movimientos de loyalty `0` y lectura de preferencias PASS. El proveedor de identidad ahora distingue credenciales inválidas (`401`), correo pendiente (`409`) e indisponibilidad real (`503`), y el formulario conserva una clave idempotente para impedir dobles altas o mensajes engañosos por reenvío.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
@@ -64,7 +66,6 @@
 - Envío real de email mediante Resend y activación del worker de notificaciones.
 - Flow/Webpay con credenciales oficiales suficientes para aceptación.
 - Renovación real del token de sesión bajo expiración controlada.
-- Reejecución remota autenticada como `CLIENTE` mediante `scripts/codex/remote-client-account-acceptance.ps1`; requiere una cuenta existente, activa y verificada en `SERGOD_CLIENT_EMAIL`/`SERGOD_CLIENT_PASSWORD`. No se creó una identidad desechable porque el entorno no ofrece limpieza completa de identidad y auditoría.
 - E2E funcional remoto completo, promoción de Vercel, cambio de dominio y observabilidad sostenida.
 
 Los hallazgos locales conocidos de V3 y los defectos adicionales expuestos por PostgreSQL real fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.

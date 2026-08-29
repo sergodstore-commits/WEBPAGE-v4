@@ -1,18 +1,35 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { currentSession, ownAccount } from '../identity/api.js';
+import { currentSession, legalVersions, ownAccount, register } from '../identity/api.js';
 import { App, RouteErrorBoundary } from './App';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
-  return { ...original, currentSession: vi.fn(() => null), ownAccount: vi.fn() };
+  return {
+    ...original,
+    currentSession: vi.fn(() => null),
+    legalVersions: vi.fn(),
+    ownAccount: vi.fn(),
+    register: vi.fn(),
+  };
 });
 
 describe('IdentityAccess presentation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(currentSession).mockReturnValue(null);
+    vi.mocked(legalVersions).mockResolvedValue([
+      {
+        contentLocation: '/legal/terms',
+        documentId: 'document-1',
+        publicTitle: 'Términos',
+        title: 'Términos y condiciones',
+        versionId: 'version-1',
+        versionLabel: '1.0',
+      },
+    ]);
+    vi.mocked(register).mockResolvedValue(undefined);
     window.history.replaceState({}, '', '/');
   });
 
@@ -35,6 +52,31 @@ describe('IdentityAccess presentation', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Registro' }));
     expect(screen.getByLabelText('Teléfono opcional (E.164)')).not.toBeRequired();
+  });
+
+  it('keeps one idempotency key and blocks duplicate registration submissions', async () => {
+    let finishRegistration: (() => void) | undefined;
+    vi.mocked(register).mockImplementation(
+      () => new Promise<void>((resolve) => (finishRegistration = resolve)),
+    );
+    window.history.replaceState({}, '', '/register');
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'cliente@example.com' } });
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'safe-password' } });
+    fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+      target: { value: 'safe-password' },
+    });
+    fireEvent.click(await screen.findByRole('checkbox'));
+    const submit = screen.getByRole('button', { name: 'Crear cuenta' });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+
+    expect(register).toHaveBeenCalledTimes(1);
+    expect(register).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: expect.any(String) }),
+    );
+    await act(async () => finishRegistration?.());
   });
 
   it('does not expose bootstrap or MFA controls in public navigation', () => {

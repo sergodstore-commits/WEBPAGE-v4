@@ -382,6 +382,8 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
 function Registration({ navigate }: { readonly navigate: (route: Route) => void }) {
   const [documents, setDocuments] = useState<readonly LegalVersion[]>([]);
   const [message, setMessage] = useState('Cargando textos legales vigentes…');
+  const [submissionState, setSubmissionState] = useState<'created' | 'idle' | 'submitting'>('idle');
+  const idempotencyKey = useRef(crypto.randomUUID());
   useEffect(() => {
     void legalVersions()
       .then((items) => {
@@ -392,6 +394,9 @@ function Registration({ navigate }: { readonly navigate: (route: Route) => void 
   }, []);
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submissionState !== 'idle') return;
+    setSubmissionState('submitting');
+    setMessage('Creando cuenta…');
     const data = new FormData(event.currentTarget);
     try {
       await register({
@@ -399,12 +404,15 @@ function Registration({ navigate }: { readonly navigate: (route: Route) => void 
           .filter(({ versionId }) => data.getAll('legal').includes(versionId))
           .map(({ versionId }) => versionId),
         email: String(data.get('email')),
+        idempotencyKey: idempotencyKey.current,
         password: String(data.get('password')),
         passwordConfirmation: String(data.get('passwordConfirmation')),
         phone: String(data.get('phone')).trim() || null,
       });
+      setSubmissionState('created');
       setMessage('Cuenta creada. Revisa tu correo para confirmar la dirección antes de ingresar.');
     } catch (error) {
+      setSubmissionState('idle');
       setMessage(messageOf(error));
     }
   };
@@ -433,8 +441,8 @@ function Registration({ navigate }: { readonly navigate: (route: Route) => void 
             </span>
           </label>
         ))}
-        <button disabled={documents.length === 0} type="submit">
-          Crear cuenta
+        <button disabled={documents.length === 0 || submissionState !== 'idle'} type="submit">
+          {submissionState === 'submitting' ? 'Creando cuenta…' : 'Crear cuenta'}
         </button>
       </form>
       <Status message={message} />

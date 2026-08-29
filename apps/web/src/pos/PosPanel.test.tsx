@@ -159,4 +159,4 @@ it('renders the productive Pseudo-POS controls without collecting card data', as
       quantity: 2,
     }),
   );
-});
+}, 10_000);

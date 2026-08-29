@@ -97,7 +97,11 @@ $session = Invoke-Api -Method POST -Path '/api/v1/identity/sessions' -Body @{
 $accessToken = [string]$session.accessToken
 if ([string]::IsNullOrWhiteSpace($accessToken)) { throw 'Client login did not return an access token.' }
 
-$account = Invoke-Api -Method GET -Path '/api/v1/account' -AccessToken $accessToken
+$accountResponse = Invoke-Api -Method GET -Path '/api/v1/account' -AccessToken $accessToken
+if ($null -eq $accountResponse.PSObject.Properties['account']) {
+  throw 'Account endpoint did not return the account envelope.'
+}
+$account = $accountResponse.account
 if ([string]$account.role -ne 'CLIENTE') { throw 'Acceptance identity is not a CLIENTE account.' }
 if ([string]$account.status -ne 'ACTIVE') { throw 'Acceptance CLIENTE account is not ACTIVE.' }
 if ([string]$account.emailVerificationStatus -ne 'VERIFIED') {

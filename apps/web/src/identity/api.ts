@@ -77,13 +77,15 @@ export async function legalVersions(): Promise<readonly LegalVersion[]> {
 export async function register(input: {
   readonly acceptedLegalVersionIds: readonly string[];
   readonly email: string;
+  readonly idempotencyKey: string;
   readonly password: string;
   readonly passwordConfirmation: string;
   readonly phone?: string | null;
 }): Promise<void> {
+  const { idempotencyKey, ...registration } = input;
   await request('/api/v1/identity/registrations', {
-    body: JSON.stringify(input),
-    headers: { 'idempotency-key': crypto.randomUUID() },
+    body: JSON.stringify(registration),
+    headers: { 'idempotency-key': idempotencyKey },
     method: 'POST',
   });
 }
