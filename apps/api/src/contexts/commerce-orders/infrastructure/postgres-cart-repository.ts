@@ -160,7 +160,7 @@ export class PgCartRepository implements CartRepository {
       const cart = await lockOwnedActiveCart(transaction, input.owner);
       const line = await requiredOwnedLine(transaction, cart.cart_id, input.cartLineId, true);
       await transaction.query(`DELETE FROM cart_lines WHERE cart_line_id=$1`, [line.cart_line_id]);
-      await removeEmptyConflictGroup(transaction, line.cart_group_id, now);
+      await removeEmptyMutableGroups(transaction, cart.cart_id, now);
       await touchCart(transaction, cart, now);
       await this.audit(
         transaction,

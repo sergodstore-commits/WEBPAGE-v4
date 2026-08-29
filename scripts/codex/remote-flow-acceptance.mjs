@@ -94,6 +94,24 @@ async function transition(adminToken, entity, nextStatus, runId) {
   });
 }
 
+async function clearFixtureCart(clientToken, productId, runId) {
+  const cart = await request('/api/v1/cart', { token: clientToken });
+  const lines = cart.item?.groups.flatMap((group) => group.lines) ?? [];
+  if (lines.some((line) => line.productId !== productId || line.preorderCampaignId !== null))
+    throw new Error('The acceptance client cart contains a non-technical line.');
+  for (const line of lines) {
+    await request(`/api/v1/cart/lines/${line.cartLineId}`, {
+      idempotencyKey: `${runId}:clear-fixture-line:${line.cartLineId}`,
+      method: 'DELETE',
+      token: clientToken,
+    });
+  }
+  const cleared = await request('/api/v1/cart', { token: clientToken });
+  const remaining = cleared.item?.groups.flatMap((group) => group.lines) ?? [];
+  if (remaining.length !== 0) throw new Error('The technical cart cleanup did not finish.');
+  return cleared;
+}
+
 async function rollbackBeforeOrder(state, adminToken, clientToken) {
   const failures = [];
   if (state.cartLineId !== undefined) {
@@ -168,9 +186,7 @@ async function prepare() {
     runId,
   };
   try {
-    const existingCart = await request('/api/v1/cart', { token: clientToken });
-    const existingLines = existingCart.item?.groups.flatMap((group) => group.lines) ?? [];
-    if (existingLines.length !== 0) throw new Error('The acceptance client cart is not empty.');
+    const existingCart = await clearFixtureCart(clientToken, product.id, runId);
     for (const entity of entities) {
       await transition(adminToken, entity, 'PUBLISHED', runId);
       state.publishedCount += 1;
@@ -309,6 +325,8 @@ async function cleanupFailed() {
   const order = await request(`/api/v1/orders/${state.orderId}`, { token: clientToken });
   if (order.item.state !== 'CANCELLED')
     throw new Error(`The failed order is not safe to clean up: state=${order.item.state}.`);
+
+  await clearFixtureCart(clientToken, state.productId, state.runId);
 
   const position = await request(`/api/v1/admin/inventory/products/${state.productId}`, {
     token: adminToken,

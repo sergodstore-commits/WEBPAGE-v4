@@ -424,6 +424,25 @@ describe('PostgreSQL Phase 9A cart', () => {
     expect(current?.groups.find((group) => group.groupType === 'CONFLICT')?.state).toBe('REMOVED');
   });
 
+  it('retires an emptied active group so a later purchase receives a fresh group', async () => {
+    await create(account, ids.account);
+    const first = await add(account, ids.regular, null);
+    const firstGroup = required(first.item.groups.find((group) => group.state === 'ACTIVE'));
+    const firstLine = required(firstGroup.lines[0]);
+
+    await service.removeLine(context('remove-active', ids.account), account, firstLine.cartLineId);
+
+    const emptied = await pool.query<{ state: string }>(
+      `SELECT state FROM cart_groups WHERE cart_group_id=$1`,
+      [firstGroup.cartGroupId],
+    );
+    expect(emptied.rows[0]?.state).toBe('REMOVED');
+
+    const second = await add(account, ids.regular, null);
+    const secondGroup = required(second.item.groups.find((group) => group.state === 'ACTIVE'));
+    expect(secondGroup.cartGroupId).not.toBe(firstGroup.cartGroupId);
+  });
+
   it('replays the same mutation and rejects the same key with another fingerprint', async () => {
     await create(anonymous);
     const first = await add(anonymous, ids.regular, null, 'same-add');
