@@ -277,6 +277,20 @@ function accessTokenValidationError(error: unknown): IdentityAccessError {
 }
 
 function providerError(error: { readonly message: string }): IdentityAccessError {
+  if (isAuthRetryableFetchError(error) || (isAuthApiError(error) && error.status >= 500)) {
+    return new IdentityAccessError(
+      'IDENTITY_PROVIDER_UNAVAILABLE',
+      503,
+      'Identity provider is unavailable.',
+      { cause: new Error(error.message) },
+    );
+  }
+  if (isAuthApiError(error) && error.code === 'invalid_credentials') {
+    return new IdentityAccessError('INVALID_CREDENTIALS', 401, 'Email or password is invalid.');
+  }
+  if (isAuthApiError(error) && error.code === 'email_not_confirmed') {
+    return new IdentityAccessError('EMAIL_NOT_VERIFIED', 409, 'Email is not verified.');
+  }
   return new IdentityAccessError(
     'IDENTITY_PROVIDER_ERROR',
     502,
