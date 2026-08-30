@@ -34,12 +34,14 @@ export class FlowPaymentGateway implements PaymentGateway {
       urlConfirmation: this.config.confirmationUrl,
       urlReturn: this.config.returnUrl,
     };
-    const response = await fetch(`${this.config.baseUrl}/payment/create`, {
-      body: signedForm(parameters, this.config.secretKey),
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      method: 'POST',
-      signal: AbortSignal.timeout(10_000),
-    });
+    const response = await providerFetch(() =>
+      fetch(`${this.config.baseUrl}/payment/create`, {
+        body: signedForm(parameters, this.config.secretKey),
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        method: 'POST',
+        signal: AbortSignal.timeout(10_000),
+      }),
+    );
     const payload = await parseJson<FlowCreateResponse>(response);
     if (!nonEmpty(payload.token) || !nonEmpty(payload.url)) {
       throw providerFailure('Flow create response is incomplete.');
@@ -58,13 +60,15 @@ export class FlowPaymentGateway implements PaymentGateway {
     const token = input.token ?? input.providerReference;
     if (!nonEmpty(token)) throw providerFailure('Flow token is missing.');
     const parameters = { apiKey: this.config.apiKey, token };
-    const response = await fetch(
-      `${this.config.baseUrl}/payment/getStatus?${signedForm(parameters, this.config.secretKey)}`,
-      {
-        headers: { accept: 'application/json' },
-        method: 'GET',
-        signal: AbortSignal.timeout(10_000),
-      },
+    const response = await providerFetch(() =>
+      fetch(
+        `${this.config.baseUrl}/payment/getStatus?${signedForm(parameters, this.config.secretKey)}`,
+        {
+          headers: { accept: 'application/json' },
+          method: 'GET',
+          signal: AbortSignal.timeout(10_000),
+        },
+      ),
     );
     const payload = await parseJson<FlowStatusResponse>(response);
     return {
@@ -144,9 +148,8 @@ export class WebpayPaymentGateway implements PaymentGateway {
     method: 'GET' | 'POST' | 'PUT',
     body?: object,
   ): Promise<T> {
-    const response = await fetch(
-      `${this.config.baseUrl}/rswebpaytransaction/api/webpay/v1.2${path}`,
-      {
+    const response = await providerFetch(() =>
+      fetch(`${this.config.baseUrl}/rswebpaytransaction/api/webpay/v1.2${path}`, {
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         headers: {
           accept: 'application/json',
@@ -156,7 +159,7 @@ export class WebpayPaymentGateway implements PaymentGateway {
         },
         method,
         signal: AbortSignal.timeout(10_000),
-      },
+      }),
     );
     return parseJson<T>(response);
   }
@@ -219,6 +222,13 @@ async function parseJson<T>(response: Response): Promise<T> {
 
 function providerFailure(message: string, cause?: unknown): PaymentError {
   return new PaymentError('PAYMENT_PROVIDER_UNAVAILABLE', 'INFRASTRUCTURE', message, { cause });
+}
+async function providerFetch(request: () => Promise<Response>): Promise<Response> {
+  try {
+    return await request();
+  } catch (error) {
+    throw providerFailure('Provider network request failed.', error);
+  }
 }
 function integer(value: number): number {
   if (!Number.isSafeInteger(value) || value < 0)

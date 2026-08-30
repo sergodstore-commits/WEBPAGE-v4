@@ -165,4 +165,29 @@ describe('payment provider gateways', () => {
       code: 'PAYMENT_PROVIDER_UNAVAILABLE',
     });
   });
+
+  it('normalizes provider transport failures before they leave the gateway', async () => {
+    const networkError = new Error('private transport detail');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(networkError));
+    const gateway = new FlowPaymentGateway({
+      apiKey: 'key',
+      baseUrl: 'https://flow.invalid',
+      confirmationUrl: 'https://api.invalid/confirmation',
+      returnUrl: 'https://api.invalid/return',
+      secretKey: 'secret',
+    });
+
+    await expect(
+      gateway.create({
+        amountClp: 3100,
+        attemptId: 'attempt',
+        orderReference: 'SG-2026-000001',
+        payerEmail: 'buyer@example.com',
+      }),
+    ).rejects.toMatchObject({
+      cause: networkError,
+      code: 'PAYMENT_PROVIDER_UNAVAILABLE',
+      message: 'Provider network request failed.',
+    });
+  });
 });
