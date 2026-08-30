@@ -804,11 +804,30 @@ async function findOrCreateCompatibleGroup(
   candidate: Candidate,
   now: Date,
 ): Promise<string> {
+  await retireOrderedGroups(transaction, cartId, now);
   const existing = await findCompatibleGroup(transaction, cartId, candidate);
   if (existing !== null) return existing;
   const id = uuids.generate();
   await insertCompatibleGroup(transaction, id, cartId, candidate, now);
   return id;
+}
+async function retireOrderedGroups(
+  transaction: PgTransaction,
+  cartId: string,
+  now: Date,
+): Promise<void> {
+  await transaction.query(
+    `DELETE FROM cart_lines line USING cart_groups grp
+      WHERE line.cart_group_id=grp.cart_group_id AND grp.cart_id=$1 AND grp.state='ACTIVE'
+        AND EXISTS(SELECT 1 FROM orders WHERE orders.cart_group_id=grp.cart_group_id)`,
+    [cartId],
+  );
+  await transaction.query(
+    `UPDATE cart_groups SET state='REMOVED',updated_at=$2
+      WHERE cart_id=$1 AND state='ACTIVE'
+        AND EXISTS(SELECT 1 FROM orders WHERE orders.cart_group_id=cart_groups.cart_group_id)`,
+    [cartId, now],
+  );
 }
 async function insertCompatibleGroup(
   transaction: PgTransaction,

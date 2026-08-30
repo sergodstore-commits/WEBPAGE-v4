@@ -421,6 +421,20 @@ export class PgCheckoutRepository implements CheckoutRepository {
             now,
           ],
         );
+        await transaction.query(`DELETE FROM cart_lines WHERE cart_group_id=$1`, [
+          group.cart_group_id,
+        ]);
+        const retiredGroup = await transaction.query(
+          `UPDATE cart_groups SET state='REMOVED',updated_at=$2
+            WHERE cart_group_id=$1 AND state='ACTIVE'`,
+          [group.cart_group_id, now],
+        );
+        if (retiredGroup.rowCount !== 1) throw conflict('CHECKOUT_GROUP_NOT_ACTIVE');
+        await transaction.query(
+          `UPDATE carts SET version=version+1,updated_at=$2
+            WHERE cart_id=$1 AND state='ACTIVE'`,
+          [group.cart_id, now],
+        );
         await this.audit(
           transaction,
           input.context,

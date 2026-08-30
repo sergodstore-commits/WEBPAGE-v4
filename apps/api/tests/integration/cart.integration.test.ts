@@ -1267,6 +1267,9 @@ describe('PostgreSQL Order promotion reservations', () => {
       expect.arrayContaining(['PENDING_PAYMENT', 'PAID']),
     );
     expect(history.rows).toHaveLength(2);
+    await expect(
+      pool.query(`SELECT state FROM cart_groups WHERE cart_group_id=$1`, [groupId]),
+    ).resolves.toMatchObject({ rows: [{ state: 'REMOVED' }] });
   });
 
   it('reserves a promotion while payment is pending and releases it with the expired Order', async () => {
