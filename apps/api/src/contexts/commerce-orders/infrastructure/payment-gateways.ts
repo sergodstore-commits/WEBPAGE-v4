@@ -230,10 +230,12 @@ async function providerFetch(request: () => Promise<Response>): Promise<Response
     throw providerFailure('Provider network request failed.', error);
   }
 }
-function integer(value: number): number {
-  if (!Number.isSafeInteger(value) || value < 0)
+function integer(value: number | string): number {
+  const normalized =
+    typeof value === 'string' ? (/^\d+$/u.test(value) ? Number(value) : Number.NaN) : value;
+  if (!Number.isSafeInteger(normalized) || normalized < 0)
     throw providerFailure('Provider amount is invalid.');
-  return value;
+  return normalized;
 }
 function nonEmpty(value: string | undefined): value is string {
   return value !== undefined && value.trim() !== '';
@@ -251,7 +253,7 @@ interface FlowCreateResponse {
   readonly url: string;
 }
 interface FlowStatusResponse {
-  readonly amount: number;
+  readonly amount: number | string;
   readonly commerceOrder: string;
   readonly currency: string;
   readonly status: number;

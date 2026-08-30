@@ -45,7 +45,7 @@ describe('payment provider gateways', () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
-          amount: 5000,
+          amount: '5000',
           commerceOrder: 'SG-2026-2',
           currency: 'CLP',
           status: 2,
