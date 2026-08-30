@@ -84,4 +84,58 @@ describe('Postgres Payment repository', () => {
       false,
     );
   });
+
+  it('qualifies the attempt version when attaching a provider session', async () => {
+    const statements: string[] = [];
+    const query = vi.fn(async (sql: string) => {
+      statements.push(sql);
+      if (sql.includes("SET status='REQUIRES_ACTION'")) {
+        return {
+          rowCount: 1,
+          rows: [
+            {
+              account_id: accountId,
+              amount_clp: 3100,
+              authorized_at: null,
+              created_at: now,
+              currency: 'CLP',
+              expires_at: null,
+              failure_code: null,
+              idempotency_key: 'payment-attach',
+              order_id: orderId,
+              payment_attempt_id: '0198a8be-6677-7000-8000-000000000011',
+              provider: 'FLOW',
+              provider_reference: 'flow-token',
+              public_number: 'SG-2026-1',
+              redirect_url: 'https://sandbox.flow.cl/app/web/pay.php?token=opaque',
+              request_fingerprint: 'fingerprint',
+              status: 'REQUIRES_ACTION',
+              terminal_at: null,
+              updated_at: now,
+            },
+          ],
+        };
+      }
+      return { rowCount: 1, rows: [] };
+    });
+    const client = { query, release: vi.fn() };
+    const pool = { connect: vi.fn().mockResolvedValue(client) } as unknown as Pool;
+    const subject = new PgPaymentRepository(
+      pool,
+      { now: () => now },
+      { generate: () => 'event-1' },
+    );
+
+    await expect(
+      subject.attachProviderSession({
+        attemptId: '0198a8be-6677-7000-8000-000000000011',
+        expiresAt: null,
+        providerReference: 'flow-token',
+        redirectUrl: 'https://sandbox.flow.cl/app/web/pay.php?token=opaque',
+      }),
+    ).resolves.toMatchObject({ status: 'REQUIRES_ACTION' });
+    expect(statements.find((sql) => sql.includes("SET status='REQUIRES_ACTION'"))).toContain(
+      'version=attempt.version+1',
+    );
+  });
 });

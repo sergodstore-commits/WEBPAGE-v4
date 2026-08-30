@@ -127,7 +127,7 @@ export class PgPaymentRepository implements PaymentRepository {
       const now = this.clock.now();
       const updated = await transaction.query<AttemptRow>(
         `UPDATE payment_attempts attempt SET status='REQUIRES_ACTION',provider_reference=$2,
-           redirect_url=$3,expires_at=$4,updated_at=$5,version=version+1
+           redirect_url=$3,expires_at=$4,updated_at=$5,version=attempt.version+1
          FROM orders WHERE attempt.payment_attempt_id=$1 AND attempt.status='CREATED'
            AND orders.order_id=attempt.order_id RETURNING attempt.*,orders.public_number`,
         [input.attemptId, input.providerReference, input.redirectUrl, input.expiresAt, now],
@@ -187,7 +187,7 @@ export class PgPaymentRepository implements PaymentRepository {
       const updated = await transaction.query<AttemptRow>(
         `UPDATE payment_attempts attempt SET status=$2,failure_code=$3,
            authorized_at=CASE WHEN $2='SUCCEEDED' THEN $4 ELSE authorized_at END,
-           terminal_at=CASE WHEN $5 THEN $4 ELSE NULL END,updated_at=$4,version=version+1
+           terminal_at=CASE WHEN $5 THEN $4 ELSE NULL END,updated_at=$4,version=attempt.version+1
          FROM orders WHERE attempt.payment_attempt_id=$1 AND orders.order_id=attempt.order_id
          RETURNING attempt.*,orders.public_number`,
         [
