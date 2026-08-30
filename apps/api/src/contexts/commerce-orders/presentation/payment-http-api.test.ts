@@ -132,4 +132,29 @@ describe('Payments HTTP provider routes', () => {
       'Payment request failed.',
     );
   });
+
+  it('reads a controlled provider diagnostic across error prototype boundaries', async () => {
+    processProviderResult.mockRejectedValueOnce(
+      new PaymentError(
+        'PAYMENT_PROVIDER_UNAVAILABLE',
+        'INFRASTRUCTURE',
+        'Payment provider session could not be created.',
+        {
+          cause: {
+            code: 'PAYMENT_PROVIDER_UNAVAILABLE',
+            message: 'Provider returned HTTP 401.',
+            name: 'PaymentError',
+          },
+        },
+      ),
+    );
+
+    const response = await fetch(`${origin}/api/v1/payments/flow/return?token=opaque-token`);
+
+    expect(response.status).toBe(503);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ diagnostic: 'Provider returned HTTP 401.' }),
+      'Payment request failed.',
+    );
+  });
 });

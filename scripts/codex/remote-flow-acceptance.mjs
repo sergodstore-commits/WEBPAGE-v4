@@ -3,8 +3,8 @@ import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 const root = new URL('../../', import.meta.url);
 const stateUrl = new URL('.runtime/codex/remote-flow-acceptance-state.json', root);
 const mode = process.argv[2];
-if (!['--cleanup-failed', '--finalize', '--prepare'].includes(mode))
-  throw new Error('Use --prepare, --finalize or --cleanup-failed.');
+if (!['--cleanup-failed', '--finalize', '--prepare', '--retry-provider'].includes(mode))
+  throw new Error('Use --prepare, --retry-provider, --finalize or --cleanup-failed.');
 
 const env = {};
 for (const line of readFileSync(new URL('.env', root), 'utf8').split(/\r?\n/u)) {
@@ -314,6 +314,41 @@ async function finalize() {
   console.log('REMOTE_FLOW_CLEANUP=PASS');
 }
 
+async function retryProvider() {
+  const state = JSON.parse(readFileSync(stateUrl, 'utf8'));
+  if (state.orderId === undefined) throw new Error('The Flow run has no order to retry.');
+  if (state.paymentAttemptId !== undefined)
+    throw new Error('The Flow run already has a provider session.');
+  const clientToken = await login(env.SERGOD_CLIENT_EMAIL, env.SERGOD_CLIENT_PASSWORD);
+  const order = await request(`/api/v1/orders/${state.orderId}`, { token: clientToken });
+  if (order.item.state !== 'PENDING_PAYMENT')
+    throw new Error(`The Flow order cannot be retried: state=${order.item.state}.`);
+
+  state.providerRetryCount = Number(state.providerRetryCount ?? 0) + 1;
+  writeFileSync(stateUrl, `${JSON.stringify(state, null, 2)}\n`, {
+    encoding: 'utf8',
+    mode: 0o600,
+  });
+  const payment = await request(`/api/v1/orders/${state.orderId}/payment-attempts`, {
+    body: { payerEmail: env.SERGOD_CLIENT_EMAIL, provider: 'FLOW' },
+    idempotencyKey: `${state.runId}:payment-retry:${state.providerRetryCount}`,
+    method: 'POST',
+    token: clientToken,
+  });
+  const redirect = new URL(payment.item.redirectUrl);
+  if (redirect.hostname !== 'sandbox.flow.cl') throw new Error('Flow redirect is not sandbox.');
+  state.paymentAttemptId = payment.item.paymentAttemptId;
+  state.redirectUrl = redirect.href;
+  writeFileSync(stateUrl, `${JSON.stringify(state, null, 2)}\n`, {
+    encoding: 'utf8',
+    mode: 0o600,
+  });
+  console.log('REMOTE_FLOW_PROVIDER_RETRY=PASS');
+  console.log(`ACCEPTANCE_RUN_ID=${state.runId}`);
+  console.log(`ORDER_PUBLIC_NUMBER=${state.orderPublicNumber}`);
+  console.log(`PAYMENT_STATUS=${payment.item.status}`);
+}
+
 async function cleanupFailed() {
   const state = JSON.parse(readFileSync(stateUrl, 'utf8'));
   if (state.orderId === undefined) throw new Error('The failed run has no order to clean up.');
@@ -378,4 +413,10 @@ async function cleanupFailed() {
   console.log('ORDER_STATUS=CANCELLED');
 }
 
-await (mode === '--prepare' ? prepare() : mode === '--finalize' ? finalize() : cleanupFailed());
+await (mode === '--prepare'
+  ? prepare()
+  : mode === '--retry-provider'
+    ? retryProvider()
+    : mode === '--finalize'
+      ? finalize()
+      : cleanupFailed());

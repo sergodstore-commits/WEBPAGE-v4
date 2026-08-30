@@ -149,22 +149,43 @@ export class PaymentHttpApi implements HttpRouteHandler {
 function paymentDiagnostic(error: unknown): string | undefined {
   let current = error;
   let diagnostic: string | undefined;
-  for (let depth = 0; depth < 5 && current instanceof Error; depth += 1) {
-    if (current instanceof PaymentError) diagnostic = current.message;
-    else {
-      const code = safeNetworkCode(current);
+  for (let depth = 0; depth < 5 && errorRecord(current) !== null; depth += 1) {
+    const record = errorRecord(current);
+    if (record === null) break;
+    if (
+      current instanceof PaymentError ||
+      (record.name === 'PaymentError' && record.code === 'PAYMENT_PROVIDER_UNAVAILABLE')
+    ) {
+      diagnostic = controlledPaymentMessage(record.message);
+    } else {
+      const code = safeNetworkCode(record);
       if (code !== undefined) diagnostic = `Provider network error ${code}.`;
-      else if (['AbortError', 'TimeoutError', 'TypeError'].includes(current.name))
+      else if (
+        typeof record.name === 'string' &&
+        ['AbortError', 'TimeoutError', 'TypeError'].includes(record.name)
+      )
         diagnostic = 'Provider network request failed.';
       else break;
     }
-    current = current.cause;
+    current = record.cause;
   }
   return diagnostic;
 }
 
-function safeNetworkCode(error: Error): string | undefined {
-  if (!('code' in error) || typeof error.code !== 'string') return undefined;
+function controlledPaymentMessage(message: unknown): string {
+  if (typeof message !== 'string') return 'Payment provider failed.';
+  if (/^Provider returned HTTP \d{3}\.$/u.test(message)) return message;
+  return new Set([
+    'Flow create response is incomplete.',
+    'Payment provider session could not be created.',
+    'Provider response is not valid JSON.',
+  ]).has(message)
+    ? message
+    : 'Payment provider failed.';
+}
+
+function safeNetworkCode(error: Record<string, unknown>): string | undefined {
+  if (typeof error.code !== 'string') return undefined;
   return new Set([
     'EACCES',
     'ECONNREFUSED',
@@ -178,6 +199,10 @@ function safeNetworkCode(error: Error): string | undefined {
   ]).has(error.code)
     ? error.code
     : undefined;
+}
+
+function errorRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
 }
 
 function match(method: string | undefined, pathname: string): Route | null {
