@@ -71,20 +71,7 @@
       "commit": "bc69337085ddf5497c605019cb2b0bacd9b998c5"
     }
   ],
-  "deferredExternal": [
-    {
-      "stageId": "02-external-providers",
-      "capability": "Webpay Integración",
-      "reason": "Flow sandbox completed a real end-to-end payment with server-to-server verification, PAID Order, inventory validation and cleanup on 2026-08-29. Webpay Integration credentials remain absent, so its official acceptance is still pending.",
-      "recordedAtUtc": "2026-08-24T05:41:50.0670848Z"
-    },
-    {
-      "stageId": "03-staging",
-      "capability": "Production promotion and sustained observability",
-      "reason": "Staging migrations/RLS, authenticated roles, Vercel preview, backup/restore and code rollback have external evidence. Production promotion, final domain switch and a sustained observability window remain pending and are not authorized before RELEASE.",
-      "recordedAtUtc": "2026-08-24T05:46:52.2115511Z"
-    }
-  ],
+  "deferredExternal": [],
   "notes": [
     "CURRENT is the sole product authority.",
     "All Work preimplementation is untrusted until Codex inspects, tests, fixes, and records evidence.",

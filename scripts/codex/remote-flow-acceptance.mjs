@@ -1,7 +1,14 @@
 import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const root = new URL('../../', import.meta.url);
-const stateUrl = new URL('.runtime/codex/remote-flow-acceptance-state.json', root);
+const provider = process.env.REMOTE_PAYMENT_PROVIDER === 'WEBPAY' ? 'WEBPAY' : 'FLOW';
+const providerLabel = provider === 'WEBPAY' ? 'WEBPAY' : 'FLOW';
+const providerName = provider === 'WEBPAY' ? 'Webpay' : 'Flow';
+const expectedRedirectHost = provider === 'WEBPAY' ? 'webpay3gint.transbank.cl' : 'sandbox.flow.cl';
+const stateUrl = new URL(
+  `.runtime/codex/remote-${provider.toLowerCase()}-acceptance-state.json`,
+  root,
+);
 const mode = process.argv[2];
 if (!['--cleanup-failed', '--finalize', '--prepare', '--retry-provider'].includes(mode))
   throw new Error('Use --prepare, --retry-provider, --finalize or --cleanup-failed.');
@@ -24,7 +31,7 @@ for (const line of readFileSync(new URL('.env', root), 'utf8').split(/\r?\n/u)) 
 
 const api = new URL(env.API_PUBLIC_URL);
 if (api.protocol !== 'https:' || api.hostname !== 'sergod-store-api-v4.onrender.com') {
-  throw new Error('Remote Flow acceptance is restricted to the expected staging API.');
+  throw new Error(`Remote ${providerName} acceptance is restricted to the expected staging API.`);
 }
 for (const key of [
   'SERGOD_ADMIN_EMAIL',
@@ -139,7 +146,7 @@ async function rollbackBeforeOrder(state, adminToken, clientToken) {
             direction: 'NEGATIVE',
             investigationReference: state.runId,
             quantity: surplus,
-            reason: 'Restore stock after Flow acceptance preparation failure',
+            reason: `Restore stock after ${providerName} acceptance preparation failure`,
           },
           idempotencyKey: `${state.runId}:rollback-stock`,
           method: 'POST',
@@ -163,7 +170,7 @@ async function rollbackBeforeOrder(state, adminToken, clientToken) {
 async function prepare() {
   try {
     readFileSync(stateUrl, 'utf8');
-    throw new Error('A remote Flow acceptance state already exists; finalize it first.');
+    throw new Error(`A remote ${providerName} acceptance state already exists; finalize it first.`);
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
@@ -176,7 +183,7 @@ async function prepare() {
   const positionBefore = await request(`/api/v1/admin/inventory/products/${product.id}`, {
     token: adminToken,
   });
-  const runId = `ACCEPT-FLOW-E2E-${new Date().toISOString().replace(/\D/gu, '').slice(0, 14)}`;
+  const runId = `ACCEPT-${providerLabel}-E2E-${new Date().toISOString().replace(/\D/gu, '').slice(0, 14)}`;
   const state = {
     entities,
     originalOnHand: Number(positionBefore.item.onHand),
@@ -192,7 +199,7 @@ async function prepare() {
       state.publishedCount += 1;
     }
     const stock = await request(`/api/v1/admin/inventory/products/${product.id}/stock-entries`, {
-      body: { quantity: 1, reason: 'Remote Flow acceptance', reference: runId },
+      body: { quantity: 1, reason: `Remote ${providerName} acceptance`, reference: runId },
       idempotencyKey: `${runId}:stock`,
       method: 'POST',
       token: adminToken,
@@ -244,20 +251,21 @@ async function prepare() {
     state.orderId = order.item.orderId;
     state.orderPublicNumber = order.item.publicNumber;
     const payment = await request(`/api/v1/orders/${state.orderId}/payment-attempts`, {
-      body: { payerEmail: env.SERGOD_CLIENT_EMAIL, provider: 'FLOW' },
+      body: { payerEmail: env.SERGOD_CLIENT_EMAIL, provider },
       idempotencyKey: `${runId}:payment`,
       method: 'POST',
       token: clientToken,
     });
     const redirect = new URL(payment.item.redirectUrl);
-    if (redirect.hostname !== 'sandbox.flow.cl') throw new Error('Flow redirect is not sandbox.');
+    if (redirect.hostname !== expectedRedirectHost)
+      throw new Error(`${providerName} redirect is not the expected test environment.`);
     state.paymentAttemptId = payment.item.paymentAttemptId;
     state.redirectUrl = redirect.href;
     writeFileSync(stateUrl, `${JSON.stringify(state, null, 2)}\n`, {
       encoding: 'utf8',
       mode: 0o600,
     });
-    console.log('REMOTE_FLOW_PREPARE=PASS');
+    console.log(`REMOTE_${providerLabel}_PREPARE=PASS`);
     console.log(`ACCEPTANCE_RUN_ID=${runId}`);
     console.log(`ORDER_PUBLIC_NUMBER=${state.orderPublicNumber}`);
     console.log(`AMOUNT_CLP=${state.amountClp}`);
@@ -293,7 +301,7 @@ async function finalize() {
   const order = await request(`/api/v1/orders/${state.orderId}`, { token: clientToken });
   if (payment.item.status !== 'SUCCEEDED' || order.item.state !== 'PAID')
     throw new Error(
-      `Flow acceptance is not terminal: payment=${payment.item.status}, order=${order.item.state}.`,
+      `${providerName} acceptance is not terminal: payment=${payment.item.status}, order=${order.item.state}.`,
     );
   const position = await request(`/api/v1/admin/inventory/products/${state.productId}`, {
     token: adminToken,
@@ -306,23 +314,24 @@ async function finalize() {
   for (const entity of [...state.entities].reverse())
     await transition(adminToken, entity, 'UNPUBLISHED', state.runId);
   unlinkSync(stateUrl);
-  console.log('REMOTE_FLOW_ACCEPTANCE=PASS');
+  console.log(`REMOTE_${providerLabel}_ACCEPTANCE=PASS`);
   console.log(`ACCEPTANCE_RUN_ID=${state.runId}`);
   console.log(`ORDER_PUBLIC_NUMBER=${state.orderPublicNumber}`);
   console.log('PAYMENT_STATUS=SUCCEEDED');
   console.log('ORDER_STATUS=PAID');
-  console.log('REMOTE_FLOW_CLEANUP=PASS');
+  console.log(`REMOTE_${providerLabel}_CLEANUP=PASS`);
 }
 
 async function retryProvider() {
   const state = JSON.parse(readFileSync(stateUrl, 'utf8'));
-  if (state.orderId === undefined) throw new Error('The Flow run has no order to retry.');
+  if (state.orderId === undefined)
+    throw new Error(`The ${providerName} run has no order to retry.`);
   if (state.paymentAttemptId !== undefined)
-    throw new Error('The Flow run already has a provider session.');
+    throw new Error(`The ${providerName} run already has a provider session.`);
   const clientToken = await login(env.SERGOD_CLIENT_EMAIL, env.SERGOD_CLIENT_PASSWORD);
   const order = await request(`/api/v1/orders/${state.orderId}`, { token: clientToken });
   if (order.item.state !== 'PENDING_PAYMENT')
-    throw new Error(`The Flow order cannot be retried: state=${order.item.state}.`);
+    throw new Error(`${providerName} order cannot be retried: state=${order.item.state}.`);
 
   state.providerRetryCount = Number(state.providerRetryCount ?? 0) + 1;
   writeFileSync(stateUrl, `${JSON.stringify(state, null, 2)}\n`, {
@@ -330,20 +339,21 @@ async function retryProvider() {
     mode: 0o600,
   });
   const payment = await request(`/api/v1/orders/${state.orderId}/payment-attempts`, {
-    body: { payerEmail: env.SERGOD_CLIENT_EMAIL, provider: 'FLOW' },
+    body: { payerEmail: env.SERGOD_CLIENT_EMAIL, provider },
     idempotencyKey: `${state.runId}:payment-retry:${state.providerRetryCount}`,
     method: 'POST',
     token: clientToken,
   });
   const redirect = new URL(payment.item.redirectUrl);
-  if (redirect.hostname !== 'sandbox.flow.cl') throw new Error('Flow redirect is not sandbox.');
+  if (redirect.hostname !== expectedRedirectHost)
+    throw new Error(`${providerName} redirect is not the expected test environment.`);
   state.paymentAttemptId = payment.item.paymentAttemptId;
   state.redirectUrl = redirect.href;
   writeFileSync(stateUrl, `${JSON.stringify(state, null, 2)}\n`, {
     encoding: 'utf8',
     mode: 0o600,
   });
-  console.log('REMOTE_FLOW_PROVIDER_RETRY=PASS');
+  console.log(`REMOTE_${providerLabel}_PROVIDER_RETRY=PASS`);
   console.log(`ACCEPTANCE_RUN_ID=${state.runId}`);
   console.log(`ORDER_PUBLIC_NUMBER=${state.orderPublicNumber}`);
   console.log(`PAYMENT_STATUS=${payment.item.status}`);
@@ -377,7 +387,7 @@ async function cleanupFailed() {
         direction: 'NEGATIVE',
         investigationReference: state.runId,
         quantity: surplus,
-        reason: 'Restore stock after failed Flow acceptance attempt',
+        reason: `Restore stock after failed ${providerName} acceptance attempt`,
       },
       idempotencyKey: `${state.runId}:cleanup-failed-stock`,
       method: 'POST',
@@ -407,7 +417,7 @@ async function cleanupFailed() {
     throw new Error('Inventory cleanup verification failed.');
 
   unlinkSync(stateUrl);
-  console.log('REMOTE_FLOW_FAILED_CLEANUP=PASS');
+  console.log(`REMOTE_${providerLabel}_FAILED_CLEANUP=PASS`);
   console.log(`ACCEPTANCE_RUN_ID=${state.runId}`);
   console.log(`ORDER_PUBLIC_NUMBER=${state.orderPublicNumber}`);
   console.log('ORDER_STATUS=CANCELLED');
