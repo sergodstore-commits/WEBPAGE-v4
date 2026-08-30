@@ -79,20 +79,20 @@
     },
     {
       "stageId": "02-external-providers",
-      "capability": "Flow and Webpay sandbox",
-      "reason": "Flow sandbox credentials and local FLOW_BASE_URL/API_PUBLIC_URL passed validation on 2026-08-24. The deployed Render callback returned PAYMENT_PROVIDER_NOT_CONFIGURED, so the same sandbox variables must be configured remotely before full transaction/callback cases; Webpay Integration credentials remain absent.",
+      "capability": "Webpay Integración",
+      "reason": "Flow sandbox completed a real end-to-end payment with server-to-server verification, PAID Order, inventory validation and cleanup on 2026-08-29. Webpay Integration credentials remain absent, so its official acceptance is still pending.",
       "recordedAtUtc": "2026-08-24T05:41:50.0670848Z"
     },
     {
       "stageId": "03-staging",
-      "capability": "Staging and production",
-      "reason": "Render public smoke and CORS passed. Supabase public configuration returned 200, but DATABASE_URL authentication was rejected; managed migrations/RLS, authenticated role smoke, Vercel preview acceptance, observability, backup/restore and rollback remain unverified.",
+      "capability": "Production promotion and sustained observability",
+      "reason": "Staging migrations/RLS, authenticated roles, Vercel preview, backup/restore and code rollback have external evidence. Production promotion, final domain switch and a sustained observability window remain pending and are not authorized before RELEASE.",
       "recordedAtUtc": "2026-08-24T05:46:52.2115511Z"
     },
     {
       "stageId": "04-remote-e2e-hardening",
-      "capability": "Authenticated remote E2E and deployment parity",
-      "reason": "The audited HEAD is not deployed and no secure CLIENTE/ADMIN sessions or provider/email credentials are available. Normal/preorder/FREIGHT_COLLECT purchases, account isolation, role operations, payment/fulfillment/notification retries and idempotency cannot be accepted against the stale public bundle.",
+      "capability": "Remaining authenticated remote E2E",
+      "reason": "Deployment parity, CLIENTE/ADMIN sessions, account reads, Pseudo-POS and a normal Flow purchase are accepted. PREORDER/FREIGHT_COLLECT, remaining critical Admin mutations, fulfillment, email delivery and controlled token-expiration acceptance remain pending.",
       "recordedAtUtc": "2026-08-24T07:00:10.5029511Z"
     }
   ],
