@@ -87,7 +87,7 @@
     {
       "stageId": "04-remote-e2e-hardening",
       "capability": "Remaining authenticated remote E2E",
-      "reason": "Deployment parity, CLIENTE/ADMIN sessions, account reads, Pseudo-POS, a normal Flow purchase and transactional email delivery are accepted. PREORDER/FREIGHT_COLLECT, remaining critical Admin mutations, fulfillment and controlled token-expiration acceptance remain pending.",
+      "reason": "Deployment parity, CLIENTE/ADMIN sessions, account reads, isolated forced token renewal/rotation, Pseudo-POS, a normal Flow purchase and transactional email delivery are accepted. PREORDER/FREIGHT_COLLECT, remaining critical Admin mutations and fulfillment remain pending.",
       "recordedAtUtc": "2026-08-24T07:00:10.5029511Z"
     }
   ],

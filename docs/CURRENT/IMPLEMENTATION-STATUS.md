@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-08-29. Incluye evidencia local reproducible y aceptación externa parcial en staging, incluida Flow sandbox. Producción aún no está aceptada ni promovida.
+> Estado auditado hasta el 2026-08-30. Incluye evidencia local reproducible y aceptación externa parcial en staging, incluidas Flow sandbox, Resend y renovación forzada de sesión. Producción aún no está aceptada ni promovida.
 
 | Área                                                                                        | Estado local verificable       | Evidencia                                                                                | Pendiente separado                                 |
 | ------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------- |
@@ -12,7 +12,7 @@
 | Flow                                                                                        | Sandbox E2E PASS               | Pago real sandbox, verificación servidor-a-servidor, Order `PAID`, inventario y limpieza | Promoción a producción en RELEASE                  |
 | Webpay Plus                                                                                 | Adapter online; sin POS físico | Create/commit/status, retorno anormal y replay probados localmente                       | Ambiente Integración con credenciales              |
 | Fulfillment                                                                                 | Corregido                      | Cada transición mantiene `fulfillment_events` y `order_state_history`                    | E2E en staging                                     |
-| Cuenta cliente                                                                              | Aceptación remota base PASS    | Identidad verificada, perfil, pedidos, preventas, puntos y preferencias con sesión real  | Mutaciones E2E y renovación controlada del token   |
+| Cuenta cliente                                                                              | Aceptación remota base PASS    | Identidad verificada, perfil, pedidos, preventas, puntos, preferencias y renovación real | Mutaciones E2E restantes                           |
 | Admin                                                                                       | Pseudo-POS aceptado en staging | 10 rutas, selectores operativos, CRUD de medios y venta presencial remota                | Completar E2E de las demás operaciones críticas    |
 | Comercio público                                                                            | Corregido y ampliado           | Shell responsive, catálogo, carrito, checkout protegido y pago; deep links estables      | Catálogo/contenido real y E2E navegador remoto     |
 | Editorial                                                                                   | Implementado                   | Repo/API y transición publish/archive/draft corregida; torneos solo informativos         | Operación y contenido real                         |
@@ -20,7 +20,7 @@
 | Notificaciones                                                                              | Staging E2E PASS               | Outbox, worker activo, Resend idempotente y entrega externa verificada                   | Promoción a producción en RELEASE                  |
 | Despliegue API                                                                              | Staging operativo              | Render sirve la rama auditada; `/health`, cuenta, Orders y Flow responden correctamente  | E2E restante, observabilidad sostenida y promoción |
 | Despliegue web                                                                              | Preview de staging operativo   | Vercel sirve la rama auditada; sesión real, recarga y rutas protegidas verificadas       | E2E funcional, promoción y dominio                 |
-| Aceptación externa final                                                                    | En ejecución                   | Sesión, Flow, Resend, limpieza, backup/restore y rollback tienen evidencia externa       | Webpay, E2E restante y observabilidad              |
+| Aceptación externa final                                                                    | En ejecución                   | Sesión y renovación, Flow, Resend, limpieza, backup/restore y rollback tienen evidencia  | Webpay, E2E restante y observabilidad              |
 
 ## Gates locales reproducidos
 
@@ -61,12 +61,12 @@
 - `scripts/codex/remote-client-account-acceptance.ps1` completó `CLIENT_ACCOUNT_ACCEPTANCE=PASS` contra `sergod-store-api-v4.onrender.com`: pedidos regulares `0`, preventas `0`, movimientos de loyalty `0` y lectura de preferencias PASS. El proveedor de identidad ahora distingue credenciales inválidas (`401`), correo pendiente (`409`) e indisponibilidad real (`503`), y el formulario conserva una clave idempotente para impedir dobles altas o mensajes engañosos por reenvío.
 - Flow sandbox completó `ACCEPT-FLOW-E2E-20260830021449` para `SG-2026-000005`: `PAYMENT_STATUS=SUCCEEDED`, `ORDER_STATUS=PAID` y `REMOTE_FLOW_CLEANUP=PASS`. La aceptación verificó el estado directamente con Flow y luego contra la API/DB; el retorno del navegador no se usó como autoridad. Durante la prueba se corrigieron dos defectos reales de persistencia (`42702` por `version` ambiguo y monto numérico de Flow recibido como texto). El adaptador también envía `timeout` alineado con la expiración de la reserva para impedir pagos tardíos.
 - El trabajador transaccional de staging se activó con los parámetros ejecutables ya cubiertos por el contrato del repositorio. Procesó seis mensajes acumulados destinados exclusivamente a la cuenta cliente de aceptación: PostgreSQL quedó con `6/6 SENT`, sin pendientes ni destinatarios ajenos, y Resend confirmó los seis como `delivered`, incluido `Pago confirmado para SG-2026-000005`.
+- `scripts/codex/remote-session-renewal-acceptance.mjs` reprodujo de forma aislada el flujo real del navegador contra staging: login por la API, persistencia con Supabase, cuenta HTTP 200, token deliberadamente alterado HTTP 401, renovación forzada, nuevo token HTTP 200 y rotación del refresh token. La prueba no dependió de esperar la expiración natural ni alteró otras sesiones abiertas.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 - Webpay Integración.
 - Webpay con credenciales oficiales suficientes para aceptación.
-- Renovación real del token de sesión bajo expiración controlada.
 - E2E funcional remoto completo, promoción de Vercel, cambio de dominio y observabilidad sostenida.
 
 Los hallazgos locales conocidos de V3 y los defectos adicionales expuestos por PostgreSQL real fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.
