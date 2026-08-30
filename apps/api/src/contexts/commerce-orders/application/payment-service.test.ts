@@ -63,4 +63,31 @@ describe('PaymentService provider initialization', () => {
       'PAYMENT_PROVIDER_UNAVAILABLE',
     );
   });
+
+  it('preserves a controlled provider message without relying on its prototype', async () => {
+    const repository = {
+      createAttempt: vi.fn().mockResolvedValue({ attempt, replayed: false }),
+      failInitialization: vi.fn().mockResolvedValue(undefined),
+    } as unknown as PaymentRepository;
+    const gateway = {
+      create: vi.fn().mockRejectedValue({ message: 'Provider returned HTTP 400.' }),
+      provider: 'FLOW',
+      verify: vi.fn(),
+    } as unknown as PaymentGateway;
+    const service = new PaymentService(repository, [gateway]);
+
+    await expect(
+      service.createAttempt(
+        {
+          actorId: attempt.accountId,
+          actorType: 'USER',
+          correlationId: crypto.randomUUID(),
+          idempotencyKey: 'flow-plain-error-test',
+        },
+        attempt.accountId,
+        attempt.orderId,
+        { payerEmail: 'buyer@example.com', provider: 'FLOW' },
+      ),
+    ).rejects.toMatchObject({ message: 'Provider returned HTTP 400.' });
+  });
 });

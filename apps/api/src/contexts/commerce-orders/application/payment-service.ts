@@ -126,6 +126,16 @@ function providerInitializationDiagnostic(error: unknown): string {
   if (typeof error === 'object' && error !== null) {
     const record = error as Record<string, unknown>;
     if (
+      typeof record.message === 'string' &&
+      (/^Provider returned HTTP \d{3}\.$/u.test(record.message) ||
+        ['Flow create response is incomplete.', 'Provider response is not valid JSON.'].includes(
+          record.message,
+        ))
+    ) {
+      return record.message;
+    }
+    if (record.message === 'fetch failed') return 'Provider network request failed.';
+    if (
       record.name === 'PaymentError' &&
       record.code === 'PAYMENT_PROVIDER_UNAVAILABLE' &&
       typeof record.message === 'string'
