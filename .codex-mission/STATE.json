@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "mission": "SERGOD_STORE_WEB_V1_V4_AUDIT_AND_RELEASE",
   "status": "ACTIVE",
-  "currentStageId": "05-final-external-acceptance",
-  "currentStageFile": ".codex-mission/stages/05-final-external-acceptance.md",
+  "currentStageId": "06-release",
+  "currentStageFile": ".codex-mission/stages/06-release.md",
   "queue": [
     {
       "id": "00-baseline",
@@ -69,6 +69,13 @@
       "completedAtUtc": "2026-08-24T07:00:10.4083336Z",
       "evidence": "Remote public browser QA covered Home, Store, Editorial, Cart, Checkout, Account, Admin and unknown routes; mobile Store had no overflow, no sub-44px actions and no console errors. Current domain bundles differ from audited HEAD: remote Cart/unknown routes fall back to Home and remote Account/Admin lack current pre-mount gates. Remote catalog exposes integration fixtures and mojibake. Local explicit 404 fixed; focused 8/8, web 42/42, web typecheck and production build PASS.",
       "commit": "bc69337085ddf5497c605019cb2b0bacd9b998c5"
+    },
+    {
+      "id": "05-final-external-acceptance",
+      "status": "PASS",
+      "completedAtUtc": "2026-08-30T19:06:33.0183581Z",
+      "evidence": "Final external acceptance PASS: Flow sandbox E2E, Webpay Integration E2E, Resend delivery, authenticated staging roles, session renewal, backup/restore, rollback and critical Admin/commerce E2E; no deferred external capability remains.",
+      "commit": "32bb5225e1d251b8fb154fbee1c2af355b001ed5"
     }
   ],
   "deferredExternal": [],
