@@ -175,6 +175,7 @@ function paymentDiagnostic(error: unknown): string | undefined {
 function controlledPaymentMessage(message: unknown): string {
   if (typeof message !== 'string') return 'Payment provider failed.';
   if (/^Provider returned HTTP \d{3}\.$/u.test(message)) return message;
+  if (message === 'Provider network request failed.') return message;
   return new Set([
     'Flow create response is incomplete.',
     'Payment provider session could not be created.',

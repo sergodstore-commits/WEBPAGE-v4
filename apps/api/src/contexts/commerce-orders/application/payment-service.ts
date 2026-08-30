@@ -56,7 +56,7 @@ export class PaymentService {
       throw new PaymentError(
         'PAYMENT_PROVIDER_UNAVAILABLE',
         'INFRASTRUCTURE',
-        'Payment provider session could not be created.',
+        providerInitializationDiagnostic(error),
         { cause: error },
       );
     }
@@ -119,6 +119,27 @@ export class PaymentService {
     }
     return gateway;
   }
+}
+
+function providerInitializationDiagnostic(error: unknown): string {
+  if (error instanceof PaymentError) return error.message;
+  if (typeof error === 'object' && error !== null) {
+    const record = error as Record<string, unknown>;
+    if (
+      record.name === 'PaymentError' &&
+      record.code === 'PAYMENT_PROVIDER_UNAVAILABLE' &&
+      typeof record.message === 'string'
+    ) {
+      return record.message;
+    }
+    if (
+      typeof record.name === 'string' &&
+      ['AbortError', 'TimeoutError', 'TypeError'].includes(record.name)
+    ) {
+      return 'Provider network request failed.';
+    }
+  }
+  return 'Payment provider session could not be created.';
 }
 
 function requiredKey(context: ExecutionContext): string {
