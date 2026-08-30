@@ -35,6 +35,7 @@ export interface PaymentGateway {
     readonly attemptId: string;
     readonly orderReference: string;
     readonly payerEmail: string;
+    readonly timeoutSeconds?: number;
   }): Promise<{
     readonly expiresAt: Date | null;
     readonly providerReference: string;

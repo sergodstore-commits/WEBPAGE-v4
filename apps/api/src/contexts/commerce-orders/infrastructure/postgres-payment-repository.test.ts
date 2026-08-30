@@ -57,7 +57,12 @@ describe('Postgres Payment repository', () => {
         requestFingerprint: 'fingerprint-1',
       }),
     ).resolves.toMatchObject({
-      attempt: { amountClp: 15_990, provider: 'FLOW', status: 'CREATED' },
+      attempt: {
+        amountClp: 15_990,
+        expiresAt: new Date('2026-08-20T12:15:00Z'),
+        provider: 'FLOW',
+        status: 'CREATED',
+      },
       replayed: false,
     });
     expect(subject.statements.some((sql) => sql.includes('INSERT INTO payment_attempts'))).toBe(

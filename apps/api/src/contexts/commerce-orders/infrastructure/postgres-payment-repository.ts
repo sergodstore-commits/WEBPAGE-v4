@@ -98,7 +98,7 @@ export class PgPaymentRepository implements PaymentRepository {
           authorized_at: null,
           created_at: now,
           currency: 'CLP',
-          expires_at: null,
+          expires_at: row.expires_at,
           failure_code: null,
           idempotency_key: input.idempotencyKey,
           order_id: row.order_id,

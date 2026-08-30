@@ -23,6 +23,7 @@ export class FlowPaymentGateway implements PaymentGateway {
     readonly attemptId: string;
     readonly orderReference: string;
     readonly payerEmail: string;
+    readonly timeoutSeconds?: number;
   }) {
     const parameters = {
       amount: String(input.amountClp),
@@ -31,6 +32,7 @@ export class FlowPaymentGateway implements PaymentGateway {
       email: input.payerEmail,
       optional: JSON.stringify({ paymentAttemptId: input.attemptId }),
       subject: `Pedido ${input.orderReference}`,
+      ...(input.timeoutSeconds === undefined ? {} : { timeout: String(input.timeoutSeconds) }),
       urlConfirmation: this.config.confirmationUrl,
       urlReturn: this.config.returnUrl,
     };

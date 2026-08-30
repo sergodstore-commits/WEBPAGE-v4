@@ -23,7 +23,51 @@ const attempt: PaymentAttemptView = {
   updatedAt: now,
 };
 
+const expiringAttempt: PaymentAttemptView = {
+  ...attempt,
+  expiresAt: new Date('2026-08-29T12:15:00.000Z'),
+};
+
 describe('PaymentService provider initialization', () => {
+  it('aligns the provider session timeout with the Order reservation', async () => {
+    const repository = {
+      attachProviderSession: vi.fn().mockImplementation((input) => ({
+        ...expiringAttempt,
+        expiresAt: input.expiresAt,
+        redirectUrl: input.redirectUrl,
+        status: 'REQUIRES_ACTION',
+      })),
+      createAttempt: vi.fn().mockResolvedValue({ attempt: expiringAttempt, replayed: false }),
+    } as unknown as PaymentRepository;
+    const gateway = {
+      create: vi.fn().mockResolvedValue({
+        expiresAt: null,
+        providerReference: 'provider-reference',
+        redirectUrl: 'https://flow.invalid/pay',
+      }),
+      provider: 'FLOW',
+      verify: vi.fn(),
+    } as unknown as PaymentGateway;
+    const service = new PaymentService(repository, [gateway]);
+
+    await service.createAttempt(
+      {
+        actorId: attempt.accountId,
+        actorType: 'USER',
+        correlationId: crypto.randomUUID(),
+        idempotencyKey: 'flow-timeout-test',
+      },
+      attempt.accountId,
+      attempt.orderId,
+      { payerEmail: 'buyer@example.com', provider: 'FLOW' },
+    );
+
+    expect(gateway.create).toHaveBeenCalledWith(expect.objectContaining({ timeoutSeconds: 900 }));
+    expect(repository.attachProviderSession).toHaveBeenCalledWith(
+      expect.objectContaining({ expiresAt: expiringAttempt.expiresAt }),
+    );
+  });
+
   it('preserves a controlled Flow diagnostic while failing the attempt', async () => {
     const providerError = new PaymentError(
       'PAYMENT_PROVIDER_UNAVAILABLE',

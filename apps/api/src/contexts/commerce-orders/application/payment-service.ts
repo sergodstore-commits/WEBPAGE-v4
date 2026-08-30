@@ -42,10 +42,22 @@ export class PaymentService {
         attemptId: created.attempt.paymentAttemptId,
         orderReference: created.attempt.orderPublicNumber,
         payerEmail: input.payerEmail,
+        ...(created.attempt.expiresAt === null
+          ? {}
+          : {
+              timeoutSeconds: Math.max(
+                1,
+                Math.ceil(
+                  (created.attempt.expiresAt.getTime() - created.attempt.createdAt.getTime()) /
+                    1000,
+                ),
+              ),
+            }),
       });
       const attempt = await this.repository.attachProviderSession({
         attemptId: created.attempt.paymentAttemptId,
         ...session,
+        expiresAt: session.expiresAt ?? created.attempt.expiresAt,
       });
       return serialize({ attempt, replayed: false });
     } catch (error) {

@@ -28,6 +28,7 @@ describe('payment provider gateways', () => {
       attemptId: 'attempt-1',
       orderReference: 'SG-2026-1',
       payerEmail: 'buyer@example.com',
+      timeoutSeconds: 900,
     });
 
     expect(result?.redirectUrl).toBe('https://flow.invalid/pay?token=flow-token');
@@ -38,6 +39,7 @@ describe('payment provider gateways', () => {
       'https://api.sergod.example/api/v1/payments/flow/confirmation',
     );
     expect(form.get('urlReturn')).toBe('https://api.sergod.example/api/v1/payments/flow/return');
+    expect(form.get('timeout')).toBe('900');
     expect(form.get('s')).toMatch(/^[a-f0-9]{64}$/u);
   });
 
