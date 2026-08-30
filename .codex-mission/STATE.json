@@ -83,12 +83,6 @@
       "capability": "Production promotion and sustained observability",
       "reason": "Staging migrations/RLS, authenticated roles, Vercel preview, backup/restore and code rollback have external evidence. Production promotion, final domain switch and a sustained observability window remain pending and are not authorized before RELEASE.",
       "recordedAtUtc": "2026-08-24T05:46:52.2115511Z"
-    },
-    {
-      "stageId": "04-remote-e2e-hardening",
-      "capability": "Remaining authenticated remote E2E",
-      "reason": "Deployment parity, CLIENTE/ADMIN sessions, account reads, isolated forced token renewal/rotation, Pseudo-POS, normal and PREORDER/FREIGHT_COLLECT Flow purchases, fulfillment and transactional email delivery are accepted. Remaining critical Admin mutations are pending.",
-      "recordedAtUtc": "2026-08-24T07:00:10.5029511Z"
     }
   ],
   "notes": [
