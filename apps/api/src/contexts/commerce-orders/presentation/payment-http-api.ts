@@ -149,11 +149,35 @@ export class PaymentHttpApi implements HttpRouteHandler {
 function paymentDiagnostic(error: unknown): string | undefined {
   let current = error;
   let diagnostic: string | undefined;
-  for (let depth = 0; depth < 4 && current instanceof PaymentError; depth += 1) {
-    diagnostic = current.message;
+  for (let depth = 0; depth < 5 && current instanceof Error; depth += 1) {
+    if (current instanceof PaymentError) diagnostic = current.message;
+    else {
+      const code = safeNetworkCode(current);
+      if (code !== undefined) diagnostic = `Provider network error ${code}.`;
+      else if (['AbortError', 'TimeoutError', 'TypeError'].includes(current.name))
+        diagnostic = 'Provider network request failed.';
+      else break;
+    }
     current = current.cause;
   }
   return diagnostic;
+}
+
+function safeNetworkCode(error: Error): string | undefined {
+  if (!('code' in error) || typeof error.code !== 'string') return undefined;
+  return new Set([
+    'EACCES',
+    'ECONNREFUSED',
+    'ECONNRESET',
+    'ENETUNREACH',
+    'ENOTFOUND',
+    'ETIMEDOUT',
+    'UND_ERR_CONNECT_TIMEOUT',
+    'UND_ERR_HEADERS_TIMEOUT',
+    'UND_ERR_SOCKET',
+  ]).has(error.code)
+    ? error.code
+    : undefined;
 }
 
 function match(method: string | undefined, pathname: string): Route | null {

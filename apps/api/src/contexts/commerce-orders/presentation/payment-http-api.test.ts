@@ -110,4 +110,26 @@ describe('Payments HTTP provider routes', () => {
       'Payment request failed.',
     );
   });
+
+  it('reduces provider network failures to an allowlisted diagnostic code', async () => {
+    const networkCause = Object.assign(new Error('private transport detail'), {
+      code: 'ETIMEDOUT',
+    });
+    processProviderResult.mockRejectedValueOnce(
+      new PaymentError(
+        'PAYMENT_PROVIDER_UNAVAILABLE',
+        'INFRASTRUCTURE',
+        'Payment provider session could not be created.',
+        { cause: new TypeError('fetch failed', { cause: networkCause }) },
+      ),
+    );
+
+    const response = await fetch(`${origin}/api/v1/payments/flow/return?token=opaque-token`);
+
+    expect(response.status).toBe(503);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ diagnostic: 'Provider network error ETIMEDOUT.' }),
+      'Payment request failed.',
+    );
+  });
 });
