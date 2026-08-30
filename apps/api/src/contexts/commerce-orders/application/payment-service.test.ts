@@ -85,4 +85,31 @@ describe('PaymentService provider initialization', () => {
       ),
     ).rejects.toMatchObject({ message: 'Provider returned HTTP 400.' });
   });
+
+  it('reduces an unknown rejection to type and code identifiers only', async () => {
+    const repository = {
+      createAttempt: vi.fn().mockResolvedValue({ attempt, replayed: false }),
+      failInitialization: vi.fn().mockResolvedValue(undefined),
+    } as unknown as PaymentRepository;
+    const gateway = {
+      create: vi.fn().mockRejectedValue({ code: 'runtime.detail', name: 'Odd Error' }),
+      provider: 'FLOW',
+      verify: vi.fn(),
+    } as unknown as PaymentGateway;
+    const service = new PaymentService(repository, [gateway]);
+
+    await expect(
+      service.createAttempt(
+        {
+          actorId: attempt.accountId,
+          actorType: 'USER',
+          correlationId: crypto.randomUUID(),
+          idempotencyKey: 'flow-error-shape-test',
+        },
+        attempt.accountId,
+        attempt.orderId,
+        { payerEmail: 'buyer@example.com', provider: 'FLOW' },
+      ),
+    ).rejects.toMatchObject({ message: 'Provider failure type ODD_ERROR:RUNTIME_DETAIL.' });
+  });
 });

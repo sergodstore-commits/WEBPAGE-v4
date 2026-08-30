@@ -149,8 +149,18 @@ function providerInitializationDiagnostic(error: unknown): string {
     ) {
       return 'Provider network request failed.';
     }
+    return `Provider failure type ${safeErrorIdentifier(record.name, 'OBJECT')}:${safeErrorIdentifier(record.code, 'NO_CODE')}.`;
   }
-  return 'Payment provider session could not be created.';
+  return `Provider failure type ${typeof error === 'string' ? 'STRING' : 'PRIMITIVE'}:NO_CODE.`;
+}
+
+function safeErrorIdentifier(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const normalized = value
+    .toUpperCase()
+    .replace(/[^A-Z0-9_]/gu, '_')
+    .slice(0, 64);
+  return normalized === '' ? fallback : normalized;
 }
 
 function requiredKey(context: ExecutionContext): string {
