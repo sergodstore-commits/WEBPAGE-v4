@@ -53,6 +53,7 @@ export class PaymentService {
         created.attempt.paymentAttemptId,
         'PAYMENT_PROVIDER_UNAVAILABLE',
       );
+      if (error instanceof PaymentError) throw error;
       throw new PaymentError(
         'PAYMENT_PROVIDER_UNAVAILABLE',
         'INFRASTRUCTURE',

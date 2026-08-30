@@ -41,23 +41,18 @@ describe('PaymentService provider initialization', () => {
     } as unknown as PaymentGateway;
     const service = new PaymentService(repository, [gateway]);
 
-    await expect(
-      service.createAttempt(
-        {
-          actorId: attempt.accountId,
-          actorType: 'USER',
-          correlationId: crypto.randomUUID(),
-          idempotencyKey: 'flow-service-test',
-        },
-        attempt.accountId,
-        attempt.orderId,
-        { payerEmail: 'buyer@example.com', provider: 'FLOW' },
-      ),
-    ).rejects.toMatchObject({
-      cause: providerError,
-      code: 'PAYMENT_PROVIDER_UNAVAILABLE',
-      message: 'Provider returned HTTP 401.',
-    });
+    const result = service.createAttempt(
+      {
+        actorId: attempt.accountId,
+        actorType: 'USER',
+        correlationId: crypto.randomUUID(),
+        idempotencyKey: 'flow-service-test',
+      },
+      attempt.accountId,
+      attempt.orderId,
+      { payerEmail: 'buyer@example.com', provider: 'FLOW' },
+    );
+    await expect(result).rejects.toBe(providerError);
     expect(repository.failInitialization).toHaveBeenCalledWith(
       attempt.paymentAttemptId,
       'PAYMENT_PROVIDER_UNAVAILABLE',
