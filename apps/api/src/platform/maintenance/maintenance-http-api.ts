@@ -90,6 +90,7 @@ export class MaintenanceHttpApi implements HttpRouteHandler {
           operation: 'maintenance.run',
           request_id: correlationId,
           result: 'FAILURE',
+          technical_error_code: safeTechnicalErrorCode(error),
         },
         'Maintenance job request failed.',
       );
@@ -145,6 +146,12 @@ function isDependencyFailure(error: unknown): boolean {
       'ETIMEDOUT',
     ].includes(code)
   );
+}
+
+function safeTechnicalErrorCode(error: unknown): string {
+  if (typeof error !== 'object' || error === null || !('code' in error)) return 'UNCLASSIFIED';
+  const code = String(error.code);
+  return /^[A-Z0-9_]{1,64}$/u.test(code) ? code : 'UNCLASSIFIED';
 }
 
 function sendError(

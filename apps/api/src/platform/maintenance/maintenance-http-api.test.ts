@@ -89,5 +89,9 @@ describe('maintenance HTTP API', () => {
     });
     expect(response.status).toBe(503);
     expect(await response.text()).not.toMatch(/DATABASE_URL|maintenance-test-token/u);
+    expect(logger.error).toHaveBeenLastCalledWith(
+      expect.objectContaining({ technical_error_code: 'ECONNREFUSED' }),
+      'Maintenance job request failed.',
+    );
   });
 });
