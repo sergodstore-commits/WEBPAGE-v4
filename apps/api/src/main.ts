@@ -109,7 +109,15 @@ const maintenanceConfig = loadMaintenanceRuntimeConfig(process.env);
 const clock = new SystemClock();
 const uuids = new CryptoUuidGenerator();
 const logger = createLogger('info');
-const pool = databaseConfig === null ? null : createPostgresPool(databaseConfig.databaseUrl);
+const pool =
+  databaseConfig === null
+    ? null
+    : createPostgresPool(
+        databaseConfig.databaseUrl,
+        databaseConfig.sslCaCertificate === undefined
+          ? {}
+          : { ssl: { ca: databaseConfig.sslCaCertificate, rejectUnauthorized: true } },
+      );
 const notificationController = new AbortController();
 let notificationLoop: Promise<void> | null = null;
 if (pool !== null && notificationWorkerEnabled(process.env)) {

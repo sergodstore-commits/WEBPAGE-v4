@@ -10,6 +10,8 @@ El proyecto actualmente conocido se clasifica como STAGING/INTEGRATION. Sus iden
 
 Producción será un proyecto separado creado al final. No resetear ni borrar staging durante la misión.
 
+La API de producción valida TLS contra la CA oficial de la conexión directa de Supabase. La CA se entrega al runtime como `DATABASE_SSL_CA_BASE64`; no se desactiva `rejectUnauthorized` ni se versiona una configuración específica del entorno.
+
 ## Vercel
 
 Destino del frontend. Usar Preview para aceptación previa. Los dominios productivos solo se promueven en Release.

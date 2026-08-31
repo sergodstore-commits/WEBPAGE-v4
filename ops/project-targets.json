@@ -24,8 +24,11 @@
   },
   "render": {
     "role": "API_AND_CRON_TARGET",
-    "serviceId": null,
-    "createWhenStageAuthorizes": true
+    "serviceId": "srv-daaqaagn74is73apo9fg",
+    "serviceName": "sergod-store-api-production",
+    "serviceUrl": "https://sergod-store-api-production.onrender.com",
+    "plan": "FREE",
+    "createWhenStageAuthorizes": false
   },
   "github": {
     "role": "NEW_CLEAN_OPERATIONAL_REPOSITORY",
