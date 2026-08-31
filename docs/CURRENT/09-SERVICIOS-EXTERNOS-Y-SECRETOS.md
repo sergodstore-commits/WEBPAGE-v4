@@ -14,9 +14,9 @@ Producción será un proyecto separado creado al final. No resetear ni borrar st
 
 Destino del frontend. Usar Preview para aceptación previa. Los dominios productivos solo se promueven en Release.
 
-## Render
+## Render y jobs gratuitos
 
-Destino objetivo de `apps/api` y cron jobs. El recurso definitivo puede no existir al inicio; crearlo/configurarlo durante la fase de deployment siguiendo CURRENT, no antes.
+Destino objetivo de `apps/api`. Por decisión expresa del propietario, producción usa el plan gratuito y los jobs recurrentes se programan con Supabase Cron mediante rutas internas autenticadas de la API. El recurso definitivo puede no existir al inicio; crearlo/configurarlo durante la fase de deployment siguiendo CURRENT, no antes.
 
 ## Flow / Webpay Plus
 

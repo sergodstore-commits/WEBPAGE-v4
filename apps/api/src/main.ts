@@ -1,3 +1,6 @@
+import { randomBytes } from 'node:crypto';
+
+import { PayloadRegistry } from '@sergod/contracts';
 import { CryptoUuidGenerator, SystemClock } from '@sergod/foundation';
 
 import { AuditService } from './contexts/audit/application/audit-service.js';
@@ -7,6 +10,7 @@ import { AccountDeliveryPreferencesService } from './contexts/account-preference
 import { PgAccountDeliveryPreferencesRepository } from './contexts/account-preferences/infrastructure/postgres-account-delivery-preferences-repository.js';
 import { AccountDeliveryPreferencesHttpApi } from './contexts/account-preferences/presentation/account-delivery-preferences-http-api.js';
 import { CatalogEntityAdminService } from './contexts/catalog/application/catalog-entity-admin-service.js';
+import { CartExpirationJob } from './contexts/commerce-orders/application/cart-expiration-job.js';
 import { CartService } from './contexts/commerce-orders/application/cart-service.js';
 import { CheckoutService } from './contexts/commerce-orders/application/checkout-service.js';
 import { FulfillmentService } from './contexts/commerce-orders/application/fulfillment-service.js';
@@ -59,14 +63,16 @@ import { LoyaltyService } from './contexts/loyalty/application/loyalty-service.j
 import { PgLoyaltyAdminAuthorizer } from './contexts/loyalty/infrastructure/postgres-loyalty-authorizer.js';
 import { PgLoyaltyRepository } from './contexts/loyalty/infrastructure/postgres-loyalty-repository.js';
 import { LoyaltyHttpApi } from './contexts/loyalty/presentation/loyalty-http-api.js';
-import { PromotionsAdminService } from './contexts/promotions/application/promotions-admin-service.js';
-import { PgPromotionsAdminAuthorizer } from './contexts/promotions/infrastructure/postgres-promotions-admin-authorizer.js';
-import { PgPromotionsRepository } from './contexts/promotions/infrastructure/postgres-promotions-repository.js';
-import { PromotionsAdminHttpApi } from './contexts/promotions/presentation/promotions-admin-http-api.js';
+import { PreorderLifecycleJob } from './contexts/preorders/application/preorder-lifecycle-job.js';
 import { PreordersAdminService } from './contexts/preorders/application/preorders-admin-service.js';
 import { PgPreordersAdminAuthorizer } from './contexts/preorders/infrastructure/postgres-preorders-admin-authorizer.js';
 import { PgPreordersRepository } from './contexts/preorders/infrastructure/postgres-preorders-repository.js';
 import { PreordersAdminHttpApi } from './contexts/preorders/presentation/preorders-admin-http-api.js';
+import { PromotionLifecycleJob } from './contexts/promotions/application/promotion-lifecycle-job.js';
+import { PromotionsAdminService } from './contexts/promotions/application/promotions-admin-service.js';
+import { PgPromotionsAdminAuthorizer } from './contexts/promotions/infrastructure/postgres-promotions-admin-authorizer.js';
+import { PgPromotionsRepository } from './contexts/promotions/infrastructure/postgres-promotions-repository.js';
+import { PromotionsAdminHttpApi } from './contexts/promotions/presentation/promotions-admin-http-api.js';
 import { ServiceCoverageService } from './contexts/service-coverage/application/service-coverage-service.js';
 import { PgServiceCoverageRepository } from './contexts/service-coverage/infrastructure/postgres-service-coverage-repository.js';
 import { ServiceCoverageHttpApi } from './contexts/service-coverage/presentation/service-coverage-http-api.js';
@@ -82,7 +88,10 @@ import { loadCatalogPublicRuntimeConfig } from './platform/config/catalog-public
 import { loadDatabaseRuntimeConfig } from './platform/config/database-runtime-config.js';
 import { loadIdentityRuntimeConfig } from './platform/config/identity-runtime-config.js';
 import { loadRuntimeConfig } from './platform/config/load-runtime-config.js';
+import { loadMaintenanceRuntimeConfig } from './platform/config/maintenance-runtime-config.js';
+import { CoordinationStore } from './platform/coordination/coordination-store.js';
 import { createLogger } from './platform/logging/logger.js';
+import { MaintenanceHttpApi } from './platform/maintenance/maintenance-http-api.js';
 import { createPostgresPool } from './platform/persistence/postgres.js';
 import { CancelableWorker } from './platform/workers/cancelable-worker.js';
 import {
@@ -96,6 +105,7 @@ const identityConfig = loadIdentityRuntimeConfig(process.env);
 const catalogConfig = loadCatalogRuntimeConfig(process.env);
 const catalogPublicConfig = loadCatalogPublicRuntimeConfig(process.env);
 const databaseConfig = loadDatabaseRuntimeConfig(process.env);
+const maintenanceConfig = loadMaintenanceRuntimeConfig(process.env);
 const clock = new SystemClock();
 const uuids = new CryptoUuidGenerator();
 const logger = createLogger('info');
@@ -127,6 +137,53 @@ const catalogPublicRateLimiter = new CatalogPublicRateLimiter(
 );
 let routeHandler: HttpRouteHandler | undefined;
 const routeHandlers: HttpRouteHandler[] = [];
+if (pool !== null && maintenanceConfig !== null) {
+  const emptyPayloads = new PayloadRegistry([]);
+  const coordination = new CoordinationStore(
+    pool,
+    clock,
+    uuids,
+    emptyPayloads,
+    emptyPayloads,
+    randomBytes(32),
+  );
+  const promotionLifecycle = new PromotionLifecycleJob(
+    new PgPromotionsRepository(pool, clock, uuids),
+    coordination,
+    clock,
+  );
+  const preorderLifecycle = new PreorderLifecycleJob(
+    new PgPreordersRepository(pool, clock, uuids),
+    coordination,
+    clock,
+  );
+  const cartExpiration = new CartExpirationJob(
+    new PgCartRepository(pool, clock, uuids),
+    coordination,
+    clock,
+  );
+  const orderExpiration = new OrderService(new PgOrderRepository(pool, clock, uuids));
+  routeHandlers.push(
+    new MaintenanceHttpApi(
+      maintenanceConfig.token,
+      clock,
+      uuids,
+      {
+        'cart-expiration': (input) => cartExpiration.run(input),
+        'order-expiration': async (input) => ({
+          kind: 'COMPLETED',
+          ...(await orderExpiration.expirePending(
+            { actorType: 'SYSTEM', correlationId: input.correlationId },
+            100,
+          )),
+        }),
+        'preorder-lifecycle': (input) => preorderLifecycle.run(input),
+        'promotion-lifecycle': (input) => promotionLifecycle.run(input),
+      },
+      logger,
+    ),
+  );
+}
 if (pool !== null) {
   const catalogPublicRepository = new PgCatalogPublicQueryRepository(pool);
   routeHandlers.push(

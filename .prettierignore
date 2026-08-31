@@ -5,6 +5,7 @@ apps/*/dist/
 .runtime/
 .tmp/
 .tools/
+deliverables/
 
 # Generated/local files not formatted by technical tooling.
 supabase/config.toml

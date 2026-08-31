@@ -9,9 +9,9 @@
       "verifyBeforeUse": true
     },
     "production": {
-      "role": "CREATE_CLEAN_DURING_RELEASE",
-      "projectId": null,
-      "projectName": null
+      "role": "PRODUCTION",
+      "projectId": "kbhbaackrgwgvxxqdlwx",
+      "projectName": "sergod-store-production"
     }
   },
   "vercel": {

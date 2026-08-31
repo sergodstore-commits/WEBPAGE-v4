@@ -5,10 +5,13 @@
 ```text
 Usuario
  ├─ Vercel → apps/web (React/Vite)
- └─ Render → apps/api (Node persistente)
-               ├─ Render Cron → promotion lifecycle
-               ├─ Render Cron → preorder lifecycle
-               └─ Render Cron → cart expiration / jobs futuros necesarios
+ └─ Render Free → apps/api (Node HTTP)
+               ↑
+        Supabase Cron → rutas internas autenticadas
+               ├─ promotion lifecycle
+               ├─ preorder lifecycle
+               ├─ cart expiration
+               └─ order expiration
                     ↓
                  Supabase
           PostgreSQL / Auth / Storage
@@ -29,12 +32,15 @@ PostgreSQL portable de `scripts/postgres/` es el mecanismo principal en Windows.
 
 - Supabase PROD limpio creado en Release.
 - Vercel producción para web y dominios.
-- Render producción para API/jobs.
+- Render Free producción para API.
+- Supabase Cron para lifecycle/expiration, según la decisión expresa del propietario de mantener costo fijo mensual de hosting en cero.
 - secretos configurados en los stores de cada plataforma.
 
 ## Jobs
 
-Cada job debe ser idempotente/durable conforme a su contexto y tener observabilidad. No dejar lifecycle/expiración dependiente de ejecución manual en producción.
+Cada job debe ser idempotente/durable conforme a su contexto y tener observabilidad. No dejar lifecycle/expiración dependiente de ejecución manual en producción. Supabase Cron invoca rutas internas separadas de la API cada cinco minutos; un secreto de alta entropía almacenado fuera de Git autentica esas llamadas.
+
+La modalidad gratuita no ofrece SLA, backups automáticos ni garantía de ausencia de suspensión. Estas limitaciones se registran de forma explícita y nunca se presentan como equivalentes operativos a un plan pago.
 
 ## CI/CD
 
