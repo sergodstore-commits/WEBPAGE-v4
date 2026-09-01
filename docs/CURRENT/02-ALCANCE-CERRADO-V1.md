@@ -17,13 +17,13 @@ Sergod Store Web V1 contiene exclusivamente las capacidades definidas en `01-ARB
   forma parte de la operación productiva V1.
 - Retiro en tienda y despacho por pagar a agencia de Chilexpress/Starken.
 - Campañas de preventa con capacidad, disponibilidad, reserva/compromiso y cierre.
-- Pseudo-POS para registrar ventas físicas y medios de pago recibidos.
+- POS para registrar ventas físicas y medios de pago recibidos.
 
 ## Experiencia y operación
 
 - Sitio público: Inicio, Tienda, Torneos, Noticias, Comunidad y Cómics/Historias.
 - Cuenta CLIENTE: perfil, preferencias de despacho, seguridad, pedidos, preventas y puntos.
-- ADMIN: dashboard, catálogo, inventario, pedidos, preventas, promociones, loyalty, Pseudo-POS, contenido editorial, usuarios, configuración y auditoría.
+- ADMIN: dashboard, catálogo, inventario, pedidos, preventas, promociones, loyalty, POS, contenido editorial, usuarios, configuración y auditoría.
 - Contenido editorial administrado exclusivamente por ADMIN.
 - Notificaciones transaccionales por email.
 

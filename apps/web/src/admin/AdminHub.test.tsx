@@ -113,7 +113,7 @@ describe('AdminHub', () => {
     for (const name of [
       'Resumen',
       'Pedidos y pagos',
-      'Pseudo-POS',
+      'POS',
       'Inventario',
       'Catálogo',
       'Preventas',
@@ -141,14 +141,14 @@ describe('AdminHub', () => {
         currentRoute="/admin/pos"
         description="Caja"
         navigate={vi.fn()}
-        title="Pseudo-POS"
+        title="POS"
       >
         <p>Contenido de caja</p>
       </AdminStandaloneLayout>,
     );
 
     const sidebar = screen.getByRole('complementary', { name: 'Navegación administrativa' });
-    expect(within(sidebar).getByRole('link', { name: 'Pseudo-POS' })).toHaveAttribute(
+    expect(within(sidebar).getByRole('link', { name: 'POS' })).toHaveAttribute(
       'aria-current',
       'page',
     );

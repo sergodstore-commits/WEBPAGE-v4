@@ -97,7 +97,7 @@ vi.mock('./api.js', () => ({
   updateLine: vi.fn(),
 }));
 
-it('renders the productive Pseudo-POS controls without collecting card data', async () => {
+it('renders the productive POS controls without collecting card data', async () => {
   render(<PosPanel />);
   expect(screen.getByRole('heading', { name: 'Venta presencial' })).toBeInTheDocument();
   expect(screen.getByRole('tab', { name: 'Caja' })).toHaveAttribute('aria-selected', 'true');

@@ -247,7 +247,7 @@ export function PosPanel() {
           <strong>{sale ? shortIdentifier(String(sale.item.pos_sale_id)) : '—'}</strong>
         </div>
       </header>
-      <div aria-label="Secciones del Pseudo-POS" className="pos-mode-switch" role="tablist">
+      <div aria-label="Secciones del POS" className="pos-mode-switch" role="tablist">
         {[
           ['SALE', 'Caja'],
           ['REPORTS', 'Historial y cierre'],

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 5,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, real environment files, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-09-01T08:46:07.578Z",
+  "createdUtc": "2026-09-01T13:41:11.098Z",
   "fileCount": 930,
-  "totalBytes": 158900109,
+  "totalBytes": 158899857,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -902,8 +902,8 @@
     },
     {
       "path": "apps/api/src/contexts/sales-pos/presentation/pos-http-api.test.ts",
-      "bytes": 9124,
-      "sha256": "4ffdd9ba4484aa844844371ee58011f65e50f62bd105b25a1c2243c844f7829c"
+      "bytes": 9117,
+      "sha256": "4a6c33915cbd572aa59181f9f1fa64741f617a8f503371790872ee1b8ee83eef"
     },
     {
       "path": "apps/api/src/contexts/sales-pos/presentation/pos-http-api.ts",
@@ -1367,13 +1367,13 @@
     },
     {
       "path": "apps/web/src/admin/AdminHub.test.tsx",
-      "bytes": 15048,
-      "sha256": "6ada1432f336554cdc63e6e456c3df862613baca0908d6e46d31742ff0c58b12"
+      "bytes": 15027,
+      "sha256": "3c81f3e3aaaded6cfd90dc22364e614a0dbbd84372e7f85b92fae3a7212b2ed8"
     },
     {
       "path": "apps/web/src/admin/AdminHub.tsx",
-      "bytes": 50991,
-      "sha256": "d29e0c14ca78a508f2db39de3b42e45b521e0a1c0e654a5837a24df22419c8e7"
+      "bytes": 50984,
+      "sha256": "bec9468db7dd9cedc327cbb102aff5949749dbebca7b0285c4297f5636032904"
     },
     {
       "path": "apps/web/src/admin/OperationalDataView.tsx",
@@ -1397,8 +1397,8 @@
     },
     {
       "path": "apps/web/src/app/App.tsx",
-      "bytes": 29882,
-      "sha256": "eb7c052514413012cd77f765abb91254584efc9dc5f79735d8a171373a18923b"
+      "bytes": 29875,
+      "sha256": "e3a69cfa6174813349099f2e28b1ec8fa8ef6a85f901eea995cb630b8dc84c2b"
     },
     {
       "path": "apps/web/src/app/SiteChrome.tsx",
@@ -1462,13 +1462,13 @@
     },
     {
       "path": "apps/web/src/pos/PosPanel.test.tsx",
-      "bytes": 6081,
-      "sha256": "20e4c006698a2890c09a18a5274ef5b04f7ecd28a1179b512260ca9dc520982f"
+      "bytes": 6074,
+      "sha256": "47ea3b968a9308f5b8f10bad8f6fca0474db46a05bc47cac5a8be09d5984dbdc"
     },
     {
       "path": "apps/web/src/pos/PosPanel.tsx",
-      "bytes": 27665,
-      "sha256": "fa3b1f45f1a064631bdbc81ee896d3f8d939a6989a21ef05bd58916b665ca5fd"
+      "bytes": 27658,
+      "sha256": "f5d4596e04ff2c810be5aac8c5c25f202a6128cf96d6cf1a463cddb40901c8b7"
     },
     {
       "path": "apps/web/src/public-commerce/PublicPages.test.tsx",
@@ -3218,7 +3218,7 @@
     {
       "path": "DELIVERY-VERIFICATION.json",
       "bytes": 1387,
-      "sha256": "ecd19aaea88f1af64e224a9ea5701d1f6a74af02c651f46b347c105ad51f69b0"
+      "sha256": "9ae9ed46345744b6942ca78a386a12cacdc8f779fabe9904b715800ec08c3128"
     },
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",
@@ -3972,18 +3972,18 @@
     },
     {
       "path": "docs/CURRENT/01-ARBOL-FUNCIONAL-V1.md",
-      "bytes": 5283,
-      "sha256": "8b99724cd8913f466156332d7acf9253262f98ece8bd6345397b7fe670ba426f"
+      "bytes": 5269,
+      "sha256": "cf6ee831f9887134557804be5b219df77ed0e90c06c099afc73e780eacc74552"
     },
     {
       "path": "docs/CURRENT/02-ALCANCE-CERRADO-V1.md",
-      "bytes": 2264,
-      "sha256": "783a1bfc6a197aab6d4bff5669de0c49f4330256d8149842c09857ae2963ebd2"
+      "bytes": 2250,
+      "sha256": "b7f6820b065387def4d5c715fc9b0955bcd45b440ab6de6c048efb40373f1a21"
     },
     {
       "path": "docs/CURRENT/03-REGLAS-DE-NEGOCIO.md",
-      "bytes": 4076,
-      "sha256": "c53bde7bd1e3fde4fee25db064e885822fd3d3e73fb345d47e3ca1e7f8220188"
+      "bytes": 4062,
+      "sha256": "b8e72b1a49f7b30d00f87a05cc48e40d1d2ea99ee5b6f41a4d84580903cbe4f2"
     },
     {
       "path": "docs/CURRENT/04-ARQUITECTURA-Y-LIMITES.md",
@@ -4037,8 +4037,8 @@
     },
     {
       "path": "docs/CURRENT/IMPLEMENTATION-STATUS.md",
-      "bytes": 17858,
-      "sha256": "bb7a022a9f41e04a0580ed010518e45fdf3e46c8bb5241d35943f06950738f34"
+      "bytes": 17711,
+      "sha256": "333ec884638a90ebed4d901140ce035d8d0aa4be1385e3696137e48516155db9"
     },
     {
       "path": "docs/CURRENT/INDEX.md",
@@ -4333,7 +4333,7 @@
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
       "bytes": 115160,
-      "sha256": "57642ef7323b7fea885dde465826109031cfb4ff71cc9686bc88e30b882084a8"
+      "sha256": "f3faf7b177cc214648c2bddc722948cb093f720f6da4a9fb43b73e29022d47d4"
     },
     {
       "path": "README.md",
@@ -4402,8 +4402,8 @@
     },
     {
       "path": "scripts/codex/remote-pos-acceptance.ps1",
-      "bytes": 12100,
-      "sha256": "414b21836980d7dc74b0b01e3acca9936dc73a1c9e3596b5acac32f3d61f05cb"
+      "bytes": 12093,
+      "sha256": "ddb4ec00c1e88b70f3a2adba5b426441933e6c8249e9c514e4f76c9bc1430531"
     },
     {
       "path": "scripts/codex/remote-preorder-freight-acceptance.mjs",

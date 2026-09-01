@@ -164,7 +164,7 @@ try {
   $entry = Invoke-Api -Method POST -Path "/api/v1/admin/inventory/products/$($product.productId)/stock-entries" `
     -AccessToken $accessToken -IdempotencyKey "${runId}:stock-entry" -Body @{
       quantity = 1
-      reason = 'Remote Pseudo-POS acceptance'
+      reason = 'Remote POS acceptance'
       reference = $runId
     }
   if ([long]$entry.position.onHand -ne $originalOnHand + 1) { throw 'Stock entry did not add exactly one unit.' }

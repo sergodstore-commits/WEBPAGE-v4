@@ -69,7 +69,7 @@ async function request(path: string, init: RequestInit = {}) {
   });
 }
 
-describe('Pseudo-POS administrative HTTP API', () => {
+describe('POS administrative HTTP API', () => {
   it('exposes the bounded administrative workflow with correlation and no-store', async () => {
     const calls: readonly [string, RequestInit][] = [
       ['/api/v1/admin/pos/products/by-sku?sku=SKU-1', { method: 'GET' }],

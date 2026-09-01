@@ -99,7 +99,7 @@ SERGOD STORE WEB V1
 │   ├── Preventas simplificadas
 │   ├── Promociones y cupones
 │   ├── Loyalty
-│   ├── Pseudo-POS
+│   ├── POS
 │   ├── Torneos editoriales
 │   ├── Noticias
 │   ├── Comunidad / Cómics
@@ -107,7 +107,7 @@ SERGOD STORE WEB V1
 │   ├── Configuración
 │   └── Auditoría
 │
-├── 5. PSEUDO-POS
+├── 5. POS
 │   ├── Buscar por producto/SKU
 │   ├── Venta anónima o asociada a cuenta
 │   ├── Promociones/cupón/puntos

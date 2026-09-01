@@ -10,7 +10,7 @@
 
 - Inventory es propietario del stock.
 - `available = on_hand - reserved` y no puede ser negativo.
-- Ecommerce y Pseudo-POS consumen la misma autoridad de stock.
+- Ecommerce y POS consumen la misma autoridad de stock.
 - Público ve `Disponible`, `Últimas unidades` o `Agotado`; ADMIN puede consultar cantidades operativas.
 
 ## Carrito
@@ -82,7 +82,7 @@ PREPARING + FREIGHT_COLLECT → SHIPPED → FULFILLED
 - El flujo confirmado crea el compromiso correspondiente y actualiza capacidad de manera transaccional/idempotente.
 - El cierre bloquea nuevos compromisos y conserva los existentes.
 
-## Pseudo-POS
+## POS
 
 - Registra ventas físicas sin procesar datos de tarjeta.
 - Puede operar con venta anónima o cuenta CLIENTE.

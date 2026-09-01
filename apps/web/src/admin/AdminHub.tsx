@@ -167,7 +167,7 @@ const adminNavigationGroups = [
     links: [
       { label: 'Resumen', route: '/admin' },
       { label: 'Pedidos y pagos', route: '/admin/orders' },
-      { label: 'Pseudo-POS', route: '/admin/pos' },
+      { label: 'POS', route: '/admin/pos' },
       { label: 'Inventario', route: '/admin/inventory' },
     ],
   },

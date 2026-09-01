@@ -132,7 +132,7 @@ export function App() {
                 currentRoute="/admin/pos"
                 description="Caja presencial, inventario compartido y registro auditable del dinero recibido."
                 navigate={navigate}
-                title="Pseudo-POS"
+                title="POS"
               >
                 <PosPanel />
               </AdminStandaloneLayout>
