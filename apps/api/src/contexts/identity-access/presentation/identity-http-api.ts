@@ -18,6 +18,12 @@ import {
   sendJson as send,
 } from '../../../presentation/http/http-utils.js';
 
+interface IdentityRequestLogger {
+  error(bindings: Record<string, unknown>, message: string): void;
+}
+
+const silentIdentityLogger: IdentityRequestLogger = { error: () => undefined };
+
 const credentialsSchema = z
   .object({
     email: z.email(),
@@ -87,11 +93,14 @@ export class IdentityHttpApi {
       readonly recovery: string;
       readonly registration: string;
     },
+    private readonly logger: IdentityRequestLogger = silentIdentityLogger,
   ) {}
 
   async handle(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
     const url = new URL(request.url ?? '/', 'http://local.invalid');
     if (!url.pathname.startsWith('/api/v1/')) return false;
+    const correlationId = randomUUID();
+    const startedAt = performance.now();
     try {
       if (
         request.method === 'GET' &&
@@ -103,7 +112,6 @@ export class IdentityHttpApi {
         this.#rateLimiter.assertAllowed(clientKey(request));
         const body = registrationSchema.parse(await readJsonBody(request));
         const idempotencyKey = readIdempotencyKey(request);
-        const correlationId = randomUUID();
         const result = await this.service.registerClient({
           ...body,
           phone: body.phone ?? null,
@@ -323,9 +331,31 @@ export class IdentityHttpApi {
       }
       return send(response, 404, { error: { code: 'ROUTE_NOT_FOUND' } });
     } catch (error) {
+      this.logger.error(
+        {
+          correlation_id: correlationId,
+          duration_ms: Math.round(performance.now() - startedAt),
+          error_code: safeTechnicalErrorCode(error),
+          error_kind: error instanceof Error ? error.name : 'UnknownError',
+          operation: 'identity.request',
+          request_id: correlationId,
+          result: 'FAILURE',
+        },
+        'Identity request failed.',
+      );
       return handleError(response, error);
     }
   }
+}
+
+function safeTechnicalErrorCode(error: unknown): string {
+  const candidate =
+    error instanceof IdentityAccessError || error instanceof HttpRequestError
+      ? error.code
+      : typeof error === 'object' && error !== null && 'code' in error
+        ? String((error as { code: unknown }).code)
+        : 'UNEXPECTED_ERROR';
+  return /^[A-Z0-9_]{2,64}$/u.test(candidate) ? candidate : 'UNEXPECTED_ERROR';
 }
 
 function handleError(response: ServerResponse, error: unknown): true {

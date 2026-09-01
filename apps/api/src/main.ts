@@ -315,6 +315,7 @@ if (identityConfig !== null && pool !== null) {
         recovery: new URL('/auth/callback/recovery', identityConfig.webAppUrl).href,
         registration: new URL('/auth/callback/confirm', identityConfig.webAppUrl).href,
       },
+      logger,
     ),
   );
 }
