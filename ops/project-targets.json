@@ -15,8 +15,8 @@
     }
   },
   "vercel": {
-    "existingProjectId": "prj_hKpppuLtu27PicSau0pEbz75usdk",
-    "existingProjectName": "sergod-store",
+    "existingProjectId": "prj_UvrLFfLAmEkoDCutlX4VaAVDB8ct",
+    "existingProjectName": "sergod-store-v4",
     "existingTeamId": "team_cAzQMS9tsrBKGL4v6PA40ZFo",
     "domains": ["sergodstore.cl", "www.sergodstore.cl"],
     "role": "FRONTEND",
