@@ -1,9 +1,9 @@
 {
   "schemaVersion": 5,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, real environment files, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-09-01T17:49:04.211Z",
+  "createdUtc": "2026-09-01T20:11:33.416Z",
   "fileCount": 930,
-  "totalBytes": 158920010,
+  "totalBytes": 158920380,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -1438,7 +1438,7 @@
     {
       "path": "apps/web/src/identity/api.ts",
       "bytes": 11741,
-      "sha256": "0e70633768fab705e80fa3b340d3ec2b2f99c2358f00369d7b748e353ddda2f9"
+      "sha256": "fdb80e7f3bdf5d2bf963c6e27dfa1976126664d01f94a97dee30447912b9d5e3"
     },
     {
       "path": "apps/web/src/identity/supabase-browser.test.tsx",
@@ -3218,7 +3218,7 @@
     {
       "path": "DELIVERY-VERIFICATION.json",
       "bytes": 1387,
-      "sha256": "f70aefcba20ccf8bda10dbb6090220c07b66bef8f7fca5ba18a61ef6977b058e"
+      "sha256": "a88acd096e8c42eb7d8676be281064198c40b76611118858129ea37b65666c9c"
     },
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",
@@ -4037,8 +4037,8 @@
     },
     {
       "path": "docs/CURRENT/IMPLEMENTATION-STATUS.md",
-      "bytes": 19110,
-      "sha256": "c4182e326b5037dd996135b4dfd63c252cb231e564b6aa64499a30e065ea4ca2"
+      "bytes": 19480,
+      "sha256": "c4e02de092f88c27e168fcd75108254616ea003c764c80a8230db0b6f36005aa"
     },
     {
       "path": "docs/CURRENT/INDEX.md",
@@ -4333,7 +4333,7 @@
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
       "bytes": 115160,
-      "sha256": "64e9ff9ceec8c12f7f1e5a6f985803fb44065809e8cb70f72b8dbe20836e1cd1"
+      "sha256": "586deb5ff9d54e7004321033770c9c19e9d522a0f57dd8ff97086708325db694"
     },
     {
       "path": "README.md",

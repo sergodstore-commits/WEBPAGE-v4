@@ -299,7 +299,7 @@ function configuredSessionClient(): SupabaseClient | null {
       autoRefreshToken: true,
       detectSessionInUrl: false,
       persistSession: true,
-      storageKey: 'sergod-store-auth-v1',
+      storageKey: 'sergod-store-auth-v2',
     },
   });
   sessionClient.auth.onAuthStateChange((event, value) => {
