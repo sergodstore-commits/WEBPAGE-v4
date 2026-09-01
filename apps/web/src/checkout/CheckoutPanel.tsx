@@ -107,7 +107,7 @@ export function CheckoutPanel() {
     try {
       const result = await createPaymentAttempt(String(order.orderId), {
         payerEmail: String(data.get('payerEmail')),
-        provider: String(data.get('provider')) as 'FLOW' | 'WEBPAY',
+        provider: 'FLOW',
       });
       const redirectUrl = String(result.item.redirectUrl ?? '');
       if (redirectUrl === '') {
@@ -315,19 +315,12 @@ export function CheckoutPanel() {
             >
               <div>
                 <p className="eyebrow">Pago online</p>
-                <h2>Elige un proveedor</h2>
+                <h2>Pago seguro con Flow</h2>
                 <p>El regreso desde el proveedor no confirma el pago por sí solo.</p>
               </div>
               <label>
                 Correo del pagador
                 <input name="payerEmail" required type="email" />
-              </label>
-              <label>
-                Proveedor
-                <select name="provider">
-                  <option value="FLOW">Flow</option>
-                  <option value="WEBPAY">Webpay Plus</option>
-                </select>
               </label>
               <button type="submit">Ir al pago seguro</button>
             </form>

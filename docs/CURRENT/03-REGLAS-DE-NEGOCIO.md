@@ -60,7 +60,8 @@ PREPARING + FREIGHT_COLLECT → SHIPPED → FULFILLED
 
 ## Payments
 
-- `Payments` es propietario de `PaymentAttempt` y de los adaptadores Flow/Webpay Plus.
+- `Payments` es propietario de `PaymentAttempt` y del adaptador Flow habilitado. El adaptador
+  Webpay Plus histórico permanece inactivo y fuera de la operación productiva V1.
 - El retorno del navegador no aprueba un pago por sí solo.
 - La aprobación requiere verificación oficial del proveedor.
 - Notificaciones duplicadas son idempotentes.

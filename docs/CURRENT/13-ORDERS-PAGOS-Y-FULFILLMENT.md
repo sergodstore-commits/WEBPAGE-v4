@@ -24,11 +24,15 @@ Un Order cuyo total sea cero se confirma transaccionalmente como `PAID` durante 
 
 ## Pago
 
-Flow y Webpay Plus son adaptadores independientes bajo Payments. La confirmación del proveedor se verifica y procesa de forma idempotente; el redirect del navegador es solo parte de UX.
+Flow es el proveedor de pago online habilitado en V1. Su confirmación se verifica y procesa de forma
+idempotente; el redirect del navegador es solo parte de UX. El adaptador Webpay previamente probado
+permanece inactivo y fuera de la experiencia productiva por decisión expresa del propietario del
+2026-09-01.
 
 Al confirmar un Order se consumen de forma idempotente las reservas de inventario/preventa, los usos de promociones/cupón y la reserva/movimientos de loyalty usando los snapshots CURRENT del checkout. La transacción crea fulfillment y escribe el historial de Order.
 
-El retorno Flow configurado es la ruta API real `/api/v1/payments/flow/return`; confirmación Flow y retornos Flow/Webpay verifican estado server-to-server.
+El retorno Flow configurado es la ruta API real `/api/v1/payments/flow/return`; su confirmación y
+retorno verifican estado server-to-server.
 
 ## Fulfillment
 

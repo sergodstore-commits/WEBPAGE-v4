@@ -26,7 +26,8 @@ PostgreSQL portable de `scripts/postgres/` es el mecanismo principal en Windows.
 - Supabase actual = staging/integration.
 - Vercel Preview para frontend.
 - Render staging/preview equivalente para API antes de producción.
-- Flow/Webpay sandbox/integración para aceptación.
+- Flow sandbox para aceptación. La evidencia histórica de Webpay Integración se conserva, pero el
+  proveedor no forma parte de la operación productiva V1 por decisión expresa del propietario.
 
 ## Producción
 
@@ -35,6 +36,8 @@ PostgreSQL portable de `scripts/postgres/` es el mecanismo principal en Windows.
 - Render Free producción para API.
 - Supabase Cron para lifecycle/expiration, según la decisión expresa del propietario de mantener costo fijo mensual de hosting en cero.
 - secretos configurados en los stores de cada plataforma.
+- Flow como único proveedor de pago online habilitado; Webpay sin credenciales y ausente del
+  checkout.
 
 ## Jobs
 

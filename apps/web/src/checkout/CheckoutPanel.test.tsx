@@ -2,7 +2,12 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 
 import { currentSession } from '../identity/api.js';
-import { createCheckoutOrder, readCheckoutSummary, replaceDeliveryIntent } from './api.js';
+import {
+  createCheckoutOrder,
+  createPaymentAttempt,
+  readCheckoutSummary,
+  replaceDeliveryIntent,
+} from './api.js';
 import { CheckoutPanel } from './CheckoutPanel.js';
 
 vi.mock('../identity/api.js', () => ({
@@ -73,6 +78,40 @@ it('loads the selected cart group and confirms a zero-total order without a paym
 
   expect(await screen.findByText(/confirmado sin pago externo/i)).toBeInTheDocument();
   expect(screen.queryByRole('heading', { name: 'Elige un proveedor' })).not.toBeInTheDocument();
+});
+
+it('offers only Flow when an order requires external payment', async () => {
+  window.history.replaceState({}, '', '/checkout?group=0198a8be-6677-7000-8000-000000000003');
+  vi.mocked(readCheckoutSummary).mockResolvedValue({
+    item: {
+      canCreateOrder: true,
+      shippingPaymentMode: null,
+      totalAmountClp: 10_000,
+    },
+  });
+  vi.mocked(createCheckoutOrder).mockResolvedValue({
+    item: {
+      orderId: '0198a8be-6677-7000-8000-000000000004',
+      publicNumber: 'SG-2026-000001',
+      requiresExternalPayment: true,
+    },
+  });
+  vi.mocked(createPaymentAttempt).mockResolvedValue({ item: { redirectUrl: '' } });
+
+  render(<CheckoutPanel />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Confirmar pedido' }));
+
+  expect(await screen.findByRole('heading', { name: 'Pago seguro con Flow' })).toBeInTheDocument();
+  expect(screen.queryByText(/Webpay/iu)).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Correo del pagador'), {
+    target: { value: 'cliente@example.com' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Ir al pago seguro' }));
+
+  expect(createPaymentAttempt).toHaveBeenCalledWith('0198a8be-6677-7000-8000-000000000004', {
+    payerEmail: 'cliente@example.com',
+    provider: 'FLOW',
+  });
 });
 
 it('separates pickup from freight-collect agency fields without requesting an address', async () => {

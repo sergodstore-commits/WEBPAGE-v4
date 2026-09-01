@@ -20,9 +20,12 @@ Destino del frontend. Usar Preview para aceptación previa. Los dominios product
 
 Destino objetivo de `apps/api`. Por decisión expresa del propietario, producción usa el plan gratuito y los jobs recurrentes se programan con Supabase Cron mediante rutas internas autenticadas de la API. El recurso definitivo puede no existir al inicio; crearlo/configurarlo durante la fase de deployment siguiendo CURRENT, no antes.
 
-## Flow / Webpay Plus
+## Flow
 
-Credenciales se mantienen fuera del repo. Implementación local/contractual puede avanzar sin ellas. Sandbox oficial se valida en Final External Acceptance.
+Las credenciales se mantienen fuera del repo. Sandbox oficial se valida en Final External
+Acceptance y producción se verifica en Release sin completar cobros técnicos. Por decisión expresa
+del propietario del 2026-09-01, producción opera exclusivamente con Flow: Webpay Plus permanece sin
+credenciales, desactivado y no se ofrece en el checkout.
 
 ## ADMIN
 

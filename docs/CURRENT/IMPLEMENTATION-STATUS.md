@@ -1,26 +1,28 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-08-30. Incluye evidencia local reproducible y aceptación externa parcial en staging, incluidas Flow sandbox, Resend y renovación forzada de sesión. Producción aún no está aceptada ni promovida.
+> Estado auditado hasta el 2026-09-01. La versión aceptada ya opera en producción y Release está
+> en cierre controlado. Por decisión expresa del propietario, Flow es el único proveedor de pago
+> online productivo; Webpay Plus queda fuera de la operación V1.
 
-| Área                                                                                        | Estado local verificable     | Evidencia                                                                                | Pendiente separado                      |
-| ------------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------- |
-| Foundation, Identity, Catalog, Inventory, Promotions, Loyalty, Preorders, Cart y Pseudo-POS | Staging E2E PASS             | Operaciones cliente/Admin trazadas y valores operativos restaurados                      | Promoción a producción en RELEASE       |
-| Orders + Checkout                                                                           | Staging E2E PASS             | Compras `REGULAR` y `PREORDER`, historial, reservas y limpieza remota                    | Promoción a producción en RELEASE       |
-| Promotions + Loyalty en Order                                                               | Corregido y probado          | Reserva/consumo/liberación idempotentes; límite global concurrente en PostgreSQL         | Carga y observabilidad en staging       |
-| `FREIGHT_COLLECT`                                                                           | Staging E2E PASS             | Costo `0`, fuera del total, sin domicilio y compra PREORDER remota                       | Promoción a producción en RELEASE       |
-| Payments Core                                                                               | Staging E2E PASS             | Flow y Webpay verificados con reconciliación autoritativa e idempotente                  | Promoción a producción en RELEASE       |
-| Flow                                                                                        | Sandbox E2E PASS             | Pago real sandbox, verificación servidor-a-servidor, Order `PAID`, inventario y limpieza | Promoción a producción en RELEASE       |
-| Webpay Plus                                                                                 | Integración E2E PASS         | Pago oficial de prueba, Order `PAID`, inventario y limpieza                              | Promoción a producción en RELEASE       |
-| Fulfillment                                                                                 | Staging E2E PASS             | `PENDING → PREPARING → SHIPPED → FULFILLED` con historial remoto                         | Promoción a producción en RELEASE       |
-| Cuenta cliente                                                                              | Staging E2E PASS             | Perfil, pedidos, preventas, puntos, preferencias, estado y renovación real               | Promoción a producción en RELEASE       |
-| Admin                                                                                       | Staging E2E PASS             | Pseudo-POS y mutaciones críticas compensadas con auditoría                               | Promoción a producción en RELEASE       |
-| Comercio público                                                                            | Staging E2E PASS             | Shell responsive, catálogo, carrito, checkout y pagos reales sandbox                     | Catálogo/contenido real y dominio final |
-| Editorial                                                                                   | Implementado                 | Repo/API y transición publish/archive/draft corregida; torneos solo informativos         | Operación y contenido real              |
-| Diseño y accesibilidad                                                                      | Staging verificado           | Sistema visual aprobado; QA escritorio/móvil, accesibilidad y rutas Admin                | Regresión final con contenido real      |
-| Notificaciones                                                                              | Staging E2E PASS             | Outbox, worker activo, Resend idempotente y entrega externa verificada                   | Promoción a producción en RELEASE       |
-| Despliegue API                                                                              | Staging operativo            | Render sirve la rama auditada; `/health`, cuenta, Orders y Flow responden correctamente  | Observabilidad sostenida y promoción    |
-| Despliegue web                                                                              | Preview de staging operativo | Vercel sirve la rama auditada; sesión, recarga y rutas protegidas verificadas            | Promoción y dominio                     |
-| Aceptación externa final                                                                    | PASS                         | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia       | Ninguno                                 |
+| Área                                                                                        | Estado local verificable | Evidencia                                                                          | Pendiente separado                      |
+| ------------------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------- |
+| Foundation, Identity, Catalog, Inventory, Promotions, Loyalty, Preorders, Cart y Pseudo-POS | Staging E2E PASS         | Operaciones cliente/Admin trazadas y valores operativos restaurados                | Promoción a producción en RELEASE       |
+| Orders + Checkout                                                                           | Staging E2E PASS         | Compras `REGULAR` y `PREORDER`, historial, reservas y limpieza remota              | Promoción a producción en RELEASE       |
+| Promotions + Loyalty en Order                                                               | Corregido y probado      | Reserva/consumo/liberación idempotentes; límite global concurrente en PostgreSQL   | Carga y observabilidad en staging       |
+| `FREIGHT_COLLECT`                                                                           | Staging E2E PASS         | Costo `0`, fuera del total, sin domicilio y compra PREORDER remota                 | Promoción a producción en RELEASE       |
+| Payments Core                                                                               | Producción Flow PASS     | Reconciliación autoritativa e idempotente; Webpay no se ofrece                     | Smoke final del artefacto exacto        |
+| Flow                                                                                        | Producción PASS          | Credenciales firmadas y sesión productiva real pendiente, sin completar cobro      | Observabilidad final                    |
+| Webpay Plus                                                                                 | Fuera de producción V1   | Adaptador histórico probado en Integración, sin credenciales ni opción visible     | Ninguno por decisión del propietario    |
+| Fulfillment                                                                                 | Staging E2E PASS         | `PENDING → PREPARING → SHIPPED → FULFILLED` con historial remoto                   | Promoción a producción en RELEASE       |
+| Cuenta cliente                                                                              | Staging E2E PASS         | Perfil, pedidos, preventas, puntos, preferencias, estado y renovación real         | Promoción a producción en RELEASE       |
+| Admin                                                                                       | Staging E2E PASS         | Pseudo-POS y mutaciones críticas compensadas con auditoría                         | Promoción a producción en RELEASE       |
+| Comercio público                                                                            | Staging E2E PASS         | Shell responsive, catálogo, carrito, checkout y pagos reales sandbox               | Catálogo/contenido real y dominio final |
+| Editorial                                                                                   | Implementado             | Repo/API y transición publish/archive/draft corregida; torneos solo informativos   | Operación y contenido real              |
+| Diseño y accesibilidad                                                                      | Staging verificado       | Sistema visual aprobado; QA escritorio/móvil, accesibilidad y rutas Admin          | Regresión final con contenido real      |
+| Notificaciones                                                                              | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Observabilidad final                    |
+| Despliegue API                                                                              | Producción operativa     | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Rollback del release exacto             |
+| Despliegue web                                                                              | Producción operativa     | Vercel sirve `www.sergodstore.cl`; dominio raíz redirige al canónico               | Desplegar y probar cambio solo Flow     |
+| Aceptación externa final                                                                    | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                                 |
 
 ## Gates locales reproducidos
 
@@ -65,6 +67,27 @@
 - `scripts/codex/remote-preorder-freight-acceptance.mjs` completó `ACCEPT-PREORDER-FREIGHT-20260830141613` para `SG-2026-000007`: PREORDER, `FREIGHT_COLLECT`, $10.000 CLP, Flow `SUCCEEDED`, Order `PAID` y fulfillment `PENDING → PREPARING → SHIPPED → FULFILLED`. La reconciliación fue servidor-a-servidor; el runner verificó el compromiso de preventa, cerró la campaña, despublicó los fixtures técnicos y terminó con `REMOTE_PREORDER_FREIGHT_CLEANUP=PASS`. Antes del recorrido definitivo, el job oficial expiró y limpió correctamente la orden técnica fallida `SG-2026-000006`, confirmando además la liberación de su reserva.
 - `scripts/codex/remote-admin-core-acceptance.mjs` completó `ACCEPT-ADMIN-CORE-20260830143421`: edición/restauración del producto técnico, desactivación/reactivación de la cuenta cliente, ciclo activo/cancelado de promoción y cupón, corrección loyalty `+1/-1`, edición y activación de configuraciones loyalty/sistema con el mismo valor operativo, y contenido editorial publicado/archivado. El estado público quedó limpio, los valores operativos originales se conservaron y se verificaron 7 entradas de auditoría trazadas. Una nueva sesión cliente y su renovación volvieron a pasar después de la reactivación.
 - `scripts/codex/remote-webpay-acceptance.mjs` completó `ACCEPT-WEBPAY-E2E-20260830185032` para `SG-2026-000008` por $3.100 CLP: el ambiente oficial de Integración autorizó la transacción, la reconciliación servidor-a-servidor confirmó `PAYMENT_STATUS=SUCCEEDED`, la Order terminó `PAID` y el inventario/fixtures técnicos volvieron a su estado original con `REMOTE_WEBPAY_CLEANUP=PASS`. El retorno del navegador no se usó como autoridad.
+
+## Evidencia de producción — 2026-09-01
+
+- Supabase PROD `kbhbaackrgwgvxxqdlwx` conserva 21 migraciones, 81 tablas públicas y RLS en las
+  80 tablas de aplicación. Render conecta mediante pooler IPv4 con TLS estricto y CA oficial.
+- Los cuatro jobs de lifecycle/expiración están programados cada cinco minutos mediante Supabase
+  Cron y `pg_net`; Cron, HTTP y ejecución de aplicación registraron `PASS` sin fallos.
+- El backup lógico productivo cifrado fue restaurado en una base desechable: 81 tablas y cero
+  diferencias bloqueantes. El texto plano y la base temporal fueron eliminados.
+- La sesión administrativa productiva pasó login, cuenta, autorización Admin, rechazo de token
+  inválido y renovación. Resend entregó el correo técnico correlacionado en un intento y el outbox
+  de prueba quedó limpio.
+- Flow producción validó credenciales mediante una consulta firmada y creó la sesión técnica
+  `SGDTECHMTIEKY4V` por $1.000 CLP. Flow devolvió HTTP 200 y estado pendiente; la URL no se abrió y
+  no se completó ningún cobro.
+- El propietario decidió el 2026-09-01 operar exclusivamente con Flow. Render no contiene
+  credenciales Webpay y el checkout deja de presentar ese proveedor; el adaptador y su evidencia
+  histórica de Integración se conservan sin activar.
+- La API productiva pasó nuevamente sesión administrativa y mantenimiento después de activar Flow.
+  La web productiva y el dominio canónico permanecen operativos; falta promover y probar el cambio
+  visual que elimina Webpay y ejecutar el rollback controlado del artefacto exacto.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

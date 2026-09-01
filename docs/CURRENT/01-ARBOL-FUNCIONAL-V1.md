@@ -79,7 +79,7 @@ SERGOD STORE WEB V1
 │   │       ├── Transportista: Chilexpress o Starken
 │   │       └── Agencia/destino
 │   ├── Creación idempotente de Order
-│   └── Pago Flow / Webpay Plus
+│   └── Pago Flow
 │
 ├── 3. CUENTA CLIENTE
 │   ├── Registro / login / verificación / recuperación

@@ -7,7 +7,7 @@ Orden macro:
 1. baseline y conformidad CURRENT;
 2. inventario visual y design system;
 3. Orders y checkout definitivo;
-4. Payments core + Flow + Webpay Plus;
+4. Payments core + Flow;
 5. fulfillment;
 6. cuenta cliente;
 7. Admin;
