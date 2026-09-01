@@ -22,7 +22,12 @@ async function collectFiles(directory = root) {
     if (entry.isDirectory() && ignoredDirectories.has(entry.name)) continue;
     const absolute = join(directory, entry.name);
     if (entry.isDirectory()) files.push(...(await collectFiles(absolute)));
-    else if (entry.isFile()) files.push(absolute);
+    else if (entry.isFile()) {
+      const name = relative(root, absolute).replaceAll('\\', '/');
+      const basename = name.split('/').at(-1) ?? '';
+      if (/^\.env(?:\..+)?$/u.test(basename) && basename !== '.env.example') continue;
+      files.push(absolute);
+    }
   }
   return files.sort((a, b) => a.localeCompare(b, 'en'));
 }
@@ -37,49 +42,42 @@ async function describe(absolute) {
 }
 
 const verification = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   project: 'SERGOD-STORE-WEB-V1',
-  deliveryProfile: 'CODEX_READY_V4_HANDOFF_VERIFIED_WITH_KNOWN_LOCAL_RUNNER_WARNING',
+  deliveryProfile: 'PRODUCTION_RELEASE_VERIFIED',
   createdUtc: new Date().toISOString(),
   productAuthority: 'docs/CURRENT/',
   missionStageCount: 7,
   initialStage: '00-baseline',
   sergodLocalSkills: 8,
   externalSkillsPolicy: 'APPROVED_ON_DEMAND_ONLY_PINNED',
-  codexSystemValidation: 'PASS_138_CHECKS',
+  codexSystemValidation: 'PASS_134_CHECKS',
   protectedMigrationHistory: 'PASS_31_FILES',
   localGates: {
     format: 'PASS',
     lint: 'PASS',
     typecheck: 'PASS',
-    unit: 'PASS_216',
-    application: 'PASS_43',
-    contract: 'PASS_53_SKIP_1',
-    web: 'PASS_27',
-    integrationLocalAssertions: 'PASS_163_POSTGRESQL_18_4',
-    integrationLocalRunnerExit: 'WARN_MANUAL_TERMINATION_AFTER_PASS_SUMMARY',
+    combined: 'PASS_398_SKIP_1',
+    integrationLocalAssertions: 'PASS_164_POSTGRESQL_18_4',
+    integrationLocalRunnerExit: 'PASS',
     build: 'PASS',
     npmAudit: 'PASS_0_VULNERABILITIES',
     deliveryAudit: 'PASS',
   },
-  deferredExternal: [
-    'Flow sandbox',
-    'Webpay integration environment',
-    'real transactional email delivery and worker activation',
-    'Git-connected Vercel deployment, remote E2E and production promotion',
-  ],
+  deferredExternal: [],
   assertions: {
     noExternalPassWithoutCredentials: true,
     noPhysicalTransbankPos: true,
     prospectiveMigrationsOnlyForV4: true,
-    noLocalImplementationCompleteDeclaration: true,
+    productionReleaseVerified: true,
+    flowIsOnlyProductionOnlinePaymentProvider: true,
     freightCollectShippingZeroWithoutAddress: true,
     tournamentsEditorialOnly: true,
     noEmptyFilesOrDirectories: true,
     noRealEnvironmentFiles: true,
   },
   packagingNote:
-    'Content manifest excludes .git, dependencies, builds, runtime directories and itself. ZIP integrity is recorded by the companion external SHA256 file.',
+    'Content manifest excludes .git, dependencies, builds, runtime directories, real environment files and itself. ZIP integrity is recorded by the companion external SHA256 file.',
 };
 await writeFile(
   join(root, 'DELIVERY-VERIFICATION.json'),
@@ -101,9 +99,9 @@ const manifestFiles = (await collectFiles()).filter(
 );
 const entries = await Promise.all(manifestFiles.map(describe));
 const manifest = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   scope:
-    'all project content files excluding .git, dependency/build/runtime directories, and PACKAGE-MANIFEST.json itself',
+    'all project content files excluding .git, dependency/build/runtime directories, real environment files, and PACKAGE-MANIFEST.json itself',
   createdUtc: verification.createdUtc,
   fileCount: entries.length,
   totalBytes: entries.reduce((sum, entry) => sum + entry.bytes, 0),

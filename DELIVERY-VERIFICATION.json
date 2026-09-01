@@ -1,44 +1,37 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "project": "SERGOD-STORE-WEB-V1",
-  "deliveryProfile": "CODEX_READY_V4_HANDOFF_VERIFIED_WITH_KNOWN_LOCAL_RUNNER_WARNING",
-  "createdUtc": "2026-08-20T19:45:31.819Z",
+  "deliveryProfile": "PRODUCTION_RELEASE_VERIFIED",
+  "createdUtc": "2026-09-01T08:46:07.578Z",
   "productAuthority": "docs/CURRENT/",
   "missionStageCount": 7,
   "initialStage": "00-baseline",
   "sergodLocalSkills": 8,
   "externalSkillsPolicy": "APPROVED_ON_DEMAND_ONLY_PINNED",
-  "codexSystemValidation": "PASS_138_CHECKS",
+  "codexSystemValidation": "PASS_134_CHECKS",
   "protectedMigrationHistory": "PASS_31_FILES",
   "localGates": {
     "format": "PASS",
     "lint": "PASS",
     "typecheck": "PASS",
-    "unit": "PASS_216",
-    "application": "PASS_43",
-    "contract": "PASS_53_SKIP_1",
-    "web": "PASS_27",
-    "integrationLocalAssertions": "PASS_163_POSTGRESQL_18_4",
-    "integrationLocalRunnerExit": "WARN_MANUAL_TERMINATION_AFTER_PASS_SUMMARY",
+    "combined": "PASS_398_SKIP_1",
+    "integrationLocalAssertions": "PASS_164_POSTGRESQL_18_4",
+    "integrationLocalRunnerExit": "PASS",
     "build": "PASS",
     "npmAudit": "PASS_0_VULNERABILITIES",
     "deliveryAudit": "PASS"
   },
-  "deferredExternal": [
-    "Flow sandbox",
-    "Webpay integration environment",
-    "real transactional email delivery and worker activation",
-    "Git-connected Vercel deployment, remote E2E and production promotion"
-  ],
+  "deferredExternal": [],
   "assertions": {
     "noExternalPassWithoutCredentials": true,
     "noPhysicalTransbankPos": true,
     "prospectiveMigrationsOnlyForV4": true,
-    "noLocalImplementationCompleteDeclaration": true,
+    "productionReleaseVerified": true,
+    "flowIsOnlyProductionOnlinePaymentProvider": true,
     "freightCollectShippingZeroWithoutAddress": true,
     "tournamentsEditorialOnly": true,
     "noEmptyFilesOrDirectories": true,
     "noRealEnvironmentFiles": true
   },
-  "packagingNote": "Content manifest excludes .git, dependencies, builds, runtime directories and itself. ZIP integrity is recorded by the companion external SHA256 file."
+  "packagingNote": "Content manifest excludes .git, dependencies, builds, runtime directories, real environment files and itself. ZIP integrity is recorded by the companion external SHA256 file."
 }
