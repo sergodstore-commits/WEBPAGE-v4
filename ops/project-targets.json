@@ -24,9 +24,9 @@
   },
   "render": {
     "role": "API_AND_CRON_TARGET",
-    "serviceId": "srv-daaqaagn74is73apo9fg",
-    "serviceName": "sergod-store-api-production",
-    "serviceUrl": "https://sergod-store-api-production.onrender.com",
+    "serviceId": "srv-da3ij5flk1mc7380htcg",
+    "serviceName": "sergod-store-api-v4",
+    "serviceUrl": "https://sergod-store-api-v4.onrender.com",
     "plan": "FREE",
     "createWhenStageAuthorizes": false
   },

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 5,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, real environment files, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-09-01T17:35:15.868Z",
+  "createdUtc": "2026-09-01T17:49:04.211Z",
   "fileCount": 930,
-  "totalBytes": 158919645,
+  "totalBytes": 158920010,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -3218,7 +3218,7 @@
     {
       "path": "DELIVERY-VERIFICATION.json",
       "bytes": 1387,
-      "sha256": "40558844d12472df432b23c9ee39b2a45df9ef6caf427250135923d8608d48e9"
+      "sha256": "f70aefcba20ccf8bda10dbb6090220c07b66bef8f7fca5ba18a61ef6977b058e"
     },
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",
@@ -4037,8 +4037,8 @@
     },
     {
       "path": "docs/CURRENT/IMPLEMENTATION-STATUS.md",
-      "bytes": 18721,
-      "sha256": "6981bf675562cd7a559ccf4a0d81ebe809719778443cf35f787a0bc5b2f280c9"
+      "bytes": 19110,
+      "sha256": "c4182e326b5037dd996135b4dfd63c252cb231e564b6aa64499a30e065ea4ca2"
     },
     {
       "path": "docs/CURRENT/INDEX.md",
@@ -4082,8 +4082,8 @@
     },
     {
       "path": "ops/project-targets.json",
-      "bytes": 1147,
-      "sha256": "39accc39232828c12950520b77c5d162787aeb2bd653589ff765a75a99812a49"
+      "bytes": 1131,
+      "sha256": "951a0f5cd2ccdd17235d96571169ebdf8382b85d9966dd8ce315befc9c91d7ed"
     },
     {
       "path": "package-lock.json",
@@ -4333,7 +4333,7 @@
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
       "bytes": 115160,
-      "sha256": "7c268e9ad0759e055bdaa04e8c1e17f514fe4a32f8a3e64220200bbbb985e9e4"
+      "sha256": "64e9ff9ceec8c12f7f1e5a6f985803fb44065809e8cb70f72b8dbe20836e1cd1"
     },
     {
       "path": "README.md",
@@ -4647,8 +4647,8 @@
     },
     {
       "path": "vercel.json",
-      "bytes": 615,
-      "sha256": "3f516f23d0b6a7d8ce13774f9dfcd6d482bfe3c2588913bf5f00769bb48bfc77"
+      "bytes": 607,
+      "sha256": "95af19ddc20e3be734102ec9e9433b61b91ef6dead6840e8358e64888aabcfa9"
     },
     {
       "path": "vitest.config.ts",
