@@ -100,6 +100,34 @@ describe('browser session lifecycle', () => {
     expect(currentSession()?.accessToken).toBe('stored-access');
   });
 
+  it('reports a safe provider reference when browser persistence fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            accessToken: 'api-access',
+            expiresAt: 1_900_000_000,
+            refreshToken: 'api-refresh',
+          }),
+          { headers: { 'content-type': 'application/json' }, status: 200 },
+        ),
+      ),
+    );
+    supabase.auth.setSession.mockResolvedValue({
+      data: { session: null },
+      error: { code: 'provider_reference', name: 'AuthError' },
+    });
+
+    await expect(
+      login({ email: 'cliente@example.test', password: 'correct horse battery staple' }),
+    ).rejects.toMatchObject({
+      code: 'SESSION_PERSISTENCE_FAILED',
+      message:
+        'La sesión fue validada, pero no pudo guardarse de forma segura. Referencia: provider_reference.',
+    });
+  });
+
   it('does not discard a successful login when a delayed initial event has no session', async () => {
     vi.stubGlobal(
       'fetch',

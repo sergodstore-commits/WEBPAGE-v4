@@ -110,9 +110,10 @@ export async function login(input: {
     }).catch(() => undefined);
     await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
     updateSession(null);
+    const reference = error?.code ?? error?.name ?? 'SESSION_NOT_RETURNED';
     throw new ApiError(
       'SESSION_PERSISTENCE_FAILED',
-      'La sesión fue validada, pero no pudo guardarse de forma segura. Inténtalo nuevamente.',
+      `La sesión fue validada, pero no pudo guardarse de forma segura. Referencia: ${reference}.`,
     );
   }
   updateSession(mapSession(data.session));
