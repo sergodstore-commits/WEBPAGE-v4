@@ -1,9 +1,9 @@
 {
   "schemaVersion": 5,
   "scope": "all project content files excluding .git, dependency/build/runtime directories, real environment files, and PACKAGE-MANIFEST.json itself",
-  "createdUtc": "2026-09-01T13:41:11.098Z",
+  "createdUtc": "2026-09-01T17:20:36.991Z",
   "fileCount": 930,
-  "totalBytes": 158899857,
+  "totalBytes": 158918337,
   "files": [
     {
       "path": ".agents/skills/sergod-context-router/SKILL.md",
@@ -1457,18 +1457,18 @@
     },
     {
       "path": "apps/web/src/pos/api.ts",
-      "bytes": 3368,
-      "sha256": "dce0043b0a6af9d5b85512266bd69ef9859a87f6f118825464aa3f0dffb8d9b3"
+      "bytes": 4073,
+      "sha256": "5bb43a02e17759908883b44c887f36d45ef995a49275e245ec6674d504f0c468"
     },
     {
       "path": "apps/web/src/pos/PosPanel.test.tsx",
-      "bytes": 6074,
-      "sha256": "47ea3b968a9308f5b8f10bad8f6fca0474db46a05bc47cac5a8be09d5984dbdc"
+      "bytes": 7425,
+      "sha256": "9b5b3bb0302c9aeb96b7b9eec9cbce9d8b1dc174bbcda18f353378a3620e1ec2"
     },
     {
       "path": "apps/web/src/pos/PosPanel.tsx",
-      "bytes": 27658,
-      "sha256": "f5d4596e04ff2c810be5aac8c5c25f202a6128cf96d6cf1a463cddb40901c8b7"
+      "bytes": 36000,
+      "sha256": "994aa2d822a3b93a3a092804aa6c46fad594ffefd53692dcb879440aa819cfd8"
     },
     {
       "path": "apps/web/src/public-commerce/PublicPages.test.tsx",
@@ -1497,8 +1497,8 @@
     },
     {
       "path": "apps/web/src/styles/global.css",
-      "bytes": 42382,
-      "sha256": "25af4a5d1710fb00fff4e044f4594f9ffd02f22abf20b2df9ca5469314f30ba7"
+      "bytes": 49984,
+      "sha256": "48b539522c3902a8fe2d5d9de1090c9f405455c9afc4e05c64f2847f1109a264"
     },
     {
       "path": "apps/web/src/styles/tokens.css",
@@ -3218,7 +3218,7 @@
     {
       "path": "DELIVERY-VERIFICATION.json",
       "bytes": 1387,
-      "sha256": "9ae9ed46345744b6942ca78a386a12cacdc8f779fabe9904b715800ec08c3128"
+      "sha256": "aad60c29567a06e1b140cc7cb22381eb211a3f97421b890e847e799437139e77"
     },
     {
       "path": "design/approved/branding/logo_sergod_store_oficial.png",
@@ -4037,8 +4037,8 @@
     },
     {
       "path": "docs/CURRENT/IMPLEMENTATION-STATUS.md",
-      "bytes": 17711,
-      "sha256": "333ec884638a90ebed4d901140ce035d8d0aa4be1385e3696137e48516155db9"
+      "bytes": 18191,
+      "sha256": "ecc7431867b679f4cb678a4ee6d8ce3620a86e802487d140b0e08bfa2a49cd0d"
     },
     {
       "path": "docs/CURRENT/INDEX.md",
@@ -4333,7 +4333,7 @@
     {
       "path": "PROJECT-CONTENT-SHA256SUMS.txt",
       "bytes": 115160,
-      "sha256": "f3faf7b177cc214648c2bddc722948cb093f720f6da4a9fb43b73e29022d47d4"
+      "sha256": "4b827e9001e454f8a8aaa4f3bc804439d6dcd73c6b08510267df48b87afb04ff"
     },
     {
       "path": "README.md",

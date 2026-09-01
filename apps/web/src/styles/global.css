@@ -394,6 +394,320 @@ a:focus-visible {
   color: var(--cyan);
   font-weight: 800;
 }
+.pos-start-card {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.8fr) minmax(24rem, 1.2fr);
+  gap: 1.25rem;
+  align-items: end;
+  padding: 1.35rem;
+}
+.pos-start-card h2,
+.pos-pane-heading h2,
+.pos-ticket-heading h2 {
+  margin: 0.25rem 0 0;
+  font-family: var(--display-font);
+  text-transform: uppercase;
+}
+.pos-start-card p:last-child {
+  margin-bottom: 0;
+}
+.pos-start-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+.pos-register-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(22rem, 0.85fr);
+  min-height: 42rem;
+  border: 1px solid var(--line);
+  background: #090a0c;
+  box-shadow: 0.4rem 0.4rem 0 #050607;
+}
+.pos-product-pane,
+.pos-ticket-pane {
+  min-width: 0;
+  padding: 1rem;
+}
+.pos-product-pane {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  border-right: 2px solid var(--line);
+  background:
+    linear-gradient(rgb(7 8 10 / 94%), rgb(7 8 10 / 94%)),
+    var(--asset-halftone-red) center / 28rem auto;
+}
+.pos-ticket-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  background: var(--panel-2);
+}
+.pos-pane-heading,
+.pos-ticket-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.pos-pane-heading > span,
+.pos-ticket-heading > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pos-catalog-search input {
+  min-height: 3.2rem;
+  padding-left: 1rem;
+  border-width: 2px;
+  background: #111318;
+  font-size: 1rem;
+}
+.pos-category-strip {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding-bottom: 0.25rem;
+  overflow-x: auto;
+}
+.pos-category-strip button {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--line);
+  background: #15171b;
+  color: var(--paper);
+  box-shadow: none;
+}
+.pos-category-strip button[aria-selected='true'] {
+  border-color: var(--cyan);
+  background: var(--paper);
+  color: #090a0c;
+}
+.pos-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.2rem, 1fr));
+  gap: 0.75rem;
+  max-height: 34rem;
+  padding: 0.15rem 0.2rem 0.35rem 0;
+  overflow-y: auto;
+}
+.pos-product-tile {
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  gap: 0.35rem;
+  min-width: 0;
+  min-height: 15rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-bottom: 4px solid var(--red);
+  background: #17191e;
+  color: var(--paper);
+  text-align: left;
+  box-shadow: 0.2rem 0.2rem 0 #030405;
+}
+.pos-product-tile:hover:not(:disabled),
+.pos-product-tile[aria-pressed='true'] {
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+}
+.pos-product-tile:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.75);
+  opacity: 0.48;
+}
+.pos-product-image {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #050607;
+}
+.pos-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pos-product-image small {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.22rem 0.4rem;
+  background: rgb(5 6 7 / 90%);
+  color: var(--paper);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.pos-product-tile > strong {
+  line-height: 1.1;
+}
+.pos-product-tile > span:not(.pos-product-image) {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.pos-product-tile > b {
+  align-self: end;
+  color: var(--paper);
+  font-family: var(--display-font);
+  font-size: 1.05rem;
+}
+.pos-empty-catalog,
+.pos-empty-ticket {
+  display: grid;
+  place-content: center;
+  gap: 0.35rem;
+  min-height: 10rem;
+  padding: 1rem;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  text-align: center;
+}
+.pos-empty-catalog {
+  grid-column: 1 / -1;
+}
+.pos-empty-catalog strong,
+.pos-empty-ticket strong {
+  color: var(--paper);
+}
+.pos-sku-search {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+  align-items: end;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+}
+.pos-selected-product {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.35fr) minmax(6rem, 0.35fr) minmax(12rem, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--cyan);
+  background: #111318;
+}
+.pos-ticket-lines {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  min-height: 14rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+.pos-ticket-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.pos-ticket-line > div:first-child {
+  display: grid;
+  min-width: 0;
+}
+.pos-ticket-line > div:first-child strong,
+.pos-ticket-line > div:first-child span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pos-ticket-line > div:first-child span {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.pos-quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.pos-quantity-control button,
+.pos-remove-line {
+  display: grid;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: #111318;
+  color: var(--paper);
+  box-shadow: none;
+}
+.pos-remove-line {
+  color: #ff7c88;
+}
+.pos-ticket-settings {
+  border-top: 1px solid var(--line);
+}
+.pos-ticket-settings summary {
+  min-height: 2.75rem;
+  padding: 0.75rem 0;
+  cursor: pointer;
+  color: var(--cyan);
+  font-weight: 850;
+}
+.pos-ticket-settings form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding-bottom: 0.85rem;
+}
+.pos-ticket-settings form h2,
+.pos-ticket-settings form p,
+.pos-ticket-settings form button {
+  grid-column: 1 / -1;
+}
+.pos-ticket-totals {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 0.8rem;
+  border-top: 2px solid var(--line);
+}
+.pos-ticket-totals p {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+}
+.pos-grand-total {
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--display-font);
+  font-size: 1.35rem;
+  text-transform: uppercase;
+}
+.pos-payment-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.pos-payment-form > label:first-child,
+.pos-pay-button {
+  grid-column: 1 / -1;
+}
+.pos-pay-button {
+  display: flex;
+  min-height: 4rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border: 2px solid #ff5967;
+  background: var(--red);
+  color: white;
+  font-family: var(--display-font);
+  font-size: 1.35rem;
+  box-shadow: 0.25rem 0.25rem 0 #050607;
+}
+.pos-secondary-grid:has(> [hidden]:not(:only-child)) {
+  align-items: start;
+}
 .selected-operation-item {
   display: grid;
   gap: 0.35rem;
@@ -1972,6 +2286,17 @@ textarea {
   .admin-sidebar-links.is-open {
     display: grid;
   }
+  .pos-register-layout,
+  .pos-start-card {
+    grid-template-columns: 1fr;
+  }
+  .pos-product-pane {
+    border-right: 0;
+    border-bottom: 2px solid var(--line);
+  }
+  .pos-product-grid {
+    max-height: none;
+  }
 }
 @media (max-width: 640px) {
   .panel,
@@ -2093,5 +2418,31 @@ textarea {
   .pos-card-wide button,
   .pos-card-wide::before {
     grid-column: auto;
+  }
+  .pos-start-fields,
+  .pos-sku-search,
+  .pos-selected-product,
+  .pos-payment-form,
+  .pos-ticket-settings form {
+    grid-template-columns: 1fr;
+  }
+  .pos-ticket-settings form h2,
+  .pos-ticket-settings form p,
+  .pos-ticket-settings form button,
+  .pos-payment-form > label:first-child,
+  .pos-pay-button {
+    grid-column: auto;
+  }
+  .pos-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pos-product-tile {
+    min-height: 13.5rem;
+  }
+  .pos-ticket-line {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .pos-ticket-line > b {
+    grid-column: 1 / 2;
   }
 }

@@ -1,4 +1,20 @@
-import { authorizedRequest } from '../identity/api.js';
+import { authorizedRequest, publicRequest } from '../identity/api.js';
+
+export interface PosCatalogProduct {
+  readonly availableForPurchase: boolean;
+  readonly availabilityStatus: 'AVAILABLE' | 'LAST_UNITS' | 'OUT_OF_STOCK';
+  readonly game: { readonly gameId: string; readonly name: string };
+  readonly name: string;
+  readonly priceAmountClp: number;
+  readonly primaryResource: {
+    readonly altText: string;
+    readonly heightPx: number;
+    readonly resourceId: string;
+    readonly widthPx: number;
+  };
+  readonly productId: string;
+  readonly saleType: 'PREORDER' | 'REGULAR';
+}
 const mutation = <T>(path: string, body: unknown, method = 'POST') =>
   authorizedRequest<T>(path, {
     method,
@@ -15,6 +31,10 @@ export const findSku = (sku: string) =>
       price_amount_clp: string;
     };
   }>(`/api/v1/admin/pos/products/by-sku?sku=${encodeURIComponent(sku)}`);
+export const posCatalog = () =>
+  publicRequest<{ items: PosCatalogProduct[]; nextCursor: string | null }>(
+    '/api/v1/catalog/products?limit=100&sort=NAME_ASC',
+  );
 export const createSale = (body: unknown) =>
   mutation<{ id: string }>('/api/v1/admin/pos/sales', body);
 export const addLine = (id: string, body: unknown) =>

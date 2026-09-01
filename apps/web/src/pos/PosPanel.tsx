@@ -15,6 +15,7 @@ import {
   findSku,
   getSale,
   moneyMethods,
+  posCatalog,
   preorderCampaigns,
   prepareSale,
   removeLine,
@@ -25,6 +26,7 @@ import {
   setLoyalty,
   transitionMoneyMethod,
   updateLine,
+  type PosCatalogProduct,
 } from './api.js';
 
 export function PosPanel() {
@@ -37,6 +39,9 @@ export function PosPanel() {
   const [accountOptions, setAccountOptions] = useState<readonly AccountView[]>([]);
   const [branches, setBranches] = useState<readonly Item[]>([]);
   const [campaigns, setCampaigns] = useState<readonly Item[]>([]);
+  const [catalogProducts, setCatalogProducts] = useState<readonly PosCatalogProduct[]>([]);
+  const [catalogQuery, setCatalogQuery] = useState('');
+  const [catalogGame, setCatalogGame] = useState('ALL');
   const [methodOptions, setMethodOptions] = useState<readonly Item[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Item | null>(null);
@@ -46,8 +51,8 @@ export function PosPanel() {
   const reloadMethods = async () => setMethodOptions(itemsOf(await moneyMethods()));
   useEffect(() => {
     let active = true;
-    void Promise.allSettled([readAccounts(), readCoverage(), moneyMethods()]).then(
-      ([accountResult, coverageResult, methodResult]) => {
+    void Promise.allSettled([readAccounts(), readCoverage(), moneyMethods(), posCatalog()]).then(
+      ([accountResult, coverageResult, methodResult, catalogResult]) => {
         if (!active) return;
         if (accountResult.status === 'fulfilled')
           setAccountOptions(
@@ -58,10 +63,12 @@ export function PosPanel() {
         if (coverageResult.status === 'fulfilled')
           setBranches(uniqueBranches(itemsOf(coverageResult.value.serviceInfo)));
         if (methodResult.status === 'fulfilled') setMethodOptions(itemsOf(methodResult.value));
+        if (catalogResult.status === 'fulfilled') setCatalogProducts(catalogResult.value.items);
         const unavailable = [
           accountResult.status === 'rejected' ? 'cuentas' : null,
           coverageResult.status === 'rejected' ? 'sucursales' : null,
           methodResult.status === 'rejected' ? 'medios externos' : null,
+          catalogResult.status === 'rejected' ? 'catálogo del POS' : null,
         ].filter((label): label is string => label !== null);
         if (unavailable.length > 0)
           setMessage(`No fue posible cargar: ${unavailable.join(', ')}. Reintenta al recargar.`);
@@ -72,6 +79,46 @@ export function PosPanel() {
       active = false;
     };
   }, []);
+  const chooseProduct = async (product: PosCatalogProduct) => {
+    const normalized: Item = {
+      name: product.name,
+      price_amount_clp: product.priceAmountClp,
+      product_id: product.productId,
+      sale_type: product.saleType,
+    };
+    setSelectedProduct(normalized);
+    try {
+      setCampaigns(
+        product.saleType === 'PREORDER' ? itemsOf(await preorderCampaigns(product.productId)) : [],
+      );
+      setMessage(`${product.name} · ${formatClp(product.priceAmountClp)}`);
+    } catch (error) {
+      setCampaigns([]);
+      setMessage(error instanceof Error ? error.message : 'No fue posible preparar este producto.');
+    }
+  };
+  const changeLineQuantity = async (line: Item, delta: number) => {
+    if (!sale) return;
+    const nextQuantity = Number(line.quantity ?? 0) + delta;
+    try {
+      if (nextQuantity <= 0) await removeLine(sale.item.pos_sale_id, String(line.pos_sale_line_id));
+      else await updateLine(sale.item.pos_sale_id, String(line.pos_sale_line_id), nextQuantity);
+      await reload(sale.item.pos_sale_id);
+      setMessage(nextQuantity <= 0 ? 'Producto retirado de la venta.' : 'Cantidad actualizada.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'No fue posible actualizar la cantidad.');
+    }
+  };
+  const removeSaleLine = async (line: Item) => {
+    if (!sale) return;
+    try {
+      await removeLine(sale.item.pos_sale_id, String(line.pos_sale_line_id));
+      await reload(sale.item.pos_sale_id);
+      setMessage('Producto retirado de la venta.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'No fue posible retirar el producto.');
+    }
+  };
   const show = async (query: 'HISTORY' | 'METHODS') => {
     try {
       const data = query === 'HISTORY' ? await sales() : await moneyMethods();
@@ -234,13 +281,25 @@ export function PosPanel() {
       setMessage(error instanceof Error ? error.message : 'No fue posible completar la operación.');
     }
   };
+  const catalogGames = Array.from(
+    new Map(catalogProducts.map((product) => [product.game.gameId, product.game])).values(),
+  );
+  const normalizedCatalogQuery = catalogQuery.trim().toLocaleLowerCase('es-CL');
+  const visibleCatalogProducts = catalogProducts.filter(
+    (product) =>
+      (catalogGame === 'ALL' || product.game.gameId === catalogGame) &&
+      (normalizedCatalogQuery === '' ||
+        `${product.name} ${product.game.name}`
+          .toLocaleLowerCase('es-CL')
+          .includes(normalizedCatalogQuery)),
+  );
   return (
     <section className="admin-standalone-panel pos-workstation">
       <header className="pos-workstation-heading">
         <div>
           <p className="eyebrow">Caja presencial</p>
-          <h2>Venta presencial</h2>
-          <p>Registra dinero recibido por medios externos. Nunca solicita datos de tarjeta.</p>
+          <h2>POS</h2>
+          <p>Busca productos, arma la venta y registra el pago desde una sola pantalla.</p>
         </div>
         <div className="pos-live-state" aria-label="Estado de la caja">
           <span>{sale ? 'Venta abierta' : 'Sin venta abierta'}</span>
@@ -281,234 +340,341 @@ export function PosPanel() {
           </div>
         </section>
       )}
-      <div className="pos-grid">
+      {workspace === 'SALE' && !sale && (
         <form
-          className="pos-card"
-          data-step="1"
-          hidden={workspace !== 'SALE'}
+          className="pos-card pos-start-card"
           onSubmit={(event) => void action(event, 'CREATE')}
         >
-          <h2>Nueva venta</h2>
-          <label>
-            Sucursal
-            <BranchSelect branches={branches} loading={optionsLoading} name="branchId" />
-          </label>
-          <label>
-            Tipo
-            <select name="saleType">
-              <option value="REGULAR">Venta regular</option>
-              <option value="PREORDER">Preventa</option>
-            </select>
-          </label>
-          <button disabled={branches.length === 0}>Crear borrador</button>
+          <div>
+            <p className="eyebrow">Abrir caja</p>
+            <h2>Nueva venta</h2>
+            <p>Selecciona el tipo de operación para comenzar a agregar productos.</p>
+          </div>
+          <div className="pos-start-fields">
+            <label>
+              Sucursal
+              <BranchSelect branches={branches} loading={optionsLoading} name="branchId" />
+            </label>
+            <label>
+              Tipo de venta
+              <select name="saleType">
+                <option value="REGULAR">Venta regular</option>
+                <option value="PREORDER">Preventa</option>
+              </select>
+            </label>
+            <button disabled={branches.length === 0}>Abrir venta</button>
+          </div>
         </form>
-        <form
-          className="pos-card"
-          data-step="2"
-          hidden={workspace !== 'SALE'}
-          onSubmit={(event) => void action(event, 'SKU')}
-        >
-          <h2>Buscar por SKU</h2>
-          <label>
-            SKU
-            <input name="sku" required />
-          </label>
-          <button>Buscar</button>
-        </form>
-        {sale && (
-          <form
-            className="pos-card"
-            data-step="3"
-            hidden={workspace !== 'SALE'}
-            onSubmit={(event) => void action(event, 'LINE')}
-          >
-            <h2>Agregar línea</h2>
-            <div className="selected-operation-item">
-              <span>Producto</span>
-              <strong>
-                {selectedProduct ? productOption(selectedProduct) : 'Busca primero por SKU'}
-              </strong>
-            </div>
-            <label>
-              Cantidad
-              <input name="quantity" min="1" type="number" required />
-            </label>
-            <label>
-              Campaña de preventa
-              <select
-                disabled={selectedProduct?.sale_type !== 'PREORDER'}
-                name="campaignId"
-                required={selectedProduct?.sale_type === 'PREORDER'}
-              >
-                <option value="">
-                  {selectedProduct?.sale_type === 'PREORDER'
-                    ? campaigns.length > 0
-                      ? 'Selecciona una campaña abierta'
-                      : 'No hay campañas abiertas'
-                    : 'No aplica a venta regular'}
-                </option>
-                {campaigns.map((campaign) => (
-                  <option
-                    key={String(campaign.preorderCampaignId)}
-                    value={String(campaign.preorderCampaignId)}
-                  >
-                    {campaignOption(campaign)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              disabled={
-                selectedProduct === null ||
-                (selectedProduct.sale_type === 'PREORDER' && campaigns.length === 0)
-              }
-            >
-              Agregar
-            </button>
-          </form>
-        )}
-        {sale && (
-          <form
-            className="pos-card pos-card-wide"
-            data-step="4"
-            hidden={workspace !== 'SALE'}
-            onSubmit={(event) => void action(event, 'BUYER')}
-          >
-            <h2>Comprador y entrega</h2>
-            <label>
-              Cuenta vinculada
-              <select disabled={optionsLoading} name="accountId">
-                <option value="">
-                  {optionsLoading ? 'Cargando cuentas…' : 'Venta como invitado'}
-                </option>
-                {accountOptions.map((account) => (
-                  <option key={account.accountId} value={account.accountId}>
-                    {account.currentEmail}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Nombre
-              <input name="buyerName" />
-            </label>
-            <label>
-              Correo
-              <input name="buyerEmail" type="email" />
-            </label>
-            <label>
-              Teléfono
-              <input name="buyerPhone" />
-            </label>
-            <label>
-              Modalidad
-              <select name="deliveryMode">
-                <option value="PICKUP">Retiro en sucursal</option>
-                <option value="SHIPPING">Despacho a agencia</option>
-              </select>
-            </label>
-            <label>
-              Transportista
-              <select name="carrier">
-                <option>CHILEXPRESS</option>
-                <option>STARKEN</option>
-              </select>
-            </label>
-            <label>
-              Comuna o ciudad de destino
-              <input name="destinationCommune" />
-            </label>
-            <label>
-              Agencia de destino
-              <input name="agencyDestination" />
-            </label>
-            <p>NO INCLUIDO — ENVÍO POR PAGAR. No se autoriza despacho domiciliario.</p>
-            <button>Guardar comprador</button>
-          </form>
-        )}
-        {sale && saleLines(sale).length > 0 && (
-          <form
-            className="pos-card"
-            hidden={workspace !== 'SALE'}
-            onSubmit={(event) => void action(event, 'LINE_UPDATE')}
-          >
-            <h2>Modificar línea</h2>
-            <label>
-              Línea
-              <LineSelect lines={saleLines(sale)} name="lineId" />
-            </label>
-            <label>
-              Cantidad
-              <input name="quantity" min="1" type="number" required />
-            </label>
-            <button>Modificar línea</button>
-          </form>
-        )}
-        {sale && saleLines(sale).length > 0 && (
-          <form
-            className="pos-card"
-            hidden={workspace !== 'SALE'}
-            onSubmit={(event) => void action(event, 'LINE_REMOVE')}
-          >
-            <h2>Eliminar línea</h2>
-            <label>
-              Línea
-              <LineSelect lines={saleLines(sale)} name="lineId" />
-            </label>
-            <button>Eliminar línea</button>
-          </form>
-        )}
-        {sale && (
-          <form
-            className="pos-card"
-            data-step="5"
-            hidden={workspace !== 'SALE'}
-            onSubmit={(event) => void action(event, 'BENEFITS')}
-          >
-            <h2>Beneficios</h2>
-            <label>
-              Cupón
-              <input name="coupon" />
-            </label>
-            <label>
-              Puntos a canjear
-              <input name="points" min="0" type="number" defaultValue="0" />
-            </label>
-            <button>Evaluar y guardar</button>
-          </form>
-        )}
-        {sale && (
-          <form
-            className="pos-card pos-complete-card"
-            data-step="6"
-            hidden={workspace !== 'SALE'}
-            onSubmit={(event) => void action(event, 'COMPLETE')}
-          >
-            <h2>Preparar y completar</h2>
-            <label>
-              Medio externo
-              <MethodSelect
-                allowEmpty={Number(sale.item.total_amount_clp ?? 0) === 0}
-                loading={optionsLoading}
-                methods={activeMethods}
-                name="methodId"
+      )}
+      {workspace === 'SALE' && sale && (
+        <div className="pos-register-layout">
+          <section aria-label="Catálogo del POS" className="pos-product-pane">
+            <header className="pos-pane-heading">
+              <div>
+                <p className="eyebrow">Catálogo</p>
+                <h2>Productos</h2>
+              </div>
+              <span>{visibleCatalogProducts.length} disponibles</span>
+            </header>
+            <label className="pos-catalog-search">
+              <span className="visually-hidden">Buscar productos</span>
+              <input
+                onChange={(event) => setCatalogQuery(event.currentTarget.value)}
+                placeholder="Buscar por nombre o juego…"
+                type="search"
+                value={catalogQuery}
               />
             </label>
-            <label>
-              Referencia
-              <input name="reference" />
-            </label>
-            <label>
-              Nota
-              <input name="note" />
-            </label>
-            <button
-              disabled={Number(sale.item.total_amount_clp ?? 0) > 0 && activeMethods.length === 0}
+            <div
+              aria-label="Filtrar catálogo por juego"
+              className="pos-category-strip"
+              role="tablist"
             >
-              Completar venta
-            </button>
-          </form>
-        )}
+              <button
+                aria-selected={catalogGame === 'ALL'}
+                onClick={() => setCatalogGame('ALL')}
+                role="tab"
+                type="button"
+              >
+                Todos
+              </button>
+              {catalogGames.map((game) => (
+                <button
+                  aria-selected={catalogGame === game.gameId}
+                  key={game.gameId}
+                  onClick={() => setCatalogGame(game.gameId)}
+                  role="tab"
+                  type="button"
+                >
+                  {game.name}
+                </button>
+              ))}
+            </div>
+            <div className="pos-product-grid">
+              {visibleCatalogProducts.map((product) => {
+                const incompatible = product.saleType !== sale.item.sale_type;
+                return (
+                  <button
+                    aria-pressed={selectedProduct?.product_id === product.productId}
+                    className="pos-product-tile"
+                    disabled={!product.availableForPurchase || incompatible}
+                    key={product.productId}
+                    onClick={() => void chooseProduct(product)}
+                    type="button"
+                  >
+                    <span className="pos-product-image">
+                      <img
+                        alt={product.primaryResource.altText}
+                        height={product.primaryResource.heightPx}
+                        loading="lazy"
+                        src={resourceUrl(product.primaryResource.resourceId)}
+                        width={product.primaryResource.widthPx}
+                      />
+                      <small>{product.saleType === 'PREORDER' ? 'Preventa' : 'Disponible'}</small>
+                    </span>
+                    <strong>{product.name}</strong>
+                    <span>{product.game.name}</span>
+                    <b>{formatClp(product.priceAmountClp)}</b>
+                  </button>
+                );
+              })}
+              {visibleCatalogProducts.length === 0 && (
+                <div className="pos-empty-catalog">
+                  <strong>No hay productos para mostrar</strong>
+                  <span>Prueba otra búsqueda o revisa el catálogo publicado.</span>
+                </div>
+              )}
+            </div>
+            <form className="pos-sku-search" onSubmit={(event) => void action(event, 'SKU')}>
+              <label>
+                Buscar directamente por SKU
+                <input name="sku" placeholder="Ej. PKM-001" required />
+              </label>
+              <button className="secondary">Buscar SKU</button>
+            </form>
+            <form className="pos-selected-product" onSubmit={(event) => void action(event, 'LINE')}>
+              <div className="selected-operation-item">
+                <span>Producto seleccionado</span>
+                <strong>
+                  {selectedProduct ? productOption(selectedProduct) : 'Selecciona un producto'}
+                </strong>
+              </div>
+              <label>
+                Cantidad
+                <input defaultValue="1" name="quantity" min="1" type="number" required />
+              </label>
+              <label>
+                Campaña de preventa
+                <select
+                  disabled={selectedProduct?.sale_type !== 'PREORDER'}
+                  name="campaignId"
+                  required={selectedProduct?.sale_type === 'PREORDER'}
+                >
+                  <option value="">
+                    {selectedProduct?.sale_type === 'PREORDER'
+                      ? campaigns.length > 0
+                        ? 'Selecciona una campaña abierta'
+                        : 'No hay campañas abiertas'
+                      : 'No aplica a venta regular'}
+                  </option>
+                  {campaigns.map((campaign) => (
+                    <option
+                      key={String(campaign.preorderCampaignId)}
+                      value={String(campaign.preorderCampaignId)}
+                    >
+                      {campaignOption(campaign)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                disabled={
+                  selectedProduct === null ||
+                  (selectedProduct.sale_type === 'PREORDER' && campaigns.length === 0)
+                }
+              >
+                Agregar a la venta
+              </button>
+            </form>
+          </section>
+          <aside aria-label="Venta actual" className="pos-ticket-pane">
+            <header className="pos-ticket-heading">
+              <div>
+                <p className="eyebrow">Venta actual</p>
+                <h2>Detalle</h2>
+              </div>
+              <span>{saleLines(sale).length} productos</span>
+            </header>
+            <div className="pos-ticket-lines">
+              {saleLines(sale).map((line) => (
+                <article className="pos-ticket-line" key={String(line.pos_sale_line_id)}>
+                  <div>
+                    <strong>
+                      {readableText(String(line.product_name_snapshot ?? 'Producto'))}
+                    </strong>
+                    <span>{String(line.sku_snapshot ?? '')}</span>
+                  </div>
+                  <div
+                    className="pos-quantity-control"
+                    aria-label={`Cantidad de ${String(line.product_name_snapshot ?? 'producto')}`}
+                  >
+                    <button
+                      aria-label="Disminuir cantidad"
+                      onClick={() => void changeLineQuantity(line, -1)}
+                      type="button"
+                    >
+                      −
+                    </button>
+                    <strong>{String(line.quantity ?? 0)}</strong>
+                    <button
+                      aria-label="Aumentar cantidad"
+                      onClick={() => void changeLineQuantity(line, 1)}
+                      type="button"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <b>{lineTotal(line)}</b>
+                  <button
+                    aria-label={`Quitar ${String(line.product_name_snapshot ?? 'producto')}`}
+                    className="pos-remove-line"
+                    onClick={() => void removeSaleLine(line)}
+                    type="button"
+                  >
+                    ×
+                  </button>
+                </article>
+              ))}
+              {saleLines(sale).length === 0 && (
+                <div className="pos-empty-ticket">
+                  <strong>La venta está vacía</strong>
+                  <span>Selecciona un producto del catálogo para comenzar.</span>
+                </div>
+              )}
+            </div>
+            <details className="pos-ticket-settings">
+              <summary>Cliente y entrega</summary>
+              <form onSubmit={(event) => void action(event, 'BUYER')}>
+                <h2>Comprador y entrega</h2>
+                <label>
+                  Cuenta vinculada
+                  <select disabled={optionsLoading} name="accountId">
+                    <option value="">
+                      {optionsLoading ? 'Cargando cuentas…' : 'Venta como invitado'}
+                    </option>
+                    {accountOptions.map((account) => (
+                      <option key={account.accountId} value={account.accountId}>
+                        {account.currentEmail}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Nombre
+                  <input name="buyerName" />
+                </label>
+                <label>
+                  Correo
+                  <input name="buyerEmail" type="email" />
+                </label>
+                <label>
+                  Teléfono
+                  <input name="buyerPhone" />
+                </label>
+                <label>
+                  Modalidad
+                  <select name="deliveryMode">
+                    <option value="PICKUP">Retiro en sucursal</option>
+                    <option value="SHIPPING">Despacho a agencia</option>
+                  </select>
+                </label>
+                <label>
+                  Transportista
+                  <select name="carrier">
+                    <option>CHILEXPRESS</option>
+                    <option>STARKEN</option>
+                  </select>
+                </label>
+                <label>
+                  Comuna o ciudad de destino
+                  <input name="destinationCommune" />
+                </label>
+                <label>
+                  Agencia de destino
+                  <input name="agencyDestination" />
+                </label>
+                <p>NO INCLUIDO — ENVÍO POR PAGAR. No se autoriza despacho domiciliario.</p>
+                <button>Guardar cliente</button>
+              </form>
+            </details>
+            <details className="pos-ticket-settings">
+              <summary>Descuentos y puntos</summary>
+              <form onSubmit={(event) => void action(event, 'BENEFITS')}>
+                <h2>Beneficios</h2>
+                <label>
+                  Cupón
+                  <input name="coupon" />
+                </label>
+                <label>
+                  Puntos a canjear
+                  <input defaultValue="0" min="0" name="points" type="number" />
+                </label>
+                <button>Aplicar beneficios</button>
+              </form>
+            </details>
+            <section aria-label="Totales de la venta" className="pos-ticket-totals">
+              <p>
+                <span>Subtotal</span>
+                <strong>{formatClp(sale.item.subtotal_amount_clp)}</strong>
+              </p>
+              <p>
+                <span>Descuentos</span>
+                <strong>
+                  −
+                  {formatClp(
+                    Number(sale.item.automatic_discount_amount_clp ?? 0) +
+                      Number(sale.item.loyalty_redeemed_amount_clp ?? 0),
+                  )}
+                </strong>
+              </p>
+              <p className="pos-grand-total">
+                <span>Total</span>
+                <strong>{formatClp(sale.item.total_amount_clp)}</strong>
+              </p>
+            </section>
+            <form className="pos-payment-form" onSubmit={(event) => void action(event, 'COMPLETE')}>
+              <label>
+                Medio de pago
+                <MethodSelect
+                  allowEmpty={Number(sale.item.total_amount_clp ?? 0) === 0}
+                  loading={optionsLoading}
+                  methods={activeMethods}
+                  name="methodId"
+                />
+              </label>
+              <label>
+                Referencia
+                <input name="reference" />
+              </label>
+              <label>
+                Nota
+                <input name="note" />
+              </label>
+              <button
+                className="pos-pay-button"
+                disabled={
+                  saleLines(sale).length === 0 ||
+                  (Number(sale.item.total_amount_clp ?? 0) > 0 && activeMethods.length === 0)
+                }
+              >
+                <span>Cobrar</span>
+                <strong>{formatClp(sale.item.total_amount_clp)}</strong>
+              </button>
+            </form>
+          </aside>
+        </div>
+      )}
+      <div className="pos-grid pos-secondary-grid">
         <form
           className="pos-card"
           hidden={workspace !== 'METHODS'}
@@ -716,19 +882,6 @@ function BranchSelect({
   );
 }
 
-function LineSelect({ lines, name }: { readonly lines: readonly Item[]; readonly name: string }) {
-  return (
-    <select name={name} required>
-      <option value="">Selecciona un producto</option>
-      {lines.map((line) => (
-        <option key={String(line.pos_sale_line_id)} value={String(line.pos_sale_line_id)}>
-          {lineLabel(line)}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 function MethodSelect({
   allowEmpty = false,
   loading,
@@ -766,13 +919,8 @@ function MethodSelect({
 }
 
 function productOption(product: Item): string {
-  return `${String(product.sku)} · ${readableText(String(product.name))}`;
-}
-
-function lineLabel(line: Item): string {
-  const name = readableText(String(line.product_name_snapshot ?? 'Producto'));
-  const sku = String(line.sku_snapshot ?? '').trim();
-  return `${sku ? `${sku} · ` : ''}${name} · ${String(line.quantity)} unidad(es)`;
+  const sku = String(product.sku ?? '').trim();
+  return `${sku ? `${sku} · ` : ''}${readableText(String(product.name))}`;
 }
 
 function campaignOption(campaign: Item): string {
@@ -786,4 +934,16 @@ function campaignOption(campaign: Item): string {
 
 function saleLines(value: unknown): readonly Item[] {
   return isRecord(value) && Array.isArray(value.lines) ? value.lines.filter(isRecord) : [];
+}
+
+function lineTotal(line: Item): string {
+  const total =
+    line.final_line_total_amount_clp ??
+    line.line_subtotal_amount_clp ??
+    Number(line.unit_price_amount_clp ?? 0) * Number(line.quantity ?? 0);
+  return formatClp(total);
+}
+
+function resourceUrl(resourceId: string): string {
+  return `/api/v1/catalog/resources/${resourceId}/content`;
 }
