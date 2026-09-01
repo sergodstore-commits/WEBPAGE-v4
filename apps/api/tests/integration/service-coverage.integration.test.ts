@@ -74,6 +74,13 @@ beforeEach(async () => {
 
 afterAll(async () => pool.end());
 
+it('lists the active branch before public service information exists', async () => {
+  await expect(service.list()).resolves.toMatchObject({
+    branches: [{ branch_id: ids.branch, name: 'Principal', state: 'ACTIVE' }],
+    serviceInfo: [],
+  });
+});
+
 it('publishes immutable PublicServiceInfo revisions and builds PICKUP only from the revision', async () => {
   const saved = (await service.saveInfo(context('info'), {
     branchId: ids.branch,

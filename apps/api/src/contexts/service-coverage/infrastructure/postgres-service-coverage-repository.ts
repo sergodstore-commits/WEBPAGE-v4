@@ -269,8 +269,14 @@ export class PgServiceCoverageRepository implements ServiceCoverageRepository {
     );
   }
   async list() {
-    const i = await this.pool.query(`SELECT * FROM public_service_info ORDER BY created_at`);
+    const [branches, i] = await Promise.all([
+      this.pool.query(
+        `SELECT branch_id,name,state FROM branches WHERE state='ACTIVE' ORDER BY created_at,branch_id`,
+      ),
+      this.pool.query(`SELECT * FROM public_service_info ORDER BY created_at`),
+    ]);
     return {
+      branches: branches.rows,
       nationwideShipping: {
         carriers: ['CHILEXPRESS', 'STARKEN'],
         coverage: 'NATIONWIDE_CHILE',

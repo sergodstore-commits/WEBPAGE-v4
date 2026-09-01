@@ -61,7 +61,11 @@ export function PosPanel() {
             ),
           );
         if (coverageResult.status === 'fulfilled')
-          setBranches(uniqueBranches(itemsOf(coverageResult.value.serviceInfo)));
+          setBranches(
+            uniqueBranches(
+              itemsOf(coverageResult.value.branches ?? coverageResult.value.serviceInfo),
+            ),
+          );
         if (methodResult.status === 'fulfilled') setMethodOptions(itemsOf(methodResult.value));
         if (catalogResult.status === 'fulfilled') setCatalogProducts(catalogResult.value.items);
         const unavailable = [
@@ -875,7 +879,11 @@ function BranchSelect({
       </option>
       {branches.map((branch) => (
         <option key={String(branch.branch_id)} value={String(branch.branch_id)}>
-          {String(branch.public_address ?? `Sucursal ${shortIdentifier(String(branch.branch_id))}`)}
+          {String(
+            branch.name ??
+              branch.public_address ??
+              `Sucursal ${shortIdentifier(String(branch.branch_id))}`,
+          )}
         </option>
       ))}
     </select>

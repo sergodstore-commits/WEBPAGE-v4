@@ -27,7 +27,8 @@ vi.mock('../identity/api.js', () => ({
 }));
 vi.mock('../service-coverage/api.js', () => ({
   readCoverage: vi.fn().mockResolvedValue({
-    serviceInfo: [{ branch_id: branchId, public_address: 'Sucursal Centro' }],
+    branches: [{ branch_id: branchId, name: 'Principal', state: 'ACTIVE' }],
+    serviceInfo: [],
   }),
 }));
 vi.mock('./api.js', () => ({

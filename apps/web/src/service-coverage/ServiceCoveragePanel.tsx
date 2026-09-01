@@ -6,12 +6,13 @@ import { readCoverage, savePublicServiceInfo, transitionServiceInfo } from './ap
 
 export function ServiceCoveragePanel() {
   const [data, setData] = useState<ReturnType<JSON['parse']>>({
+    branches: [],
     serviceInfo: [],
   });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const serviceInfo = itemsOf(data.serviceInfo);
-  const branches = uniqueBranches(serviceInfo);
+  const branches = uniqueBranches(itemsOf(data.branches ?? data.serviceInfo));
   const refresh = async () => setData(await readCoverage());
   useEffect(() => {
     let active = true;
@@ -186,6 +187,7 @@ function uniqueBranches(items: readonly Item[]): readonly Item[] {
 }
 
 function branchLabel(item: Item): string {
+  if (typeof item.name === 'string' && item.name.trim() !== '') return readableText(item.name);
   if (typeof item.public_address === 'string' && item.public_address.trim() !== '')
     return readableText(item.public_address);
   return `Sucursal ${shortIdentifier(String(item.branch_id ?? 'sin referencia'))}`;
