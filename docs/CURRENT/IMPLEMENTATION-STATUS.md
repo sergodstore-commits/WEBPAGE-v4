@@ -17,7 +17,7 @@
 | Cuenta cliente                                                                       | Producción PASS          | Perfil, pedidos, preventas, puntos, preferencias, estado y renovación real         | Ninguno                                |
 | Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                | Carga operativa del propietario        |
 | Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                      | Catálogo/contenido del propietario     |
-| Editorial                                                                            | Producción PASS          | Flujo publish/archive/draft; torneos únicamente informativos                       | Contenido del propietario              |
+| Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados         | Contenido del propietario              |
 | Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin            | Ninguno                                |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                                |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                                |
@@ -30,13 +30,13 @@
 - `npm ci`: PASS.
 - Runner oficial `scripts/codex/verify-local.ps1 -RunLocalIntegration`: `LOCAL_VERIFICATION=PASS` y salida natural `0` el 2026-08-23.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit: 64 archivos / 226 pruebas PASS.
-- Application: 8 archivos / 43 pruebas PASS.
-- Contract: 19 archivos / 53 PASS y 1 SKIP documentado.
-- Web: 11 archivos / 53 pruebas PASS. Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro idempotente ante doble envío, sincronización de cierre de sesión, estado 404 explícito y presentación operativa de Admin.
-- Integration local: 13 archivos / 164 pruebas PASS sobre PostgreSQL 18.4. `test:integration:local` terminó naturalmente con código 0 el 2026-08-23.
+- Unit, Application, Contract y Web: 108 archivos / 407 pruebas PASS y 1 SKIP documentado.
+  Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro
+  idempotente, estado 404 explícito, editor visual por bloques y lectura editorial pública.
+- Integration local: 14 archivos / 168 pruebas PASS sobre PostgreSQL 18.4. La migración editorial
+  pasó tanto upgrade del baseline como instalación limpia `001`–`022` el 2026-09-02.
 - `codex:prepare`: 135 checks PASS; 8 Skills locales válidas.
-- Migraciones protegidas: 31 intactas; `016`–`021` y mirrors Supabase son prospectivas.
+- Migraciones protegidas: 31 intactas; `016`–`022` y mirrors Supabase son prospectivas.
 - `npm audit`: 0 vulnerabilidades.
 - Auditoría de entrega: sin archivos/directorios vacíos, `.env` reales ni placeholders bloqueantes.
 - QA manual local: Inicio, Tienda, Editorial, Carrito, Checkout, Cuenta y accesos Admin revisados en escritorio/móvil; sin overflow horizontal y con acciones móviles de al menos 44 px.
@@ -108,6 +108,19 @@
   `/api/v1/admin/branches/initialize` con idempotencia: `Sergod Store`, Los Carrera 5142, Copiapó,
   `America/Santiago`. La lectura posterior confirmó exactamente una sucursal y el POS habilitó
   “Abrir venta”; no se abrió ni registró ninguna venta durante esta comprobación.
+- El editor editorial dejó de depender de un único campo de texto: noticias, torneos, comunidad,
+  cómics, quests y Hall of Fame aceptan bloques ordenables de texto e imagen, alineación
+  izquierda/centro/derecha/ancho completo, tres tamaños y vista previa. Los recursos permanecen
+  privados durante el borrador y solo se entregan públicamente si la publicación está publicada y
+  todavía referencia la imagen.
+- Antes del cambio se creó el respaldo productivo cifrado
+  `sergod-production-public-20260902-094716.dump.aes`; su restauración desechable comparó 81 tablas
+  y 1.633 filas sin diferencias. Supabase PROD aplicó la migración `022_editorial_media` y verificó
+  22 migraciones, tabla nueva con RLS y asociaciones editoriales inmutables.
+- Render dejó `1734412` live en el despliegue `dep-dac2nce8bjmc73chsfc0`. Vercel promovió el mismo
+  commit mediante el deployment `7XXnUjaeuu9W6mYdt4gRCWL49WqC`; el dominio productivo conservó la
+  sesión Admin, mostró “Diseñar publicación”, respondió salud/catálogo HTTP 200 y no registró
+  errores de consola. La prueba no creó contenido ni subió archivos a producción.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
