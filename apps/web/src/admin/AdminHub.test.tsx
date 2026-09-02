@@ -18,6 +18,33 @@ beforeEach(() => {
     status: 200,
   } as never);
   vi.mocked(authorizedRequest).mockImplementation(async (path, init) => {
+    if (path.startsWith('/api/v1/admin/content') && !init?.method)
+      return {
+        items: [
+          {
+            body: 'Texto inicial.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000301',
+            excerpt: 'Resumen inicial.',
+            metadata: {
+              document: {
+                blocks: [
+                  {
+                    id: '0198a8be-6677-7000-8000-000000000302',
+                    text: 'Texto inicial.',
+                    type: 'TEXT',
+                  },
+                ],
+                version: 1,
+              },
+            },
+            slug: 'noticia-inicial',
+            status: 'DRAFT',
+            title: 'Noticia inicial',
+            type: 'NEWS',
+          },
+        ],
+        nextCursor: null,
+      } as never;
     if (init?.method) return { item: {} } as never;
     if (path.startsWith('/api/v1/admin/orders'))
       return {
@@ -223,6 +250,41 @@ describe('AdminHub', () => {
       screen.queryByRole('heading', { name: 'Configuración loyalty' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Contenido editorial' })).not.toBeInTheDocument();
+  });
+
+  it('edits editorial content as ordered visual blocks instead of raw text only', async () => {
+    render(<AdminHub area="content" navigate={vi.fn()} />);
+
+    const selector = await screen.findByLabelText('Publicación');
+    fireEvent.change(selector, {
+      target: { value: '0198a8be-6677-7000-8000-000000000301' },
+    });
+    expect(screen.getByRole('heading', { name: 'Diseñar publicación' })).toBeInTheDocument();
+    expect(screen.getAllByText('Texto inicial.')).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir texto' }));
+    const textareas = screen.getAllByLabelText('Texto');
+    const added = textareas.at(-1);
+    if (!added) throw new Error('Added editorial text block was not rendered.');
+    fireEvent.change(added, { target: { value: 'Segundo bloque.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar publicación' }));
+
+    await waitFor(() => {
+      const call = vi
+        .mocked(authorizedRequest)
+        .mock.calls.find(
+          ([path, init]) =>
+            path === '/api/v1/admin/content/0198a8be-6677-7000-8000-000000000301' &&
+            init?.method === 'PUT',
+        );
+      const body = JSON.parse(String(call?.[1]?.body));
+      expect(body.body).toBe('Texto inicial.\n\nSegundo bloque.');
+      expect(body.metadata.document.blocks).toHaveLength(2);
+      expect(body.metadata.document.blocks[1]).toMatchObject({
+        text: 'Segundo bloque.',
+        type: 'TEXT',
+      });
+    });
   });
 
   it('sends a complete product edit with idempotency protection', async () => {

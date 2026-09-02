@@ -47,6 +47,13 @@ export class PgEditorialRepository implements EditorialRepository {
     );
     return map(required(result.rows[0]));
   }
+  async getAdmin(entryId: string) {
+    const result = await this.pool.query<Row>(
+      `SELECT * FROM editorial_entries WHERE editorial_entry_id=$1`,
+      [entryId],
+    );
+    return map(required(result.rows[0]));
+  }
   async list(input: {
     readonly cursor?: string | undefined;
     readonly limit: number;
@@ -92,6 +99,20 @@ export class PgEditorialRepository implements EditorialRepository {
     return map(required(result.rows[0]));
   }
   async update(context: ExecutionContext, entryId: string, input: EditorialWrite) {
+    const resourceIds = editorialImageResourceIds(input.metadata);
+    if (resourceIds.length > 0) {
+      const associated = await this.pool.query<{ resource_id: string }>(
+        `SELECT media.resource_id
+           FROM editorial_entry_media media
+           JOIN resource_assets resource USING(resource_id)
+          WHERE media.editorial_entry_id=$1
+            AND media.resource_id = ANY($2::uuid[])
+            AND resource.state='ACTIVE'`,
+        [entryId, resourceIds],
+      );
+      if (associated.rowCount !== resourceIds.length)
+        throw new EditorialError('EDITORIAL_IMAGE_NOT_ASSOCIATED', 409);
+    }
     const result = await this.pool.query<Row>(
       `UPDATE editorial_entries SET type=$2,slug=$3,title=$4,excerpt=$5,body=$6,metadata=$7,
          updated_by=$8,updated_at=$9,version=version+1 WHERE editorial_entry_id=$1 RETURNING *`,
@@ -109,6 +130,25 @@ export class PgEditorialRepository implements EditorialRepository {
     );
     return map(required(result.rows[0]));
   }
+}
+
+function editorialImageResourceIds(metadata: Record<string, unknown>): string[] {
+  const document = metadata.document;
+  if (document === null || typeof document !== 'object') return [];
+  const blocks = (document as { blocks?: unknown }).blocks;
+  if (!Array.isArray(blocks)) return [];
+  return [
+    ...new Set(
+      blocks.flatMap((block) =>
+        block !== null &&
+        typeof block === 'object' &&
+        (block as { type?: unknown }).type === 'IMAGE' &&
+        typeof (block as { resourceId?: unknown }).resourceId === 'string'
+          ? [(block as { resourceId: string }).resourceId]
+          : [],
+      ),
+    ),
+  ];
 }
 
 function required(row: Row | undefined): Row {

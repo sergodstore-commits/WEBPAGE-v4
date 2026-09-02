@@ -6,6 +6,13 @@ export type PublicationStatus = (typeof publicationStatuses)[number];
 
 export const resourceStates = ['QUARANTINED', 'ACTIVE', 'REPLACED', 'REMOVED'] as const;
 export type ResourceState = (typeof resourceStates)[number];
+export const resourceClasses = [
+  'CATALOG_IMAGE',
+  'CONTENT_IMAGE',
+  'COMIC_PAGE',
+  'EVIDENCE_DOCUMENT',
+] as const;
+export type ResourceClass = (typeof resourceClasses)[number];
 
 export const catalogImageMimeTypes = [
   'image/jpeg',

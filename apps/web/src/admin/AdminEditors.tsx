@@ -1,6 +1,19 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
-import { type AuthorizedResponse, authorizedRequest, authorizedResponse } from '../identity/api.js';
+import { EditorialDocumentView } from '../editorial/EditorialDocument.js';
+import {
+  documentFromMetadata,
+  type EditorialBlock,
+  type EditorialDocumentValue,
+  type EditorialImagePlacement,
+  type EditorialImageWidth,
+} from '../editorial/editorial-document-model.js';
+import {
+  type AuthorizedResponse,
+  authorizedBlob,
+  authorizedRequest,
+  authorizedResponse,
+} from '../identity/api.js';
 import { itemIdentifier, itemReference } from './presentation.js';
 
 type Item = Record<string, unknown>;
@@ -484,6 +497,7 @@ export function RecordEditors({
   readonly products: readonly Item[];
   readonly promotions: readonly Item[];
 }) {
+  if (area === 'content') return <EditorialVisualEditor content={content} onAction={onAction} />;
   const preorder = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -526,23 +540,6 @@ export function RecordEditors({
       { reason: String(form.get('reason')), value: /^-?\d+$/u.test(raw) ? Number(raw) : raw },
       'PATCH',
       'configurations',
-    );
-  };
-  const editorial = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    return onAction(
-      `/api/v1/admin/content/${String(form.get('id'))}`,
-      {
-        body: String(form.get('body')),
-        excerpt: String(form.get('excerpt')),
-        metadata: {},
-        slug: String(form.get('slug')),
-        title: String(form.get('title')),
-        type: String(form.get('type')),
-      },
-      'PUT',
-      'content',
     );
   };
   const promotion = (event: FormEvent<HTMLFormElement>) => {
@@ -680,52 +677,6 @@ export function RecordEditors({
           </label>
           <button>Guardar configuración</button>
         </form>
-        <form hidden={area !== 'content'} onSubmit={(event) => void editorial(event)}>
-          <h3>Contenido editorial</h3>
-          <ItemSelect
-            items={content}
-            label="Contenido"
-            name="id"
-            onSelect={(item, form) =>
-              fillForm(form, item, {
-                body: 'body',
-                excerpt: 'excerpt',
-                slug: 'slug',
-                title: 'title',
-                type: 'type',
-              })
-            }
-          />
-          <label>
-            Tipo
-            <select name="type">
-              <option value="NEWS">Noticia</option>
-              <option value="TOURNAMENT">Torneo</option>
-              <option value="COMMUNITY">Comunidad</option>
-              <option value="COMIC_SERIES">Serie de cómic</option>
-              <option value="COMIC_CHAPTER">Capítulo</option>
-              <option value="QUEST">Quest</option>
-              <option value="HALL_OF_FAME">Hall of Fame</option>
-            </select>
-          </label>
-          <label>
-            Título
-            <input name="title" required />
-          </label>
-          <label>
-            Slug
-            <input name="slug" pattern="[a-z0-9-]+" required />
-          </label>
-          <label>
-            Resumen
-            <textarea name="excerpt" required />
-          </label>
-          <label>
-            Contenido
-            <textarea name="body" required rows={6} />
-          </label>
-          <button>Guardar contenido</button>
-        </form>
         <form hidden={area !== 'promotions'} onSubmit={(event) => void promotion(event)}>
           <h3>Promoción porcentual general</h3>
           <ItemSelect
@@ -819,6 +770,381 @@ export function RecordEditors({
       </div>
     </section>
   );
+}
+
+interface EditorialDraft {
+  readonly document: EditorialDocumentValue;
+  readonly excerpt: string;
+  readonly id: string;
+  readonly metadata: Record<string, unknown>;
+  readonly slug: string;
+  readonly title: string;
+  readonly type: string;
+}
+
+function EditorialVisualEditor({
+  content,
+  onAction,
+}: {
+  readonly content: readonly Item[];
+  readonly onAction: AdminAction;
+}) {
+  const [selectedId, setSelectedId] = useState('');
+  const [draft, setDraft] = useState<EditorialDraft | null>(null);
+  const [message, setMessage] = useState(
+    'Selecciona un borrador para ordenar texto e imágenes en una vista previa real.',
+  );
+
+  const select = (id: string) => {
+    setSelectedId(id);
+    const selected = content.find((item) => itemIdentifier(item) === id);
+    setDraft(selected ? editorialDraft(selected) : null);
+    setMessage(
+      selected ? 'Publicación cargada en el editor visual.' : 'Selecciona una publicación.',
+    );
+  };
+  const updateBlock = (index: number, block: EditorialBlock) => {
+    if (draft === null) return;
+    const blocks = [...draft.document.blocks];
+    blocks[index] = block;
+    setDraft({ ...draft, document: { blocks, version: 1 } });
+  };
+  const moveBlock = (index: number, delta: number) => {
+    if (draft === null) return;
+    const target = index + delta;
+    if (target < 0 || target >= draft.document.blocks.length) return;
+    const blocks = [...draft.document.blocks];
+    const current = blocks[index];
+    const replacement = blocks[target];
+    if (current === undefined || replacement === undefined) return;
+    blocks[index] = replacement;
+    blocks[target] = current;
+    setDraft({ ...draft, document: { blocks, version: 1 } });
+  };
+  const removeBlock = (index: number) => {
+    if (draft === null) return;
+    setDraft({
+      ...draft,
+      document: {
+        blocks: draft.document.blocks.filter((_block, blockIndex) => blockIndex !== index),
+        version: 1,
+      },
+    });
+  };
+  const save = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (draft === null) return;
+    const blocks = draft.document.blocks.flatMap((block) =>
+      block.type === 'TEXT' && block.text.trim() === ''
+        ? []
+        : [block.type === 'TEXT' ? { ...block, text: block.text.trim() } : block],
+    );
+    const body = blocks
+      .flatMap((block) => (block.type === 'TEXT' ? [block.text] : []))
+      .join('\n\n')
+      .trim();
+    await onAction(
+      `/api/v1/admin/content/${draft.id}`,
+      {
+        body: body || draft.excerpt,
+        excerpt: draft.excerpt,
+        metadata: { ...draft.metadata, document: { blocks, version: 1 } },
+        slug: draft.slug,
+        title: draft.title,
+        type: draft.type,
+      },
+      'PUT',
+      'content',
+    );
+    setDraft({ ...draft, document: { blocks, version: 1 } });
+    setMessage('Diseño editorial guardado.');
+  };
+  const upload = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (draft === null) return;
+    setMessage('Subiendo y validando imagen…');
+    try {
+      const result = await authorizedRequest<{ item: Item }>(
+        `/api/v1/admin/content/${draft.id}/resources`,
+        {
+          body: new FormData(event.currentTarget),
+          headers: { 'idempotency-key': crypto.randomUUID() },
+          method: 'POST',
+        },
+      );
+      setDraft(editorialDraft(result.item));
+      setMessage('Imagen insertada en la publicación. Puedes moverla o cambiar su ajuste.');
+      event.currentTarget.reset();
+    } catch (error) {
+      setMessage(messageOf(error));
+    }
+  };
+
+  return (
+    <section className="cut-panel admin-module editorial-admin-editor" id="editorial-visual-editor">
+      <div className="editorial-editor-heading">
+        <div>
+          <p className="eyebrow">Editor visual</p>
+          <h2>Diseñar publicación</h2>
+          <p>Ordena bloques y decide cómo el texto se acomoda alrededor de cada imagen.</p>
+        </div>
+        <label>
+          Publicación
+          <select onChange={(event) => select(event.target.value)} value={selectedId}>
+            <option value="">Selecciona</option>
+            {content.map((item) => {
+              const id = itemIdentifier(item);
+              return id ? (
+                <option key={id} value={id}>
+                  {itemReference(item)}
+                </option>
+              ) : null;
+            })}
+          </select>
+        </label>
+      </div>
+      <p aria-live="polite" className="status">
+        {message}
+      </p>
+      {draft !== null && (
+        <>
+          <form className="editorial-details-form" onSubmit={(event) => void save(event)}>
+            <label>
+              Tipo
+              <select
+                onChange={(event) => setDraft({ ...draft, type: event.target.value })}
+                value={draft.type}
+              >
+                <option value="NEWS">Noticia</option>
+                <option value="TOURNAMENT">Torneo informativo</option>
+                <option value="COMMUNITY">Comunidad</option>
+                <option value="COMIC_SERIES">Serie de cómic</option>
+                <option value="COMIC_CHAPTER">Capítulo</option>
+                <option value="QUEST">Quest</option>
+                <option value="HALL_OF_FAME">Hall of Fame</option>
+              </select>
+            </label>
+            <label>
+              Título
+              <input
+                onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+                required
+                value={draft.title}
+              />
+            </label>
+            <label>
+              Slug
+              <input
+                onChange={(event) => setDraft({ ...draft, slug: event.target.value })}
+                pattern="[a-z0-9-]+"
+                required
+                value={draft.slug}
+              />
+            </label>
+            <label className="editorial-field-wide">
+              Resumen
+              <textarea
+                onChange={(event) => setDraft({ ...draft, excerpt: event.target.value })}
+                required
+                value={draft.excerpt}
+              />
+            </label>
+            <div className="editorial-block-list editorial-field-wide">
+              <div className="editorial-block-toolbar">
+                <h3>Bloques de la publicación</h3>
+                <button
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      document: {
+                        blocks: [
+                          ...draft.document.blocks,
+                          { id: crypto.randomUUID(), text: '', type: 'TEXT' },
+                        ],
+                        version: 1,
+                      },
+                    })
+                  }
+                  type="button"
+                >
+                  Añadir texto
+                </button>
+              </div>
+              {draft.document.blocks.map((block, index) => (
+                <article className="editorial-block-editor" key={block.id}>
+                  <div className="editorial-block-toolbar">
+                    <strong>{block.type === 'TEXT' ? 'Texto' : 'Imagen'}</strong>
+                    <div className="admin-inline-actions">
+                      <button
+                        disabled={index === 0}
+                        onClick={() => moveBlock(index, -1)}
+                        type="button"
+                      >
+                        Subir
+                      </button>
+                      <button
+                        disabled={index === draft.document.blocks.length - 1}
+                        onClick={() => moveBlock(index, 1)}
+                        type="button"
+                      >
+                        Bajar
+                      </button>
+                      <button onClick={() => removeBlock(index)} type="button">
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                  {block.type === 'TEXT' ? (
+                    <label>
+                      Texto
+                      <textarea
+                        onChange={(event) =>
+                          updateBlock(index, { ...block, text: event.target.value })
+                        }
+                        rows={5}
+                        value={block.text}
+                      />
+                    </label>
+                  ) : (
+                    <div className="editorial-image-controls">
+                      <EditorialAdminImage block={block} editorialEntryId={draft.id} />
+                      <label>
+                        Ajuste con el texto
+                        <select
+                          onChange={(event) =>
+                            updateBlock(index, {
+                              ...block,
+                              placement: event.target.value as EditorialImagePlacement,
+                            })
+                          }
+                          value={block.placement}
+                        >
+                          <option value="LEFT">Izquierda, texto alrededor</option>
+                          <option value="RIGHT">Derecha, texto alrededor</option>
+                          <option value="CENTER">Centrada</option>
+                          <option value="FULL">Ancho completo</option>
+                        </select>
+                      </label>
+                      <label>
+                        Tamaño
+                        <select
+                          onChange={(event) =>
+                            updateBlock(index, {
+                              ...block,
+                              width: event.target.value as EditorialImageWidth,
+                            })
+                          }
+                          value={block.width}
+                        >
+                          <option value="SMALL">Pequeña</option>
+                          <option value="MEDIUM">Mediana</option>
+                          <option value="LARGE">Grande</option>
+                        </select>
+                      </label>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+            <button className="editorial-field-wide">Guardar publicación</button>
+          </form>
+          <div className="editorial-editor-columns">
+            <form encType="multipart/form-data" onSubmit={(event) => void upload(event)}>
+              <h3>Insertar imagen</h3>
+              <label>
+                Archivo
+                <input
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  name="file"
+                  required
+                  type="file"
+                />
+              </label>
+              <label>
+                Descripción accesible
+                <input name="altText" required />
+              </label>
+              <label>
+                Ajuste inicial
+                <select defaultValue="CENTER" name="placement">
+                  <option value="LEFT">Izquierda, texto alrededor</option>
+                  <option value="RIGHT">Derecha, texto alrededor</option>
+                  <option value="CENTER">Centrada</option>
+                  <option value="FULL">Ancho completo</option>
+                </select>
+              </label>
+              <label>
+                Tamaño inicial
+                <select defaultValue="MEDIUM" name="width">
+                  <option value="SMALL">Pequeña</option>
+                  <option value="MEDIUM">Mediana</option>
+                  <option value="LARGE">Grande</option>
+                </select>
+              </label>
+              <button>Subir e insertar</button>
+            </form>
+            <section className="editorial-live-preview" aria-label="Vista previa de la publicación">
+              <p className="eyebrow">Vista previa</p>
+              <h3>{draft.title}</h3>
+              <p>{draft.excerpt}</p>
+              <EditorialDocumentView
+                document={draft.document}
+                renderImage={(block) => (
+                  <EditorialAdminImage block={block} editorialEntryId={draft.id} />
+                )}
+              />
+            </section>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function editorialDraft(item: Item): EditorialDraft {
+  const id = itemIdentifier(item);
+  if (id === null) throw new Error('La publicación no tiene un identificador válido.');
+  const body = String(item.body ?? '');
+  const metadata = isItem(item.metadata) ? item.metadata : {};
+  return {
+    document: documentFromMetadata(metadata, body, id),
+    excerpt: String(item.excerpt ?? ''),
+    id,
+    metadata,
+    slug: String(item.slug ?? ''),
+    title: String(item.title ?? ''),
+    type: String(item.type ?? 'NEWS'),
+  };
+}
+
+function EditorialAdminImage({
+  block,
+  editorialEntryId,
+}: {
+  readonly block: Extract<EditorialBlock, { type: 'IMAGE' }>;
+  readonly editorialEntryId: string;
+}) {
+  const [source, setSource] = useState('');
+  useEffect(() => {
+    let active = true;
+    let objectUrl = '';
+    void authorizedBlob(
+      `/api/v1/admin/content/${editorialEntryId}/resources/${block.resourceId}/content`,
+    )
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSource(objectUrl);
+      })
+      .catch(() => {
+        if (active) setSource('');
+      });
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [block.resourceId, editorialEntryId]);
+  return source ? <img alt={block.altText} src={source} /> : <span>Cargando imagen…</span>;
 }
 
 function ItemSelect({

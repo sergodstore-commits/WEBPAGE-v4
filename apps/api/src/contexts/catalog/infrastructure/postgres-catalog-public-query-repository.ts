@@ -196,7 +196,7 @@ export class PgCatalogPublicQueryRepository
          SELECT resource_id, mime_type_real, byte_size, sha256_hex, secure_storage_key
            FROM resource_assets
           WHERE resource_id = $1::uuid
-            AND resource_class = 'CATALOG_IMAGE'
+            AND resource_class IN ('CATALOG_IMAGE', 'CONTENT_IMAGE', 'COMIC_PAGE')
             AND state = 'ACTIVE'
        ), owners AS (
          SELECT media.resource_id, media.source_type AS owner_type, media.source_id AS owner_id
@@ -205,6 +205,11 @@ export class PgCatalogPublicQueryRepository
          UNION ALL
          SELECT media.resource_id, 'PRODUCT'::text AS owner_type, media.product_id AS owner_id
            FROM product_media media
+           JOIN candidate ON candidate.resource_id = media.resource_id
+         UNION ALL
+         SELECT media.resource_id, 'EDITORIAL_ENTRY'::text AS owner_type,
+                media.editorial_entry_id AS owner_id
+           FROM editorial_entry_media media
            JOIN candidate ON candidate.resource_id = media.resource_id
        ), visible_owners AS (
          SELECT owners.resource_id
@@ -225,6 +230,9 @@ export class PgCatalogPublicQueryRepository
              ON product_category.category_id = product.category_id
            LEFT JOIN collections product_collection
              ON product_collection.collection_id = product.collection_id
+           LEFT JOIN editorial_entries editorial
+             ON owners.owner_type = 'EDITORIAL_ENTRY'
+            AND editorial.editorial_entry_id = owners.owner_id
           WHERE CASE owners.owner_type
             WHEN 'TCG_GAME' THEN game.publication_status = 'PUBLISHED'
             WHEN 'CATEGORY' THEN category.publication_status = 'PUBLISHED'
@@ -235,6 +243,19 @@ export class PgCatalogPublicQueryRepository
               AND product_category.publication_status = 'PUBLISHED'
               AND (product.collection_id IS NULL
                 OR product_collection.publication_status = 'PUBLISHED')
+            WHEN 'EDITORIAL_ENTRY' THEN editorial.status = 'PUBLISHED'
+              AND EXISTS (
+                SELECT 1
+                  FROM jsonb_array_elements(
+                    CASE
+                      WHEN jsonb_typeof(editorial.metadata #> '{document,blocks}') = 'array'
+                        THEN editorial.metadata #> '{document,blocks}'
+                      ELSE '[]'::jsonb
+                    END
+                  ) AS block
+                 WHERE block->>'type' = 'IMAGE'
+                   AND block->>'resourceId' = owners.resource_id::text
+              )
             ELSE false
           END
        )
@@ -244,6 +265,33 @@ export class PgCatalogPublicQueryRepository
         WHERE (SELECT count(*) FROM owners) = 1
           AND (SELECT count(*) FROM visible_owners) = 1`,
       [resourceId],
+    );
+    const row = result.rows[0];
+    return row === undefined
+      ? null
+      : {
+          byteSize: safePublicResourceByteSize(row.byte_size),
+          mimeTypeReal: row.mime_type_real,
+          resourceId: row.resource_id,
+          secureStorageKey: row.secure_storage_key,
+          sha256Hex: row.sha256_hex,
+        };
+  }
+
+  async findEditorialAdminResource(
+    editorialEntryId: string,
+    resourceId: string,
+  ): Promise<CatalogPublicResourceRecord | null> {
+    const result = await this.pool.query<PublicResourceRow>(
+      `SELECT resource.resource_id, resource.mime_type_real, resource.byte_size,
+              resource.sha256_hex, resource.secure_storage_key
+         FROM editorial_entry_media media
+         JOIN resource_assets resource USING(resource_id)
+        WHERE media.editorial_entry_id=$1
+          AND media.resource_id=$2
+          AND resource.resource_class IN ('CONTENT_IMAGE','COMIC_PAGE')
+          AND resource.state='ACTIVE'`,
+      [editorialEntryId, resourceId],
     );
     const row = result.rows[0];
     return row === undefined

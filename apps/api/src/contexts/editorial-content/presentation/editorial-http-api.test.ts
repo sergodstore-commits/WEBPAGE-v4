@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import type { IdentityAccessService } from '../../identity-access/application/identity-access-service.js';
 import { createServer } from '../../../presentation/http/create-server.js';
 import type { EditorialService } from '../application/editorial-service.js';
+import type { EditorialMediaService } from '../application/editorial-media-service.js';
 import { EditorialHttpApi } from './editorial-http-api.js';
 
 const accountId = '0198a8be-6677-7000-8000-000000000001';
@@ -17,7 +18,10 @@ const editorial = {
   listPublic: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
   transition: vi.fn().mockResolvedValue({ item: { status: 'PUBLISHED' } }),
 } as unknown as EditorialService;
-const server = createServer(new EditorialHttpApi(identity, editorial));
+const media = {
+  upload: vi.fn().mockResolvedValue({ item: { editorialEntryId: entryId }, replayed: false }),
+} as unknown as EditorialMediaService;
+const server = createServer(new EditorialHttpApi(identity, editorial, media));
 let origin: string;
 
 beforeAll(async () => {
@@ -56,6 +60,30 @@ describe('Editorial HTTP API', () => {
       expect.objectContaining({ actorId: accountId }),
       entryId,
       'PUBLISHED',
+    );
+  });
+
+  it('uploads a validated editorial image with ADMIN authorization and idempotency', async () => {
+    const form = new FormData();
+    form.set('file', new Blob(['image'], { type: 'image/webp' }), 'news.webp');
+    form.set('altText', 'Mesa de juego durante el evento');
+    form.set('placement', 'LEFT');
+    form.set('width', 'MEDIUM');
+    const response = await fetch(`${origin}/api/v1/admin/content/${entryId}/resources`, {
+      body: form,
+      headers: { authorization: 'Bearer admin-token', 'idempotency-key': 'editorial-upload-1' },
+      method: 'POST',
+    });
+    expect(identity.authorize).toHaveBeenCalled();
+    expect(response.status, await response.clone().text()).toBe(201);
+    expect(media.upload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        altText: 'Mesa de juego durante el evento',
+        context: expect.objectContaining({ idempotencyKey: 'editorial-upload-1' }),
+        editorialEntryId: entryId,
+        placement: 'LEFT',
+        width: 'MEDIUM',
+      }),
     );
   });
 });

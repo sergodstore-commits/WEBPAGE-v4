@@ -6,6 +6,7 @@ import type {
   CatalogMediaSourceType,
   NormalizedProductInput,
   PublicationStatus,
+  ResourceClass,
   ResourceState,
   ValidatedResourceDescriptor,
 } from '../domain/catalog.js';
@@ -132,6 +133,17 @@ export interface CatalogResourceReconciliationView extends CatalogResourceView {
 }
 
 export interface CatalogRepository {
+  activateAndAttachEditorialResource(input: {
+    readonly altText: string;
+    readonly context: ExecutionContext;
+    readonly descriptor: ValidatedResourceDescriptor;
+    readonly editorialEntryId: string;
+    readonly idempotencyKey: string;
+    readonly placement: 'CENTER' | 'FULL' | 'LEFT' | 'RIGHT';
+    readonly requestFingerprint: string;
+    readonly resourceId: string;
+    readonly width: 'LARGE' | 'MEDIUM' | 'SMALL';
+  }): Promise<{ readonly replayed: boolean; readonly resourceId: string }>;
   activateResource(input: {
     readonly context: ExecutionContext;
     readonly descriptor: ValidatedResourceDescriptor;
@@ -245,6 +257,7 @@ export interface CatalogRepository {
     readonly idempotencyKey: string;
     readonly originalFilenameSafe: string;
     readonly position: number;
+    readonly resourceClass: ResourceClass;
     readonly requestFingerprint?: string;
   }): Promise<{
     readonly replayed: boolean;

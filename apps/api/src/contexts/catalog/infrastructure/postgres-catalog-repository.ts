@@ -196,9 +196,10 @@ export class PgCatalogRepository implements CatalogRepository {
           `INSERT INTO resource_assets (
              resource_id, resource_class, original_filename_safe, secure_storage_key,
              alt_text, position, state, uploaded_by, uploaded_at
-           ) VALUES ($1, 'CATALOG_IMAGE', $2, $3, $4, $5, 'QUARANTINED', $6, $7)`,
+           ) VALUES ($1, $2, $3, $4, $5, $6, 'QUARANTINED', $7, $8)`,
           [
             resourceId,
+            input.resourceClass,
             input.originalFilenameSafe,
             secureStorageKey,
             input.altText,
@@ -227,6 +228,103 @@ export class PgCatalogRepository implements CatalogRepository {
       );
     }
     return { ...result, secureStorageKey: resource.secureStorageKey };
+  }
+
+  async activateAndAttachEditorialResource(
+    input: Parameters<CatalogRepository['activateAndAttachEditorialResource']>[0],
+  ) {
+    return this.idempotent(
+      'EDITORIAL_ACTIVATE_ATTACH_RESOURCE',
+      input,
+      async (transaction, now) => {
+        const entry = await transaction.query(
+          `SELECT editorial_entry_id FROM editorial_entries
+            WHERE editorial_entry_id = $1 FOR UPDATE`,
+          [input.editorialEntryId],
+        );
+        if (entry.rowCount !== 1) {
+          throw new CatalogError(
+            'EDITORIAL_NOT_FOUND',
+            'NOT_FOUND',
+            'Editorial entry was not found.',
+          );
+        }
+        await activateQuarantined(transaction, input.resourceId, input.descriptor, now);
+        await transaction.query(
+          `INSERT INTO editorial_entry_media (
+             editorial_media_id, editorial_entry_id, resource_id, created_by, created_at
+           ) VALUES ($1, $2, $3, $4, $5)`,
+          [
+            this.uuids.generate(),
+            input.editorialEntryId,
+            input.resourceId,
+            requiredActor(input.context),
+            now,
+          ],
+        );
+        await transaction.query(
+          `UPDATE editorial_entries
+              SET metadata = jsonb_set(
+                    metadata,
+                    '{document}',
+                    jsonb_build_object(
+                      'version', 1,
+                      'blocks',
+                      CASE
+                        WHEN jsonb_typeof(metadata #> '{document,blocks}') = 'array'
+                          THEN metadata #> '{document,blocks}'
+                        ELSE jsonb_build_array(
+                          jsonb_build_object(
+                            'id', editorial_entry_id,
+                            'type', 'TEXT',
+                            'text', body
+                          )
+                        )
+                      END || jsonb_build_array(
+                        jsonb_build_object(
+                          'id', $2::text,
+                          'type', 'IMAGE',
+                          'resourceId', $2::text,
+                          'altText', $3::text,
+                          'placement', $4::text,
+                          'width', $5::text
+                        )
+                      )
+                    ),
+                    true
+                  ),
+                  updated_by = $6,
+                  updated_at = $7,
+                  version = version + 1
+            WHERE editorial_entry_id = $1`,
+          [
+            input.editorialEntryId,
+            input.resourceId,
+            input.altText,
+            input.placement,
+            input.width,
+            requiredActor(input.context),
+            now,
+          ],
+        );
+        await this.audit(
+          transaction,
+          input.context,
+          'EDITORIAL_RESOURCE_ACTIVATED',
+          'RESOURCE_ASSET',
+          input.resourceId,
+        );
+        await this.audit(
+          transaction,
+          input.context,
+          'EDITORIAL_RESOURCE_ASSOCIATED',
+          'EDITORIAL_ENTRY',
+          input.editorialEntryId,
+        );
+        return input.resourceId;
+      },
+      (resourceId, replayed) => ({ replayed, resourceId }),
+    );
   }
 
   async activateResource(input: Parameters<CatalogRepository['activateResource']>[0]) {

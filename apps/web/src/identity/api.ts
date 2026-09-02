@@ -222,6 +222,32 @@ export async function authorizedRequest<Value>(
   return (await authorizedResponse<Value>(path, init)).body;
 }
 
+export async function authorizedBlob(path: string): Promise<Blob> {
+  const active = await activeSession();
+  try {
+    return await authorizedBlobOnce(path, active);
+  } catch (error) {
+    if (!(error instanceof ApiError) || !refreshableAuthenticationError(error.code)) throw error;
+    return authorizedBlobOnce(path, await refreshSession());
+  }
+}
+
+async function authorizedBlobOnce(path: string, active: SessionTokens): Promise<Blob> {
+  const response = await fetch(path, {
+    headers: { authorization: `Bearer ${active.accessToken}` },
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as {
+      error?: { code?: string; message?: string };
+    } | null;
+    throw new ApiError(
+      payload?.error?.code ?? 'REQUEST_FAILED',
+      payload?.error?.message ?? 'No fue posible cargar la imagen.',
+    );
+  }
+  return response.blob();
+}
+
 export interface AuthorizedResponse<Value> {
   readonly body: Value;
   readonly headers: Headers;

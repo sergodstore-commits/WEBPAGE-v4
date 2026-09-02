@@ -1,6 +1,8 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
 import { ApiError, authorizedRequest, currentSession, publicRequest } from '../identity/api.js';
+import { EditorialDocumentView } from '../editorial/EditorialDocument.js';
+import { documentFromMetadata } from '../editorial/editorial-document-model.js';
 
 interface ProductCard {
   readonly availableForPurchase: boolean;
@@ -79,8 +81,10 @@ const initialFilters: CatalogFilters = {
 };
 
 interface EditorialEntry {
+  readonly body: string;
   readonly editorialEntryId: string;
   readonly excerpt: string;
+  readonly metadata: Record<string, unknown>;
   readonly slug: string;
   readonly title: string;
   readonly type: string;
@@ -670,6 +674,7 @@ async function addProductToCart(
 
 export function EditorialPage({ type, title }: { readonly type: string; readonly title: string }) {
   const [items, setItems] = useState<readonly EditorialEntry[]>([]);
+  const [selected, setSelected] = useState<EditorialEntry | null>(null);
   const [message, setMessage] = useState('Cargando contenido…');
   useEffect(() => {
     void publicRequest<{ items: EditorialEntry[] }>(
@@ -681,6 +686,7 @@ export function EditorialPage({ type, title }: { readonly type: string; readonly
       })
       .catch((error: unknown) => setMessage(messageOf(error)));
   }, [type]);
+  const visibleSelected = selected?.type === type ? selected : null;
   const sectionDescription =
     type === 'TOURNAMENT'
       ? 'Calendario, resultados y podios informativos; no administra rondas.'
@@ -701,6 +707,23 @@ export function EditorialPage({ type, title }: { readonly type: string; readonly
       <p aria-live="polite" className="status">
         {message}
       </p>
+      {visibleSelected !== null && (
+        <article className="editorial-reader cut-panel">
+          <button className="button-secondary" onClick={() => setSelected(null)} type="button">
+            Volver a publicaciones
+          </button>
+          <p className="card-kicker">{visibleSelected.type.replaceAll('_', ' ')}</p>
+          <h2>{visibleSelected.title}</h2>
+          <p className="editorial-reader-excerpt">{visibleSelected.excerpt}</p>
+          <EditorialDocumentView
+            document={documentFromMetadata(
+              visibleSelected.metadata,
+              visibleSelected.body,
+              visibleSelected.editorialEntryId,
+            )}
+          />
+        </article>
+      )}
       {items.length > 0 ? (
         <section aria-label={`Publicaciones de ${title}`} className="editorial-grid">
           {items.map((item, index) => (
@@ -711,6 +734,9 @@ export function EditorialPage({ type, title }: { readonly type: string; readonly
               <p className="card-kicker">{item.type.replaceAll('_', ' ')}</p>
               <h2>{item.title}</h2>
               <p>{item.excerpt}</p>
+              <button onClick={() => setSelected(item)} type="button">
+                Leer publicación
+              </button>
             </article>
           ))}
         </section>

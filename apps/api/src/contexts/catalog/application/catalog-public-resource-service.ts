@@ -66,6 +66,21 @@ export class CatalogPublicResourceService {
     }
     return new CatalogPublicResourceDelivery(record, this.storage);
   }
+
+  async prepareEditorialAdmin(
+    editorialEntryId: string,
+    resourceId: string,
+  ): Promise<CatalogPublicResourceDelivery> {
+    const record = await this.repository.findEditorialAdminResource(editorialEntryId, resourceId);
+    if (record === null) {
+      throw new CatalogError(
+        'EDITORIAL_RESOURCE_NOT_FOUND',
+        'NOT_FOUND',
+        'Editorial resource was not found.',
+      );
+    }
+    return new CatalogPublicResourceDelivery(record, this.storage);
+  }
 }
 
 function opaqueStrongEtag(sha256Hex: string): string {

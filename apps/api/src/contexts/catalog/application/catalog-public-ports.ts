@@ -62,6 +62,10 @@ export interface CatalogPublicResourceRecord {
 }
 
 export interface CatalogPublicResourceQueryPort {
+  findEditorialAdminResource(
+    editorialEntryId: string,
+    resourceId: string,
+  ): Promise<CatalogPublicResourceRecord | null>;
   findPublicResource(resourceId: string): Promise<CatalogPublicResourceRecord | null>;
 }
 

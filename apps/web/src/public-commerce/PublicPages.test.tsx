@@ -207,4 +207,50 @@ describe('public editorial sections', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
   });
+
+  it('opens the complete publication and renders its safe image layout', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({
+      items: [
+        {
+          body: 'Texto compatible.',
+          editorialEntryId: '0198a8be-6677-7000-8000-000000000010',
+          excerpt: 'Resumen de la noticia.',
+          metadata: {
+            document: {
+              blocks: [
+                {
+                  altText: 'Jugadores reunidos en Sergod Store',
+                  id: '0198a8be-6677-7000-8000-000000000020',
+                  placement: 'RIGHT',
+                  resourceId: '0198a8be-6677-7000-8000-000000000020',
+                  type: 'IMAGE',
+                  width: 'MEDIUM',
+                },
+                {
+                  id: '0198a8be-6677-7000-8000-000000000021',
+                  text: 'Contenido completo de la noticia.',
+                  type: 'TEXT',
+                },
+              ],
+              version: 1,
+            },
+          },
+          slug: 'encuentro-sergod',
+          title: 'Encuentro Sergod',
+          type: 'NEWS',
+        },
+      ],
+    } as never);
+
+    render(<EditorialPage title="Noticias" type="NEWS" />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Leer publicación' }));
+
+    expect(screen.getByText('Contenido completo de la noticia.')).toBeInTheDocument();
+    const image = screen.getByRole('img', { name: 'Jugadores reunidos en Sergod Store' });
+    expect(image).toHaveAttribute(
+      'src',
+      '/api/v1/catalog/resources/0198a8be-6677-7000-8000-000000000020/content',
+    );
+    expect(image.closest('figure')).toHaveClass('placement-right', 'width-medium');
+  });
 });

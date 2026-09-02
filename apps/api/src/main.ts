@@ -45,9 +45,11 @@ import {
 import { CatalogPublicResourceHttpApi } from './contexts/catalog/presentation/catalog-public-resource-http-api.js';
 import { CatalogResourceAdminHttpApi } from './contexts/catalog/presentation/catalog-resource-admin-http-api.js';
 import { IdentityAccessService } from './contexts/identity-access/application/identity-access-service.js';
+import { EditorialMediaService } from './contexts/editorial-content/application/editorial-media-service.js';
 import { EditorialService } from './contexts/editorial-content/application/editorial-service.js';
 import { PgEditorialRepository } from './contexts/editorial-content/infrastructure/postgres-editorial-repository.js';
 import { EditorialHttpApi } from './contexts/editorial-content/presentation/editorial-http-api.js';
+import { EditorialResourceHttpApi } from './contexts/editorial-content/presentation/editorial-resource-http-api.js';
 import { PgIdentityAccessRepository } from './contexts/identity-access/infrastructure/postgres-identity-access-repository.js';
 import { SupabaseIdentityProvider } from './contexts/identity-access/infrastructure/supabase-identity-provider.js';
 import { IdentityHttpApi } from './contexts/identity-access/presentation/identity-http-api.js';
@@ -232,19 +234,19 @@ if (identityConfig !== null && pool !== null) {
     catalogConfig === null ? undefined : new UuidCatalogStorageKeyGenerator(uuids),
   );
   const catalogService = new CatalogEntityAdminService(catalogRepository, catalogAuthorizer);
-  const catalogResourceService =
+  const catalogBinaryService =
     catalogStorage === null
       ? null
-      : new CatalogResourceAdminService(
+      : new CatalogService(
           catalogRepository,
           catalogAuthorizer,
-          new CatalogService(
-            catalogRepository,
-            catalogAuthorizer,
-            new SharpCatalogImageValidator(),
-            catalogStorage,
-          ),
+          new SharpCatalogImageValidator(),
+          catalogStorage,
         );
+  const catalogResourceService =
+    catalogBinaryService === null
+      ? null
+      : new CatalogResourceAdminService(catalogRepository, catalogAuthorizer, catalogBinaryService);
   const inventoryService = new InventoryAdminService(
     new PgInventoryRepository(pool, clock, uuids),
     new PgInventoryAdminAuthorizer(pool),
@@ -280,6 +282,17 @@ if (identityConfig !== null && pool !== null) {
     new PgFulfillmentRepository(pool, clock, uuids),
   );
   const editorialService = new EditorialService(new PgEditorialRepository(pool, clock, uuids));
+  const editorialMediaService =
+    catalogBinaryService === null || catalogStorage === null
+      ? null
+      : new EditorialMediaService(
+          editorialService,
+          catalogBinaryService,
+          new CatalogPublicResourceService(
+            new PgCatalogPublicQueryRepository(pool),
+            catalogStorage,
+          ),
+        );
   const accountDeliveryPreferencesService = new AccountDeliveryPreferencesService(
     new PgAccountDeliveryPreferencesRepository(pool, clock),
   );
@@ -294,7 +307,8 @@ if (identityConfig !== null && pool !== null) {
     new CheckoutHttpApi(identityService, checkoutService, logger),
     new PaymentHttpApi(identityService, paymentService, logger),
     new FulfillmentHttpApi(identityService, fulfillmentService),
-    new EditorialHttpApi(identityService, editorialService),
+    new EditorialResourceHttpApi(identityService, editorialMediaService),
+    new EditorialHttpApi(identityService, editorialService, editorialMediaService),
     new OrderHttpApi(identityService, orderService, logger),
     new CartHttpApi(identityService, cartService, logger),
     new PosHttpApi(identityService, posService),

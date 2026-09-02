@@ -17,6 +17,7 @@ import {
   type CatalogImageMimeType,
   type CatalogMediaSourceType,
   type PublicationStatus,
+  type ResourceClass,
 } from '../domain/catalog.js';
 import type {
   CatalogAdminAuthorizer,
@@ -96,6 +97,7 @@ export class CatalogService {
     readonly originalFilename: string;
     readonly position: number;
     readonly requestFingerprint?: string;
+    readonly resourceClass: ResourceClass;
   }) {
     if (!Number.isSafeInteger(input.position) || input.position <= 0) {
       throw new CatalogError(
@@ -113,6 +115,7 @@ export class CatalogService {
       idempotencyKey: requireIdempotencyKey(input.context),
       originalFilenameSafe,
       position: input.position,
+      resourceClass: input.resourceClass,
       ...(input.requestFingerprint === undefined
         ? {}
         : { requestFingerprint: input.requestFingerprint }),
@@ -128,7 +131,10 @@ export class CatalogService {
     readonly position: number;
   }) {
     await this.authorize(input.context);
-    const { descriptor, registered } = await this.prepareCatalogImage(input);
+    const { descriptor, registered } = await this.prepareCatalogImage({
+      ...input,
+      resourceClass: 'CATALOG_IMAGE',
+    });
 
     const activated = await this.activateResource({
       context: input.context,
@@ -154,7 +160,10 @@ export class CatalogService {
     readonly requestFingerprint: string;
   }) {
     await this.authorize(input.context);
-    const { descriptor, registered } = await this.prepareCatalogImage(input);
+    const { descriptor, registered } = await this.prepareCatalogImage({
+      ...input,
+      resourceClass: 'CATALOG_IMAGE',
+    });
     try {
       const associated = await this.repository.activateAndAttachResource({
         context: input.context,
@@ -171,6 +180,64 @@ export class CatalogService {
       };
     } catch (error) {
       await this.recordFailure(input.context, registered.resourceId, 'FINAL_ASSOCIATION', error);
+      throw error;
+    }
+  }
+
+  async ingestAndAttachEditorialImage(input: {
+    readonly altText: string;
+    readonly bytes: Uint8Array;
+    readonly context: ExecutionContext;
+    readonly declaredMimeType: string;
+    readonly editorialEntryId: string;
+    readonly originalFilename: string;
+    readonly placement: 'CENTER' | 'FULL' | 'LEFT' | 'RIGHT';
+    readonly resourceClass: 'COMIC_PAGE' | 'CONTENT_IMAGE';
+    readonly width: 'LARGE' | 'MEDIUM' | 'SMALL';
+  }) {
+    await this.authorize(input.context);
+    const requestFingerprint = sha256(
+      Buffer.from(
+        JSON.stringify({
+          altText: input.altText,
+          contentSha256: sha256(input.bytes),
+          declaredMimeType: input.declaredMimeType,
+          editorialEntryId: input.editorialEntryId,
+          originalFilename: input.originalFilename,
+          placement: input.placement,
+          resourceClass: input.resourceClass,
+          width: input.width,
+        }),
+      ),
+    );
+    const { descriptor, registered } = await this.prepareCatalogImage({
+      ...input,
+      position: 1,
+      requestFingerprint,
+    });
+    try {
+      const associated = await this.repository.activateAndAttachEditorialResource({
+        altText: input.altText,
+        context: input.context,
+        descriptor,
+        editorialEntryId: input.editorialEntryId,
+        idempotencyKey: requireIdempotencyKey(input.context),
+        placement: input.placement,
+        requestFingerprint,
+        resourceId: registered.resourceId,
+        width: input.width,
+      });
+      return {
+        replayed: registered.replayed && associated.replayed,
+        resourceId: associated.resourceId,
+      };
+    } catch (error) {
+      await this.recordFailure(
+        input.context,
+        registered.resourceId,
+        'FINAL_EDITORIAL_ASSOCIATION',
+        error,
+      );
       throw error;
     }
   }
@@ -210,6 +277,7 @@ export class CatalogService {
     const { descriptor, registered } = await this.prepareCatalogImage({
       ...input,
       position: current.position,
+      resourceClass: 'CATALOG_IMAGE',
     });
     try {
       const replaced = await this.repository.activateAndReplaceResource({
@@ -241,6 +309,7 @@ export class CatalogService {
     readonly originalFilename: string;
     readonly position: number;
     readonly requestFingerprint?: string;
+    readonly resourceClass: ResourceClass;
   }) {
     const bytes =
       input.bytes.byteLength <= catalogImageLimits.maximumByteSize

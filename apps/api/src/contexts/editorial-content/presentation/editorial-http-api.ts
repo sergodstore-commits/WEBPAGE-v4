@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import {
   editorialListQuerySchema,
+  editorialImageUploadFieldsSchema,
   editorialStatusSchema,
   editorialWriteSchema,
   type EditorialStatus,
@@ -15,10 +16,13 @@ import type { HttpRouteHandler } from '../../../presentation/http/create-server.
 import {
   HttpRequestError,
   readBearerToken,
+  readIdempotencyKey,
   readJsonBody,
   sendJson,
   sendPublicJson,
 } from '../../../presentation/http/http-utils.js';
+import { readBoundedMultipart } from '../../../presentation/http/multipart.js';
+import type { EditorialMediaService } from '../application/editorial-media-service.js';
 import { EditorialService } from '../application/editorial-service.js';
 import { EditorialError } from '../infrastructure/postgres-editorial-repository.js';
 
@@ -28,6 +32,7 @@ type Route =
   | { readonly kind: 'ADMIN_LIST' }
   | { readonly kind: 'ADMIN_CREATE' }
   | { readonly kind: 'ADMIN_UPDATE'; readonly entryId: string }
+  | { readonly kind: 'ADMIN_MEDIA_UPLOAD'; readonly entryId: string }
   | {
       readonly kind: 'ADMIN_TRANSITION';
       readonly entryId: string;
@@ -38,6 +43,7 @@ export class EditorialHttpApi implements HttpRouteHandler {
   constructor(
     private readonly identity: IdentityAccessService,
     private readonly editorial: EditorialService,
+    private readonly media: EditorialMediaService | null = null,
   ) {}
   async handle(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
     const url = new URL(request.url ?? '/', 'http://local.invalid');
@@ -48,9 +54,18 @@ export class EditorialHttpApi implements HttpRouteHandler {
       const result = route.kind.startsWith('PUBLIC')
         ? await publicExecute(route, request, url, this.editorial)
         : await this.adminExecute(route, request, url, correlationId);
+      const status =
+        route.kind === 'ADMIN_CREATE' ||
+        (route.kind === 'ADMIN_MEDIA_UPLOAD' &&
+          typeof result === 'object' &&
+          result !== null &&
+          'replayed' in result &&
+          result.replayed === false)
+          ? 201
+          : 200;
       return route.kind.startsWith('PUBLIC')
         ? sendPublicJson(request, response, result, correlationId)
-        : sendJson(response, route.kind === 'ADMIN_CREATE' ? 201 : 200, result, correlationId);
+        : sendJson(response, status, result, correlationId);
     } catch (error) {
       const mapped = mapError(error);
       return sendJson(response, mapped.status, { correlationId, error: mapped }, correlationId);
@@ -68,13 +83,37 @@ export class EditorialHttpApi implements HttpRouteHandler {
         capability: { kind: 'ADMIN' },
       })
     ).account;
-    const context = { actorId: account.accountId, actorType: 'USER' as const, correlationId };
+    const idempotencyKey =
+      route.kind === 'ADMIN_MEDIA_UPLOAD'
+        ? readIdempotencyKey(request, { maximumLength: 255, visibleAscii: true })
+        : undefined;
+    const context = {
+      actorId: account.accountId,
+      actorType: 'USER' as const,
+      correlationId,
+      ...(idempotencyKey === undefined ? {} : { idempotencyKey }),
+    };
     if (route.kind === 'ADMIN_LIST') {
       noBody(request);
       const query = editorialListQuerySchema.parse(Object.fromEntries(url.searchParams));
       return this.editorial.listAdmin(compactQuery(query));
     }
     noQuery(url);
+    if (route.kind === 'ADMIN_MEDIA_UPLOAD') {
+      if (this.media === null)
+        throw new HttpRequestError(
+          'EDITORIAL_STORAGE_NOT_CONFIGURED',
+          503,
+          'Editorial image storage is not configured.',
+        );
+      const multipart = await readBoundedMultipart(request, ['altText', 'placement', 'width']);
+      return this.media.upload({
+        ...editorialImageUploadFieldsSchema.parse(multipart.fields),
+        ...multipart.file,
+        context,
+        editorialEntryId: uuid(route.entryId),
+      });
+    }
     if (route.kind === 'ADMIN_CREATE') {
       return this.editorial.create(context, editorialWriteSchema.parse(await json(request)));
     }
@@ -120,6 +159,9 @@ function match(method: string | undefined, pathname: string): Route | null {
     return { kind: 'PUBLIC_GET', slug: publicItem[1] };
   if (pathname === '/api/v1/admin/content' && method === 'GET') return { kind: 'ADMIN_LIST' };
   if (pathname === '/api/v1/admin/content' && method === 'POST') return { kind: 'ADMIN_CREATE' };
+  const mediaUpload = /^\/api\/v1\/admin\/content\/([^/]+)\/resources$/u.exec(pathname);
+  if (mediaUpload?.[1] !== undefined && method === 'POST')
+    return { entryId: mediaUpload[1], kind: 'ADMIN_MEDIA_UPLOAD' };
   const transition = /^\/api\/v1\/admin\/content\/([^/]+)\/(publish|archive|draft)$/u.exec(
     pathname,
   );

@@ -1569,12 +1569,18 @@ function EditorialComposer({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const body = String(form.get('body'));
     await onAction(
       '/api/v1/admin/content',
       {
-        body: String(form.get('body')),
+        body,
         excerpt: String(form.get('excerpt')),
-        metadata: {},
+        metadata: {
+          document: {
+            blocks: [{ id: crypto.randomUUID(), text: body, type: 'TEXT' }],
+            version: 1,
+          },
+        },
         slug: String(form.get('slug')),
         title: String(form.get('title')),
         type: String(form.get('type')),

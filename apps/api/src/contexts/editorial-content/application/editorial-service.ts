@@ -17,6 +17,7 @@ export interface EditorialEntryView {
 
 export interface EditorialRepository {
   create(context: ExecutionContext, input: EditorialWrite): Promise<EditorialEntryView>;
+  getAdmin(entryId: string): Promise<EditorialEntryView>;
   getPublished(slug: string): Promise<EditorialEntryView>;
   list(input: {
     readonly cursor?: string | undefined;
@@ -44,6 +45,9 @@ export class EditorialService {
   constructor(private readonly repository: EditorialRepository) {}
   async getPublished(slug: string) {
     return { item: serialize(await this.repository.getPublished(slug)) };
+  }
+  async getAdmin(entryId: string) {
+    return { item: serialize(await this.repository.getAdmin(entryId)) };
   }
   async listPublic(input: {
     readonly cursor?: string | undefined;
