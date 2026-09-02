@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-01. Release productivo `PASS`. Por decisión expresa del
+> Estado auditado hasta el 2026-09-02. Release productivo `PASS`. Por decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
 > operación V1.
 
@@ -21,7 +21,7 @@
 | Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin            | Ninguno                                |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                                |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                                |
-| Despliegue web                                                                       | Producción PASS          | Vercel `c5f97bd`, dominio canónico, smoke y rollback/restauración controlados      | Ninguno                                |
+| Despliegue web                                                                       | Producción PASS          | Vercel `0d29388`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                                |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                                |
 
 ## Gates locales reproducidos
@@ -94,6 +94,20 @@
 - El rollback instantáneo productivo cambió temporalmente `c5f97bd` por `2358111`; el dominio
   respondió correctamente durante la reversión y `c5f97bd` se restauró inmediatamente. Vercel
   confirmó el release restaurado y ningún rollback activo.
+
+## Verificación productiva posterior — 2026-09-02
+
+- Render y Vercel quedaron alineados exclusivamente con Supabase PROD `kbhbaackrgwgvxxqdlwx`.
+  La API verificó conexión PostgreSQL con la CA oficial, cuenta `ADMIN` activa y confirmada, y
+  tokens emitidos por el mismo proyecto; el bundle público contiene la URL y clave pública
+  esperadas, sin referencias al proyecto de staging.
+- Vercel promovió `0d29388` a Producción y asignó `www.sergodstore.cl`. El inicio de sesión real
+  llegó a Cuenta, permaneció activo tras la espera y permitió navegar directamente a `/admin/pos`
+  sin regresar al acceso.
+- Se recuperaron del entorno anterior los datos reales de la única sucursal y se inicializó mediante
+  `/api/v1/admin/branches/initialize` con idempotencia: `Sergod Store`, Los Carrera 5142, Copiapó,
+  `America/Santiago`. La lectura posterior confirmó exactamente una sucursal y el POS habilitó
+  “Abrir venta”; no se abrió ni registró ninguna venta durante esta comprobación.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
