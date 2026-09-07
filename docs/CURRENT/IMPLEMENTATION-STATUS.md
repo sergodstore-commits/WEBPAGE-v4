@@ -130,6 +130,16 @@
   `10:00 a 22:00`, teléfono `+56934423169` y correo `sergodstore@gmail.com`, exactamente como indicó
   el propietario. `GET /api/v1/service-coverage/store` respondió HTTP 200 desde el dominio y entregó
   esos datos a checkout; indicaciones y mapa permanecen nulos, sin contenido inventado.
+- El catálogo administrativo se reorganizó en tres tareas directas: `Nuevo producto`,
+  `Editar producto` e `Imágenes`. La galería carga al seleccionar la entidad, permite vista previa,
+  portada y orden, y conserva la administración técnica dentro de controles plegados. La corrección
+  adicional `27597c7` impide que las tablas genéricas desplacen estas tareas en pantallas pequeñas.
+  El gate completo pasó con 109 archivos, 411 pruebas aprobadas y 1 omisión documentada; la API
+  respondió salud HTTP 200 y autenticación HTTP 401 en la ruta privada sin sesión.
+- Vercel promovió `27597c7` a Producción mediante el deployment
+  `8MULAfLEY383LExzXbbaMvXBwVVd`. `www.sergodstore.cl/admin/catalog` conservó la sesión Admin,
+  mostró las tres tareas antes de las herramientas avanzadas, permitió alternarlas y no registró
+  errores ni advertencias de consola. La comprobación no creó productos ni modificó datos.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
