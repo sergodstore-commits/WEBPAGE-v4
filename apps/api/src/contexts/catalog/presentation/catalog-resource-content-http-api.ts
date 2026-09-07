@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import type { HttpRouteHandler } from '../../../presentation/http/create-server.js';
 import {
+  HttpRequestError,
   readBearerToken,
   sendJson,
   setSecurityHeaders,
@@ -82,6 +83,8 @@ function ownerType(segment: string): CatalogEntityType {
 }
 
 function mapError(error: unknown) {
+  if (error instanceof HttpRequestError)
+    return { code: error.code, message: error.message, status: error.httpStatus };
   if (error instanceof IdentityAccessError)
     return {
       code: error.httpStatus === 401 ? 'AUTHENTICATION_REQUIRED' : 'ACCESS_DENIED',

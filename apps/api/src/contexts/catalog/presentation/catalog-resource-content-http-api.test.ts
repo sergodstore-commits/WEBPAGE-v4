@@ -36,6 +36,15 @@ afterAll(async () => {
 });
 
 describe('Catalog resource content HTTP API', () => {
+  it('rejects requests without an authenticated session', async () => {
+    const response = await fetch(
+      `${origin}/api/v1/admin/catalog/products/${entityId}/resources/${resourceId}/content`,
+    );
+    expect(response.status).toBe(401);
+    const body = (await response.json()) as { readonly error: { readonly code: string } };
+    expect(body.error.code).toBe('AUTHENTICATION_REQUIRED');
+  });
+
   it('delivers a private product image only after ADMIN authorization', async () => {
     const response = await fetch(
       `${origin}/api/v1/admin/catalog/products/${entityId}/resources/${resourceId}/content`,
