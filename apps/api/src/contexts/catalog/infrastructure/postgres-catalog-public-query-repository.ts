@@ -20,6 +20,7 @@ import type {
   CatalogPublicResourceQueryPort,
   CatalogPublicResourceRecord,
 } from '../application/catalog-public-ports.js';
+import type { CatalogEntityType } from '../domain/catalog.js';
 
 export class PgCatalogPublicQueryRepository
   implements CatalogPublicQueryPort, CatalogPublicResourceQueryPort
@@ -265,6 +266,43 @@ export class PgCatalogPublicQueryRepository
         WHERE (SELECT count(*) FROM owners) = 1
           AND (SELECT count(*) FROM visible_owners) = 1`,
       [resourceId],
+    );
+    const row = result.rows[0];
+    return row === undefined
+      ? null
+      : {
+          byteSize: safePublicResourceByteSize(row.byte_size),
+          mimeTypeReal: row.mime_type_real,
+          resourceId: row.resource_id,
+          secureStorageKey: row.secure_storage_key,
+          sha256Hex: row.sha256_hex,
+        };
+  }
+
+  async findCatalogAdminResource(
+    entityType: CatalogEntityType,
+    entityId: string,
+    resourceId: string,
+  ): Promise<CatalogPublicResourceRecord | null> {
+    const result = await this.pool.query<PublicResourceRow>(
+      `SELECT resource.resource_id, resource.mime_type_real, resource.byte_size,
+              resource.sha256_hex, resource.secure_storage_key
+         FROM resource_assets resource
+        WHERE resource.resource_id=$3
+          AND resource.resource_class='CATALOG_IMAGE'
+          AND resource.state='ACTIVE'
+          AND (
+            ($1='PRODUCT' AND EXISTS (
+              SELECT 1 FROM product_media media
+               WHERE media.product_id=$2 AND media.resource_id=resource.resource_id
+            ))
+            OR ($1<>'PRODUCT' AND EXISTS (
+              SELECT 1 FROM catalog_entity_media media
+               WHERE media.source_type=$1 AND media.source_id=$2
+                 AND media.resource_id=resource.resource_id
+            ))
+          )`,
+      [entityType, entityId, resourceId],
     );
     const row = result.rows[0];
     return row === undefined

@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EditorialDocumentView } from '../editorial/EditorialDocument.js';
 import {
@@ -87,35 +87,11 @@ export function CatalogEditors({
   };
   return (
     <section className="cut-panel admin-module" id="catalog-editors">
-      <h2>Editar catálogo</h2>
-      <p>Selecciona una entidad y guarda todos los datos que quieras conservar.</p>
-      <div className="admin-form-grid">
-        <ParentEditor
-          items={games}
-          label="Juego TCG"
-          onSubmit={(event) => patchParent(event, 'tcg-games', 'games')}
-        />
-        <ParentEditor
-          items={categories}
-          label="Categoría"
-          onSubmit={(event) => patchParent(event, 'categories', 'categories')}
-        />
-        <form onSubmit={(event) => void patchCollection(event)}>
-          <h3>Colección</h3>
-          <ItemSelect
-            items={collections}
-            label="Colección"
-            name="entityId"
-            onSelect={(item, form) =>
-              fillForm(form, item, { description: 'description', gameId: 'gameId', name: 'name' })
-            }
-          />
-          <ItemSelect items={games} label="Juego" name="gameId" />
-          <TextFields />
-          <button>Guardar colección</button>
-        </form>
+      <h2>Editar producto</h2>
+      <p>Selecciona un producto, revisa sus datos y guarda únicamente los cambios necesarios.</p>
+      <div className="catalog-product-form">
         <form onSubmit={(event) => void patchProduct(event)}>
-          <h3>Producto</h3>
+          <h3>Datos del producto</h3>
           <ItemSelect
             items={products}
             label="Producto"
@@ -177,6 +153,36 @@ export function CatalogEditors({
           <button>Guardar producto</button>
         </form>
       </div>
+      <details className="catalog-reference-tools">
+        <summary>Editar juegos, categorías y colecciones</summary>
+        <p>Estas clasificaciones afectan a varios productos. Modifícalas con cuidado.</p>
+        <div className="admin-form-grid">
+          <ParentEditor
+            items={games}
+            label="Juego TCG"
+            onSubmit={(event) => patchParent(event, 'tcg-games', 'games')}
+          />
+          <ParentEditor
+            items={categories}
+            label="Categoría"
+            onSubmit={(event) => patchParent(event, 'categories', 'categories')}
+          />
+          <form onSubmit={(event) => void patchCollection(event)}>
+            <h3>Colección</h3>
+            <ItemSelect
+              items={collections}
+              label="Colección"
+              name="entityId"
+              onSelect={(item, form) =>
+                fillForm(form, item, { description: 'description', gameId: 'gameId', name: 'name' })
+              }
+            />
+            <ItemSelect items={games} label="Juego" name="gameId" />
+            <TextFields />
+            <button>Guardar colección</button>
+          </form>
+        </div>
+      </details>
     </section>
   );
 }
@@ -244,7 +250,10 @@ export function CatalogResourceManager({
   const [items, setItems] = useState<readonly Item[]>([]);
   const [etag, setEtag] = useState('');
   const [retireReasons, setRetireReasons] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState('Selecciona una entidad y carga sus imágenes.');
+  const [message, setMessage] = useState('Selecciona un producto para administrar su galería.');
+  const [uploadAltText, setUploadAltText] = useState('');
+  const [uploadPreview, setUploadPreview] = useState('');
+  const loadGeneration = useRef(0);
   const entities = useMemo(
     () =>
       owner === 'products'
@@ -257,15 +266,19 @@ export function CatalogResourceManager({
     [categories, collections, games, owner, products],
   );
   const base = `/api/v1/admin/catalog/${owner}/${entityId}/resources`;
-  const load = async () => {
-    if (!entityId) return setMessage('Selecciona una entidad.');
+  const selectedEntity = entities.find((item) => itemIdentifier(item) === entityId);
+  const selectedLabel = selectedEntity ? itemReference(selectedEntity) : '';
+  const load = async (targetEntityId = entityId, targetOwner = owner) => {
+    if (!targetEntityId) return setMessage('Selecciona una entidad.');
+    const generation = ++loadGeneration.current;
     try {
       const loaded: Item[] = [];
       const seenCursors = new Set<string>();
       let cursor: string | null = null;
       let representationEtag = '';
       do {
-        const pagePath: string = `${base}?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+        const targetBase = `/api/v1/admin/catalog/${targetOwner}/${targetEntityId}/resources`;
+        const pagePath: string = `${targetBase}?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
         const response: AuthorizedResponse<{ items: Item[]; nextCursor: string | null }> =
           await authorizedResponse(pagePath);
         const pageEtag = response.headers.get('etag') ?? '';
@@ -278,17 +291,25 @@ export function CatalogResourceManager({
           throw new Error('La paginación de imágenes no avanzó.');
         if (cursor) seenCursors.add(cursor);
       } while (cursor);
+      if (generation !== loadGeneration.current) return;
       setItems(loaded);
       setEtag(representationEtag);
       setMessage(loaded.length ? 'Imágenes cargadas.' : 'Esta entidad todavía no tiene imágenes.');
     } catch (error) {
-      setMessage(messageOf(error));
+      if (generation === loadGeneration.current) setMessage(messageOf(error));
     }
   };
+  useEffect(
+    () => () => {
+      if (uploadPreview) URL.revokeObjectURL(uploadPreview);
+    },
+    [uploadPreview],
+  );
   const upload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!entityId) return setMessage('Selecciona una entidad.');
     const data = new FormData(event.currentTarget);
+    data.set('position', String(items.length + 1));
     try {
       await authorizedRequest(base, {
         body: data,
@@ -296,6 +317,9 @@ export function CatalogResourceManager({
         method: 'POST',
       });
       setMessage('Imagen subida correctamente.');
+      event.currentTarget.reset();
+      setUploadAltText('');
+      setUploadPreview('');
       await load();
     } catch (error) {
       setMessage(messageOf(error));
@@ -342,22 +366,26 @@ export function CatalogResourceManager({
   };
   return (
     <section className="cut-panel admin-module" id="catalog-resources">
-      <h2>Imágenes del catálogo</h2>
+      <h2>Galería del producto</h2>
+      <p>Sube las fotos, define la portada y ordénalas como aparecerán en la tienda.</p>
       <p className="status" role="status">
         {message}
       </p>
-      <div className="admin-form-grid">
-        <div>
+      <div className="catalog-gallery-setup">
+        <div className="catalog-gallery-selector">
           <label>
-            Tipo
+            Tipo de contenido
             <select
               value={owner}
               onChange={(event) => {
                 setOwner(event.target.value as typeof owner);
+                loadGeneration.current += 1;
                 setEntityId('');
                 setItems([]);
                 setEtag('');
                 setRetireReasons({});
+                setUploadAltText('');
+                setMessage('Selecciona una entidad para administrar su galería.');
               }}
             >
               <option value="products">Producto</option>
@@ -372,112 +400,199 @@ export function CatalogResourceManager({
             name="resourceEntity"
             onChange={(value) => {
               setEntityId(value);
+              loadGeneration.current += 1;
               setItems([]);
               setEtag('');
               setRetireReasons({});
+              setMessage(value ? 'Cargando galería…' : 'Selecciona una entidad.');
+              const entity = entities.find((item) => itemIdentifier(item) === value);
+              setUploadAltText(entity ? itemReference(entity) : '');
+              if (value) void load(value, owner);
             }}
             value={entityId}
           />
-          <button onClick={() => void load()} type="button">
-            Cargar imágenes
-          </button>
+          {selectedEntity && (
+            <div className="catalog-selected-entity">
+              <span>Galería seleccionada</span>
+              <strong>{selectedLabel}</strong>
+              <small>
+                {items.length} {items.length === 1 ? 'imagen' : 'imágenes'}
+              </small>
+            </div>
+          )}
         </div>
-        <form encType="multipart/form-data" onSubmit={(event) => void upload(event)}>
-          <h3>Subir imagen</h3>
+        <form
+          className="catalog-upload-card"
+          encType="multipart/form-data"
+          onSubmit={(event) => void upload(event)}
+        >
+          <h3>Añadir imagen</h3>
+          {uploadPreview ? (
+            <img
+              alt="Vista previa de la imagen seleccionada"
+              className="catalog-upload-preview"
+              src={uploadPreview}
+            />
+          ) : (
+            <div className="catalog-upload-placeholder">Vista previa</div>
+          )}
           <label>
-            Archivo
+            Seleccionar archivo
             <input
               accept="image/jpeg,image/png,image/webp,image/avif"
               name="file"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                setUploadPreview(file ? URL.createObjectURL(file) : '');
+              }}
               required
               type="file"
             />
           </label>
           <label>
-            Texto alternativo
-            <input name="altText" required />
+            Descripción de la imagen
+            <input
+              name="altText"
+              onChange={(event) => setUploadAltText(event.target.value)}
+              placeholder="Ej.: Frente de la caja"
+              required
+              value={uploadAltText}
+            />
           </label>
-          <label>
-            Posición
-            <input min="1" name="position" required type="number" />
-          </label>
-          <button>Subir imagen</button>
+          <small>Se añadirá automáticamente al final de la galería.</small>
+          <button disabled={!entityId}>Añadir a la galería</button>
         </form>
       </div>
-      {items.map((item, index) => {
-        const id = String(item.resourceId);
-        return (
-          <article className="admin-resource" key={id}>
-            <div>
-              <strong>{String(item.originalFilenameSafe ?? id)}</strong>
-              <p>
-                {String(item.altText ?? '')} · posición {String(item.position ?? '')} ·{' '}
-                {String(item.state ?? '')}
-              </p>
-            </div>
-            <div className="admin-inline-actions">
-              <button disabled={index === 0 || !etag} onClick={() => move(id, -1)} type="button">
-                Subir posición
-              </button>
-              <button
-                disabled={index === items.length - 1 || !etag}
-                onClick={() => move(id, 1)}
-                type="button"
-              >
-                Bajar posición
-              </button>
-              <button
-                onClick={() => void json(`${base}/primary`, { resourceId: id }, 'PUT')}
-                type="button"
-              >
-                Hacer principal
-              </button>
-              <button
-                onClick={() => {
-                  const reason = retireReasons[id]?.trim();
-                  if (!reason) return setMessage('Indica el motivo para retirar la imagen.');
-                  void json(`${base}/${id}/retirements`, { reason }, 'POST');
-                }}
-                type="button"
-              >
-                Retirar
-              </button>
-            </div>
-            <label>
-              Motivo de retiro
-              <input
-                name="retireReason"
-                onChange={(event) =>
-                  setRetireReasons((current) => ({ ...current, [id]: event.target.value }))
-                }
-                value={retireReasons[id] ?? ''}
-              />
-            </label>
-            <form encType="multipart/form-data" onSubmit={(event) => void replace(event, id)}>
-              <label>
-                Nueva imagen
-                <input
-                  accept="image/jpeg,image/png,image/webp,image/avif"
-                  name="file"
-                  required
-                  type="file"
-                />
-              </label>
-              <label>
-                Texto alternativo
-                <input defaultValue={String(item.altText ?? '')} name="altText" required />
-              </label>
-              <label>
-                Motivo
-                <input name="reason" required />
-              </label>
-              <button>Reemplazar</button>
-            </form>
-          </article>
-        );
-      })}
+      {entityId && items.length > 0 && (
+        <div className="catalog-resource-grid">
+          {items.map((item, index) => {
+            const id = String(item.resourceId);
+            return (
+              <article className="admin-resource" key={id}>
+                <div className="catalog-resource-image">
+                  <CatalogResourcePreview
+                    alt={String(item.altText ?? '')}
+                    entityId={entityId}
+                    owner={owner}
+                    resourceId={id}
+                  />
+                  {item.isPrimary === true && <span className="status-chip">Portada</span>}
+                </div>
+                <div className="catalog-resource-copy">
+                  <strong>{String(item.originalFilenameSafe ?? id)}</strong>
+                  <p>{String(item.altText ?? '')}</p>
+                  <small>Posición {index + 1}</small>
+                </div>
+                <div className="admin-inline-actions">
+                  <button
+                    disabled={index === 0 || !etag}
+                    onClick={() => move(id, -1)}
+                    type="button"
+                  >
+                    Mover antes
+                  </button>
+                  <button
+                    disabled={index === items.length - 1 || !etag}
+                    onClick={() => move(id, 1)}
+                    type="button"
+                  >
+                    Mover después
+                  </button>
+                  <button
+                    disabled={item.isPrimary === true}
+                    onClick={() => void json(`${base}/primary`, { resourceId: id }, 'PUT')}
+                    type="button"
+                  >
+                    {item.isPrimary === true ? 'Es la portada' : 'Usar como portada'}
+                  </button>
+                </div>
+                <details className="catalog-image-maintenance">
+                  <summary>Reemplazar o quitar imagen</summary>
+                  <form encType="multipart/form-data" onSubmit={(event) => void replace(event, id)}>
+                    <label>
+                      Nueva imagen
+                      <input
+                        accept="image/jpeg,image/png,image/webp,image/avif"
+                        name="file"
+                        required
+                        type="file"
+                      />
+                    </label>
+                    <label>
+                      Descripción de la imagen
+                      <input defaultValue={String(item.altText ?? '')} name="altText" required />
+                    </label>
+                    <label>
+                      Motivo del reemplazo
+                      <input name="reason" required />
+                    </label>
+                    <button>Reemplazar imagen</button>
+                  </form>
+                  <div className="catalog-retire-image">
+                    <label>
+                      Motivo para quitarla
+                      <input
+                        name="retireReason"
+                        onChange={(event) =>
+                          setRetireReasons((current) => ({ ...current, [id]: event.target.value }))
+                        }
+                        value={retireReasons[id] ?? ''}
+                      />
+                    </label>
+                    <button
+                      className="danger"
+                      onClick={() => {
+                        const reason = retireReasons[id]?.trim();
+                        if (!reason) return setMessage('Indica el motivo para quitar la imagen.');
+                        void json(`${base}/${id}/retirements`, { reason }, 'POST');
+                      }}
+                      type="button"
+                    >
+                      Quitar de la galería
+                    </button>
+                  </div>
+                </details>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
+}
+
+function CatalogResourcePreview({
+  alt,
+  entityId,
+  owner,
+  resourceId,
+}: {
+  readonly alt: string;
+  readonly entityId: string;
+  readonly owner: (typeof owners)[number]['segment'];
+  readonly resourceId: string;
+}) {
+  const [source, setSource] = useState('');
+  useEffect(() => {
+    let active = true;
+    let objectUrl = '';
+    void authorizedBlob(
+      `/api/v1/admin/catalog/${owner}/${entityId}/resources/${resourceId}/content`,
+    )
+      .then((blob) => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSource(objectUrl);
+      })
+      .catch(() => {
+        if (active) setSource('');
+      });
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [entityId, owner, resourceId]);
+  return source ? <img alt={alt} src={source} /> : <span>Imagen no disponible</span>;
 }
 
 export function RecordEditors({

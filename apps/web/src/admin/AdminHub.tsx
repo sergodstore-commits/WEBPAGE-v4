@@ -238,6 +238,7 @@ export function AdminHub({
   const [actionMessage, setActionMessage] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [store, setStore] = useState<StoreSummary | null>(null);
+  const [catalogWorkspace, setCatalogWorkspace] = useState<'create' | 'edit' | 'images'>('create');
   const areaDefinition = adminAreas.find((definition) => definition.area === area) ?? adminAreas[0];
   const requiredModules = modules.filter(({ anchor }) =>
     requiredModulesByArea[area].includes(anchor),
@@ -388,27 +389,56 @@ export function AdminHub({
             <InventoryPanel onAction={mutate} products={data.catalog?.items ?? []} />
           )}
           {area === 'catalog' && (
-            <>
-              <CatalogComposer
-                categories={data.categories?.items ?? []}
-                collections={data.collections?.items ?? []}
-                games={data.games?.items ?? []}
-                onAction={mutate}
-              />
-              <CatalogEditors
-                categories={data.categories?.items ?? []}
-                collections={data.collections?.items ?? []}
-                games={data.games?.items ?? []}
-                onAction={mutate}
-                products={data.catalog?.items ?? []}
-              />
-              <CatalogResourceManager
-                categories={data.categories?.items ?? []}
-                collections={data.collections?.items ?? []}
-                games={data.games?.items ?? []}
-                products={data.catalog?.items ?? []}
-              />
-            </>
+            <section className="catalog-admin-workspace" aria-label="Herramientas del catálogo">
+              <nav aria-label="Secciones del catálogo" className="catalog-admin-tabs">
+                <button
+                  aria-current={catalogWorkspace === 'create' ? 'page' : undefined}
+                  onClick={() => setCatalogWorkspace('create')}
+                  type="button"
+                >
+                  Nuevo producto
+                </button>
+                <button
+                  aria-current={catalogWorkspace === 'edit' ? 'page' : undefined}
+                  onClick={() => setCatalogWorkspace('edit')}
+                  type="button"
+                >
+                  Editar producto
+                </button>
+                <button
+                  aria-current={catalogWorkspace === 'images' ? 'page' : undefined}
+                  onClick={() => setCatalogWorkspace('images')}
+                  type="button"
+                >
+                  Imágenes
+                </button>
+              </nav>
+              {catalogWorkspace === 'create' && (
+                <CatalogComposer
+                  categories={data.categories?.items ?? []}
+                  collections={data.collections?.items ?? []}
+                  games={data.games?.items ?? []}
+                  onAction={mutate}
+                />
+              )}
+              {catalogWorkspace === 'edit' && (
+                <CatalogEditors
+                  categories={data.categories?.items ?? []}
+                  collections={data.collections?.items ?? []}
+                  games={data.games?.items ?? []}
+                  onAction={mutate}
+                  products={data.catalog?.items ?? []}
+                />
+              )}
+              {catalogWorkspace === 'images' && (
+                <CatalogResourceManager
+                  categories={data.categories?.items ?? []}
+                  collections={data.collections?.items ?? []}
+                  games={data.games?.items ?? []}
+                  products={data.catalog?.items ?? []}
+                />
+              )}
+            </section>
           )}
           {area === 'preorders' && (
             <PreorderComposer
@@ -1086,51 +1116,11 @@ function CatalogComposer({
   };
   return (
     <section className="cut-panel admin-module">
-      <h2>Crear catálogo</h2>
-      <div className="admin-form-grid">
-        <form onSubmit={(event) => void parent(event, 'tcg-games')}>
-          <h3>Juego TCG</h3>
-          <label>
-            Nombre
-            <input name="name" required />
-          </label>
-          <label>
-            Slug
-            <input name="slug" pattern="[a-z0-9-]+" required />
-          </label>
-          <label>
-            Descripción
-            <input name="description" />
-          </label>
-          <button>Crear juego</button>
-        </form>
-        <form onSubmit={(event) => void parent(event, 'categories')}>
-          <h3>Categoría</h3>
-          <label>
-            Nombre
-            <input name="name" required />
-          </label>
-          <label>
-            Descripción
-            <input name="description" />
-          </label>
-          <button>Crear categoría</button>
-        </form>
-        <form onSubmit={(event) => void collection(event)}>
-          <h3>Colección</h3>
-          <EntitySelect items={games} label="Juego" name="gameId" />
-          <label>
-            Nombre
-            <input name="name" required />
-          </label>
-          <label>
-            Descripción
-            <input name="description" />
-          </label>
-          <button>Crear colección</button>
-        </form>
+      <h2>Nuevo producto</h2>
+      <p>Completa los datos comerciales. Después podrás cargar y ordenar sus imágenes.</p>
+      <div className="catalog-product-form">
         <form onSubmit={(event) => void product(event)}>
-          <h3>Producto</h3>
+          <h3>Datos del producto</h3>
           <EntitySelect items={games} label="Juego" name="gameId" />
           <EntitySelect items={categories} label="Categoría" name="categoryId" />
           <EntitySelect allowEmpty items={collections} label="Colección" name="collectionId" />
@@ -1165,13 +1155,60 @@ function CatalogComposer({
             Condición
             <input name="condition" />
           </label>
-          <label>
+          <label className="catalog-wide-field">
             Descripción
             <textarea name="description" />
           </label>
           <button>Crear producto</button>
         </form>
       </div>
+      <details className="catalog-reference-tools">
+        <summary>Administrar juegos, categorías y colecciones</summary>
+        <p>Usa estas opciones solo cuando necesites crear una nueva clasificación.</p>
+        <div className="admin-form-grid">
+          <form onSubmit={(event) => void parent(event, 'tcg-games')}>
+            <h3>Juego TCG</h3>
+            <label>
+              Nombre
+              <input name="name" required />
+            </label>
+            <label>
+              Slug
+              <input name="slug" pattern="[a-z0-9-]+" required />
+            </label>
+            <label>
+              Descripción
+              <input name="description" />
+            </label>
+            <button>Crear juego</button>
+          </form>
+          <form onSubmit={(event) => void parent(event, 'categories')}>
+            <h3>Categoría</h3>
+            <label>
+              Nombre
+              <input name="name" required />
+            </label>
+            <label>
+              Descripción
+              <input name="description" />
+            </label>
+            <button>Crear categoría</button>
+          </form>
+          <form onSubmit={(event) => void collection(event)}>
+            <h3>Colección</h3>
+            <EntitySelect items={games} label="Juego" name="gameId" />
+            <label>
+              Nombre
+              <input name="name" required />
+            </label>
+            <label>
+              Descripción
+              <input name="description" />
+            </label>
+            <button>Crear colección</button>
+          </form>
+        </div>
+      </details>
     </section>
   );
 }

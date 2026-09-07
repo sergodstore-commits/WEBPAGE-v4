@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 
 import { catalogImageLimits, CatalogError, type CatalogImageMimeType } from '../domain/catalog.js';
+import type { CatalogEntityType } from '../domain/catalog.js';
 import type { CatalogPrivateStoragePort } from './ports.js';
 import type {
   CatalogPublicResourceQueryPort,
@@ -77,6 +78,22 @@ export class CatalogPublicResourceService {
         'EDITORIAL_RESOURCE_NOT_FOUND',
         'NOT_FOUND',
         'Editorial resource was not found.',
+      );
+    }
+    return new CatalogPublicResourceDelivery(record, this.storage);
+  }
+
+  async prepareCatalogAdmin(
+    entityType: CatalogEntityType,
+    entityId: string,
+    resourceId: string,
+  ): Promise<CatalogPublicResourceDelivery> {
+    const record = await this.repository.findCatalogAdminResource(entityType, entityId, resourceId);
+    if (record === null) {
+      throw new CatalogError(
+        'CATALOG_RESOURCE_NOT_FOUND',
+        'NOT_FOUND',
+        'Catalog resource was not found.',
       );
     }
     return new CatalogPublicResourceDelivery(record, this.storage);

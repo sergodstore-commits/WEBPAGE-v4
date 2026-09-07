@@ -9,7 +9,7 @@ import type {
   CatalogPublicSort,
 } from '@sergod/contracts';
 
-import type { CatalogImageMimeType } from '../domain/catalog.js';
+import type { CatalogEntityType, CatalogImageMimeType } from '../domain/catalog.js';
 
 export interface CatalogPublicNameCursor {
   readonly id: string;
@@ -62,6 +62,11 @@ export interface CatalogPublicResourceRecord {
 }
 
 export interface CatalogPublicResourceQueryPort {
+  findCatalogAdminResource(
+    entityType: CatalogEntityType,
+    entityId: string,
+    resourceId: string,
+  ): Promise<CatalogPublicResourceRecord | null>;
   findEditorialAdminResource(
     editorialEntryId: string,
     resourceId: string,

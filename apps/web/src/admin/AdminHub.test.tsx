@@ -308,11 +308,14 @@ describe('AdminHub', () => {
 
   it('sends a complete product edit with idempotency protection', async () => {
     render(<AdminHub area="catalog" navigate={vi.fn()} />);
-    const section = (await screen.findByRole('heading', { name: 'Editar catálogo' })).closest(
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar producto' }));
+    const section = (await screen.findByRole('heading', { name: 'Editar producto' })).closest(
       'section',
     );
     if (!section) throw new Error('Catalog editor was not rendered.');
-    const form = within(section).getByRole('heading', { name: 'Producto' }).closest('form');
+    const form = within(section)
+      .getByRole('heading', { name: 'Datos del producto' })
+      .closest('form');
     if (!form) throw new Error('Product editor was not rendered.');
     const fields = within(form);
     fireEvent.change(fields.getByLabelText('Producto'), { target: { value: 'product-1' } });
@@ -370,13 +373,13 @@ describe('AdminHub', () => {
       status: 200,
     } as never);
     render(<AdminHub area="catalog" navigate={vi.fn()} />);
-    const section = (await screen.findByRole('heading', { name: 'Imágenes del catálogo' })).closest(
+    fireEvent.click(await screen.findByRole('button', { name: 'Imágenes' }));
+    const section = (await screen.findByRole('heading', { name: 'Galería del producto' })).closest(
       'section',
     );
     if (!section) throw new Error('Catalog resource manager was not rendered.');
     const fields = within(section);
     fireEvent.change(fields.getByLabelText('Producto'), { target: { value: 'product-1' } });
-    fireEvent.click(fields.getByRole('button', { name: 'Cargar imágenes' }));
     await waitFor(() =>
       expect(vi.mocked(authorizedResponse)).toHaveBeenCalledWith(
         '/api/v1/admin/catalog/products/product-1/resources?limit=100',
@@ -384,14 +387,15 @@ describe('AdminHub', () => {
     );
 
     const file = new File(['image'], 'product.webp', { type: 'image/webp' });
-    const uploadForm = fields.getByRole('heading', { name: 'Subir imagen' }).closest('form');
+    const uploadForm = fields.getByRole('heading', { name: 'Añadir imagen' }).closest('form');
     if (!uploadForm) throw new Error('Image upload form was not rendered.');
     const uploadFields = within(uploadForm);
-    fireEvent.change(uploadFields.getByLabelText('Archivo'), { target: { files: [file] } });
-    fireEvent.change(uploadFields.getByLabelText('Texto alternativo'), {
+    fireEvent.change(uploadFields.getByLabelText('Seleccionar archivo'), {
+      target: { files: [file] },
+    });
+    fireEvent.change(uploadFields.getByLabelText('Descripción de la imagen'), {
       target: { value: 'Vista frontal del producto' },
     });
-    fireEvent.change(uploadFields.getByLabelText('Posición'), { target: { value: '1' } });
     fireEvent.submit(uploadForm);
 
     await waitFor(() => {
@@ -404,10 +408,10 @@ describe('AdminHub', () => {
       const submitted = call?.[1]?.body as FormData;
       expect(submitted.get('file')).toBeInstanceOf(File);
       expect(submitted.get('altText')).toBe('Vista frontal del producto');
-      expect(submitted.get('position')).toBe('1');
+      expect(submitted.get('position')).toBe('3');
     });
 
-    const moveUpButtons = await fields.findAllByRole('button', { name: 'Subir posición' });
+    const moveUpButtons = await fields.findAllByRole('button', { name: 'Mover antes' });
     const secondMoveUp = moveUpButtons[1];
     if (!secondMoveUp) throw new Error('Second resource reorder action was not rendered.');
     fireEvent.click(secondMoveUp);
@@ -427,10 +431,13 @@ describe('AdminHub', () => {
       ]);
     });
 
-    await waitFor(() => expect(vi.mocked(authorizedResponse).mock.calls.length).toBeGreaterThan(2));
+    await waitFor(() => expect(vi.mocked(authorizedResponse).mock.calls.length).toBeGreaterThan(1));
     const currentFields = within(section);
-    const retirementReasons = currentFields.getAllByLabelText('Motivo de retiro');
-    const retireButtons = currentFields.getAllByRole('button', { name: 'Retirar' });
+    for (const control of currentFields.getAllByText('Reemplazar o quitar imagen')) {
+      fireEvent.click(control);
+    }
+    const retirementReasons = currentFields.getAllByLabelText('Motivo para quitarla');
+    const retireButtons = currentFields.getAllByRole('button', { name: 'Quitar de la galería' });
     if (!retirementReasons[0] || !retireButtons[0])
       throw new Error('Resource retirement controls were not rendered.');
     fireEvent.change(retirementReasons[0], { target: { value: 'Imagen desactualizada' } });
