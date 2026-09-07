@@ -31,10 +31,15 @@ export class ServiceCoverageHttpApi implements HttpRouteHandler {
   ) {}
   async handle(req: IncomingMessage, res: ServerResponse) {
     const url = new URL(req.url ?? '/', 'http://local');
-    if (!url.pathname.startsWith('/api/v1/admin/service-coverage')) return false;
+    const publicStoreRequest =
+      req.method === 'GET' && url.pathname === '/api/v1/service-coverage/store';
+    if (!publicStoreRequest && !url.pathname.startsWith('/api/v1/admin/service-coverage'))
+      return false;
     const correlationId = randomUUID();
     const startedAt = performance.now();
     try {
+      if (publicStoreRequest)
+        return sendJson(res, 200, await this.service.publicStore(), correlationId);
       const auth = await this.identity.authorize({
         accessToken: readBearerToken(req),
         capability: { kind: 'ADMIN' },

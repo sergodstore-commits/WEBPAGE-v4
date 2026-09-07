@@ -290,6 +290,48 @@ export class PgServiceCoverageRepository implements ServiceCoverageRepository {
       serviceInfo: i.rows,
     };
   }
+  async publicStore() {
+    const result = await this.pool.query<{
+      branch_id: string;
+      directions: string | null;
+      map_url: string | null;
+      name: string;
+      opening_hours: string;
+      public_address: string;
+      public_contacts: string;
+    }>(
+      `SELECT branch.branch_id,branch.name,
+          revision.body_or_description_snapshot->>'publicAddress' public_address,
+          revision.body_or_description_snapshot->>'openingHours' opening_hours,
+          revision.body_or_description_snapshot->>'publicContacts' public_contacts,
+          revision.body_or_description_snapshot->>'directions' directions,
+          revision.body_or_description_snapshot->>'mapUrl' map_url
+         FROM branches branch
+         JOIN public_service_info info USING(branch_id)
+         JOIN content_revisions revision
+           ON revision.revision_id=info.current_published_revision_id
+          AND revision.source_type='PUBLIC_SERVICE_INFO'
+          AND revision.source_id=info.public_service_info_id
+        WHERE branch.state='ACTIVE' AND info.state='PUBLISHED'
+        ORDER BY branch.created_at,branch.branch_id
+        LIMIT 1`,
+    );
+    const store = result.rows[0];
+    return {
+      item:
+        store === undefined
+          ? null
+          : {
+              branchId: store.branch_id,
+              directions: store.directions,
+              mapUrl: store.map_url,
+              name: store.name,
+              openingHours: store.opening_hours,
+              publicAddress: store.public_address,
+              publicContacts: store.public_contacts,
+            },
+    };
+  }
   async validateProvisionalIntent(input: CheckoutDeliveryIntent) {
     if (input.mode === 'PICKUP') {
       const result = await this.pool.query<ReturnType<JSON['parse']>>(

@@ -1,6 +1,9 @@
 import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { authorizedRequest } from '../identity/api.js';
+import { readCoverage } from '../service-coverage/api.js';
+import { StoreField } from '../service-coverage/StoreField.js';
+import { firstStoreFromCoverage, type StoreSummary } from '../service-coverage/store.js';
 import { CatalogEditors, CatalogResourceManager, RecordEditors } from './AdminEditors.js';
 import {
   itemDetail,
@@ -188,7 +191,7 @@ const adminNavigationGroups = [
     label: 'Gestión',
     links: [
       { label: 'Usuarios', route: '/admin/accounts' },
-      { label: 'Sucursales y cobertura', route: '/admin/service-coverage' },
+      { label: 'Tienda y cobertura', route: '/admin/service-coverage' },
       { label: 'Configuración', route: '/admin/configuration' },
       { label: 'Auditoría', route: '/admin/audit' },
     ],
@@ -234,6 +237,7 @@ export function AdminHub({
   const [data, setData] = useState<Record<string, ModuleState>>(initialModules);
   const [actionMessage, setActionMessage] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [store, setStore] = useState<StoreSummary | null>(null);
   const areaDefinition = adminAreas.find((definition) => definition.area === area) ?? adminAreas[0];
   const requiredModules = modules.filter(({ anchor }) =>
     requiredModulesByArea[area].includes(anchor),
@@ -284,6 +288,21 @@ export function AdminHub({
       if (definition) void load(definition);
     }
   }, [area, load]);
+
+  useEffect(() => {
+    if (!['loyalty', 'preorders'].includes(area)) return;
+    let active = true;
+    void readCoverage()
+      .then((result) => {
+        if (active) setStore(firstStoreFromCoverage(result));
+      })
+      .catch(() => {
+        if (active) setStore(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [area]);
 
   const mutate = async (path: string, body: unknown, method = 'POST', reload?: string) => {
     setActionMessage('Guardando operación…');
@@ -392,12 +411,16 @@ export function AdminHub({
             </>
           )}
           {area === 'preorders' && (
-            <PreorderComposer onAction={mutate} products={data.catalog?.items ?? []} />
+            <PreorderComposer
+              onAction={mutate}
+              products={data.catalog?.items ?? []}
+              store={store}
+            />
           )}
           {area === 'promotions' && (
             <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
           )}
-          {area === 'loyalty' && <LoyaltyOperations onAction={mutate} />}
+          {area === 'loyalty' && <LoyaltyOperations onAction={mutate} store={store} />}
           {area === 'configuration' && <ConfigurationComposer onAction={mutate} />}
           {area === 'content' && <EditorialComposer onAction={mutate} />}
           {['configuration', 'content', 'loyalty', 'preorders', 'promotions'].includes(area) && (
@@ -410,6 +433,7 @@ export function AdminHub({
               preorders={data.preorders?.items ?? []}
               products={data.catalog?.items ?? []}
               promotions={data.promotions?.items ?? []}
+              store={store}
             />
           )}
         </div>
@@ -1184,6 +1208,7 @@ function EntitySelect({
 function PreorderComposer({
   products,
   onAction,
+  store,
 }: {
   readonly products: readonly Item[];
   readonly onAction: (
@@ -1192,6 +1217,7 @@ function PreorderComposer({
     method?: string,
     reload?: string,
   ) => Promise<void>;
+  readonly store: StoreSummary | null;
 }) {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1216,10 +1242,7 @@ function PreorderComposer({
       <h2>Nueva campaña de preventa</h2>
       <form onSubmit={(event) => void submit(event)}>
         <ProductSelect items={products} />
-        <label>
-          Sucursal
-          <input name="branchId" required />
-        </label>
+        <StoreField store={store} />
         <label>
           Cupos
           <input min="1" name="capacity" required type="number" />
@@ -1240,7 +1263,7 @@ function PreorderComposer({
           Grupo de fulfillment
           <input name="groupKey" />
         </label>
-        <button>Crear campaña</button>
+        <button disabled={store === null}>Crear campaña</button>
       </form>
     </section>
   );
@@ -1248,6 +1271,7 @@ function PreorderComposer({
 
 function LoyaltyOperations({
   onAction,
+  store,
 }: {
   readonly onAction: (
     path: string,
@@ -1255,6 +1279,7 @@ function LoyaltyOperations({
     method?: string,
     reload?: string,
   ) => Promise<void>;
+  readonly store: StoreSummary | null;
 }) {
   const correction = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1288,10 +1313,7 @@ function LoyaltyOperations({
       <div className="admin-form-grid">
         <form onSubmit={(event) => void configuration(event)}>
           <h3>Nueva configuración</h3>
-          <label>
-            Sucursal
-            <input name="branchId" required />
-          </label>
+          <StoreField store={store} />
           <label>
             CLP para acumular un punto
             <input min="1" name="earn" required type="number" />
@@ -1308,7 +1330,7 @@ function LoyaltyOperations({
             Máximo canjeable (puntos base)
             <input max="10000" min="1" name="maximum" type="number" />
           </label>
-          <button>Crear configuración</button>
+          <button disabled={store === null}>Crear configuración</button>
         </form>
         <form onSubmit={(event) => void correction(event)}>
           <h3>Corrección controlada de puntos</h3>
@@ -1440,10 +1462,6 @@ function PromotionComposer({
             </select>
           </label>
           <label>
-            Sucursal opcional
-            <input name="branchId" />
-          </label>
-          <label>
             Prioridad
             <input defaultValue="0" name="priority" required type="number" />
           </label>
@@ -1531,7 +1549,7 @@ function ConfigurationComposer({
             <option value="ANONYMOUS_CART_INACTIVITY_MINUTES">
               Inactividad del carrito anónimo
             </option>
-            <option value="PICKUP_BRANCH_ID">Sucursal de retiro</option>
+            <option value="PICKUP_BRANCH_ID">Tienda de retiro</option>
             <option value="DEFAULT_LOW_STOCK_THRESHOLD">Umbral de últimas unidades</option>
             <option value="PAYMENT_RESERVATION_DURATION_MINUTES">
               Duración de reserva de pago

@@ -1,6 +1,9 @@
 import { type FormEvent, useEffect, useState } from 'react';
 
 import { currentSession } from '../identity/api.js';
+import { readPublicStore } from '../service-coverage/api.js';
+import { StoreField } from '../service-coverage/StoreField.js';
+import { firstStore, type StoreSummary } from '../service-coverage/store.js';
 import {
   clearCheckoutCoupon,
   clearCheckoutPoints,
@@ -21,6 +24,7 @@ export function CheckoutPanel() {
   const [summary, setSummary] = useState<ReturnType<JSON['parse']> | null>(null);
   const [order, setOrder] = useState<ReturnType<JSON['parse']> | null>(null);
   const [message, setMessage] = useState('');
+  const [store, setStore] = useState<StoreSummary | null>(null);
   const [deliveryMode, setDeliveryMode] = useState<'PICKUP' | 'SHIPPING'>('PICKUP');
   const refresh = async (id = groupId) => setSummary((await readCheckoutSummary(id)).item);
   useEffect(() => {
@@ -43,16 +47,33 @@ export function CheckoutPanel() {
       active = false;
     };
   }, [initialGroupId, isAuthenticated]);
+  useEffect(() => {
+    if (!isAuthenticated || initialGroupId === '') return;
+    let active = true;
+    void readPublicStore()
+      .then((result) => {
+        if (!active) return;
+        setStore(firstStore(result.item));
+      })
+      .catch(() => {
+        if (active) setStore(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [initialGroupId, isAuthenticated]);
   const run = async (event: FormEvent<HTMLFormElement>, action: string) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {
       if (action === 'DELIVERY') {
         const mode = String(form.get('mode'));
+        if (mode === 'PICKUP' && store === null)
+          throw new Error('La información de retiro en tienda no está disponible.');
         await replaceDeliveryIntent(
           groupId,
           mode === 'PICKUP'
-            ? { branchId: String(form.get('branchId')), mode: 'PICKUP' }
+            ? { branchId: store?.branchId, mode: 'PICKUP' }
             : {
                 agencyDestination: String(form.get('agencyDestination')),
                 carrier: String(form.get('carrier')),
@@ -210,10 +231,7 @@ export function CheckoutPanel() {
                 </select>
               </label>
               {deliveryMode === 'PICKUP' ? (
-                <label>
-                  Sucursal de retiro
-                  <input name="branchId" />
-                </label>
+                <StoreField store={store} />
               ) : (
                 <div className="delivery-fields">
                   <p className="freight-notice compact">
@@ -241,7 +259,9 @@ export function CheckoutPanel() {
                   </label>
                 </div>
               )}
-              <button>Guardar entrega</button>
+              <button disabled={deliveryMode === 'PICKUP' && store === null}>
+                Guardar entrega
+              </button>
             </form>
             <form className="checkout-option" onSubmit={(event) => void run(event, 'COUPON')}>
               <div className="option-heading">

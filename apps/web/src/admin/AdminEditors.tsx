@@ -14,6 +14,8 @@ import {
   authorizedRequest,
   authorizedResponse,
 } from '../identity/api.js';
+import { StoreField } from '../service-coverage/StoreField.js';
+import type { StoreSummary } from '../service-coverage/store.js';
 import { itemIdentifier, itemReference } from './presentation.js';
 
 type Item = Record<string, unknown>;
@@ -487,6 +489,7 @@ export function RecordEditors({
   preorders,
   products,
   promotions,
+  store,
 }: {
   readonly area: 'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions';
   readonly content: readonly Item[];
@@ -496,6 +499,7 @@ export function RecordEditors({
   readonly preorders: readonly Item[];
   readonly products: readonly Item[];
   readonly promotions: readonly Item[];
+  readonly store: StoreSummary | null;
 }) {
   if (area === 'content') return <EditorialVisualEditor content={content} onAction={onAction} />;
   const preorder = (event: FormEvent<HTMLFormElement>) => {
@@ -589,7 +593,6 @@ export function RecordEditors({
             name="id"
             onSelect={(item, form) =>
               fillForm(form, item, {
-                branchId: 'branchId',
                 capacity: 'capacity',
                 closesAt: 'closesAt',
                 estimatedArrivalText: 'arrival',
@@ -600,10 +603,7 @@ export function RecordEditors({
             }
           />
           <ItemSelect items={products} label="Producto" name="productId" />
-          <label>
-            Sucursal
-            <input name="branchId" required />
-          </label>
+          <StoreField store={store} />
           <label>
             Cupos
             <input min="1" name="capacity" required type="number" />
@@ -624,7 +624,7 @@ export function RecordEditors({
             Grupo fulfillment
             <input name="groupKey" />
           </label>
-          <button>Guardar preventa</button>
+          <button disabled={store === null}>Guardar preventa</button>
         </form>
         <form hidden={area !== 'loyalty'} onSubmit={(event) => void loyaltyEdit(event)}>
           <h3>Configuración loyalty</h3>
@@ -741,10 +741,7 @@ export function RecordEditors({
               <option value="COUPON_REQUIRED">Requiere cupón</option>
             </select>
           </label>
-          <label>
-            Sucursal opcional
-            <input name="branchId" />
-          </label>
+          <input name="branchId" type="hidden" />
           <label>
             Prioridad
             <input defaultValue="0" name="priority" required type="number" />

@@ -142,9 +142,9 @@ export function App() {
             <AccessGate requiredRole="ADMIN">
               <AdminStandaloneLayout
                 currentRoute="/admin/service-coverage"
-                description="Sucursales, retiro y cobertura pública de despacho."
+                description="Tienda, retiro y cobertura pública de despacho."
                 navigate={navigate}
-                title="Sucursales y cobertura"
+                title="Tienda y cobertura"
               >
                 <ServiceCoveragePanel />
               </AdminStandaloneLayout>

@@ -26,6 +26,7 @@ export interface ServiceCoverageRepository {
     reason: string,
   ): Promise<unknown>;
   list(): Promise<unknown>;
+  publicStore(): Promise<unknown>;
   buildDeliverySnapshot(
     input: unknown,
     orderTotalWithoutShippingClp: number,
@@ -45,6 +46,9 @@ export class ServiceCoverageService {
   }
   list() {
     return this.repository.list();
+  }
+  publicStore() {
+    return this.repository.publicStore();
   }
   buildDeliverySnapshot(i: unknown, orderTotalWithoutShippingClp = 0) {
     return this.repository.buildDeliverySnapshot(

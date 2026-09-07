@@ -3,6 +3,8 @@ import { OperationalDataView } from '../admin/OperationalDataView.js';
 import { readableText, shortIdentifier } from '../admin/presentation.js';
 import { accounts as readAccounts, type AccountView } from '../identity/api.js';
 import { readCoverage } from '../service-coverage/api.js';
+import { StoreField } from '../service-coverage/StoreField.js';
+import { firstStoreFromCoverage, type StoreSummary } from '../service-coverage/store.js';
 import {
   addLine,
   completeSale,
@@ -37,7 +39,7 @@ export function PosPanel() {
   );
   const [sale, setSale] = useState<ReturnType<JSON['parse']>>(null);
   const [accountOptions, setAccountOptions] = useState<readonly AccountView[]>([]);
-  const [branches, setBranches] = useState<readonly Item[]>([]);
+  const [store, setStore] = useState<StoreSummary | null>(null);
   const [campaigns, setCampaigns] = useState<readonly Item[]>([]);
   const [catalogProducts, setCatalogProducts] = useState<readonly PosCatalogProduct[]>([]);
   const [catalogQuery, setCatalogQuery] = useState('');
@@ -61,16 +63,12 @@ export function PosPanel() {
             ),
           );
         if (coverageResult.status === 'fulfilled')
-          setBranches(
-            uniqueBranches(
-              itemsOf(coverageResult.value.branches ?? coverageResult.value.serviceInfo),
-            ),
-          );
+          setStore(firstStoreFromCoverage(coverageResult.value));
         if (methodResult.status === 'fulfilled') setMethodOptions(itemsOf(methodResult.value));
         if (catalogResult.status === 'fulfilled') setCatalogProducts(catalogResult.value.items);
         const unavailable = [
           accountResult.status === 'rejected' ? 'cuentas' : null,
-          coverageResult.status === 'rejected' ? 'sucursales' : null,
+          coverageResult.status === 'rejected' ? 'tienda' : null,
           methodResult.status === 'rejected' ? 'medios externos' : null,
           catalogResult.status === 'rejected' ? 'catálogo del POS' : null,
         ].filter((label): label is string => label !== null);
@@ -355,10 +353,7 @@ export function PosPanel() {
             <p>Selecciona el tipo de operación para comenzar a agregar productos.</p>
           </div>
           <div className="pos-start-fields">
-            <label>
-              Sucursal
-              <BranchSelect branches={branches} loading={optionsLoading} name="branchId" />
-            </label>
+            <StoreField loading={optionsLoading} store={store} />
             <label>
               Tipo de venta
               <select name="saleType">
@@ -366,7 +361,7 @@ export function PosPanel() {
                 <option value="PREORDER">Preventa</option>
               </select>
             </label>
-            <button disabled={branches.length === 0}>Abrir venta</button>
+            <button disabled={store === null}>Abrir venta</button>
           </div>
         </form>
       )}
@@ -588,7 +583,7 @@ export function PosPanel() {
                 <label>
                   Modalidad
                   <select name="deliveryMode">
-                    <option value="PICKUP">Retiro en sucursal</option>
+                    <option value="PICKUP">Retiro en tienda</option>
                     <option value="SHIPPING">Despacho a agencia</option>
                   </select>
                 </label>
@@ -769,15 +764,12 @@ export function PosPanel() {
           onSubmit={(event) => void action(event, 'DAILY')}
         >
           <h2>Total diario</h2>
-          <label>
-            Sucursal
-            <BranchSelect branches={branches} loading={optionsLoading} name="branchId" />
-          </label>
+          <StoreField loading={optionsLoading} store={store} />
           <label>
             Fecha
             <input name="date" type="date" required />
           </label>
-          <button disabled={branches.length === 0}>Consultar</button>
+          <button disabled={store === null}>Consultar</button>
         </form>
         {sale && (
           <form
@@ -849,45 +841,6 @@ function itemsOf(value: unknown): readonly Item[] {
   if (Array.isArray(value)) return value.filter(isRecord);
   if (isRecord(value) && Array.isArray(value.items)) return value.items.filter(isRecord);
   return [];
-}
-
-function uniqueBranches(items: readonly Item[]): readonly Item[] {
-  return items.filter(
-    (item, index) =>
-      typeof item.branch_id === 'string' &&
-      items.findIndex((candidate) => candidate.branch_id === item.branch_id) === index,
-  );
-}
-
-function BranchSelect({
-  branches,
-  loading,
-  name,
-}: {
-  readonly branches: readonly Item[];
-  readonly loading: boolean;
-  readonly name: string;
-}) {
-  return (
-    <select disabled={branches.length === 0} name={name} required>
-      <option value="">
-        {loading
-          ? 'Cargando sucursal…'
-          : branches.length === 0
-            ? 'No hay sucursal configurada'
-            : 'Selecciona una sucursal'}
-      </option>
-      {branches.map((branch) => (
-        <option key={String(branch.branch_id)} value={String(branch.branch_id)}>
-          {String(
-            branch.name ??
-              branch.public_address ??
-              `Sucursal ${shortIdentifier(String(branch.branch_id))}`,
-          )}
-        </option>
-      ))}
-    </select>
-  );
 }
 
 function MethodSelect({

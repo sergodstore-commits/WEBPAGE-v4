@@ -32,7 +32,8 @@ it('renders the administrative service coverage workflow without raw data', asyn
   expect(screen.queryByText(/tarifa CLP/iu)).not.toBeInTheDocument();
   expect((await screen.findAllByText('Av. Principal 123')).length).toBeGreaterThan(0);
   expect(screen.getAllByText('Publicado').length).toBeGreaterThan(0);
-  expect(screen.getAllByRole('option', { name: 'Av. Principal 123' }).length).toBe(2);
+  expect(screen.getByLabelText('Tienda configurada')).toHaveTextContent('Av. Principal 123');
+  expect(screen.queryByLabelText('Sucursal')).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Identificador')).not.toBeInTheDocument();
   expect(document.querySelector('pre')).not.toBeInTheDocument();
 

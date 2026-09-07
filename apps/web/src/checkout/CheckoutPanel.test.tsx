@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 
 import { currentSession } from '../identity/api.js';
+import { readPublicStore } from '../service-coverage/api.js';
 import {
   createCheckoutOrder,
   createPaymentAttempt,
@@ -27,9 +28,21 @@ vi.mock('./api.js', () => ({
   selectCheckoutPoints: vi.fn(),
 }));
 
+vi.mock('../service-coverage/api.js', () => ({
+  readPublicStore: vi.fn(),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(currentSession).mockReturnValue({ accessToken: 'test-access' } as never);
+  vi.mocked(readPublicStore).mockResolvedValue({
+    item: {
+      branchId: '0198c500-0000-7000-8000-000000000002',
+      name: 'Sergod Store',
+      openingHours: 'Lunes a sábado',
+      publicAddress: 'Av. Principal 123',
+    },
+  });
   window.history.replaceState({}, '', '/checkout');
 });
 
@@ -127,11 +140,20 @@ it('separates pickup from freight-collect agency fields without requesting an ad
 
   render(<CheckoutPanel />);
   const mode = await screen.findByLabelText('Modalidad');
-  expect(screen.getByLabelText('Sucursal de retiro')).toBeInTheDocument();
+  expect(await screen.findByLabelText('Tienda configurada')).toHaveTextContent('Sergod Store');
+  const deliveryForm = screen.getByRole('button', { name: 'Guardar entrega' }).closest('form');
+  if (!deliveryForm) throw new Error('Delivery form was not rendered.');
+  fireEvent.submit(deliveryForm);
+  await waitFor(() =>
+    expect(replaceDeliveryIntent).toHaveBeenCalledWith('0198a8be-6677-7000-8000-000000000003', {
+      branchId: '0198c500-0000-7000-8000-000000000002',
+      mode: 'PICKUP',
+    }),
+  );
 
   fireEvent.change(mode, { target: { value: 'SHIPPING' } });
 
-  expect(screen.queryByLabelText('Sucursal de retiro')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Tienda configurada')).not.toBeInTheDocument();
   expect(screen.getByText('Despacho exclusivamente a agencia')).toBeInTheDocument();
   expect(screen.queryByLabelText(/dirección/iu)).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Destinatario'), { target: { value: 'Cliente' } });

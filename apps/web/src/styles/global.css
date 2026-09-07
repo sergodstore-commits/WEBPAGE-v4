@@ -1153,6 +1153,22 @@ textarea {
   background: var(--panel-2);
   border-top: 3px solid var(--red);
 }
+.store-context {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  background: color-mix(in srgb, var(--panel-2) 86%, var(--red));
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+}
+.store-context > span,
+.store-context > small {
+  color: var(--muted);
+}
+.store-context > strong {
+  color: var(--text);
+}
 .admin-resource {
   display: grid;
   gap: 1rem;

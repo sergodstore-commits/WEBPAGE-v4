@@ -1,4 +1,4 @@
-import { authorizedRequest } from '../identity/api.js';
+import { authorizedRequest, publicRequest } from '../identity/api.js';
 
 const mutate = <T>(path: string, body: unknown, method = 'POST') =>
   authorizedRequest<T>(path, {
@@ -9,6 +9,8 @@ const mutate = <T>(path: string, body: unknown, method = 'POST') =>
 
 export const readCoverage = () =>
   authorizedRequest<ReturnType<JSON['parse']>>('/api/v1/admin/service-coverage');
+export const readPublicStore = () =>
+  publicRequest<ReturnType<JSON['parse']>>('/api/v1/service-coverage/store');
 export const savePublicServiceInfo = (body: unknown) =>
   mutate<{ id: string }>('/api/v1/admin/service-coverage/public-service-info', body);
 export const transitionServiceInfo = (id: string, nextState: string, reason: string) =>

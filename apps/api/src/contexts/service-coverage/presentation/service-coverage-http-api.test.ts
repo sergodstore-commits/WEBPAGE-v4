@@ -29,6 +29,15 @@ const service = {
     },
     serviceInfo: [],
   }),
+  publicStore: vi.fn().mockResolvedValue({
+    item: {
+      branchId: '0198c300-0000-7000-8000-000000000003',
+      name: 'Sergod Store',
+      openingHours: 'Lunes a sábado',
+      publicAddress: 'Av. Principal 123',
+      publicContacts: '+56 9 1234 5678',
+    },
+  }),
   saveInfo: vi.fn().mockResolvedValue({ id: resourceId, replayed: false }),
   transitionInfo: vi.fn().mockResolvedValue({ id: resourceId, replayed: false }),
 };
@@ -51,6 +60,20 @@ afterAll(
 );
 
 describe('Service coverage administrative HTTP API', () => {
+  it('publishes only the configured store information without requiring a session', async () => {
+    const response = await fetch(`${origin}/api/v1/service-coverage/store`);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      item: {
+        name: 'Sergod Store',
+        openingHours: 'Lunes a sábado',
+        publicAddress: 'Av. Principal 123',
+      },
+    });
+    expect(identity.authorize).not.toHaveBeenCalled();
+  });
+
   it('requires authentication and Idempotency-Key before administrative mutation', async () => {
     const denied = createServer(
       new ServiceCoverageHttpApi(

@@ -3,7 +3,7 @@ import { operationalValue, readableText, shortIdentifier } from './presentation.
 const fieldLabels: Readonly<Record<string, string>> = {
   agencyDestination: 'Agencia de destino',
   amount_clp: 'Monto',
-  branch_id: 'Sucursal',
+  branch_id: 'Tienda',
   buyer_email: 'Correo del comprador',
   buyer_name: 'Comprador',
   buyer_phone: 'Teléfono del comprador',

@@ -3,6 +3,8 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { OperationalDataView } from '../admin/OperationalDataView.js';
 import { readableText, shortIdentifier } from '../admin/presentation.js';
 import { readCoverage, savePublicServiceInfo, transitionServiceInfo } from './api.js';
+import { StoreField } from './StoreField.js';
+import { firstStoreFromCoverage } from './store.js';
 
 export function ServiceCoveragePanel() {
   const [data, setData] = useState<ReturnType<JSON['parse']>>({
@@ -12,7 +14,7 @@ export function ServiceCoveragePanel() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const serviceInfo = itemsOf(data.serviceInfo);
-  const branches = uniqueBranches(itemsOf(data.branches ?? data.serviceInfo));
+  const store = firstStoreFromCoverage(data);
   const refresh = async () => setData(await readCoverage());
   useEffect(() => {
     let active = true;
@@ -77,23 +79,7 @@ export function ServiceCoveragePanel() {
       <div className="pos-grid">
         <form onSubmit={(event) => void run(event, 'INFO')}>
           <h2>Atención pública</h2>
-          <label>
-            Sucursal
-            <select disabled={branches.length === 0} name="branchId" required>
-              <option value="">
-                {loading
-                  ? 'Cargando sucursal…'
-                  : branches.length === 0
-                    ? 'No hay sucursal configurada'
-                    : 'Selecciona una sucursal'}
-              </option>
-              {branches.map((branch) => (
-                <option key={String(branch.branch_id)} value={String(branch.branch_id)}>
-                  {branchLabel(branch)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <StoreField loading={loading} store={store} />
           <label>
             Dirección pública
             <input name="publicAddress" required />
@@ -118,7 +104,7 @@ export function ServiceCoveragePanel() {
             Motivo de edición
             <input name="reason" />
           </label>
-          <button disabled={branches.length === 0}>Guardar información</button>
+          <button disabled={store === null}>Guardar información</button>
         </form>
         <form onSubmit={(event) => void run(event, 'TRANSITION')}>
           <h2>Publicar o retirar atención</h2>
@@ -178,17 +164,9 @@ function itemsOf(value: unknown): readonly Item[] {
   return Array.isArray(value) ? value.filter(isRecord) : [];
 }
 
-function uniqueBranches(items: readonly Item[]): readonly Item[] {
-  return items.filter(
-    (item, index) =>
-      typeof item.branch_id === 'string' &&
-      items.findIndex((candidate) => candidate.branch_id === item.branch_id) === index,
-  );
-}
-
 function branchLabel(item: Item): string {
   if (typeof item.name === 'string' && item.name.trim() !== '') return readableText(item.name);
   if (typeof item.public_address === 'string' && item.public_address.trim() !== '')
     return readableText(item.public_address);
-  return `Sucursal ${shortIdentifier(String(item.branch_id ?? 'sin referencia'))}`;
+  return `Tienda ${shortIdentifier(String(item.branch_id ?? 'sin referencia'))}`;
 }

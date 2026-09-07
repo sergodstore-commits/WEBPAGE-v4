@@ -45,6 +45,17 @@ beforeEach(() => {
         ],
         nextCursor: null,
       } as never;
+    if (path === '/api/v1/admin/service-coverage')
+      return {
+        branches: [
+          {
+            branch_id: '0198a8be-6677-7000-8000-000000000401',
+            name: 'Sergod Store',
+            state: 'ACTIVE',
+          },
+        ],
+        serviceInfo: [],
+      } as never;
     if (init?.method) return { item: {} } as never;
     if (path.startsWith('/api/v1/admin/orders'))
       return {
@@ -148,7 +159,7 @@ describe('AdminHub', () => {
       'Loyalty',
       'Noticias, torneos, comunidad y cómics',
       'Usuarios',
-      'Sucursales y cobertura',
+      'Tienda y cobertura',
       'Configuración',
       'Auditoría',
     ])
@@ -183,7 +194,7 @@ describe('AdminHub', () => {
       'href',
       '/admin/accounts',
     );
-    expect(within(sidebar).getByRole('link', { name: 'Sucursales y cobertura' })).toHaveAttribute(
+    expect(within(sidebar).getByRole('link', { name: 'Tienda y cobertura' })).toHaveAttribute(
       'href',
       '/admin/service-coverage',
     );
@@ -250,6 +261,14 @@ describe('AdminHub', () => {
       screen.queryByRole('heading', { name: 'Configuración loyalty' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Contenido editorial' })).not.toBeInTheDocument();
+  });
+
+  it('uses the configured store automatically instead of asking for an internal branch code', async () => {
+    render(<AdminHub area="preorders" navigate={vi.fn()} />);
+
+    expect(await screen.findAllByLabelText('Tienda configurada')).not.toHaveLength(0);
+    expect(screen.getAllByLabelText('Tienda configurada')[0]).toHaveTextContent('Sergod Store');
+    expect(screen.queryByLabelText('Sucursal')).not.toBeInTheDocument();
   });
 
   it('edits editorial content as ordered visual blocks instead of raw text only', async () => {

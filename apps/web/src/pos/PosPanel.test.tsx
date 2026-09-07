@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 
-import { addLine, removeLine, updateLine } from './api.js';
+import { addLine, createSale, removeLine, updateLine } from './api.js';
 import { PosPanel } from './PosPanel.js';
 
 const { accountId, branchId, campaignId, lineId, methodId, productId, saleId } = vi.hoisted(() => ({
@@ -135,12 +135,21 @@ it('renders the productive POS controls without collecting card data', async () 
   const createButton = screen.getByRole('button', { name: 'Abrir venta' });
   const form = createButton.closest('form');
   if (!form) throw new Error('Create sale form was not rendered.');
-  await waitFor(() => expect(within(form).getByLabelText('Sucursal')).toBeEnabled());
-  fireEvent.change(within(form).getByLabelText('Sucursal'), { target: { value: branchId } });
+  await waitFor(() =>
+    expect(within(form).getByLabelText('Tienda configurada')).toHaveTextContent('Principal'),
+  );
+  expect(within(form).queryByLabelText('Sucursal')).not.toBeInTheDocument();
   fireEvent.change(within(form).getByLabelText('Tipo de venta'), {
     target: { value: 'PREORDER' },
   });
   fireEvent.submit(form);
+
+  await waitFor(() =>
+    expect(vi.mocked(createSale)).toHaveBeenCalledWith({
+      branchId,
+      saleType: 'PREORDER',
+    }),
+  );
 
   await waitFor(() =>
     expect(screen.getByRole('heading', { name: 'Comprador y entrega' })).toBeInTheDocument(),
