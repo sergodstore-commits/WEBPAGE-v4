@@ -140,6 +140,17 @@
   `8MULAfLEY383LExzXbbaMvXBwVVd`. `www.sergodstore.cl/admin/catalog` conservó la sesión Admin,
   mostró las tres tareas antes de las herramientas avanzadas, permitió alternarlas y no registró
   errores ni advertencias de consola. La comprobación no creó productos ni modificó datos.
+- El commit `77fe685` simplificó transversalmente el panel Admin: reorganizó el menú con nombres
+  operativos, reemplazó el resumen decorativo por accesos a tareas frecuentes, separó
+  Pedidos/Pagos/Entregas y Crear/Editar/Estados en vistas únicas, dividió las operaciones de
+  inventario y añadió búsqueda y estados legibles a Clientes y usuarios. No eliminó capacidades ni
+  alteró contratos de servidor. El gate completo pasó con 109 archivos, 414 pruebas aprobadas y 1
+  omisión documentada.
+- Vercel promovió `77fe685` a Producción mediante el deployment
+  `8BiMA1NigHE14pZ2HWdGFZ56s9u5`. La sesión Admin persistió al navegar por Resumen, Pedidos,
+  Inventario, Publicaciones y Clientes y usuarios; todas las pestañas seleccionadas mostraron su
+  tarea correspondiente y el navegador registró cero errores y advertencias. Web y API respondieron
+  HTTP 200. La comprobación no ejecutó acciones administrativas ni modificó datos.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
