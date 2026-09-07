@@ -121,6 +121,15 @@
   commit mediante el deployment `7XXnUjaeuu9W6mYdt4gRCWL49WqC`; el dominio productivo conservó la
   sesión Admin, mostró “Diseñar publicación”, respondió salud/catálogo HTTP 200 y no registró
   errores de consola. La prueba no creó contenido ni subió archivos a producción.
+- El commit `f3b36d2` eliminó de la interfaz la complejidad de múltiples sucursales: POS, retiro,
+  preventas, loyalty y atención usan automáticamente la única tienda activa, sin pedir códigos
+  internos. El gate completo pasó con 108 archivos, 409 pruebas aprobadas y 1 omisión documentada.
+  Render lo dejó live en `dep-dafc40favr4c73bukfog` y Vercel lo promovió a Producción mediante
+  `FVQReytafXMkVaKsho81hf38WALz`; la sesión Admin persistió tras recargar el dominio.
+- La atención de `Sergod Store` quedó publicada con dirección `Los Carrera 5142, Copiapó`, horario
+  `10:00 a 22:00`, teléfono `+56934423169` y correo `sergodstore@gmail.com`, exactamente como indicó
+  el propietario. `GET /api/v1/service-coverage/store` respondió HTTP 200 desde el dominio y entregó
+  esos datos a checkout; indicaciones y mapa permanecen nulos, sin contenido inventado.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
