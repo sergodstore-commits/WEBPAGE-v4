@@ -257,6 +257,61 @@ a:focus-visible {
   border-top: 1px solid #353941;
   padding: 1.25rem 0;
 }
+.admin-list-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--red);
+  background: var(--panel);
+}
+.admin-list-toolbar label {
+  width: min(30rem, 100%);
+}
+.admin-list-toolbar span {
+  color: var(--muted);
+  font-weight: 750;
+}
+.account-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.account-card-heading h2 {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+.account-state-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+.account-state-chips span {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #3a3d45;
+  background: #111317;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.account-management {
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+}
+.account-management summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+.account-management form {
+  margin-top: 0.8rem;
+}
 .inline-form {
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   align-items: end;
@@ -2518,6 +2573,94 @@ textarea {
 .admin-snapshot {
   margin-top: 0;
 }
+.admin-quick-actions,
+.admin-activity-summary {
+  border: 2px solid #353941;
+  border-top: 3px solid var(--red);
+  background: var(--panel);
+  box-shadow: 0.4rem 0.4rem 0 #050607;
+}
+.admin-quick-actions {
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+.admin-section-intro {
+  margin-bottom: 1rem;
+}
+.admin-section-intro h2 {
+  margin: 0.2rem 0 0;
+}
+.admin-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.admin-action-grid a {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 6.25rem;
+  align-content: center;
+  padding: 1rem;
+  border: 1px solid #3a3d45;
+  border-left: 4px solid var(--red);
+  background: #111317;
+  color: var(--paper);
+  text-decoration: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 0.55rem), calc(100% - 0.55rem) 100%, 0 100%);
+}
+.admin-action-grid a:hover,
+.admin-action-grid a:focus-visible {
+  border-left-color: var(--cyan);
+  background: var(--panel-2);
+}
+.admin-action-grid strong {
+  font-family: var(--display-font);
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+.admin-action-grid span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+.admin-activity-summary {
+  margin-top: 1rem;
+  padding: 1rem;
+}
+.admin-activity-summary > summary {
+  cursor: pointer;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.admin-activity-summary[open] > summary {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.admin-task-workspace {
+  min-width: 0;
+}
+.admin-task-tabs {
+  position: sticky;
+  z-index: 8;
+  top: 5.75rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  background: rgb(9 10 12 / 96%);
+}
+.admin-task-tabs button {
+  min-height: var(--control-height);
+  border: 1px solid #3a3d45;
+  background: #202329;
+  color: var(--paper);
+}
+.admin-task-tabs button[aria-current='page'] {
+  border-color: var(--red);
+  background: var(--red);
+  box-shadow: inset 0 -3px 0 var(--cyan);
+}
 .admin-operational-panel,
 .admin-module {
   scroll-margin-top: 11rem;
@@ -2699,9 +2842,14 @@ textarea {
     grid-row: auto;
   }
   .account-panel-heading,
+  .account-card-heading,
+  .admin-list-toolbar,
   .admin-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .account-state-chips {
+    justify-content: flex-start;
   }
   .account-delivery-form {
     grid-template-columns: 1fr;
@@ -2713,13 +2861,20 @@ textarea {
   .admin-area-navigation {
     grid-template-columns: 1fr;
   }
+  .admin-action-grid {
+    grid-template-columns: 1fr;
+  }
   .catalog-admin-tabs,
+  .admin-task-tabs,
   .catalog-product-form > form,
   .catalog-gallery-setup,
   .catalog-upload-card {
     grid-template-columns: 1fr;
   }
   .catalog-admin-tabs {
+    position: static;
+  }
+  .admin-task-tabs {
     position: static;
   }
   .catalog-product-form h3,

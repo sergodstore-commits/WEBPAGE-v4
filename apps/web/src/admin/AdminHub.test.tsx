@@ -144,31 +144,36 @@ describe('AdminHub', () => {
       'href',
       '/admin/inventory',
     );
-    expect(within(navigation).getByRole('link', { name: 'Auditoría' })).toHaveAttribute(
+    expect(within(navigation).getByRole('link', { name: 'Actividad' })).toHaveAttribute(
       'href',
       '/admin/audit',
     );
     for (const name of [
       'Resumen',
-      'Pedidos y pagos',
+      'Pedidos',
       'POS',
       'Inventario',
-      'Catálogo',
+      'Productos',
       'Preventas',
-      'Promociones y cupones',
-      'Loyalty',
-      'Noticias, torneos, comunidad y cómics',
-      'Usuarios',
-      'Tienda y cobertura',
-      'Configuración',
-      'Auditoría',
+      'Promociones',
+      'Puntos',
+      'Publicaciones',
+      'Clientes y usuarios',
+      'Datos de la tienda',
+      'Ajustes',
+      'Actividad',
     ])
       expect(within(navigation).getByRole('link', { name })).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: '¿Qué necesitas hacer?' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Abrir POS/ }));
+    expect(navigate).toHaveBeenCalledWith('/admin/pos');
+    expect(screen.queryByText('Datos de servidor')).not.toBeInTheDocument();
 
     const toggle = screen.getByRole('button', { name: 'Menú de administración' });
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    fireEvent.click(within(navigation).getByRole('link', { name: 'Pedidos y pagos' }));
+    fireEvent.click(within(navigation).getByRole('link', { name: 'Pedidos' }));
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(navigate).toHaveBeenCalledWith('/admin/orders');
   });
@@ -190,11 +195,11 @@ describe('AdminHub', () => {
       'aria-current',
       'page',
     );
-    expect(within(sidebar).getByRole('link', { name: 'Usuarios' })).toHaveAttribute(
+    expect(within(sidebar).getByRole('link', { name: 'Clientes y usuarios' })).toHaveAttribute(
       'href',
       '/admin/accounts',
     );
-    expect(within(sidebar).getByRole('link', { name: 'Tienda y cobertura' })).toHaveAttribute(
+    expect(within(sidebar).getByRole('link', { name: 'Datos de la tienda' })).toHaveAttribute(
       'href',
       '/admin/service-coverage',
     );
@@ -214,14 +219,16 @@ describe('AdminHub', () => {
         .mock.calls.some(([path]) => path === '/api/v1/admin/catalog/products?limit=25'),
     ).toBe(false);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Pagos' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Conciliar' }));
     await screen.findByText('Operación guardada correctamente.');
     expect(vi.mocked(authorizedRequest)).toHaveBeenCalledWith(
       '/api/v1/admin/payment-attempts/payment-1/reconcile',
       expect.objectContaining({ method: 'POST' }),
     );
-    expect(screen.getByText('Pagado')).toBeInTheDocument();
     expect(screen.getByText('Pendiente')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Pedidos' }));
+    expect(screen.getByText('Pagado')).toBeInTheDocument();
   });
 
   it('presents operational labels and repairs only verified damaged text', async () => {
@@ -247,6 +254,7 @@ describe('AdminHub', () => {
     });
     render(<AdminHub area="orders" navigate={vi.fn()} />);
     await waitFor(() => expect(screen.getByText('SG-2026-000010')).toBeInTheDocument());
+    fireEvent.click(await screen.findByRole('button', { name: 'Pagos · Error' }));
     expect(await screen.findByText('Pagos no disponibles.')).toBeInTheDocument();
   });
 
@@ -258,9 +266,48 @@ describe('AdminHub', () => {
     ).toBeGreaterThan(0);
     expect(screen.queryByRole('heading', { name: 'Campaña de preventa' })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: 'Configuración loyalty' }),
+      screen.queryByRole('heading', { name: 'Configuración de puntos' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Contenido editorial' })).not.toBeInTheDocument();
+  });
+
+  it('separates dense admin areas into one task at a time', async () => {
+    render(<AdminHub area="promotions" navigate={vi.fn()} />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Crear promociones y cupones' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Editar operaciones' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar promoción' }));
+    expect(screen.getByRole('heading', { name: 'Editar operaciones' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Crear promociones y cupones' }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Estados' }));
+    expect(await screen.findByRole('heading', { name: 'Promociones' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Cupones' })).toBeInTheDocument();
+  });
+
+  it('shows one inventory operation at a time with plain labels', async () => {
+    render(<AdminHub area="inventory" navigate={vi.fn()} />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Ingresar productos al inventario' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Corregir una diferencia de inventario' }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Corregir stock' }));
+    expect(
+      screen.getByRole('heading', { name: 'Corregir una diferencia de inventario' }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aviso de pocas unidades' }));
+    expect(screen.getByRole('heading', { name: 'Aviso de pocas unidades' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Avisar cuando queden')).toBeInTheDocument();
   });
 
   it('uses the configured store automatically instead of asking for an internal branch code', async () => {
@@ -274,6 +321,7 @@ describe('AdminHub', () => {
   it('edits editorial content as ordered visual blocks instead of raw text only', async () => {
     render(<AdminHub area="content" navigate={vi.fn()} />);
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar publicación' }));
     const selector = await screen.findByLabelText('Publicación');
     fireEvent.change(selector, {
       target: { value: '0198a8be-6677-7000-8000-000000000301' },

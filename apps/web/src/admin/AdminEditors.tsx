@@ -736,13 +736,13 @@ export function RecordEditors({
             <input name="arrival" required />
           </label>
           <label>
-            Grupo fulfillment
+            Grupo de entrega opcional
             <input name="groupKey" />
           </label>
           <button disabled={store === null}>Guardar preventa</button>
         </form>
         <form hidden={area !== 'loyalty'} onSubmit={(event) => void loyaltyEdit(event)}>
-          <h3>Configuración loyalty</h3>
+          <h3>Configuración de puntos</h3>
           <ItemSelect
             items={loyalty}
             label="Configuración"
@@ -772,7 +772,7 @@ export function RecordEditors({
             Máximo canjeable
             <input max="10000" min="1" name="maximum" type="number" />
           </label>
-          <button>Guardar loyalty</button>
+          <button>Guardar configuración de puntos</button>
         </form>
         <form hidden={area !== 'configuration'} onSubmit={(event) => void configEdit(event)}>
           <h3>Versión de configuración</h3>

@@ -15,6 +15,7 @@ import {
 
 type Item = Record<string, unknown>;
 type LoadState = 'error' | 'loading' | 'ready';
+type AdminTask = 'create' | 'edit' | 'records';
 interface ModuleState {
   readonly items: readonly Item[];
   readonly message: string;
@@ -65,7 +66,7 @@ interface AdminAreaDefinition {
 const modules = [
   { anchor: 'orders', label: 'Pedidos', path: '/api/v1/admin/orders?limit=25' },
   { anchor: 'payments', label: 'Pagos', path: '/api/v1/admin/payment-attempts?limit=25' },
-  { anchor: 'fulfillments', label: 'Fulfillment', path: '/api/v1/admin/fulfillments?limit=25' },
+  { anchor: 'fulfillments', label: 'Entregas', path: '/api/v1/admin/fulfillments?limit=25' },
   { anchor: 'catalog', label: 'Catálogo', path: '/api/v1/admin/catalog/products?limit=25' },
   { anchor: 'games', label: 'Juegos TCG', path: '/api/v1/admin/catalog/tcg-games?limit=25' },
   { anchor: 'categories', label: 'Categorías', path: '/api/v1/admin/catalog/categories?limit=25' },
@@ -77,7 +78,11 @@ const modules = [
   { anchor: 'preorders', label: 'Preventas', path: '/api/v1/admin/preorders/campaigns?limit=25' },
   { anchor: 'promotions', label: 'Promociones', path: '/api/v1/admin/promotions?limit=25' },
   { anchor: 'coupons', label: 'Cupones', path: '/api/v1/admin/coupons?limit=25' },
-  { anchor: 'loyalty', label: 'Loyalty', path: '/api/v1/admin/loyalty/configurations?limit=25' },
+  {
+    anchor: 'loyalty',
+    label: 'Configuración de puntos',
+    path: '/api/v1/admin/loyalty/configurations?limit=25',
+  },
   {
     anchor: 'configurations',
     label: 'Configuración',
@@ -94,14 +99,14 @@ const initialModules = Object.fromEntries(
 const adminAreas = [
   {
     area: 'dashboard',
-    description: 'Resumen de actividad para orientar la operación diaria.',
+    description: 'Accesos directos y actividad reciente para trabajar sin buscar entre pantallas.',
     label: 'Resumen',
     route: '/admin',
-    title: 'Centro de control',
+    title: 'Panel de operación',
   },
   {
     area: 'orders',
-    description: 'Pedidos, intentos de pago y cumplimiento en una sola secuencia operativa.',
+    description: 'Revisa pedidos, confirma pagos y actualiza retiros o despachos.',
     label: 'Pedidos y pagos',
     route: '/admin/orders',
     title: 'Pedidos y entregas',
@@ -115,29 +120,29 @@ const adminAreas = [
   },
   {
     area: 'inventory',
-    description: 'Entradas, ajustes y umbrales sobre el inventario compartido.',
+    description: 'Ingresa productos, corrige diferencias y configura avisos de pocas unidades.',
     label: 'Inventario',
     route: '/admin/inventory',
     title: 'Control de inventario',
   },
   {
     area: 'preorders',
-    description: 'Campañas, capacidad, apertura, cierre y publicación de preventas.',
+    description: 'Crea campañas, define sus cupos y controla cuándo se publican.',
     label: 'Preventas',
     route: '/admin/preorders',
     title: 'Gestión de preventas',
   },
   {
     area: 'promotions',
-    description: 'Promociones automáticas, cupones, límites y vigencias.',
+    description: 'Crea descuentos y cupones, define su vigencia y controla su estado.',
     label: 'Promociones y cupones',
     route: '/admin/promotions',
     title: 'Promociones y cupones',
   },
   {
     area: 'loyalty',
-    description: 'Configuración de puntos y correcciones administrativas controladas.',
-    label: 'Loyalty',
+    description: 'Configura cómo se acumulan y canjean puntos o corrige un saldo justificado.',
+    label: 'Puntos',
     route: '/admin/loyalty',
     title: 'Programa de puntos',
   },
@@ -150,56 +155,106 @@ const adminAreas = [
   },
   {
     area: 'configuration',
-    description: 'Versiones y valores operativos con motivo auditable.',
+    description: 'Ajustes operativos avanzados con historial y motivo obligatorio.',
     label: 'Configuración',
     route: '/admin/configuration',
     title: 'Configuración del sistema',
   },
   {
     area: 'audit',
-    description: 'Trazabilidad de acciones y resultados administrativos.',
+    description: 'Consulta qué cambios administrativos se realizaron y cuándo ocurrieron.',
     label: 'Auditoría',
     route: '/admin/audit',
-    title: 'Registro de auditoría',
+    title: 'Actividad administrativa',
   },
 ] as const satisfies readonly AdminAreaDefinition[];
 
 const adminNavigationGroups = [
   {
-    label: 'Operación diaria',
+    label: 'Ventas del día',
     links: [
       { label: 'Resumen', route: '/admin' },
-      { label: 'Pedidos y pagos', route: '/admin/orders' },
+      { label: 'Pedidos', route: '/admin/orders' },
       { label: 'POS', route: '/admin/pos' },
-      { label: 'Inventario', route: '/admin/inventory' },
     ],
   },
   {
-    label: 'Comercio',
+    label: 'Productos y stock',
     links: [
-      { label: 'Catálogo', route: '/admin/catalog' },
+      { label: 'Productos', route: '/admin/catalog' },
+      { label: 'Inventario', route: '/admin/inventory' },
       { label: 'Preventas', route: '/admin/preorders' },
-      { label: 'Promociones y cupones', route: '/admin/promotions' },
-      { label: 'Loyalty', route: '/admin/loyalty' },
+      { label: 'Promociones', route: '/admin/promotions' },
+      { label: 'Puntos', route: '/admin/loyalty' },
     ],
   },
   {
     label: 'Contenido',
-    links: [{ label: 'Noticias, torneos, comunidad y cómics', route: '/admin/content' }],
+    links: [{ label: 'Publicaciones', route: '/admin/content' }],
   },
   {
-    label: 'Gestión',
+    label: 'Administración',
     links: [
-      { label: 'Usuarios', route: '/admin/accounts' },
-      { label: 'Tienda y cobertura', route: '/admin/service-coverage' },
-      { label: 'Configuración', route: '/admin/configuration' },
-      { label: 'Auditoría', route: '/admin/audit' },
+      { label: 'Clientes y usuarios', route: '/admin/accounts' },
+      { label: 'Datos de la tienda', route: '/admin/service-coverage' },
+      { label: 'Ajustes', route: '/admin/configuration' },
+      { label: 'Actividad', route: '/admin/audit' },
     ],
   },
 ] as const satisfies readonly {
   readonly label: string;
   readonly links: readonly { readonly label: string; readonly route: AdminRoute }[];
 }[];
+
+const dashboardActions = [
+  {
+    description: 'Registrar una venta presencial.',
+    label: 'Abrir POS',
+    route: '/admin/pos',
+  },
+  {
+    description: 'Crear, editar o cargar imágenes.',
+    label: 'Administrar productos',
+    route: '/admin/catalog',
+  },
+  {
+    description: 'Revisar pagos y preparar entregas.',
+    label: 'Revisar pedidos',
+    route: '/admin/orders',
+  },
+  {
+    description: 'Ingresar stock o corregir existencias.',
+    label: 'Ajustar inventario',
+    route: '/admin/inventory',
+  },
+  {
+    description: 'Crear noticias, torneos, comunidad o cómics.',
+    label: 'Publicar contenido',
+    route: '/admin/content',
+  },
+  {
+    description: 'Editar dirección, horario y cobertura.',
+    label: 'Configurar tienda',
+    route: '/admin/service-coverage',
+  },
+] as const satisfies readonly {
+  readonly description: string;
+  readonly label: string;
+  readonly route: AdminRoute;
+}[];
+
+const managedTaskLabels = {
+  configuration: { create: 'Nuevo ajuste', edit: 'Editar ajuste', records: 'Versiones' },
+  content: { create: 'Nueva publicación', edit: 'Editar publicación', records: 'Estados' },
+  loyalty: { create: 'Puntos y configuración', edit: 'Editar configuración', records: 'Estados' },
+  preorders: { create: 'Nueva preventa', edit: 'Editar preventa', records: 'Campañas' },
+  promotions: { create: 'Nueva promoción', edit: 'Editar promoción', records: 'Estados' },
+} as const satisfies Readonly<
+  Record<
+    'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions',
+    Readonly<Record<AdminTask, string>>
+  >
+>;
 
 const requiredModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
   audit: ['audit'],
@@ -239,6 +294,8 @@ export function AdminHub({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [store, setStore] = useState<StoreSummary | null>(null);
   const [catalogWorkspace, setCatalogWorkspace] = useState<'create' | 'edit' | 'images'>('create');
+  const [managedTask, setManagedTask] = useState<AdminTask>('create');
+  const [ordersModule, setOrdersModule] = useState('orders');
   const areaDefinition = adminAreas.find((definition) => definition.area === area) ?? adminAreas[0];
   const requiredModules = modules.filter(({ anchor }) =>
     requiredModulesByArea[area].includes(anchor),
@@ -246,6 +303,7 @@ export function AdminHub({
   const visibleModules = modules.filter(({ anchor }) =>
     visibleModulesByArea[area].includes(anchor),
   );
+  const managedArea = isManagedTaskArea(area) ? area : null;
 
   const load = useCallback(async (definition: ModuleDefinition, cursor?: string | null) => {
     const append = cursor !== undefined && cursor !== null;
@@ -291,6 +349,12 @@ export function AdminHub({
   }, [area, load]);
 
   useEffect(() => {
+    setCatalogWorkspace('create');
+    setManagedTask('create');
+    setOrdersModule('orders');
+  }, [area]);
+
+  useEffect(() => {
     if (!['loyalty', 'preorders'].includes(area)) return;
     let active = true;
     void readCoverage()
@@ -329,12 +393,6 @@ export function AdminHub({
           <h1>{areaDefinition.title}</h1>
           <p>{areaDefinition.description}</p>
         </div>
-        <div className="admin-heading-tools">
-          <div aria-label="Garantías de operación" className="heading-stats">
-            <span>Datos de servidor</span>
-            <span>Acciones auditables</span>
-          </div>
-        </div>
       </header>
       <button
         aria-controls="admin-sidebar-links"
@@ -358,25 +416,87 @@ export function AdminHub({
               {actionMessage}
             </p>
             {area === 'dashboard' && (
-              <section
-                aria-label="Resumen operativo visible"
-                className="metric-grid admin-snapshot"
-              >
-                {requiredModules.map((module) => (
-                  <div className="metric" key={module.anchor}>
-                    <span>{module.label} en página</span>
-                    <strong>
-                      {data[module.anchor]?.state === 'ready'
-                        ? data[module.anchor]?.items.length
-                        : '—'}
-                    </strong>
+              <>
+                <section aria-labelledby="admin-actions-title" className="admin-quick-actions">
+                  <div className="admin-section-intro">
+                    <p className="eyebrow">Trabajo frecuente</p>
+                    <h2 id="admin-actions-title">¿Qué necesitas hacer?</h2>
                   </div>
-                ))}
-              </section>
+                  <div className="admin-action-grid">
+                    {dashboardActions.map((action) => (
+                      <a
+                        href={action.route}
+                        key={action.route}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          navigate(action.route);
+                        }}
+                      >
+                        <strong>{action.label}</strong>
+                        <span>{action.description}</span>
+                      </a>
+                    ))}
+                  </div>
+                </section>
+                <details className="admin-activity-summary">
+                  <summary>Ver actividad reciente</summary>
+                  <div
+                    aria-label="Resumen operativo visible"
+                    className="metric-grid admin-snapshot"
+                  >
+                    {requiredModules.map((module) => (
+                      <div className="metric" key={module.anchor}>
+                        <span>{module.label} recientes</span>
+                        <strong>
+                          {data[module.anchor]?.state === 'ready'
+                            ? data[module.anchor]?.items.length
+                            : '—'}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </>
             )}
           </section>
 
-          {area !== 'catalog' &&
+          {area === 'orders' && (
+            <section aria-label="Gestión de pedidos" className="admin-task-workspace">
+              <nav aria-label="Secciones de pedidos" className="admin-task-tabs">
+                {visibleModules.map((module) => (
+                  <button
+                    aria-current={ordersModule === module.anchor ? 'page' : undefined}
+                    key={module.anchor}
+                    onClick={() => setOrdersModule(module.anchor)}
+                    type="button"
+                  >
+                    {module.label}
+                    {data[module.anchor]?.state === 'error' ? ' · Error' : ''}
+                  </button>
+                ))}
+              </nav>
+              {visibleModules
+                .filter((module) => module.anchor === ordersModule)
+                .map((module) => (
+                  <AdminModule
+                    definition={module}
+                    key={module.anchor}
+                    module={data[module.anchor] ?? emptyModule()}
+                    onAction={mutate}
+                    onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
+                  />
+                ))}
+            </section>
+          )}
+          {![
+            'catalog',
+            'configuration',
+            'content',
+            'loyalty',
+            'orders',
+            'preorders',
+            'promotions',
+          ].includes(area) &&
             visibleModules.map((module) => (
               <AdminModule
                 definition={module}
@@ -457,36 +577,77 @@ export function AdminHub({
               </details>
             </section>
           )}
-          {area === 'preorders' && (
-            <PreorderComposer
-              onAction={mutate}
-              products={data.catalog?.items ?? []}
-              store={store}
-            />
-          )}
-          {area === 'promotions' && (
-            <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
-          )}
-          {area === 'loyalty' && <LoyaltyOperations onAction={mutate} store={store} />}
-          {area === 'configuration' && <ConfigurationComposer onAction={mutate} />}
-          {area === 'content' && <EditorialComposer onAction={mutate} />}
-          {['configuration', 'content', 'loyalty', 'preorders', 'promotions'].includes(area) && (
-            <RecordEditors
-              area={area as 'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions'}
-              configurations={data.configurations?.items ?? []}
-              content={data.content?.items ?? []}
-              loyalty={data.loyalty?.items ?? []}
-              onAction={mutate}
-              preorders={data.preorders?.items ?? []}
-              products={data.catalog?.items ?? []}
-              promotions={data.promotions?.items ?? []}
-              store={store}
-            />
+          {managedArea && (
+            <section
+              aria-label={`Herramientas de ${areaDefinition.label}`}
+              className="admin-task-workspace"
+            >
+              <nav aria-label={`Tareas de ${areaDefinition.label}`} className="admin-task-tabs">
+                {(Object.keys(managedTaskLabels[managedArea]) as AdminTask[]).map((task) => (
+                  <button
+                    aria-current={managedTask === task ? 'page' : undefined}
+                    key={task}
+                    onClick={() => setManagedTask(task)}
+                    type="button"
+                  >
+                    {managedTaskLabels[managedArea][task]}
+                  </button>
+                ))}
+              </nav>
+              {managedTask === 'create' && managedArea === 'preorders' && (
+                <PreorderComposer
+                  onAction={mutate}
+                  products={data.catalog?.items ?? []}
+                  store={store}
+                />
+              )}
+              {managedTask === 'create' && managedArea === 'promotions' && (
+                <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
+              )}
+              {managedTask === 'create' && managedArea === 'loyalty' && (
+                <LoyaltyOperations onAction={mutate} store={store} />
+              )}
+              {managedTask === 'create' && managedArea === 'configuration' && (
+                <ConfigurationComposer onAction={mutate} />
+              )}
+              {managedTask === 'create' && managedArea === 'content' && (
+                <EditorialComposer onAction={mutate} />
+              )}
+              {managedTask === 'edit' && (
+                <RecordEditors
+                  area={managedArea}
+                  configurations={data.configurations?.items ?? []}
+                  content={data.content?.items ?? []}
+                  loyalty={data.loyalty?.items ?? []}
+                  onAction={mutate}
+                  preorders={data.preorders?.items ?? []}
+                  products={data.catalog?.items ?? []}
+                  promotions={data.promotions?.items ?? []}
+                  store={store}
+                />
+              )}
+              {managedTask === 'records' &&
+                visibleModules.map((module) => (
+                  <AdminModule
+                    definition={module}
+                    key={module.anchor}
+                    module={data[module.anchor] ?? emptyModule()}
+                    onAction={mutate}
+                    onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
+                  />
+                ))}
+            </section>
           )}
         </div>
       </div>
     </main>
   );
+}
+
+function isManagedTaskArea(
+  area: AdminArea,
+): area is 'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions' {
+  return ['configuration', 'content', 'loyalty', 'preorders', 'promotions'].includes(area);
 }
 
 export function AdminStandaloneLayout({
@@ -510,12 +671,6 @@ export function AdminStandaloneLayout({
           <p className="eyebrow">Panel administrativo</p>
           <h1>{title}</h1>
           <p>{description}</p>
-        </div>
-        <div className="admin-heading-tools">
-          <div aria-label="Garantías de operación" className="heading-stats">
-            <span>Datos de servidor</span>
-            <span>Acciones auditables</span>
-          </div>
         </div>
       </header>
       <button
@@ -568,8 +723,8 @@ function AdminSidebar({
   return (
     <aside aria-label="Navegación administrativa" className="admin-sidebar cut-panel">
       <div className="admin-sidebar-heading">
-        <p className="eyebrow">Sergod operación</p>
-        <strong>Áreas de trabajo</strong>
+        <p className="eyebrow">Sergod Store</p>
+        <strong>Menú de administración</strong>
       </div>
       <div className={`admin-sidebar-links${open ? ' is-open' : ''}`} id="admin-sidebar-links">
         <nav aria-label="Herramientas administrativas" className="admin-area-navigation">
@@ -852,7 +1007,7 @@ function FulfillmentAction({
     <form className="inline-action" onSubmit={(event) => void submit(event)}>
       <label>
         <span className="visually-hidden">Nuevo estado</span>
-        <select aria-label="Nuevo estado de fulfillment" name="toStatus">
+        <select aria-label="Nuevo estado de entrega" name="toStatus">
           <option value="PREPARING">Preparando</option>
           <option value="READY_FOR_PICKUP">Listo para retiro</option>
           <option value="SHIPPED">Despachado</option>
@@ -962,6 +1117,7 @@ function InventoryPanel({
     reload?: string,
   ) => Promise<void>;
 }) {
+  const [task, setTask] = useState<'entry' | 'adjust' | 'threshold'>('entry');
   const submit = (event: FormEvent<HTMLFormElement>, kind: 'ENTRY' | 'ADJUST' | 'THRESHOLD') => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -989,12 +1145,34 @@ function InventoryPanel({
     <section className="cut-panel admin-module" id="inventory">
       <h2>Inventario</h2>
       <p>
-        Entradas, ajustes auditados y umbral de últimas unidades sobre la autoridad compartida de
-        stock.
+        Selecciona una tarea. Todos los cambios afectan el mismo stock usado por la tienda y el POS.
       </p>
+      <nav aria-label="Tareas de inventario" className="admin-task-tabs">
+        <button
+          aria-current={task === 'entry' ? 'page' : undefined}
+          onClick={() => setTask('entry')}
+          type="button"
+        >
+          Ingresar stock
+        </button>
+        <button
+          aria-current={task === 'adjust' ? 'page' : undefined}
+          onClick={() => setTask('adjust')}
+          type="button"
+        >
+          Corregir stock
+        </button>
+        <button
+          aria-current={task === 'threshold' ? 'page' : undefined}
+          onClick={() => setTask('threshold')}
+          type="button"
+        >
+          Aviso de pocas unidades
+        </button>
+      </nav>
       <div className="admin-form-grid">
-        <form onSubmit={(event) => void submit(event, 'ENTRY')}>
-          <h3>Registrar entrada</h3>
+        <form hidden={task !== 'entry'} onSubmit={(event) => void submit(event, 'ENTRY')}>
+          <h3>Ingresar productos al inventario</h3>
           <ProductSelect items={products} />
           <label>
             Cantidad
@@ -1010,8 +1188,8 @@ function InventoryPanel({
           </label>
           <button>Registrar entrada</button>
         </form>
-        <form onSubmit={(event) => void submit(event, 'ADJUST')}>
-          <h3>Ajustar inventario</h3>
+        <form hidden={task !== 'adjust'} onSubmit={(event) => void submit(event, 'ADJUST')}>
+          <h3>Corregir una diferencia de inventario</h3>
           <ProductSelect items={products} />
           <label>
             Dirección
@@ -1029,20 +1207,20 @@ function InventoryPanel({
             <input name="reason" required />
           </label>
           <label>
-            Referencia de investigación
+            Referencia o comprobante
             <input name="reference" required />
           </label>
           <button>Aplicar ajuste</button>
         </form>
-        <form onSubmit={(event) => void submit(event, 'THRESHOLD')}>
-          <h3>Umbral de últimas unidades</h3>
+        <form hidden={task !== 'threshold'} onSubmit={(event) => void submit(event, 'THRESHOLD')}>
+          <h3>Aviso de pocas unidades</h3>
           <ProductSelect items={products} />
           <label>
-            Umbral
+            Avisar cuando queden
             <input min="0" name="threshold" type="number" />
           </label>
-          <p>Vacío restaura la configuración general.</p>
-          <button>Guardar umbral</button>
+          <p>Déjalo vacío para usar el valor general de la tienda.</p>
+          <button>Guardar aviso</button>
         </form>
       </div>
     </section>
@@ -1314,7 +1492,7 @@ function PreorderComposer({
           <input name="arrival" required />
         </label>
         <label>
-          Grupo de fulfillment
+          Grupo de entrega opcional
           <input name="groupKey" />
         </label>
         <button disabled={store === null}>Crear campaña</button>
@@ -1363,7 +1541,7 @@ function LoyaltyOperations({
   };
   return (
     <section className="cut-panel admin-module">
-      <h2>Administrar loyalty</h2>
+      <h2>Programa de puntos</h2>
       <div className="admin-form-grid">
         <form onSubmit={(event) => void configuration(event)}>
           <h3>Nueva configuración</h3>

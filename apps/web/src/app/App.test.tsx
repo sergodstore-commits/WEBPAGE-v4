@@ -1,13 +1,14 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { currentSession, legalVersions, ownAccount, register } from '../identity/api.js';
+import { accounts, currentSession, legalVersions, ownAccount, register } from '../identity/api.js';
 import { App, RouteErrorBoundary } from './App';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
   return {
     ...original,
+    accounts: vi.fn(),
     currentSession: vi.fn(() => null),
     legalVersions: vi.fn(),
     ownAccount: vi.fn(),
@@ -30,6 +31,7 @@ describe('IdentityAccess presentation', () => {
       },
     ]);
     vi.mocked(register).mockResolvedValue(undefined);
+    vi.mocked(accounts).mockResolvedValue([]);
     window.history.replaceState({}, '', '/');
   });
 
@@ -126,7 +128,42 @@ describe('IdentityAccess presentation', () => {
     expect(
       await screen.findByRole('heading', { name: 'Acceso administrativo restringido' }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Centro de control' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Panel de operación' })).not.toBeInTheDocument();
+  });
+
+  it('presents searchable account cards with plain status labels', async () => {
+    vi.mocked(currentSession).mockReturnValue({ accessToken: 'admin-access' } as never);
+    vi.mocked(ownAccount).mockResolvedValue({
+      accountId: 'admin-1',
+      currentEmail: 'admin@sergod.cl',
+      currentPhone: null,
+      emailVerificationStatus: 'VERIFIED',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+    });
+    vi.mocked(accounts).mockResolvedValue([
+      {
+        accountId: 'customer-1',
+        currentEmail: 'cliente@sergod.cl',
+        currentPhone: null,
+        emailVerificationStatus: 'PENDING',
+        role: 'CLIENTE',
+        status: 'ACTIVE',
+      },
+    ]);
+    window.history.replaceState({}, '', '/admin/accounts');
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: 'Clientes y usuarios' })).toBeInTheDocument();
+    expect(await screen.findByText('Cliente')).toBeInTheDocument();
+    expect(screen.getByText('Activa')).toBeInTheDocument();
+    expect(screen.getByText('Correo pendiente')).toBeInTheDocument();
+    expect(screen.queryByText('CLIENTE')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Buscar por correo'), {
+      target: { value: 'nadie' },
+    });
+    expect(screen.getByText('No encontramos cuentas con ese correo.')).toBeInTheDocument();
   });
 
   it('shows a recoverable route error instead of leaving the application blank', () => {

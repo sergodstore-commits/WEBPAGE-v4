@@ -118,9 +118,9 @@ export function App() {
             <AccessGate requiredRole="ADMIN">
               <AdminStandaloneLayout
                 currentRoute="/admin/accounts"
-                description="Cuentas, roles, estados y verificación de acceso."
+                description="Busca una cuenta y administra únicamente las acciones disponibles para ella."
                 navigate={navigate}
-                title="Usuarios"
+                title="Clientes y usuarios"
               >
                 <AccountsPanel />
               </AdminStandaloneLayout>
@@ -142,9 +142,9 @@ export function App() {
             <AccessGate requiredRole="ADMIN">
               <AdminStandaloneLayout
                 currentRoute="/admin/service-coverage"
-                description="Tienda, retiro y cobertura pública de despacho."
+                description="Dirección, horario, contacto, retiro y cobertura pública de despacho."
                 navigate={navigate}
-                title="Tienda y cobertura"
+                title="Datos de la tienda"
               >
                 <ServiceCoveragePanel />
               </AdminStandaloneLayout>
@@ -734,6 +734,7 @@ function Account({ navigate }: { readonly navigate: (route: Route) => void }) {
 function AccountsPanel() {
   const [items, setItems] = useState<readonly AccountView[]>([]);
   const [message, setMessage] = useState('Cargando cuentas…');
+  const [query, setQuery] = useState('');
   const reload = () =>
     void accounts()
       .then((value) => {
@@ -760,29 +761,67 @@ function AccountsPanel() {
       setMessage(messageOf(error));
     }
   };
+  const visibleAccounts = items.filter((account) =>
+    account.currentEmail
+      .toLocaleLowerCase('es-CL')
+      .includes(query.trim().toLocaleLowerCase('es-CL')),
+  );
   return (
     <section className="admin-standalone-panel">
       <Status message={message} />
-      {items.map((account) => (
+      <div className="admin-list-toolbar">
+        <label>
+          Buscar por correo
+          <input
+            onChange={(event) => setQuery(event.currentTarget.value)}
+            placeholder="cliente@correo.cl"
+            type="search"
+            value={query}
+          />
+        </label>
+        <span>{visibleAccounts.length} cuentas visibles</span>
+      </div>
+      {visibleAccounts.map((account) => (
         <article className="account-card" key={account.accountId}>
-          <h2>{account.currentEmail}</h2>
-          <p>
-            {account.role} · {account.status} · correo {account.emailVerificationStatus}
-          </p>
-          <form className="inline-form" onSubmit={(event) => void action(event, account)}>
-            <label>
-              Acción
-              <select name="operation">
-                <option value="PROMOTE">Promover a Admin</option>
-                <option value="DEACTIVATE">Desactivar</option>
-                <option value="REACTIVATE">Reactivar</option>
-              </select>
-            </label>
-            <Field label="Motivo cuando corresponda" name="reason" />
-            <button type="submit">Aplicar</button>
-          </form>
+          <div className="account-card-heading">
+            <h2>{account.currentEmail}</h2>
+            <div className="account-state-chips" aria-label="Estado de la cuenta">
+              <span>{account.role === 'ADMIN' ? 'Administrador' : 'Cliente'}</span>
+              <span>{account.status === 'ACTIVE' ? 'Activa' : 'Desactivada'}</span>
+              <span>
+                {account.emailVerificationStatus === 'VERIFIED'
+                  ? 'Correo verificado'
+                  : 'Correo pendiente'}
+              </span>
+            </div>
+          </div>
+          <details className="account-management">
+            <summary>Administrar cuenta</summary>
+            <form className="inline-form" onSubmit={(event) => void action(event, account)}>
+              <label>
+                Acción
+                <select name="operation">
+                  {account.status === 'DEACTIVATED' ? (
+                    <option value="REACTIVATE">Reactivar cuenta</option>
+                  ) : (
+                    <>
+                      {account.role === 'CLIENTE' && (
+                        <option value="PROMOTE">Dar acceso de administrador</option>
+                      )}
+                      <option value="DEACTIVATE">Desactivar cuenta</option>
+                    </>
+                  )}
+                </select>
+              </label>
+              <Field label="Motivo del cambio" name="reason" />
+              <button type="submit">Guardar cambio</button>
+            </form>
+          </details>
         </article>
       ))}
+      {message === '' && visibleAccounts.length === 0 && (
+        <p className="status">No encontramos cuentas con ese correo.</p>
+      )}
     </section>
   );
 }
