@@ -376,15 +376,16 @@ export function AdminHub({
             )}
           </section>
 
-          {visibleModules.map((module) => (
-            <AdminModule
-              definition={module}
-              key={module.anchor}
-              module={data[module.anchor] ?? emptyModule()}
-              onAction={mutate}
-              onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
-            />
-          ))}
+          {area !== 'catalog' &&
+            visibleModules.map((module) => (
+              <AdminModule
+                definition={module}
+                key={module.anchor}
+                module={data[module.anchor] ?? emptyModule()}
+                onAction={mutate}
+                onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
+              />
+            ))}
           {area === 'inventory' && (
             <InventoryPanel onAction={mutate} products={data.catalog?.items ?? []} />
           )}
@@ -438,6 +439,22 @@ export function AdminHub({
                   products={data.catalog?.items ?? []}
                 />
               )}
+              <details className="catalog-publication-tools">
+                <summary>Publicar y revisar registros del catálogo</summary>
+                <p>
+                  Aquí puedes revisar estados y publicar, retirar o archivar productos y sus
+                  clasificaciones.
+                </p>
+                {visibleModules.map((module) => (
+                  <AdminModule
+                    definition={module}
+                    key={module.anchor}
+                    module={data[module.anchor] ?? emptyModule()}
+                    onAction={mutate}
+                    onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
+                  />
+                ))}
+              </details>
             </section>
           )}
           {area === 'preorders' && (
