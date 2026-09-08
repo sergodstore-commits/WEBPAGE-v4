@@ -29,10 +29,26 @@ try {
     uuids,
   ).run({ correlationId: uuids.generate(), scheduledFor });
   process.stdout.write(
-    `Catalog Storage reconciliation ${result.kind.toLowerCase()}: ${result.scanned} scanned, ${result.compatible} compatible, ${result.anomalies} anomalies.\n`,
+    [
+      `Catalog Storage reconciliation ${result.kind.toLowerCase()}:`,
+      `${result.scanned} scanned,`,
+      `${result.compatible} compatible,`,
+      `${result.anomalies} anomalies.`,
+      `Usage: ${formatBytes(result.usage.totalBytes)} in ${result.usage.totalObjects} objects`,
+      `(${formatBytes(result.usage.activeBytes)} active,`,
+      `${formatBytes(result.usage.retainedBytes)} safely retained,`,
+      `${formatBytes(result.usage.orphanBytes)} orphaned).\n`,
+    ].join(' '),
   );
 } finally {
   await pool.end();
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KiB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MiB`;
+  return `${(bytes / 1024 ** 3).toFixed(2)} GiB`;
 }
 
 function scheduledTime(arguments_: readonly string[], now: Date): Date {

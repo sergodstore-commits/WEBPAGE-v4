@@ -14,7 +14,34 @@ export interface CatalogStorageReconciliationResult {
   readonly compatible: number;
   readonly kind: 'COMPLETED' | 'IN_PROGRESS' | 'SUCCEEDED';
   readonly scanned: number;
+  readonly usage: CatalogStorageUsage;
 }
+
+export interface CatalogStorageUsage {
+  readonly activeBytes: number;
+  readonly activeObjects: number;
+  readonly orphanBytes: number;
+  readonly orphanObjects: number;
+  readonly retainedBytes: number;
+  readonly retainedObjects: number;
+  readonly totalBytes: number;
+  readonly totalObjects: number;
+}
+
+type MutableCatalogStorageUsage = {
+  -readonly [Key in keyof CatalogStorageUsage]: CatalogStorageUsage[Key];
+};
+
+const emptyUsage = (): MutableCatalogStorageUsage => ({
+  activeBytes: 0,
+  activeObjects: 0,
+  orphanBytes: 0,
+  orphanObjects: 0,
+  retainedBytes: 0,
+  retainedObjects: 0,
+  totalBytes: 0,
+  totalObjects: 0,
+});
 
 export class CatalogStorageReconciler {
   readonly #transactions: PgTransactionExecutor;
@@ -35,17 +62,19 @@ export class CatalogStorageReconciler {
   }): Promise<CatalogStorageReconciliationResult> {
     const acquired = await this.acquire(input);
     if (acquired.kind !== 'ACQUIRED') {
-      return { anomalies: 0, compatible: 0, kind: acquired.kind, scanned: 0 };
+      return { anomalies: 0, compatible: 0, kind: acquired.kind, scanned: 0, usage: emptyUsage() };
     }
     try {
       const metadata = await this.repository.listResourcesForReconciliation();
       const objectKeys = await this.storage.listPrivateObjectKeys();
       const knownKeys = new Set(metadata.map((resource) => resource.secureStorageKey));
+      const availableKeys = new Set(objectKeys);
+      const usage = emptyUsage();
       let anomalies = 0;
       let compatible = 0;
 
       for (const resource of metadata) {
-        if (!objectKeys.includes(resource.secureStorageKey)) {
+        if (!availableKeys.has(resource.secureStorageKey)) {
           anomalies += 1;
           await this.auditAnomaly(
             input.correlationId,
@@ -55,6 +84,7 @@ export class CatalogStorageReconciler {
           continue;
         }
         const storedBytes = await this.storage.downloadPrivateObject(resource.secureStorageKey);
+        addKnownUsage(usage, resource.state, storedBytes.byteLength);
         const storedHash = sha256(storedBytes);
         if (resource.sha256Hex !== null && storedHash !== resource.sha256Hex) {
           anomalies += 1;
@@ -66,6 +96,11 @@ export class CatalogStorageReconciler {
 
       for (const key of objectKeys) {
         if (knownKeys.has(key)) continue;
+        const storedBytes = await this.storage.downloadPrivateObject(key);
+        usage.orphanBytes += storedBytes.byteLength;
+        usage.orphanObjects += 1;
+        usage.totalBytes += storedBytes.byteLength;
+        usage.totalObjects += 1;
         anomalies += 1;
         await this.auditAnomaly(input.correlationId, opaqueKeyReference(key), 'ORPHAN_OBJECT');
       }
@@ -73,7 +108,7 @@ export class CatalogStorageReconciler {
       const scanned = metadata.length + objectKeys.filter((key) => !knownKeys.has(key)).length;
       await this.complete(acquired.runId, { anomalies, compatible, scanned });
       await this.auditCompletion(input.correlationId, acquired.runId, anomalies);
-      return { anomalies, compatible, kind: 'COMPLETED', scanned };
+      return { anomalies, compatible, kind: 'COMPLETED', scanned, usage };
     } catch (error) {
       await this.fail(acquired.runId);
       throw error;
@@ -233,6 +268,22 @@ export class CatalogStorageReconciler {
       ],
     );
   }
+}
+
+function addKnownUsage(
+  usage: MutableCatalogStorageUsage,
+  state: 'ACTIVE' | 'QUARANTINED' | 'REMOVED' | 'REPLACED',
+  byteSize: number,
+): void {
+  usage.totalBytes += byteSize;
+  usage.totalObjects += 1;
+  if (state === 'ACTIVE') {
+    usage.activeBytes += byteSize;
+    usage.activeObjects += 1;
+    return;
+  }
+  usage.retainedBytes += byteSize;
+  usage.retainedObjects += 1;
 }
 
 function sha256(bytes: Uint8Array): string {

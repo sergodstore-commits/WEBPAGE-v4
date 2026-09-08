@@ -234,15 +234,52 @@ describe('PostgreSQL Catalog foundation', () => {
   it('reconciles metadata and Storage without deleting orphan objects', async () => {
     const resourceId = await createActiveResource(1);
     const reconciler = new CatalogStorageReconciler(pool, repository, storage, clock, uuids);
-    await expect(
-      reconciler.run({ correlationId: crypto.randomUUID(), scheduledFor: clock.now() }),
-    ).resolves.toMatchObject({ anomalies: 0, compatible: 1, kind: 'COMPLETED' });
+    const metadata = await repository.findResource(resourceId);
+    expect(metadata).not.toBeNull();
+    const key = metadata?.secureStorageKey ?? '';
+    const activeObject = storedObjects.get(key) ?? new Uint8Array();
+    const activeBytes = activeObject.byteLength;
+    const firstRun = await reconciler.run({
+      correlationId: crypto.randomUUID(),
+      scheduledFor: clock.now(),
+    });
+    expect(firstRun).toMatchObject({
+      anomalies: 0,
+      compatible: 1,
+      kind: 'COMPLETED',
+      usage: {
+        activeBytes,
+        activeObjects: 1,
+        orphanBytes: 0,
+        orphanObjects: 0,
+        retainedBytes: 0,
+        retainedObjects: 0,
+        totalBytes: activeBytes,
+        totalObjects: 1,
+      },
+    });
 
     storedObjects.set('opaque-orphan-test-key', pngFixture);
     const later = new Date(clock.now().getTime() + 60_000);
-    await expect(
-      reconciler.run({ correlationId: crypto.randomUUID(), scheduledFor: later }),
-    ).resolves.toMatchObject({ anomalies: 1, compatible: 1, kind: 'COMPLETED' });
+    const orphanRun = await reconciler.run({
+      correlationId: crypto.randomUUID(),
+      scheduledFor: later,
+    });
+    expect(orphanRun).toMatchObject({
+      anomalies: 1,
+      compatible: 1,
+      kind: 'COMPLETED',
+      usage: {
+        activeBytes,
+        activeObjects: 1,
+        orphanBytes: pngFixture.byteLength,
+        orphanObjects: 1,
+        retainedBytes: 0,
+        retainedObjects: 0,
+        totalBytes: activeBytes + pngFixture.byteLength,
+        totalObjects: 2,
+      },
+    });
     expect(storedObjects.has('opaque-orphan-test-key')).toBe(true);
     const runs = await pool.query<{ state: string }>(
       `SELECT state FROM scheduled_job_runs WHERE job_name = 'CATALOG_STORAGE_RECONCILIATION'`,
@@ -250,9 +287,6 @@ describe('PostgreSQL Catalog foundation', () => {
     expect(runs.rows).toHaveLength(2);
     expect(runs.rows.every((row) => row.state === 'SUCCEEDED')).toBe(true);
 
-    const metadata = await repository.findResource(resourceId);
-    expect(metadata).not.toBeNull();
-    const key = metadata?.secureStorageKey ?? '';
     storedObjects.delete(key);
     const missingSchedule = new Date(clock.now().getTime() + 120_000);
     await expect(
@@ -265,7 +299,31 @@ describe('PostgreSQL Catalog foundation', () => {
       reconciler.run({ correlationId: crypto.randomUUID(), scheduledFor: mismatchSchedule }),
     ).resolves.toMatchObject({ anomalies: 2, compatible: 0, kind: 'COMPLETED' });
 
-    const concurrentSchedule = new Date(clock.now().getTime() + 240_000);
+    storedObjects.set(key, activeObject);
+    await service.removeResource({ context: context('storage-retention'), resourceId });
+    const retentionSchedule = new Date(clock.now().getTime() + 240_000);
+    const retainedRun = await reconciler.run({
+      correlationId: crypto.randomUUID(),
+      scheduledFor: retentionSchedule,
+    });
+    expect(retainedRun).toMatchObject({
+      anomalies: 1,
+      compatible: 1,
+      kind: 'COMPLETED',
+      usage: {
+        activeBytes: 0,
+        activeObjects: 0,
+        orphanBytes: pngFixture.byteLength,
+        orphanObjects: 1,
+        retainedBytes: activeBytes,
+        retainedObjects: 1,
+        totalBytes: activeBytes + pngFixture.byteLength,
+        totalObjects: 2,
+      },
+    });
+    expect(storedObjects.has(key)).toBe(true);
+
+    const concurrentSchedule = new Date(clock.now().getTime() + 300_000);
     const concurrent = await Promise.all([
       reconciler.run({ correlationId: crypto.randomUUID(), scheduledFor: concurrentSchedule }),
       reconciler.run({ correlationId: crypto.randomUUID(), scheduledFor: concurrentSchedule }),
