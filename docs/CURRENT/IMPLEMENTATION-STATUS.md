@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-02. Release productivo `PASS`. Por decisión expresa del
+> Estado auditado hasta el 2026-09-08. Release productivo `PASS`. Por decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
 > operación V1.
 
@@ -21,7 +21,7 @@
 | Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin            | Ninguno                                |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                                |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                                |
-| Despliegue web                                                                       | Producción PASS          | Vercel `0d29388`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                                |
+| Despliegue web                                                                       | Producción PASS          | Vercel `68b4fa5`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                                |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                                |
 
 ## Gates locales reproducidos
@@ -30,7 +30,7 @@
 - `npm ci`: PASS.
 - Runner oficial `scripts/codex/verify-local.ps1 -RunLocalIntegration`: `LOCAL_VERIFICATION=PASS` y salida natural `0` el 2026-08-23.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit, Application, Contract y Web: 108 archivos / 407 pruebas PASS y 1 SKIP documentado.
+- Unit, Application, Contract y Web: 109 archivos / 429 pruebas PASS y 1 SKIP documentado.
   Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro
   idempotente, estado 404 explícito, editor visual por bloques y lectura editorial pública.
 - Integration local: 14 archivos / 168 pruebas PASS sobre PostgreSQL 18.4. La migración editorial
@@ -151,6 +151,20 @@
   Inventario, Publicaciones y Clientes y usuarios; todas las pestañas seleccionadas mostraron su
   tarea correspondiente y el navegador registró cero errores y advertencias. Web y API respondieron
   HTTP 200. La comprobación no ejecutó acciones administrativas ni modificó datos.
+- El propietario solicitó acumular las mejoras públicas y promoverlas una sola vez. Los commits
+  `f2eec59`–`68b4fa5` completaron Inicio, detalle de Tienda, Torneos, Noticias, Comunidad y Cómics:
+  Inicio consume destacados reales; Tienda expone galería y detalle público; Torneos separa
+  próximos, realizados, Quests y Hall of Fame; Noticias incorpora portada y categorías; Comunidad
+  combina actividades con la información publicada de la única tienda; y Cómics relaciona series y
+  capítulos con lector por bloques e imágenes. Los contenidos históricos sin los nuevos metadatos
+  permanecen visibles en grupos explícitos, sin inferir clasificaciones.
+- El gate integral del conjunto terminó con 109 archivos, 429 pruebas aprobadas y 1 omisión
+  documentada; formato, lint, tipos y compilación productiva pasaron. `main` avanzó linealmente desde
+  `95b5730` hasta `68b4fa5`, sin secretos, `.env`, migraciones ni cambios de esquema. El dominio
+  productivo y la API respondieron HTTP 200; Inicio, Tienda, Torneos, Noticias, Comunidad, Cómics y
+  Publicaciones Admin se comprobaron con sesión persistente y cero errores o advertencias. En Admin
+  se verificaron los campos dinámicos sin guardar ni modificar contenido. El release anterior se
+  conserva como rollback de deployment.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
