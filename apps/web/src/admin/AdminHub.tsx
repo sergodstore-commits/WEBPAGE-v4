@@ -1831,12 +1831,15 @@ function EditorialComposer({
             },
           }
         : {};
+    const categoryMetadata =
+      type === 'NEWS' ? { category: String(form.get('newsCategory')).trim() } : {};
     await onAction(
       '/api/v1/admin/content',
       {
         body,
         excerpt: String(form.get('excerpt')),
         metadata: {
+          ...categoryMetadata,
           ...eventMetadata,
           document: {
             blocks: [{ id: crypto.randomUUID(), text: body, type: 'TEXT' }],
@@ -1883,6 +1886,12 @@ function EditorialComposer({
               <input name="eventStartsAt" required type="datetime-local" />
             </label>
           </>
+        )}
+        {type === 'NEWS' && (
+          <label>
+            Categoría de noticia
+            <input defaultValue="General" name="newsCategory" required />
+          </label>
         )}
         <label>
           Título

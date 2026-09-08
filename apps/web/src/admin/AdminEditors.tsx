@@ -1044,9 +1044,7 @@ function EditorialVisualEditor({
               <select
                 onChange={(event) => {
                   const type = event.target.value;
-                  const metadata = supportsEventMetadata(type)
-                    ? draft.metadata
-                    : withoutEventMetadata(draft.metadata);
+                  const metadata = metadataForEditorialType(draft.metadata, type);
                   setDraft({ ...draft, metadata, type });
                 }}
                 value={draft.type}
@@ -1090,6 +1088,21 @@ function EditorialVisualEditor({
                   />
                 </label>
               </>
+            )}
+            {draft.type === 'NEWS' && (
+              <label>
+                Categoría de noticia
+                <input
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      metadata: { ...draft.metadata, category: event.target.value },
+                    })
+                  }
+                  required
+                  value={newsCategoryFromMetadata(draft.metadata)}
+                />
+              </label>
             )}
             <label>
               Título
@@ -1297,8 +1310,22 @@ function eventFromMetadata(metadata: Record<string, unknown>): EditorialEventVal
   return { startsAt, status };
 }
 
-function withoutEventMetadata(metadata: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(metadata).filter(([key]) => key !== 'event'));
+function metadataForEditorialType(
+  metadata: Record<string, unknown>,
+  type: string,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(metadata).filter(
+      ([key]) =>
+        (key !== 'event' || supportsEventMetadata(type)) && (key !== 'category' || type === 'NEWS'),
+    ),
+  );
+}
+
+function newsCategoryFromMetadata(metadata: Record<string, unknown>): string {
+  return typeof metadata.category === 'string' && metadata.category.trim()
+    ? metadata.category
+    : 'General';
 }
 
 function dateTimeLocalValue(value: string | undefined): string {

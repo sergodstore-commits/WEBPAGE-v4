@@ -34,6 +34,7 @@ import { CartPage } from '../cart/CartPage.js';
 import {
   EditorialPage,
   HomeHighlights,
+  NewsPage,
   StorePage,
   TournamentPage,
 } from '../public-commerce/PublicPages.js';
@@ -110,7 +111,7 @@ export function App() {
           {route === '/shop' && <StorePage />}
           {route === '/cart' && <CartPage />}
           {route === '/tournaments' && <TournamentPage />}
-          {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
+          {route === '/news' && <NewsPage />}
           {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
           {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
           {adminArea && (

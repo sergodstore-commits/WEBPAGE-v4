@@ -362,6 +362,7 @@ describe('AdminHub', () => {
         startsAt: expect.stringContaining('2026-08-10T'),
         status: 'COMPLETED',
       });
+      expect(body.metadata.category).toBeUndefined();
     });
   });
 

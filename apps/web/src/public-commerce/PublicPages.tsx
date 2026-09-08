@@ -94,6 +94,7 @@ interface EditorialEntry {
   readonly editorialEntryId: string;
   readonly excerpt: string;
   readonly metadata: Record<string, unknown>;
+  readonly publishedAt?: string;
   readonly slug: string;
   readonly title: string;
   readonly type: string;
@@ -1274,6 +1275,184 @@ function sortByEventDate(
     const rightTime = new Date(eventFromEditorial(right)?.startsAt ?? 0).getTime();
     return direction === 'ascending' ? leftTime - rightTime : rightTime - leftTime;
   });
+}
+
+export function NewsPage() {
+  const [items, setItems] = useState<readonly EditorialEntry[]>([]);
+  const [category, setCategory] = useState('Todas');
+  const [selected, setSelected] = useState<EditorialEntry | null>(null);
+  const [message, setMessage] = useState('Cargando noticias…');
+
+  useEffect(() => {
+    let active = true;
+    void publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=NEWS')
+      .then((result) => {
+        if (!active) return;
+        setItems(result.items);
+        setMessage(result.items.length === 0 ? 'Todavía no hay noticias publicadas.' : '');
+      })
+      .catch((error: unknown) => {
+        if (active) setMessage(messageOf(error));
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const categories = [...new Set(items.map(newsCategory))].sort((left, right) =>
+    left.localeCompare(right, 'es'),
+  );
+  const visible =
+    category === 'Todas' ? items : items.filter((item) => newsCategory(item) === category);
+  const featured = visible[0];
+
+  if (selected !== null) {
+    return (
+      <main className="page-frame editorial-page visual-public">
+        <article className="editorial-reader cut-panel">
+          <button className="button-secondary" onClick={() => setSelected(null)} type="button">
+            Volver a noticias
+          </button>
+          <p className="card-kicker">{newsCategory(selected)}</p>
+          <h1>{selected.title}</h1>
+          {validEditorialDate(selected.publishedAt) && (
+            <p className="news-date">Publicada el {publicDateTime(selected.publishedAt ?? '')}</p>
+          )}
+          <p className="editorial-reader-excerpt">{selected.excerpt}</p>
+          <EditorialDocumentView
+            document={documentFromMetadata(
+              selected.metadata,
+              selected.body,
+              selected.editorialEntryId,
+            )}
+          />
+        </article>
+      </main>
+    );
+  }
+
+  return (
+    <main className="page-frame editorial-page news-page visual-public">
+      <header className="section-heading editorial-heading cut-panel">
+        <div>
+          <p className="eyebrow">Actualidad Sergod</p>
+          <h1>Noticias</h1>
+          <p>
+            Novedades oficiales de la tienda y de la comunidad, organizadas para encontrarlas
+            fácilmente.
+          </p>
+        </div>
+        <div aria-label="Características de la sección" className="heading-stats">
+          <span>Portada editorial</span>
+          <span>Artículos completos</span>
+        </div>
+      </header>
+      <p aria-live="polite" className="status">
+        {message}
+      </p>
+      {items.length > 0 && (
+        <>
+          <nav aria-label="Categorías de noticias" className="news-categories">
+            {['Todas', ...categories].map((option) => (
+              <button
+                aria-pressed={category === option}
+                key={option}
+                onClick={() => setCategory(option)}
+                type="button"
+              >
+                {option}
+              </button>
+            ))}
+          </nav>
+          {featured ? (
+            <>
+              <NewsFeaturedCard item={featured} onSelect={setSelected} />
+              {visible.length > 1 && (
+                <section aria-label="Más noticias" className="editorial-grid news-grid">
+                  {visible.slice(1).map((item) => (
+                    <NewsCard item={item} key={item.editorialEntryId} onSelect={setSelected} />
+                  ))}
+                </section>
+              )}
+            </>
+          ) : (
+            <section className="editorial-empty cut-panel" role="status">
+              <h2>No hay noticias en esta categoría</h2>
+              <p>Selecciona otra categoría para revisar las publicaciones disponibles.</p>
+            </section>
+          )}
+        </>
+      )}
+      {items.length === 0 && message !== 'Cargando noticias…' && (
+        <section className="editorial-empty cut-panel" role="status">
+          <p className="eyebrow">Portada editorial</p>
+          <h2>Aún no hay noticias para mostrar</h2>
+          <p>Las publicaciones oficiales aparecerán aquí cuando la tienda las publique.</p>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function NewsFeaturedCard({
+  item,
+  onSelect,
+}: {
+  readonly item: EditorialEntry;
+  readonly onSelect: (item: EditorialEntry) => void;
+}) {
+  const cover = firstEditorialImage(item);
+  return (
+    <article className={`news-feature cut-panel${cover ? ' has-cover' : ''}`}>
+      {cover && <img alt={cover.altText} src={resourceUrl(cover.resourceId)} />}
+      <div>
+        <p className="card-kicker">Portada · {newsCategory(item)}</p>
+        <h2>{item.title}</h2>
+        <p>{item.excerpt}</p>
+        <button onClick={() => onSelect(item)} type="button">
+          Leer artículo
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function NewsCard({
+  item,
+  onSelect,
+}: {
+  readonly item: EditorialEntry;
+  readonly onSelect: (item: EditorialEntry) => void;
+}) {
+  const cover = firstEditorialImage(item);
+  return (
+    <article className="editorial-card news-card">
+      {cover && (
+        <img alt={cover.altText} className="news-card-cover" src={resourceUrl(cover.resourceId)} />
+      )}
+      <p className="card-kicker">{newsCategory(item)}</p>
+      <h2>{item.title}</h2>
+      <p>{item.excerpt}</p>
+      <button onClick={() => onSelect(item)} type="button">
+        Leer artículo
+      </button>
+    </article>
+  );
+}
+
+function newsCategory(item: EditorialEntry): string {
+  const category = item.metadata.category;
+  return typeof category === 'string' && category.trim() ? category.trim() : 'General';
+}
+
+function firstEditorialImage(item: EditorialEntry) {
+  return documentFromMetadata(item.metadata, item.body, item.editorialEntryId).blocks.find(
+    (block) => block.type === 'IMAGE',
+  );
+}
+
+function validEditorialDate(value: string | undefined): boolean {
+  return typeof value === 'string' && !Number.isNaN(new Date(value).getTime());
 }
 
 export function EditorialPage({ type, title }: { readonly type: string; readonly title: string }) {

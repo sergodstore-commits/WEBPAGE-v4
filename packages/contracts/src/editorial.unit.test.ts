@@ -61,6 +61,19 @@ describe('editorial document contract', () => {
     ).toBe(false);
   });
 
+  it('accepts news categories and rejects them on unrelated content', () => {
+    expect(
+      editorialWriteSchema.parse({ ...base, metadata: { category: 'Torneos' } }).metadata.category,
+    ).toBe('Torneos');
+    expect(
+      editorialWriteSchema.safeParse({
+        ...base,
+        metadata: { category: 'Torneos' },
+        type: 'COMMUNITY',
+      }).success,
+    ).toBe(false);
+  });
+
   it('rejects unsafe markup-shaped blocks and unsupported positioning', () => {
     expect(() =>
       editorialWriteSchema.parse({

@@ -2,7 +2,13 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError, publicRequest } from '../identity/api.js';
-import { EditorialPage, HomeHighlights, StorePage, TournamentPage } from './PublicPages.js';
+import {
+  EditorialPage,
+  HomeHighlights,
+  NewsPage,
+  StorePage,
+  TournamentPage,
+} from './PublicPages.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -523,5 +529,62 @@ describe('public editorial sections', () => {
       '/api/v1/catalog/resources/0198a8be-6677-7000-8000-000000000020/content',
     );
     expect(image.closest('figure')).toHaveClass('placement-right', 'width-medium');
+  });
+
+  it('shows a news cover, real categories and the complete selected article', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({
+      items: [
+        {
+          body: 'Contenido principal.',
+          editorialEntryId: '0198a8be-6677-7000-8000-000000000110',
+          excerpt: 'Resumen principal.',
+          metadata: {
+            category: 'Novedades',
+            document: {
+              blocks: [
+                {
+                  altText: 'Mesa de juego preparada',
+                  id: '0198a8be-6677-7000-8000-000000000111',
+                  placement: 'FULL',
+                  resourceId: '0198a8be-6677-7000-8000-000000000112',
+                  type: 'IMAGE',
+                  width: 'LARGE',
+                },
+              ],
+              version: 1,
+            },
+          },
+          slug: 'nueva-temporada',
+          title: 'Nueva temporada',
+          type: 'NEWS',
+        },
+        {
+          body: 'Bases y detalles del evento.',
+          editorialEntryId: '0198a8be-6677-7000-8000-000000000113',
+          excerpt: 'Resumen del evento.',
+          metadata: { category: 'Eventos' },
+          slug: 'evento-especial',
+          title: 'Evento especial',
+          type: 'NEWS',
+        },
+      ],
+    } as never);
+
+    render(<NewsPage />);
+
+    const cover = await screen.findByRole('img', { name: 'Mesa de juego preparada' });
+    expect(cover).toHaveAttribute(
+      'src',
+      '/api/v1/catalog/resources/0198a8be-6677-7000-8000-000000000112/content',
+    );
+    expect(screen.getByRole('button', { name: 'Novedades' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Eventos' }));
+    expect(screen.queryByText('Nueva temporada')).not.toBeInTheDocument();
+    expect(screen.getByText('Evento especial')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Leer artículo' }));
+    expect(screen.getByText('Bases y detalles del evento.')).toBeInTheDocument();
   });
 });

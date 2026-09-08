@@ -51,6 +51,7 @@ export const editorialDocumentSchema = z
   });
 export const editorialMetadataSchema = z
   .object({
+    category: z.string().trim().min(1).max(80).optional(),
     document: editorialDocumentSchema.optional(),
     event: editorialEventMetadataSchema.optional(),
   })
@@ -82,6 +83,13 @@ export const editorialWriteSchema = z
         code: 'custom',
         message: 'Event metadata is only valid for tournaments and quests.',
         path: ['metadata', 'event'],
+      });
+    }
+    if (entry.metadata.category && entry.type !== 'NEWS') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Editorial category metadata is only valid for news.',
+        path: ['metadata', 'category'],
       });
     }
   });
