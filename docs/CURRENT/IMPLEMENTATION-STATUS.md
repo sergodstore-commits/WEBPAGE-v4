@@ -188,6 +188,22 @@
   los huérfanos se detectan y contabilizan, pero tampoco se eliminan sin una decisión posterior
   explícita. La integración focal pasó 21 pruebas sobre PostgreSQL con el optimizador real; formato,
   lint, tipos y compilación API pasaron. No requirió migración ni escritura remota.
+- El commit local `d06be4c` completa los puntos tercero y cuarto: las cargas múltiples bloquean el
+  doble envío, conservan la misma clave idempotente al reintentar, eliminan de la cola solo las fotos
+  confirmadas y mantienen visible el resultado de un fallo parcial. Antes de subir, cada foto puede
+  quitarse individualmente sin seleccionar de nuevo el lote; las posiciones restantes se recalculan
+  y sus vistas previas se liberan. Las 21 pruebas focales del panel, formato, lint y tipos pasaron.
+- El commit local `f5a3014` completa el quinto punto de seguridad local: una falla del optimizador
+  deja el registro en cuarentena, no escribe bytes en Storage y nunca activa la imagen. Junto con las
+  pruebas existentes de firma real, MIME, dimensiones, clave segura y Storage privado, pasaron 9
+  pruebas de aplicación y 29 pruebas unitarias focales. No hubo escritura remota.
+- El sexto punto cerró el gate acumulado local: `verify` pasó formato, lint, tipos, 111 archivos de
+  pruebas con 448 aprobadas y 1 omisión documentada, además de la compilación productiva. La suite
+  PostgreSQL oficial pasó 14 archivos y 169 pruebas; el historial confirmó 31 migraciones protegidas,
+  la auditoría de entrega no encontró vacíos, entornos reales ni placeholders y `npm audit` informó
+  0 vulnerabilidades de producción. La instancia PostgreSQL desechable quedó apagada. El conjunto
+  continúa exclusivamente local, pendiente de una única subida a Preview y aceptación real antes de
+  cualquier promoción productiva.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
