@@ -252,6 +252,7 @@ export function CatalogResourceManager({
   const [retireReasons, setRetireReasons] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('Selecciona un producto para administrar su galería.');
   const [pendingUploads, setPendingUploads] = useState<readonly PendingCatalogUpload[]>([]);
+  const [uploading, setUploading] = useState(false);
   const pendingUploadsRef = useRef<readonly PendingCatalogUpload[]>([]);
   const loadGeneration = useRef(0);
   const entities = useMemo(
@@ -317,13 +318,26 @@ export function CatalogResourceManager({
       })),
     );
   };
+  const removePendingUpload = (idempotencyKey: string) => {
+    setPendingUploads((current) => {
+      const removed = current.find((item) => item.idempotencyKey === idempotencyKey);
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      const firstPosition = nextCatalogImagePosition(items);
+      return current
+        .filter((item) => item.idempotencyKey !== idempotencyKey)
+        .map((item, index) => ({ ...item, position: firstPosition + index }));
+    });
+  };
   const upload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const form = event.currentTarget;
+    if (uploading) return;
     if (!entityId) return setMessage('Selecciona una entidad.');
     if (pendingUploads.length === 0) return setMessage('Selecciona al menos una imagen.');
     if (pendingUploads.some((item) => item.altText.trim() === ''))
       return setMessage('Describe cada imagen antes de subirla.');
     let uploaded = 0;
+    setUploading(true);
     try {
       setMessage(
         `Subiendo ${pendingUploads.length} ${pendingUploads.length === 1 ? 'imagen' : 'imágenes'}…`,
@@ -340,24 +354,26 @@ export function CatalogResourceManager({
         });
         uploaded += 1;
       }
-      setMessage(
-        `${uploaded} ${uploaded === 1 ? 'imagen subida' : 'imágenes subidas'} correctamente.`,
-      );
-      event.currentTarget.reset();
+      form.reset();
       revokeUploadPreviews(pendingUploads);
       setPendingUploads([]);
       await load();
+      setMessage(
+        `${uploaded} ${uploaded === 1 ? 'imagen subida' : 'imágenes subidas'} correctamente.`,
+      );
     } catch (error) {
       const completed = pendingUploads.slice(0, uploaded);
       const remaining = pendingUploads.slice(uploaded);
-      revokeUploadPreviews(completed);
-      setPendingUploads(remaining);
-      setMessage(
+      const feedback =
         uploaded === 0
           ? messageOf(error)
-          : `${uploaded} imágenes se guardaron; faltan ${remaining.length}. ${messageOf(error)}`,
-      );
+          : `${uploaded} ${uploaded === 1 ? 'imagen se guardó' : 'imágenes se guardaron'}; faltan ${remaining.length}. ${messageOf(error)}`;
+      revokeUploadPreviews(completed);
+      setPendingUploads(remaining);
       await load();
+      setMessage(feedback);
+    } finally {
+      setUploading(false);
     }
   };
   const json = async (path: string, body: unknown, method: string, headers: HeadersInit = {}) => {
@@ -458,6 +474,7 @@ export function CatalogResourceManager({
           )}
         </div>
         <form
+          aria-busy={uploading}
           className="catalog-upload-card"
           encType="multipart/form-data"
           onSubmit={(event) => void upload(event)}
@@ -478,6 +495,7 @@ export function CatalogResourceManager({
               name="file"
               onChange={(event) => selectFiles(event.target.files)}
               required
+              disabled={uploading}
               type="file"
             />
             <span>Arrastra aquí una o varias fotos, o selecciónalas desde tu equipo.</span>
@@ -507,6 +525,15 @@ export function CatalogResourceManager({
                       value={item.altText}
                     />
                   </label>
+                  <button
+                    aria-label={`Quitar ${item.file.name} de esta carga`}
+                    className="link"
+                    disabled={uploading}
+                    onClick={() => removePendingUpload(item.idempotencyKey)}
+                    type="button"
+                  >
+                    Quitar de esta carga
+                  </button>
                 </article>
               ))}
             </div>
@@ -515,7 +542,9 @@ export function CatalogResourceManager({
             Se añadirá al final de la galería y el servidor reducirá su peso cuando sea posible sin
             deformarla.
           </small>
-          <button disabled={!entityId || pendingUploads.length === 0}>Añadir a la galería</button>
+          <button disabled={!entityId || pendingUploads.length === 0 || uploading}>
+            {uploading ? 'Procesando imágenes…' : 'Añadir a la galería'}
+          </button>
         </form>
       </div>
       {entityId && items.length > 0 && (

@@ -591,4 +591,66 @@ describe('AdminHub', () => {
     fireEvent.change(currentFields.getByLabelText('Producto'), { target: { value: '' } });
     expect(currentFields.queryByText('front.webp')).not.toBeInTheDocument();
   });
+
+  it('keeps only pending images after a partial batch failure and retries without duplication', async () => {
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Imágenes' }));
+    const section = (await screen.findByRole('heading', { name: 'Galería del producto' })).closest(
+      'section',
+    );
+    if (!section) throw new Error('Catalog resource manager was not rendered.');
+    const fields = within(section);
+    fireEvent.change(fields.getByLabelText('Producto'), { target: { value: 'product-1' } });
+    await waitFor(() => expect(authorizedResponse).toHaveBeenCalled());
+
+    let attempts = 0;
+    vi.mocked(authorizedRequest).mockImplementation(async (path, init) => {
+      if (path.endsWith('/product-1/resources') && init?.method === 'POST') {
+        attempts += 1;
+        if (attempts === 2) throw new Error('Carga interrumpida.');
+      }
+      return { item: {} } as never;
+    });
+
+    const uploadForm = fields.getByRole('heading', { name: 'Añadir imágenes' }).closest('form');
+    if (!uploadForm) throw new Error('Image upload form was not rendered.');
+    const first = new File(['first'], 'first.webp', { type: 'image/webp' });
+    const second = new File(['second'], 'second.webp', { type: 'image/webp' });
+    const discarded = new File(['discarded'], 'discarded.webp', { type: 'image/webp' });
+    fireEvent.change(within(uploadForm).getByLabelText(/Seleccionar imágenes/u), {
+      target: { files: [first, second, discarded] },
+    });
+    fireEvent.click(
+      within(uploadForm).getByRole('button', { name: 'Quitar discarded.webp de esta carga' }),
+    );
+    expect(within(uploadForm).queryByText('discarded.webp')).not.toBeInTheDocument();
+    const descriptions = within(uploadForm).getAllByLabelText(/Descripción de la imagen/u);
+    fireEvent.change(descriptions[0] as HTMLElement, { target: { value: 'Frente' } });
+    fireEvent.change(descriptions[1] as HTMLElement, { target: { value: 'Reverso' } });
+    fireEvent.submit(uploadForm);
+
+    expect(await screen.findByText(/1 imagen se guardó; faltan 1/u)).toBeInTheDocument();
+    expect(within(uploadForm).queryByText('first.webp')).not.toBeInTheDocument();
+    expect(within(uploadForm).getByText('second.webp')).toBeInTheDocument();
+    const failedCalls = vi
+      .mocked(authorizedRequest)
+      .mock.calls.filter(([path]) => path.endsWith('/product-1/resources'));
+    const failedKey = (failedCalls[1]?.[1]?.headers as Record<string, string> | undefined)?.[
+      'idempotency-key'
+    ];
+
+    await waitFor(() =>
+      expect(within(uploadForm).getByRole('button', { name: 'Añadir a la galería' })).toBeEnabled(),
+    );
+    fireEvent.submit(uploadForm);
+    await waitFor(() => expect(attempts).toBe(3));
+    const uploadCalls = vi
+      .mocked(authorizedRequest)
+      .mock.calls.filter(([path]) => path.endsWith('/product-1/resources'));
+    const retryKey = (uploadCalls[2]?.[1]?.headers as Record<string, string> | undefined)?.[
+      'idempotency-key'
+    ];
+    expect(retryKey).toBe(failedKey);
+    expect(await screen.findByText('1 imagen subida correctamente.')).toBeInTheDocument();
+  });
 });
