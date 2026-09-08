@@ -166,6 +166,28 @@ describe('Catalog application', () => {
     );
   });
 
+  it('keeps the resource quarantined without writing bytes when optimization fails', async () => {
+    const optimizer: CatalogImageOptimizationPort = {
+      optimize: vi.fn().mockRejectedValue(new Error('Image processing failed safely.')),
+    };
+    const test = subject(optimizer);
+
+    await expect(
+      test.service.ingestCatalogImage({
+        altText: 'Recurso que no pudo procesarse',
+        bytes: new Uint8Array([1, 2, 3]),
+        context,
+        declaredMimeType: 'image/png',
+        originalFilename: 'resource.png',
+        position: 1,
+      }),
+    ).rejects.toThrow('Image processing failed safely.');
+
+    expect(test.repository.registerQuarantinedResource).toHaveBeenCalledOnce();
+    expect(test.storage.uploadPrivateObject).not.toHaveBeenCalled();
+    expect(test.repository.activateResource).not.toHaveBeenCalled();
+  });
+
   it('leaves the resource quarantined when Storage fails', async () => {
     const test = subject();
     vi.mocked(test.storage.uploadPrivateObject).mockRejectedValueOnce(
