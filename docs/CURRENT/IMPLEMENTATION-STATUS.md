@@ -165,6 +165,14 @@
   Publicaciones Admin se comprobaron con sesión persistente y cero errores o advertencias. En Admin
   se verificaron los campos dinámicos sin guardar ni modificar contenido. El release anterior se
   conserva como rollback de deployment.
+- El commit local `08de606` prepara la biblioteca operativa de imágenes sin promoverla todavía:
+  mantiene `catalog-assets` privado y organiza cada carga nueva en carpetas virtuales por área y
+  registro (`products`, `games`, `categories`, `collections`, `news`, `tournaments`, `community`,
+  `comics`, `quests` y `hall-of-fame`). Las claves históricas en la raíz siguen siendo compatibles y
+  no se movió ni eliminó ningún objeto. La galería Admin acepta selección múltiple o arrastre,
+  muestra cada vista previa, exige descripción accesible individual y conserva portada, orden,
+  reemplazo e historial. El gate integral pasó con 111 archivos, 438 pruebas aprobadas y 1 omisión;
+  la integración focal de catálogo pasó 21 pruebas sobre PostgreSQL local. No requirió migración.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
