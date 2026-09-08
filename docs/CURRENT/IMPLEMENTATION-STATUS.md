@@ -173,6 +173,14 @@
   muestra cada vista previa, exige descripción accesible individual y conserva portada, orden,
   reemplazo e historial. El gate integral pasó con 111 archivos, 438 pruebas aprobadas y 1 omisión;
   la integración focal de catálogo pasó 21 pruebas sobre PostgreSQL local. No requirió migración.
+- El commit local `6afcdc4` completa el primer punto previo a la promoción conjunta: el API procesa
+  automáticamente las imágenes comerciales y editoriales antes de guardarlas. Conserva JPEG, PNG,
+  WebP o AVIF, respeta proporción, nunca agranda una imagen y adopta el resultado únicamente cuando
+  ocupa menos espacio; si una imagen grande admite reducción segura, limita su dimensión mayor a
+  2.400 px. El flujo no toca el logo ni los assets versionados de diseño y mantiene validación de
+  firma, extensión, dimensiones, píxeles, hash, autorización e idempotencia. El gate integral pasó
+  con 111 archivos, 446 pruebas aprobadas y 1 omisión; la suite oficial PostgreSQL pasó 14 archivos y
+  169 pruebas. No requirió migración ni escritura remota.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
