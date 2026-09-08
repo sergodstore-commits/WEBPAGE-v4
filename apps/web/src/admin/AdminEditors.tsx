@@ -251,8 +251,8 @@ export function CatalogResourceManager({
   const [etag, setEtag] = useState('');
   const [retireReasons, setRetireReasons] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('Selecciona un producto para administrar su galería.');
-  const [uploadAltText, setUploadAltText] = useState('');
-  const [uploadPreview, setUploadPreview] = useState('');
+  const [pendingUploads, setPendingUploads] = useState<readonly PendingCatalogUpload[]>([]);
+  const pendingUploadsRef = useRef<readonly PendingCatalogUpload[]>([]);
   const loadGeneration = useRef(0);
   const entities = useMemo(
     () =>
@@ -299,30 +299,65 @@ export function CatalogResourceManager({
       if (generation === loadGeneration.current) setMessage(messageOf(error));
     }
   };
-  useEffect(
-    () => () => {
-      if (uploadPreview) URL.revokeObjectURL(uploadPreview);
-    },
-    [uploadPreview],
-  );
+  useEffect(() => {
+    pendingUploadsRef.current = pendingUploads;
+  }, [pendingUploads]);
+  useEffect(() => () => revokeUploadPreviews(pendingUploadsRef.current), []);
+  const selectFiles = (files: FileList | readonly File[] | null) => {
+    revokeUploadPreviews(pendingUploads);
+    const selected = files === null ? [] : Array.from(files);
+    const firstPosition = nextCatalogImagePosition(items);
+    setPendingUploads(
+      selected.map((file, index) => ({
+        altText: '',
+        file,
+        idempotencyKey: crypto.randomUUID(),
+        position: firstPosition + index,
+        previewUrl: URL.createObjectURL(file),
+      })),
+    );
+  };
   const upload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!entityId) return setMessage('Selecciona una entidad.');
-    const data = new FormData(event.currentTarget);
-    data.set('position', String(items.length + 1));
+    if (pendingUploads.length === 0) return setMessage('Selecciona al menos una imagen.');
+    if (pendingUploads.some((item) => item.altText.trim() === ''))
+      return setMessage('Describe cada imagen antes de subirla.');
+    let uploaded = 0;
     try {
-      await authorizedRequest(base, {
-        body: data,
-        headers: { 'idempotency-key': crypto.randomUUID() },
-        method: 'POST',
-      });
-      setMessage('Imagen subida correctamente.');
+      setMessage(
+        `Subiendo ${pendingUploads.length} ${pendingUploads.length === 1 ? 'imagen' : 'imágenes'}…`,
+      );
+      for (const item of pendingUploads) {
+        const data = new FormData();
+        data.set('file', item.file);
+        data.set('altText', item.altText.trim());
+        data.set('position', String(item.position));
+        await authorizedRequest(base, {
+          body: data,
+          headers: { 'idempotency-key': item.idempotencyKey },
+          method: 'POST',
+        });
+        uploaded += 1;
+      }
+      setMessage(
+        `${uploaded} ${uploaded === 1 ? 'imagen subida' : 'imágenes subidas'} correctamente.`,
+      );
       event.currentTarget.reset();
-      setUploadAltText('');
-      setUploadPreview('');
+      revokeUploadPreviews(pendingUploads);
+      setPendingUploads([]);
       await load();
     } catch (error) {
-      setMessage(messageOf(error));
+      const completed = pendingUploads.slice(0, uploaded);
+      const remaining = pendingUploads.slice(uploaded);
+      revokeUploadPreviews(completed);
+      setPendingUploads(remaining);
+      setMessage(
+        uploaded === 0
+          ? messageOf(error)
+          : `${uploaded} imágenes se guardaron; faltan ${remaining.length}. ${messageOf(error)}`,
+      );
+      await load();
     }
   };
   const json = async (path: string, body: unknown, method: string, headers: HeadersInit = {}) => {
@@ -384,7 +419,8 @@ export function CatalogResourceManager({
                 setItems([]);
                 setEtag('');
                 setRetireReasons({});
-                setUploadAltText('');
+                revokeUploadPreviews(pendingUploads);
+                setPendingUploads([]);
                 setMessage('Selecciona una entidad para administrar su galería.');
               }}
             >
@@ -405,8 +441,8 @@ export function CatalogResourceManager({
               setEtag('');
               setRetireReasons({});
               setMessage(value ? 'Cargando galería…' : 'Selecciona una entidad.');
-              const entity = entities.find((item) => itemIdentifier(item) === value);
-              setUploadAltText(entity ? itemReference(entity) : '');
+              revokeUploadPreviews(pendingUploads);
+              setPendingUploads([]);
               if (value) void load(value, owner);
             }}
             value={entityId}
@@ -426,41 +462,57 @@ export function CatalogResourceManager({
           encType="multipart/form-data"
           onSubmit={(event) => void upload(event)}
         >
-          <h3>Añadir imagen</h3>
-          {uploadPreview ? (
-            <img
-              alt="Vista previa de la imagen seleccionada"
-              className="catalog-upload-preview"
-              src={uploadPreview}
-            />
-          ) : (
-            <div className="catalog-upload-placeholder">Vista previa</div>
-          )}
-          <label>
-            Seleccionar archivo
+          <h3>Añadir imágenes</h3>
+          <label
+            className="catalog-upload-dropzone"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              selectFiles(event.dataTransfer.files);
+            }}
+          >
+            Seleccionar imágenes
             <input
               accept="image/jpeg,image/png,image/webp,image/avif"
+              multiple
               name="file"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                setUploadPreview(file ? URL.createObjectURL(file) : '');
-              }}
+              onChange={(event) => selectFiles(event.target.files)}
               required
               type="file"
             />
+            <span>Arrastra aquí una o varias fotos, o selecciónalas desde tu equipo.</span>
           </label>
-          <label>
-            Descripción de la imagen
-            <input
-              name="altText"
-              onChange={(event) => setUploadAltText(event.target.value)}
-              placeholder="Ej.: Frente de la caja"
-              required
-              value={uploadAltText}
-            />
-          </label>
+          {pendingUploads.length === 0 ? (
+            <div className="catalog-upload-placeholder">Las vistas previas aparecerán aquí.</div>
+          ) : (
+            <div className="catalog-pending-upload-grid">
+              {pendingUploads.map((item, index) => (
+                <article key={item.idempotencyKey}>
+                  <img alt="" className="catalog-upload-preview" src={item.previewUrl} />
+                  <strong>{item.file.name}</strong>
+                  <label>
+                    Descripción de la imagen {index + 1}
+                    <input
+                      onChange={(event) =>
+                        setPendingUploads((current) =>
+                          current.map((candidate) =>
+                            candidate.idempotencyKey === item.idempotencyKey
+                              ? { ...candidate, altText: event.target.value }
+                              : candidate,
+                          ),
+                        )
+                      }
+                      placeholder="Ej.: Frente de la caja"
+                      required
+                      value={item.altText}
+                    />
+                  </label>
+                </article>
+              ))}
+            </div>
+          )}
           <small>Se añadirá automáticamente al final de la galería.</small>
-          <button disabled={!entityId}>Añadir a la galería</button>
+          <button disabled={!entityId || pendingUploads.length === 0}>Añadir a la galería</button>
         </form>
       </div>
       {entityId && items.length > 0 && (
@@ -558,6 +610,27 @@ export function CatalogResourceManager({
         </div>
       )}
     </section>
+  );
+}
+
+interface PendingCatalogUpload {
+  readonly altText: string;
+  readonly file: File;
+  readonly idempotencyKey: string;
+  readonly position: number;
+  readonly previewUrl: string;
+}
+
+function revokeUploadPreviews(items: readonly PendingCatalogUpload[]): void {
+  for (const item of items) URL.revokeObjectURL(item.previewUrl);
+}
+
+function nextCatalogImagePosition(items: readonly Item[]): number {
+  return (
+    items.reduce((maximum, item) => {
+      const position = Number(item.position);
+      return Number.isSafeInteger(position) && position > maximum ? position : maximum;
+    }, 0) + 1
   );
 }
 

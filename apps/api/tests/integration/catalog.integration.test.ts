@@ -296,6 +296,13 @@ describe('PostgreSQL Catalog foundation', () => {
       originalFilename: 'secundaria.png',
       position: 1,
     });
+    const organizedKeys = await pool.query<{ secure_storage_key: string }>(
+      `SELECT secure_storage_key FROM resource_assets WHERE resource_id = ANY($1::uuid[])`,
+      [[first.item.resourceId, second.item.resourceId]],
+    );
+    expect(
+      organizedKeys.rows.every((row) => row.secure_storage_key.startsWith(`games/${game.gameId}/`)),
+    ).toBe(true);
 
     const listed = await resourceAdminService.list(context('resource-list'), {
       entityId: game.gameId,
@@ -699,8 +706,9 @@ describe('PostgreSQL Catalog foundation', () => {
         width_px: 320,
       });
       const storageKey = persisted.rows[0]?.secure_storage_key;
-      expect(storageKey).toMatch(/^[0-9a-f-]{36}$/u);
-      expect(storageKey).not.toContain('catalog');
+      expect(storageKey).toMatch(
+        /^catalog\/unassigned\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u,
+      );
       expect(storedObjects.has(storageKey ?? '')).toBe(true);
     }
   });

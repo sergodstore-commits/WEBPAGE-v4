@@ -519,28 +519,35 @@ describe('AdminHub', () => {
     );
 
     const file = new File(['image'], 'product.webp', { type: 'image/webp' });
-    const uploadForm = fields.getByRole('heading', { name: 'Añadir imagen' }).closest('form');
+    const secondFile = new File(['image-2'], 'product-back.webp', { type: 'image/webp' });
+    const uploadForm = fields.getByRole('heading', { name: 'Añadir imágenes' }).closest('form');
     if (!uploadForm) throw new Error('Image upload form was not rendered.');
     const uploadFields = within(uploadForm);
-    fireEvent.change(uploadFields.getByLabelText('Seleccionar archivo'), {
-      target: { files: [file] },
+    fireEvent.change(uploadFields.getByLabelText(/Seleccionar imágenes/u), {
+      target: { files: [file, secondFile] },
     });
-    fireEvent.change(uploadFields.getByLabelText('Descripción de la imagen'), {
+    const descriptions = uploadFields.getAllByLabelText(/Descripción de la imagen/u);
+    fireEvent.change(descriptions[0] as HTMLElement, {
       target: { value: 'Vista frontal del producto' },
+    });
+    fireEvent.change(descriptions[1] as HTMLElement, {
+      target: { value: 'Vista posterior del producto' },
     });
     fireEvent.submit(uploadForm);
 
     await waitFor(() => {
-      const call = vi
+      const calls = vi
         .mocked(authorizedRequest)
-        .mock.calls.find(([path]) => path.endsWith('/product-1/resources'));
-      expect(call?.[1]).toEqual(
-        expect.objectContaining({ body: expect.any(FormData), method: 'POST' }),
-      );
-      const submitted = call?.[1]?.body as FormData;
-      expect(submitted.get('file')).toBeInstanceOf(File);
-      expect(submitted.get('altText')).toBe('Vista frontal del producto');
-      expect(submitted.get('position')).toBe('3');
+        .mock.calls.filter(([path]) => path.endsWith('/product-1/resources'));
+      expect(calls).toHaveLength(2);
+      const firstSubmitted = calls[0]?.[1]?.body as FormData;
+      const secondSubmitted = calls[1]?.[1]?.body as FormData;
+      expect(firstSubmitted.get('file')).toBe(file);
+      expect(firstSubmitted.get('altText')).toBe('Vista frontal del producto');
+      expect(firstSubmitted.get('position')).toBe('3');
+      expect(secondSubmitted.get('file')).toBe(secondFile);
+      expect(secondSubmitted.get('altText')).toBe('Vista posterior del producto');
+      expect(secondSubmitted.get('position')).toBe('4');
     });
 
     const moveUpButtons = await fields.findAllByRole('button', { name: 'Mover antes' });

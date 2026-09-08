@@ -29,6 +29,7 @@ export class EditorialMediaService {
     const uploaded = await this.resources.ingestAndAttachEditorialImage({
       ...input,
       resourceClass,
+      storageFolder: `${editorialStorageFolder(current.item.type)}/${input.editorialEntryId}`,
     });
     return { ...uploaded, ...(await this.editorial.getAdmin(input.editorialEntryId)) };
   }
@@ -36,4 +37,17 @@ export class EditorialMediaService {
   prepare(editorialEntryId: string, resourceId: string) {
     return this.resourceDelivery.prepareEditorialAdmin(editorialEntryId, resourceId);
   }
+}
+
+function editorialStorageFolder(type: string): string {
+  const folders: Readonly<Record<string, string>> = {
+    COMIC_CHAPTER: 'comics',
+    COMIC_SERIES: 'comics',
+    COMMUNITY: 'community',
+    HALL_OF_FAME: 'hall-of-fame',
+    NEWS: 'news',
+    QUEST: 'quests',
+    TOURNAMENT: 'tournaments',
+  };
+  return folders[type] ?? 'editorial';
 }

@@ -39,7 +39,7 @@ export interface CatalogStorageInventoryPort extends CatalogPrivateStoragePort {
 }
 
 export interface CatalogStorageKeyGenerator {
-  generate(): string;
+  generate(storageFolder?: string): string;
 }
 
 export interface CatalogEntityView {
@@ -258,6 +258,7 @@ export interface CatalogRepository {
     readonly originalFilenameSafe: string;
     readonly position: number;
     readonly resourceClass: ResourceClass;
+    readonly storageFolder?: string;
     readonly requestFingerprint?: string;
   }): Promise<{
     readonly replayed: boolean;

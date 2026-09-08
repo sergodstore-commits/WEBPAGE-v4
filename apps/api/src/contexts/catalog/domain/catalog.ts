@@ -56,7 +56,12 @@ const descriptorSchema = z
     megapixels: z.number().positive().max(40),
     mimeTypeReal: z.enum(catalogImageMimeTypes),
     originalFilenameSafe: z.string().min(1).max(255),
-    secureStorageKey: z.string().uuid(),
+    secureStorageKey: z
+      .string()
+      .max(255)
+      .regex(
+        /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\/)*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u,
+      ),
     sha256Hex: z.string().regex(/^[0-9a-f]{64}$/u),
     widthPx: z.number().int().positive().nullable(),
   })

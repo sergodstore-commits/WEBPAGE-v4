@@ -98,6 +98,7 @@ export class CatalogService {
     readonly position: number;
     readonly requestFingerprint?: string;
     readonly resourceClass: ResourceClass;
+    readonly storageFolder?: string;
   }) {
     if (!Number.isSafeInteger(input.position) || input.position <= 0) {
       throw new CatalogError(
@@ -116,6 +117,7 @@ export class CatalogService {
       originalFilenameSafe,
       position: input.position,
       resourceClass: input.resourceClass,
+      ...(input.storageFolder === undefined ? {} : { storageFolder: input.storageFolder }),
       ...(input.requestFingerprint === undefined
         ? {}
         : { requestFingerprint: input.requestFingerprint }),
@@ -134,6 +136,7 @@ export class CatalogService {
     const { descriptor, registered } = await this.prepareCatalogImage({
       ...input,
       resourceClass: 'CATALOG_IMAGE',
+      storageFolder: 'catalog/unassigned',
     });
 
     const activated = await this.activateResource({
@@ -163,6 +166,7 @@ export class CatalogService {
     const { descriptor, registered } = await this.prepareCatalogImage({
       ...input,
       resourceClass: 'CATALOG_IMAGE',
+      storageFolder: catalogStorageFolder(input.entityType, input.entityId),
     });
     try {
       const associated = await this.repository.activateAndAttachResource({
@@ -193,6 +197,7 @@ export class CatalogService {
     readonly originalFilename: string;
     readonly placement: 'CENTER' | 'FULL' | 'LEFT' | 'RIGHT';
     readonly resourceClass: 'COMIC_PAGE' | 'CONTENT_IMAGE';
+    readonly storageFolder: string;
     readonly width: 'LARGE' | 'MEDIUM' | 'SMALL';
   }) {
     await this.authorize(input.context);
@@ -278,6 +283,7 @@ export class CatalogService {
       ...input,
       position: current.position,
       resourceClass: 'CATALOG_IMAGE',
+      storageFolder: catalogStorageFolder(input.entityType, input.entityId),
     });
     try {
       const replaced = await this.repository.activateAndReplaceResource({
@@ -310,6 +316,7 @@ export class CatalogService {
     readonly position: number;
     readonly requestFingerprint?: string;
     readonly resourceClass: ResourceClass;
+    readonly storageFolder?: string;
   }) {
     const bytes =
       input.bytes.byteLength <= catalogImageLimits.maximumByteSize
@@ -549,4 +556,14 @@ function requireText(value: string, code: string): string {
 
 function sha256(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
+}
+
+function catalogStorageFolder(entityType: CatalogEntityType, entityId: string): string {
+  const folders: Readonly<Record<CatalogEntityType, string>> = {
+    CATEGORY: 'categories',
+    COLLECTION: 'collections',
+    PRODUCT: 'products',
+    TCG_GAME: 'games',
+  };
+  return `${folders[entityType]}/${entityId}`;
 }

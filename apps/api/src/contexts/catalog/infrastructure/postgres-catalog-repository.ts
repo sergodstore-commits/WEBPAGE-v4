@@ -184,7 +184,7 @@ export class PgCatalogRepository implements CatalogRepository {
       input,
       async (transaction, now) => {
         const resourceId = this.uuids.generate();
-        const secureStorageKey = this.storageKeys?.generate();
+        const secureStorageKey = this.storageKeys?.generate(input.storageFolder);
         if (secureStorageKey === undefined) {
           throw new CatalogError(
             'CATALOG_STORAGE_NOT_CONFIGURED',
