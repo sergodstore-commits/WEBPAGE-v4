@@ -181,6 +181,13 @@
   firma, extensión, dimensiones, píxeles, hash, autorización e idempotencia. El gate integral pasó
   con 111 archivos, 446 pruebas aprobadas y 1 omisión; la suite oficial PostgreSQL pasó 14 archivos y
   169 pruebas. No requirió migración ni escritura remota.
+- El commit local `33ea490` completa el segundo punto previo a la promoción conjunta: la
+  reconciliación privada informa bytes y cantidad de objetos activos, retenidos por historial y
+  huérfanos, además de sus anomalías e integridad. Retirar o reemplazar una imagen conserva el
+  objeto privado y su trazabilidad, sin devolverlo al catálogo público ni borrarlo automáticamente;
+  los huérfanos se detectan y contabilizan, pero tampoco se eliminan sin una decisión posterior
+  explícita. La integración focal pasó 21 pruebas sobre PostgreSQL con el optimizador real; formato,
+  lint, tipos y compilación API pasaron. No requirió migración ni escritura remota.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
