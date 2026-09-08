@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError, publicRequest } from '../identity/api.js';
-import { EditorialPage, StorePage } from './PublicPages.js';
+import { EditorialPage, HomeHighlights, StorePage } from './PublicPages.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -15,6 +15,92 @@ vi.mock('../identity/api.js', async (importOriginal) => {
 });
 
 beforeEach(() => vi.clearAllMocks());
+
+describe('public home highlights', () => {
+  it('renders only real commerce and editorial records returned by the server', async () => {
+    vi.mocked(publicRequest).mockImplementation(async (path) => {
+      if (path.includes('saleType=REGULAR')) {
+        return { items: [homeProduct('Producto publicado', 'REGULAR')] } as never;
+      }
+      if (path.includes('saleType=PREORDER')) {
+        return { items: [homeProduct('Preventa publicada', 'PREORDER')] } as never;
+      }
+      if (path.includes('type=NEWS')) {
+        return { items: [homeEditorial('Noticia publicada', 'NEWS')] } as never;
+      }
+      if (path.includes('type=TOURNAMENT')) {
+        return { items: [homeEditorial('Torneo publicado', 'TOURNAMENT')] } as never;
+      }
+      throw new Error(`Ruta inesperada: ${path}`);
+    });
+    const navigate = vi.fn();
+
+    render(<HomeHighlights navigate={navigate} />);
+
+    expect(await screen.findByText('Producto publicado')).toBeInTheDocument();
+    expect(screen.getByText('Preventa publicada')).toBeInTheDocument();
+    expect(screen.getByText('Noticia publicada')).toBeInTheDocument();
+    expect(screen.getByText('Torneo publicado')).toBeInTheDocument();
+    expect(screen.getAllByText('$9.990')).toHaveLength(2);
+    expect(vi.mocked(publicRequest).mock.calls.map(([path]) => path)).toEqual(
+      expect.arrayContaining([
+        '/api/v1/catalog/products?limit=4&sort=NEWEST&saleType=REGULAR',
+        '/api/v1/catalog/products?limit=4&sort=NEWEST&saleType=PREORDER',
+        '/api/v1/content?limit=3&type=NEWS',
+        '/api/v1/content?limit=3&type=TOURNAMENT',
+      ]),
+    );
+    const [openTournament] = screen.getAllByRole('button', { name: 'Abrir publicación' });
+    expect(openTournament).toBeDefined();
+    if (openTournament === undefined) throw new Error('No se encontró el acceso al torneo.');
+    fireEvent.click(openTournament);
+    expect(navigate).toHaveBeenCalledWith('/tournaments');
+  });
+
+  it('shows honest empty states instead of invented highlights', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({ items: [] } as never);
+
+    render(<HomeHighlights navigate={vi.fn()} />);
+
+    expect(
+      await screen.findByText('Aún no hay productos regulares publicados.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Aún no hay preventas publicadas.')).toBeInTheDocument();
+    expect(screen.getByText('Aún no hay torneos publicados.')).toBeInTheDocument();
+    expect(screen.getByText('Aún no hay noticias publicadas.')).toBeInTheDocument();
+  });
+});
+
+function homeProduct(name: string, saleType: 'PREORDER' | 'REGULAR') {
+  return {
+    availableForPurchase: true,
+    availabilityStatus: 'AVAILABLE',
+    game: { gameId: crypto.randomUUID(), name: 'Pokémon', slug: 'pokemon' },
+    name,
+    priceAmountClp: 9990,
+    preorderCampaignId: saleType === 'PREORDER' ? crypto.randomUUID() : null,
+    primaryResource: {
+      altText: name,
+      heightPx: 800,
+      resourceId: crypto.randomUUID(),
+      widthPx: 600,
+    },
+    productId: crypto.randomUUID(),
+    saleType,
+  } as const;
+}
+
+function homeEditorial(title: string, type: 'NEWS' | 'TOURNAMENT') {
+  return {
+    body: '',
+    editorialEntryId: crypto.randomUUID(),
+    excerpt: `Resumen de ${title}`,
+    metadata: {},
+    slug: title.toLowerCase().replaceAll(' ', '-'),
+    title,
+    type,
+  };
+}
 
 describe('public Store cart action', () => {
   it('shows an explicit empty state when the catalog cannot return products', async () => {

@@ -90,6 +90,274 @@ interface EditorialEntry {
   readonly type: string;
 }
 
+type HomeRoute = '/community' | '/comics' | '/news' | '/shop' | '/tournaments';
+type HighlightStatus = 'error' | 'loading' | 'ready';
+
+interface HighlightState<T> {
+  readonly items: readonly T[];
+  readonly status: HighlightStatus;
+}
+
+const loadingHighlights = { items: [], status: 'loading' } as const;
+
+export function HomeHighlights({ navigate }: { readonly navigate: (route: HomeRoute) => void }) {
+  const [regularProducts, setRegularProducts] =
+    useState<HighlightState<ProductCard>>(loadingHighlights);
+  const [preorders, setPreorders] = useState<HighlightState<ProductCard>>(loadingHighlights);
+  const [news, setNews] = useState<HighlightState<EditorialEntry>>(loadingHighlights);
+  const [tournaments, setTournaments] = useState<HighlightState<EditorialEntry>>(loadingHighlights);
+
+  useEffect(() => {
+    let active = true;
+    const load = async <T,>(
+      path: string,
+      update: (state: HighlightState<T>) => void,
+    ): Promise<void> => {
+      try {
+        const result = await publicRequest<{ items: T[] }>(path);
+        if (active) update({ items: result.items, status: 'ready' });
+      } catch {
+        if (active) update({ items: [], status: 'error' });
+      }
+    };
+    void Promise.all([
+      load('/api/v1/catalog/products?limit=4&sort=NEWEST&saleType=REGULAR', setRegularProducts),
+      load('/api/v1/catalog/products?limit=4&sort=NEWEST&saleType=PREORDER', setPreorders),
+      load('/api/v1/content?limit=3&type=NEWS', setNews),
+      load('/api/v1/content?limit=3&type=TOURNAMENT', setTournaments),
+    ]);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <div className="home-highlights">
+      <HomeProductSection
+        actionLabel="Ver tienda"
+        emptyMessage="Aún no hay productos regulares publicados."
+        eyebrow="Tienda"
+        navigate={() => navigate('/shop')}
+        state={regularProducts}
+        title="Productos destacados"
+      />
+      <HomeProductSection
+        actionLabel="Ver preventas"
+        emptyMessage="Aún no hay preventas publicadas."
+        eyebrow="Próximos lanzamientos"
+        navigate={() => navigate('/shop')}
+        state={preorders}
+        title="Preventas destacadas"
+      />
+      <HomeEditorialSection
+        actionLabel="Ver torneos"
+        emptyMessage="Aún no hay torneos publicados."
+        eyebrow="Comunidad competitiva"
+        navigate={() => navigate('/tournaments')}
+        state={tournaments}
+        title="Próximos torneos"
+      />
+      <HomeEditorialSection
+        actionLabel="Ver noticias"
+        emptyMessage="Aún no hay noticias publicadas."
+        eyebrow="Editorial"
+        navigate={() => navigate('/news')}
+        state={news}
+        title="Últimas noticias"
+      />
+      <section aria-labelledby="home-community-title" className="home-highlight-section">
+        <header className="home-highlight-heading">
+          <div>
+            <p className="eyebrow">Más Sergod</p>
+            <h2 id="home-community-title">Comunidad e historias</h2>
+          </div>
+        </header>
+        <div className="home-strips home-access-grid">
+          <article className="feature-strip">
+            <span aria-hidden="true" className="feature-index">
+              05
+            </span>
+            <p className="card-kicker">Comunidad</p>
+            <h3>Actividades y novedades locales</h3>
+            <button onClick={() => navigate('/community')} type="button">
+              Ir a comunidad
+            </button>
+          </article>
+          <article className="feature-strip">
+            <span aria-hidden="true" className="feature-index">
+              06
+            </span>
+            <p className="card-kicker">Historias</p>
+            <h3>Cómics y contenido Sergod</h3>
+            <button onClick={() => navigate('/comics')} type="button">
+              Descubrir historias
+            </button>
+          </article>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function HomeProductSection({
+  actionLabel,
+  emptyMessage,
+  eyebrow,
+  navigate,
+  state,
+  title,
+}: {
+  readonly actionLabel: string;
+  readonly emptyMessage: string;
+  readonly eyebrow: string;
+  readonly navigate: () => void;
+  readonly state: HighlightState<ProductCard>;
+  readonly title: string;
+}) {
+  const headingId = homeHeadingId(title);
+  return (
+    <section aria-labelledby={headingId} className="home-highlight-section">
+      <HomeHighlightHeading
+        actionLabel={actionLabel}
+        eyebrow={eyebrow}
+        headingId={headingId}
+        navigate={navigate}
+        title={title}
+      />
+      {state.status === 'ready' && state.items.length > 0 ? (
+        <div className="home-highlight-grid">
+          {state.items.map((product) => (
+            <article className="commerce-card" key={product.productId}>
+              <div className="product-media">
+                <img
+                  alt={product.primaryResource.altText}
+                  height={product.primaryResource.heightPx}
+                  loading="lazy"
+                  src={`/api/v1/catalog/resources/${product.primaryResource.resourceId}/content`}
+                  width={product.primaryResource.widthPx}
+                />
+                <span className="status-chip">{availabilityLabel(product.availabilityStatus)}</span>
+              </div>
+              <div className="product-card-body">
+                <p className="card-kicker">{product.game.name}</p>
+                <h3>{product.name}</h3>
+                <p className="price">${product.priceAmountClp.toLocaleString('es-CL')}</p>
+                <button onClick={navigate} type="button">
+                  Ver en tienda
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <HomeHighlightStatus emptyMessage={emptyMessage} status={state.status} />
+      )}
+    </section>
+  );
+}
+
+function HomeEditorialSection({
+  actionLabel,
+  emptyMessage,
+  eyebrow,
+  navigate,
+  state,
+  title,
+}: {
+  readonly actionLabel: string;
+  readonly emptyMessage: string;
+  readonly eyebrow: string;
+  readonly navigate: () => void;
+  readonly state: HighlightState<EditorialEntry>;
+  readonly title: string;
+}) {
+  const headingId = homeHeadingId(title);
+  return (
+    <section aria-labelledby={headingId} className="home-highlight-section">
+      <HomeHighlightHeading
+        actionLabel={actionLabel}
+        eyebrow={eyebrow}
+        headingId={headingId}
+        navigate={navigate}
+        title={title}
+      />
+      {state.status === 'ready' && state.items.length > 0 ? (
+        <div className="home-highlight-grid">
+          {state.items.map((item, index) => (
+            <article className="editorial-card" key={item.editorialEntryId}>
+              <span aria-hidden="true" className="editorial-index">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <p className="card-kicker">{item.type.replaceAll('_', ' ')}</p>
+              <h3>{item.title}</h3>
+              <p>{item.excerpt}</p>
+              <button onClick={navigate} type="button">
+                Abrir publicación
+              </button>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <HomeHighlightStatus emptyMessage={emptyMessage} status={state.status} />
+      )}
+    </section>
+  );
+}
+
+function HomeHighlightHeading({
+  actionLabel,
+  eyebrow,
+  headingId,
+  navigate,
+  title,
+}: {
+  readonly actionLabel: string;
+  readonly eyebrow: string;
+  readonly headingId: string;
+  readonly navigate: () => void;
+  readonly title: string;
+}) {
+  return (
+    <header className="home-highlight-heading">
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2 id={headingId}>{title}</h2>
+      </div>
+      <button className="secondary" onClick={navigate} type="button">
+        {actionLabel}
+      </button>
+    </header>
+  );
+}
+
+function homeHeadingId(title: string): string {
+  return `home-${title
+    .normalize('NFD')
+    .replaceAll(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, '-')}`;
+}
+
+function HomeHighlightStatus({
+  emptyMessage,
+  status,
+}: {
+  readonly emptyMessage: string;
+  readonly status: HighlightStatus;
+}) {
+  const message =
+    status === 'loading'
+      ? 'Cargando contenido publicado…'
+      : status === 'error'
+        ? 'No pudimos cargar esta sección. Puedes abrirla para volver a intentarlo.'
+        : emptyMessage;
+  return (
+    <p aria-live="polite" className={`home-highlight-status is-${status}`}>
+      {message}
+    </p>
+  );
+}
+
 export function StorePage() {
   const [items, setItems] = useState<readonly ProductCard[]>([]);
   const [filters, setFilters] = useState<CatalogFilters>(initialFilters);

@@ -1,7 +1,14 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { accounts, currentSession, legalVersions, ownAccount, register } from '../identity/api.js';
+import {
+  accounts,
+  currentSession,
+  legalVersions,
+  ownAccount,
+  publicRequest,
+  register,
+} from '../identity/api.js';
 import { App, RouteErrorBoundary } from './App';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
@@ -12,6 +19,7 @@ vi.mock('../identity/api.js', async (importOriginal) => {
     currentSession: vi.fn(() => null),
     legalVersions: vi.fn(),
     ownAccount: vi.fn(),
+    publicRequest: vi.fn(),
     register: vi.fn(),
   };
 });
@@ -32,6 +40,7 @@ describe('IdentityAccess presentation', () => {
     ]);
     vi.mocked(register).mockResolvedValue(undefined);
     vi.mocked(accounts).mockResolvedValue([]);
+    vi.mocked(publicRequest).mockResolvedValue({ items: [] } as never);
     window.history.replaceState({}, '', '/');
   });
 
