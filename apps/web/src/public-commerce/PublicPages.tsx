@@ -1578,6 +1578,268 @@ function CommunityStoreCard({ store }: { readonly store: StoreSummary | null }) 
   );
 }
 
+export function ComicsPage() {
+  const [series, setSeries] = useState<readonly EditorialEntry[]>([]);
+  const [chapters, setChapters] = useState<readonly EditorialEntry[]>([]);
+  const [selectedSeries, setSelectedSeries] = useState<EditorialEntry | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<EditorialEntry | null>(null);
+  const [message, setMessage] = useState('Cargando cómics e historias…');
+
+  useEffect(() => {
+    let active = true;
+    void Promise.allSettled([
+      publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=100&type=COMIC_SERIES'),
+      publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=100&type=COMIC_CHAPTER'),
+    ]).then(([seriesResult, chapterResult]) => {
+      if (!active) return;
+      const seriesItems = seriesResult.status === 'fulfilled' ? seriesResult.value.items : [];
+      const chapterItems = chapterResult.status === 'fulfilled' ? chapterResult.value.items : [];
+      setSeries(seriesItems);
+      setChapters(chapterItems);
+      const failures = [
+        seriesResult.status === 'rejected' ? 'las series' : '',
+        chapterResult.status === 'rejected' ? 'los capítulos' : '',
+      ].filter(Boolean);
+      setMessage(
+        failures.length > 0
+          ? `No fue posible cargar ${failures.join(' ni ')}.`
+          : seriesItems.length === 0 && chapterItems.length === 0
+            ? 'Todavía no hay cómics publicados.'
+            : '',
+      );
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (selectedChapter !== null) {
+    const comic = comicFromEditorial(selectedChapter);
+    return (
+      <main className="page-frame editorial-page comic-reader-page visual-public">
+        <article className="editorial-reader cut-panel">
+          <button
+            className="button-secondary"
+            onClick={() => setSelectedChapter(null)}
+            type="button"
+          >
+            Volver a capítulos
+          </button>
+          <p className="card-kicker">{comic ? `Capítulo ${comic.chapterNumber}` : 'Capítulo'}</p>
+          <h1>{selectedChapter.title}</h1>
+          <p className="editorial-reader-excerpt">{selectedChapter.excerpt}</p>
+          <EditorialDocumentView
+            document={documentFromMetadata(
+              selectedChapter.metadata,
+              selectedChapter.body,
+              selectedChapter.editorialEntryId,
+            )}
+          />
+        </article>
+      </main>
+    );
+  }
+
+  if (selectedSeries !== null) {
+    const seriesChapters = chapters
+      .filter((chapter) => comicFromEditorial(chapter)?.seriesSlug === selectedSeries.slug)
+      .sort(
+        (left, right) =>
+          (comicFromEditorial(left)?.chapterNumber ?? 0) -
+          (comicFromEditorial(right)?.chapterNumber ?? 0),
+      );
+    return (
+      <main className="page-frame editorial-page comics-page visual-public">
+        <button
+          className="button-secondary comics-back"
+          onClick={() => setSelectedSeries(null)}
+          type="button"
+        >
+          Volver a series
+        </button>
+        <section className="comic-series-detail cut-panel">
+          <p className="eyebrow">Serie</p>
+          <h1>{selectedSeries.title}</h1>
+          <p className="editorial-reader-excerpt">{selectedSeries.excerpt}</p>
+          <EditorialDocumentView
+            document={documentFromMetadata(
+              selectedSeries.metadata,
+              selectedSeries.body,
+              selectedSeries.editorialEntryId,
+            )}
+          />
+        </section>
+        <section aria-labelledby="comic-chapters" className="comic-chapters cut-panel">
+          <div className="tournament-section-heading">
+            <p className="eyebrow">Lectura</p>
+            <h2 id="comic-chapters">Capítulos</h2>
+          </div>
+          {seriesChapters.length > 0 ? (
+            <div className="editorial-grid">
+              {seriesChapters.map((chapter) => (
+                <ComicChapterCard
+                  chapter={chapter}
+                  key={chapter.editorialEntryId}
+                  onSelect={setSelectedChapter}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="tournament-section-empty">
+              Esta serie aún no tiene capítulos publicados.
+            </p>
+          )}
+        </section>
+      </main>
+    );
+  }
+
+  const knownSeries = new Set(series.map((item) => item.slug));
+  const unlinkedChapters = chapters.filter((chapter) => {
+    const comic = comicFromEditorial(chapter);
+    return comic === null || !knownSeries.has(comic.seriesSlug);
+  });
+
+  return (
+    <main className="page-frame editorial-page comics-page visual-public">
+      <header className="section-heading editorial-heading cut-panel">
+        <div>
+          <p className="eyebrow">Historias Sergod</p>
+          <h1>Cómics e historias</h1>
+          <p>Explora las series publicadas por la tienda y lee sus capítulos completos en orden.</p>
+        </div>
+        <div aria-label="Características de la sección" className="heading-stats">
+          <span>Series y capítulos</span>
+          <span>Lector con imágenes</span>
+        </div>
+      </header>
+      <p aria-live="polite" className="status">
+        {message}
+      </p>
+      {series.length > 0 ? (
+        <section aria-labelledby="comic-series" className="comic-series-list">
+          <h2 className="visually-hidden" id="comic-series">
+            Series publicadas
+          </h2>
+          <div className="editorial-grid comic-series-grid">
+            {series.map((item) => (
+              <ComicSeriesCard
+                chapterCount={
+                  chapters.filter(
+                    (chapter) => comicFromEditorial(chapter)?.seriesSlug === item.slug,
+                  ).length
+                }
+                item={item}
+                key={item.editorialEntryId}
+                onSelect={setSelectedSeries}
+              />
+            ))}
+          </div>
+        </section>
+      ) : message !== 'Cargando cómics e historias…' ? (
+        <section className="editorial-empty cut-panel" role="status">
+          <p className="eyebrow">Portada de cómics</p>
+          <h2>Aún no hay series para mostrar</h2>
+          <p>Las series aparecerán aquí cuando la tienda las publique.</p>
+        </section>
+      ) : null}
+      {unlinkedChapters.length > 0 && (
+        <section aria-labelledby="unlinked-chapters" className="comic-chapters cut-panel">
+          <div className="tournament-section-heading">
+            <p className="eyebrow">Archivo anterior</p>
+            <h2 id="unlinked-chapters">Capítulos por organizar</h2>
+          </div>
+          <p>Estos capítulos siguen disponibles mientras se asignan a su serie correcta.</p>
+          <div className="editorial-grid">
+            {unlinkedChapters.map((chapter) => (
+              <ComicChapterCard
+                chapter={chapter}
+                key={chapter.editorialEntryId}
+                onSelect={setSelectedChapter}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function ComicSeriesCard({
+  chapterCount,
+  item,
+  onSelect,
+}: {
+  readonly chapterCount: number;
+  readonly item: EditorialEntry;
+  readonly onSelect: (item: EditorialEntry) => void;
+}) {
+  const cover = firstEditorialImage(item);
+  return (
+    <article className="comic-series-card cut-panel">
+      {cover ? (
+        <img alt={cover.altText} src={resourceUrl(cover.resourceId)} />
+      ) : (
+        <div aria-hidden="true" className="comic-cover-placeholder">
+          SERGOD
+        </div>
+      )}
+      <div>
+        <p className="card-kicker">
+          Serie · {chapterCount} {chapterCount === 1 ? 'capítulo' : 'capítulos'}
+        </p>
+        <h2>{item.title}</h2>
+        <p>{item.excerpt}</p>
+        <button onClick={() => onSelect(item)} type="button">
+          Ver serie
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function ComicChapterCard({
+  chapter,
+  onSelect,
+}: {
+  readonly chapter: EditorialEntry;
+  readonly onSelect: (item: EditorialEntry) => void;
+}) {
+  const cover = firstEditorialImage(chapter);
+  const comic = comicFromEditorial(chapter);
+  return (
+    <article className="editorial-card news-card">
+      {cover && (
+        <img alt={cover.altText} className="news-card-cover" src={resourceUrl(cover.resourceId)} />
+      )}
+      <p className="card-kicker">{comic ? `Capítulo ${comic.chapterNumber}` : 'Capítulo'}</p>
+      <h3>{chapter.title}</h3>
+      <p>{chapter.excerpt}</p>
+      <button onClick={() => onSelect(chapter)} type="button">
+        Leer capítulo
+      </button>
+    </article>
+  );
+}
+
+function comicFromEditorial(
+  item: EditorialEntry,
+): { readonly chapterNumber: number; readonly seriesSlug: string } | null {
+  const comic = item.metadata.comic;
+  if (typeof comic !== 'object' || comic === null || Array.isArray(comic)) return null;
+  const chapterNumber = 'chapterNumber' in comic ? comic.chapterNumber : null;
+  const seriesSlug = 'seriesSlug' in comic ? comic.seriesSlug : null;
+  if (
+    typeof chapterNumber !== 'number' ||
+    !Number.isInteger(chapterNumber) ||
+    chapterNumber < 1 ||
+    typeof seriesSlug !== 'string' ||
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(seriesSlug)
+  )
+    return null;
+  return { chapterNumber, seriesSlug };
+}
+
 function NewsFeaturedCard({
   item,
   onSelect,

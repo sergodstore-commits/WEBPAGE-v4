@@ -19,6 +19,16 @@ export const editorialEventMetadataSchema = z
     status: editorialEventStatusSchema,
   })
   .strict();
+export const editorialComicMetadataSchema = z
+  .object({
+    chapterNumber: z.number().int().positive(),
+    seriesSlug: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u)
+      .max(160),
+  })
+  .strict();
 export const editorialTextBlockSchema = z
   .object({ id: z.uuid(), text: z.string().trim().min(1).max(10_000), type: z.literal('TEXT') })
   .strict();
@@ -52,6 +62,7 @@ export const editorialDocumentSchema = z
 export const editorialMetadataSchema = z
   .object({
     category: z.string().trim().min(1).max(80).optional(),
+    comic: editorialComicMetadataSchema.optional(),
     document: editorialDocumentSchema.optional(),
     event: editorialEventMetadataSchema.optional(),
   })
@@ -92,6 +103,13 @@ export const editorialWriteSchema = z
         path: ['metadata', 'category'],
       });
     }
+    if (entry.metadata.comic && entry.type !== 'COMIC_CHAPTER') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Comic relationship metadata is only valid for chapters.',
+        path: ['metadata', 'comic'],
+      });
+    }
   });
 export const editorialListQuerySchema = z
   .object({
@@ -110,3 +128,4 @@ export type EditorialBlock = EditorialDocument['blocks'][number];
 export type EditorialImagePlacement = z.infer<typeof editorialImagePlacementSchema>;
 export type EditorialImageWidth = z.infer<typeof editorialImageWidthSchema>;
 export type EditorialEventMetadata = z.infer<typeof editorialEventMetadataSchema>;
+export type EditorialComicMetadata = z.infer<typeof editorialComicMetadataSchema>;

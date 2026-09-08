@@ -404,6 +404,40 @@ describe('AdminHub', () => {
     });
   });
 
+  it('creates a comic chapter linked to its series and chapter order', async () => {
+    render(<AdminHub area="content" navigate={vi.fn()} />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Nuevo contenido editorial' }),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Tipo'), { target: { value: 'COMIC_CHAPTER' } });
+    fireEvent.change(screen.getByLabelText('Slug de la serie'), {
+      target: { value: 'guardianes-de-sergod' },
+    });
+    fireEvent.change(screen.getByLabelText('Número de capítulo'), { target: { value: '3' } });
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'El regreso' } });
+    fireEvent.change(screen.getByLabelText('Slug'), {
+      target: { value: 'guardianes-capitulo-3' },
+    });
+    fireEvent.change(screen.getByLabelText('Resumen'), { target: { value: 'Tercer capítulo.' } });
+    fireEvent.change(screen.getByLabelText('Contenido'), {
+      target: { value: 'Historia completa.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+
+    await waitFor(() => {
+      const call = vi
+        .mocked(authorizedRequest)
+        .mock.calls.find(
+          ([path, init]) => path === '/api/v1/admin/content' && init?.method === 'POST',
+        );
+      expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
+        metadata: { comic: { chapterNumber: 3, seriesSlug: 'guardianes-de-sergod' } },
+        type: 'COMIC_CHAPTER',
+      });
+    });
+  });
+
   it('sends a complete product edit with idempotency protection', async () => {
     render(<AdminHub area="catalog" navigate={vi.fn()} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Editar producto' }));

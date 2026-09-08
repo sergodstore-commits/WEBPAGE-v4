@@ -899,6 +899,11 @@ interface EditorialEventValue {
   readonly status: 'UPCOMING' | 'COMPLETED';
 }
 
+interface EditorialComicValue {
+  readonly chapterNumber: number | '';
+  readonly seriesSlug: string;
+}
+
 function EditorialVisualEditor({
   content,
   onAction,
@@ -958,6 +963,18 @@ function EditorialVisualEditor({
       return {
         ...currentDraft,
         metadata: { ...currentDraft.metadata, event: { ...current, ...patch } },
+      };
+    });
+  };
+  const updateComic = (patch: Partial<EditorialComicValue>) => {
+    setDraft((currentDraft) => {
+      if (currentDraft === null) return null;
+      return {
+        ...currentDraft,
+        metadata: {
+          ...currentDraft.metadata,
+          comic: { ...comicFromMetadata(currentDraft.metadata), ...patch },
+        },
       };
     });
   };
@@ -1103,6 +1120,33 @@ function EditorialVisualEditor({
                   value={newsCategoryFromMetadata(draft.metadata)}
                 />
               </label>
+            )}
+            {draft.type === 'COMIC_CHAPTER' && (
+              <>
+                <label>
+                  Slug de la serie
+                  <input
+                    onChange={(event) => updateComic({ seriesSlug: event.target.value })}
+                    pattern="[a-z0-9-]+"
+                    required
+                    value={comicFromMetadata(draft.metadata).seriesSlug}
+                  />
+                </label>
+                <label>
+                  Número de capítulo
+                  <input
+                    min="1"
+                    onChange={(event) =>
+                      updateComic({
+                        chapterNumber: event.target.value ? Number(event.target.value) : '',
+                      })
+                    }
+                    required
+                    type="number"
+                    value={comicFromMetadata(draft.metadata).chapterNumber}
+                  />
+                </label>
+              </>
             )}
             <label>
               Título
@@ -1317,9 +1361,23 @@ function metadataForEditorialType(
   return Object.fromEntries(
     Object.entries(metadata).filter(
       ([key]) =>
-        (key !== 'event' || supportsEventMetadata(type)) && (key !== 'category' || type === 'NEWS'),
+        (key !== 'event' || supportsEventMetadata(type)) &&
+        (key !== 'category' || type === 'NEWS') &&
+        (key !== 'comic' || type === 'COMIC_CHAPTER'),
     ),
   );
+}
+
+function comicFromMetadata(metadata: Record<string, unknown>): EditorialComicValue {
+  const comic = metadata.comic;
+  if (!isItem(comic)) return { chapterNumber: '', seriesSlug: '' };
+  return {
+    chapterNumber:
+      typeof comic.chapterNumber === 'number' && Number.isInteger(comic.chapterNumber)
+        ? comic.chapterNumber
+        : '',
+    seriesSlug: typeof comic.seriesSlug === 'string' ? comic.seriesSlug : '',
+  };
 }
 
 function newsCategoryFromMetadata(metadata: Record<string, unknown>): string {

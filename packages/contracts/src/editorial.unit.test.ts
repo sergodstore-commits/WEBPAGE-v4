@@ -74,6 +74,26 @@ describe('editorial document contract', () => {
     ).toBe(false);
   });
 
+  it('links comic chapters to a series without requiring it on legacy chapters', () => {
+    expect(
+      editorialWriteSchema.parse({
+        ...base,
+        metadata: { comic: { chapterNumber: 2, seriesSlug: 'guardianes-de-sergod' } },
+        type: 'COMIC_CHAPTER',
+      }).metadata.comic,
+    ).toEqual({ chapterNumber: 2, seriesSlug: 'guardianes-de-sergod' });
+    expect(
+      editorialWriteSchema.safeParse({ ...base, metadata: {}, type: 'COMIC_CHAPTER' }).success,
+    ).toBe(true);
+    expect(
+      editorialWriteSchema.safeParse({
+        ...base,
+        metadata: { comic: { chapterNumber: 1, seriesSlug: 'guardianes-de-sergod' } },
+        type: 'COMIC_SERIES',
+      }).success,
+    ).toBe(false);
+  });
+
   it('rejects unsafe markup-shaped blocks and unsupported positioning', () => {
     expect(() =>
       editorialWriteSchema.parse({

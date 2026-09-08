@@ -32,8 +32,8 @@ import { AccountHub } from '../account/AccountHub.js';
 import { AdminHub, AdminStandaloneLayout, type AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
 import {
+  ComicsPage,
   CommunityPage,
-  EditorialPage,
   HomeHighlights,
   NewsPage,
   StorePage,
@@ -114,7 +114,7 @@ export function App() {
           {route === '/tournaments' && <TournamentPage />}
           {route === '/news' && <NewsPage />}
           {route === '/community' && <CommunityPage navigate={navigate} />}
-          {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
+          {route === '/comics' && <ComicsPage />}
           {adminArea && (
             <AccessGate requiredRole="ADMIN">
               <AdminHub area={adminArea} navigate={navigate} />

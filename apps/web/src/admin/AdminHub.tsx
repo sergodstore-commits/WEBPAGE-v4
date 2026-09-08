@@ -1833,6 +1833,15 @@ function EditorialComposer({
         : {};
     const categoryMetadata =
       type === 'NEWS' ? { category: String(form.get('newsCategory')).trim() } : {};
+    const comicMetadata =
+      type === 'COMIC_CHAPTER'
+        ? {
+            comic: {
+              chapterNumber: Number(form.get('chapterNumber')),
+              seriesSlug: String(form.get('seriesSlug')).trim(),
+            },
+          }
+        : {};
     await onAction(
       '/api/v1/admin/content',
       {
@@ -1840,6 +1849,7 @@ function EditorialComposer({
         excerpt: String(form.get('excerpt')),
         metadata: {
           ...categoryMetadata,
+          ...comicMetadata,
           ...eventMetadata,
           document: {
             blocks: [{ id: crypto.randomUUID(), text: body, type: 'TEXT' }],
@@ -1892,6 +1902,18 @@ function EditorialComposer({
             Categoría de noticia
             <input defaultValue="General" name="newsCategory" required />
           </label>
+        )}
+        {type === 'COMIC_CHAPTER' && (
+          <>
+            <label>
+              Slug de la serie
+              <input name="seriesSlug" pattern="[a-z0-9-]+" required />
+            </label>
+            <label>
+              Número de capítulo
+              <input min="1" name="chapterNumber" required type="number" />
+            </label>
+          </>
         )}
         <label>
           Título

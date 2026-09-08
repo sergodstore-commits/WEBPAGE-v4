@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError, publicRequest } from '../identity/api.js';
 import {
+  ComicsPage,
   CommunityPage,
   EditorialPage,
   HomeHighlights,
@@ -636,5 +637,86 @@ describe('public editorial sections', () => {
     expect(navigate).toHaveBeenCalledWith('/tournaments');
     fireEvent.click(screen.getByRole('button', { name: 'Ver actividad' }));
     expect(screen.getByText('Todos los detalles de la actividad.')).toBeInTheDocument();
+  });
+
+  it('navigates from comic series to ordered chapters and the image reader', async () => {
+    vi.mocked(publicRequest)
+      .mockResolvedValueOnce({
+        items: [
+          {
+            body: 'Presentación de la serie.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000130',
+            excerpt: 'Una historia de la comunidad.',
+            metadata: {
+              document: {
+                blocks: [
+                  {
+                    altText: 'Portada de Guardianes de Sergod',
+                    id: '0198a8be-6677-7000-8000-000000000131',
+                    placement: 'FULL',
+                    resourceId: '0198a8be-6677-7000-8000-000000000132',
+                    type: 'IMAGE',
+                    width: 'LARGE',
+                  },
+                ],
+                version: 1,
+              },
+            },
+            slug: 'guardianes-de-sergod',
+            title: 'Guardianes de Sergod',
+            type: 'COMIC_SERIES',
+          },
+        ],
+      } as never)
+      .mockResolvedValueOnce({
+        items: [
+          {
+            body: 'Contenido del segundo capítulo.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000133',
+            excerpt: 'La historia continúa.',
+            metadata: { comic: { chapterNumber: 2, seriesSlug: 'guardianes-de-sergod' } },
+            slug: 'guardianes-capitulo-2',
+            title: 'El desafío',
+            type: 'COMIC_CHAPTER',
+          },
+          {
+            body: 'Contenido del primer capítulo.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000134',
+            excerpt: 'Aquí comienza la historia.',
+            metadata: { comic: { chapterNumber: 1, seriesSlug: 'guardianes-de-sergod' } },
+            slug: 'guardianes-capitulo-1',
+            title: 'El comienzo',
+            type: 'COMIC_CHAPTER',
+          },
+          {
+            body: 'Capítulo anterior.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000135',
+            excerpt: 'Pendiente de clasificación.',
+            metadata: {},
+            slug: 'capitulo-anterior',
+            title: 'Historia anterior',
+            type: 'COMIC_CHAPTER',
+          },
+        ],
+      } as never);
+
+    render(<ComicsPage />);
+
+    expect(await screen.findByText('Guardianes de Sergod')).toBeInTheDocument();
+    expect(screen.getByText('Serie · 2 capítulos')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Capítulos por organizar' })).toBeInTheDocument();
+    expect(screen.getByText('Historia anterior')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Portada de Guardianes de Sergod' })).toHaveAttribute(
+      'src',
+      '/api/v1/catalog/resources/0198a8be-6677-7000-8000-000000000132/content',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver serie' }));
+    const chapterButtons = screen.getAllByRole('button', { name: 'Leer capítulo' });
+    expect(chapterButtons).toHaveLength(2);
+    expect(chapterButtons[0]?.closest('article')).toHaveTextContent('Capítulo 1');
+    expect(chapterButtons[1]?.closest('article')).toHaveTextContent('Capítulo 2');
+    fireEvent.click(chapterButtons[0] as HTMLElement);
+    expect(screen.getByText('Contenido del primer capítulo.')).toBeInTheDocument();
   });
 });
