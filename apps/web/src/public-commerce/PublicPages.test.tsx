@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError, publicRequest } from '../identity/api.js';
 import {
+  CommunityPage,
   EditorialPage,
   HomeHighlights,
   NewsPage,
@@ -586,5 +587,54 @@ describe('public editorial sections', () => {
     expect(screen.getByText('Evento especial')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Leer artículo' }));
     expect(screen.getByText('Bases y detalles del evento.')).toBeInTheDocument();
+  });
+
+  it('joins community activities with the configured single-store contact information', async () => {
+    vi.mocked(publicRequest).mockImplementation(async (path) => {
+      if (path.includes('type=COMMUNITY'))
+        return {
+          items: [
+            {
+              body: 'Todos los detalles de la actividad.',
+              editorialEntryId: '0198a8be-6677-7000-8000-000000000120',
+              excerpt: 'Actividad abierta a la comunidad.',
+              metadata: {},
+              slug: 'tarde-de-juego',
+              title: 'Tarde de juego',
+              type: 'COMMUNITY',
+            },
+          ],
+        } as never;
+      if (path === '/api/v1/service-coverage/store')
+        return {
+          item: {
+            branchId: '0198a8be-6677-7000-8000-000000000121',
+            name: 'Sergod Store',
+            openingHours: '10:00 a 22:00',
+            publicAddress: 'Los Carrera 5142, Copiapó',
+            publicContacts: '+56934423169 · sergodstore@gmail.com',
+          },
+        } as never;
+      throw new Error(`Unexpected path ${path}`);
+    });
+    const navigate = vi.fn();
+
+    render(<CommunityPage navigate={navigate} />);
+
+    expect(await screen.findByText('Tarde de juego')).toBeInTheDocument();
+    expect(screen.getByText('Los Carrera 5142, Copiapó')).toBeInTheDocument();
+    expect(screen.getByText('10:00 a 22:00')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute(
+      'href',
+      'https://wa.me/56934423169',
+    );
+    expect(screen.getByRole('link', { name: 'Correo' })).toHaveAttribute(
+      'href',
+      'mailto:sergodstore@gmail.com',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Torneos y Quests' }));
+    expect(navigate).toHaveBeenCalledWith('/tournaments');
+    fireEvent.click(screen.getByRole('button', { name: 'Ver actividad' }));
+    expect(screen.getByText('Todos los detalles de la actividad.')).toBeInTheDocument();
   });
 });

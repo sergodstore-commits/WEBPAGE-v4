@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { ApiError, authorizedRequest, currentSession, publicRequest } from '../identity/api.js';
 import { EditorialDocumentView } from '../editorial/EditorialDocument.js';
 import { documentFromMetadata } from '../editorial/editorial-document-model.js';
+import { firstStore, type StoreSummary } from '../service-coverage/store.js';
 
 interface ProductCard {
   readonly availableForPurchase: boolean;
@@ -1391,6 +1392,189 @@ export function NewsPage() {
         </section>
       )}
     </main>
+  );
+}
+
+export function CommunityPage({ navigate }: { readonly navigate: (route: HomeRoute) => void }) {
+  const [items, setItems] = useState<readonly EditorialEntry[]>([]);
+  const [store, setStore] = useState<StoreSummary | null>(null);
+  const [selected, setSelected] = useState<EditorialEntry | null>(null);
+  const [message, setMessage] = useState('Cargando comunidad e información local…');
+
+  useEffect(() => {
+    let active = true;
+    void Promise.allSettled([
+      publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=COMMUNITY'),
+      publicRequest<{ item: unknown }>('/api/v1/service-coverage/store'),
+    ]).then(([editorialResult, storeResult]) => {
+      if (!active) return;
+      const editorialItems =
+        editorialResult.status === 'fulfilled' ? editorialResult.value.items : [];
+      if (editorialResult.status === 'fulfilled') setItems(editorialItems);
+      if (storeResult.status === 'fulfilled') setStore(firstStore(storeResult.value.item));
+      const failures = [
+        editorialResult.status === 'rejected' ? 'las actividades de comunidad' : '',
+        storeResult.status === 'rejected' ? 'la información local' : '',
+      ].filter(Boolean);
+      setMessage(
+        failures.length > 0
+          ? `No fue posible cargar ${failures.join(' ni ')}.`
+          : editorialItems.length === 0
+            ? 'Todavía no hay actividades publicadas.'
+            : '',
+      );
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (selected !== null) {
+    return (
+      <main className="page-frame editorial-page visual-public">
+        <article className="editorial-reader cut-panel">
+          <button className="button-secondary" onClick={() => setSelected(null)} type="button">
+            Volver a comunidad
+          </button>
+          <p className="card-kicker">Comunidad Sergod</p>
+          <h1>{selected.title}</h1>
+          <p className="editorial-reader-excerpt">{selected.excerpt}</p>
+          <EditorialDocumentView
+            document={documentFromMetadata(
+              selected.metadata,
+              selected.body,
+              selected.editorialEntryId,
+            )}
+          />
+        </article>
+      </main>
+    );
+  }
+
+  return (
+    <main className="page-frame editorial-page community-page visual-public">
+      <header className="section-heading editorial-heading cut-panel">
+        <div>
+          <p className="eyebrow">La comunidad Sergod</p>
+          <h1>Juega, comparte y participa</h1>
+          <p>
+            Actividades, juegos y encuentros publicados por Sergod Store, junto con la información
+            real para visitarnos o contactarnos.
+          </p>
+        </div>
+        <div aria-label="Accesos de comunidad" className="heading-stats">
+          <button onClick={() => navigate('/tournaments')} type="button">
+            Torneos y Quests
+          </button>
+          <button onClick={() => navigate('/comics')} type="button">
+            Cómics e historias
+          </button>
+        </div>
+      </header>
+      <p aria-live="polite" className="status">
+        {message}
+      </p>
+      <section aria-labelledby="community-activities" className="community-activities cut-panel">
+        <div className="tournament-section-heading">
+          <p className="eyebrow">Juegos y actividades</p>
+          <h2 id="community-activities">Lo que está pasando en Sergod</h2>
+        </div>
+        {items.length > 0 ? (
+          <div className="editorial-grid">
+            {items.map((item) => (
+              <CommunityCard item={item} key={item.editorialEntryId} onSelect={setSelected} />
+            ))}
+          </div>
+        ) : (
+          <p className="tournament-section-empty">
+            Las actividades aparecerán aquí cuando sean publicadas por la tienda.
+          </p>
+        )}
+      </section>
+      <CommunityStoreCard store={store} />
+    </main>
+  );
+}
+
+function CommunityCard({
+  item,
+  onSelect,
+}: {
+  readonly item: EditorialEntry;
+  readonly onSelect: (item: EditorialEntry) => void;
+}) {
+  const cover = firstEditorialImage(item);
+  return (
+    <article className="editorial-card news-card">
+      {cover && (
+        <img alt={cover.altText} className="news-card-cover" src={resourceUrl(cover.resourceId)} />
+      )}
+      <p className="card-kicker">Comunidad</p>
+      <h3>{item.title}</h3>
+      <p>{item.excerpt}</p>
+      <button onClick={() => onSelect(item)} type="button">
+        Ver actividad
+      </button>
+    </article>
+  );
+}
+
+function CommunityStoreCard({ store }: { readonly store: StoreSummary | null }) {
+  const email = store?.publicContacts?.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/u)?.[0];
+  const phone = store?.publicContacts?.match(/\+\d[\d\s-]{7,}/u)?.[0];
+  const whatsappDigits = phone?.replace(/\D/gu, '');
+  return (
+    <section aria-labelledby="community-store" className="community-store cut-panel">
+      <div>
+        <p className="eyebrow">Información local</p>
+        <h2 id="community-store">{store?.name ?? 'Sergod Store'}</h2>
+        {store ? (
+          <dl className="community-store-details">
+            {store.publicAddress && (
+              <>
+                <dt>Dirección</dt>
+                <dd>{store.publicAddress}</dd>
+              </>
+            )}
+            {store.openingHours && (
+              <>
+                <dt>Horario</dt>
+                <dd>{store.openingHours}</dd>
+              </>
+            )}
+            {store.publicContacts && (
+              <>
+                <dt>Contacto</dt>
+                <dd>{store.publicContacts}</dd>
+              </>
+            )}
+            {store.directions && (
+              <>
+                <dt>Cómo llegar</dt>
+                <dd>{store.directions}</dd>
+              </>
+            )}
+          </dl>
+        ) : (
+          <p>La información local no está disponible en este momento.</p>
+        )}
+      </div>
+      {(whatsappDigits || email || store?.mapUrl) && (
+        <div aria-label="Enlaces de contacto" className="community-contact-actions">
+          {whatsappDigits && (
+            <a href={`https://wa.me/${whatsappDigits}`} rel="noreferrer" target="_blank">
+              WhatsApp
+            </a>
+          )}
+          {email && <a href={`mailto:${email}`}>Correo</a>}
+          {store?.mapUrl && (
+            <a href={store.mapUrl} rel="noreferrer" target="_blank">
+              Ver mapa
+            </a>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

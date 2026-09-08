@@ -2214,6 +2214,59 @@ textarea {
   color: var(--cyan);
   font-weight: 800;
 }
+.community-page {
+  display: grid;
+  gap: 1.5rem;
+}
+.community-page > .status {
+  margin-block: -0.5rem;
+}
+.community-activities,
+.community-store {
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border-top: 3px solid var(--red);
+}
+.community-store {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  align-items: center;
+}
+.community-store h2 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+}
+.community-store-details {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) minmax(0, 1fr);
+  gap: 0.45rem 1rem;
+  margin: 1.2rem 0 0;
+}
+.community-store-details dt {
+  color: var(--cyan);
+  font-weight: 850;
+}
+.community-store-details dd {
+  margin: 0;
+}
+.community-contact-actions {
+  display: grid;
+  min-width: 11rem;
+  gap: 0.7rem;
+}
+.community-contact-actions a {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--cyan);
+  color: var(--text);
+  font-weight: 850;
+  text-align: center;
+  text-decoration: none;
+}
+.community-contact-actions a:hover,
+.community-contact-actions a:focus-visible {
+  background: var(--cyan);
+  color: #050607;
+}
 .editorial-document {
   display: flow-root;
   max-width: 72rem;
@@ -2315,6 +2368,12 @@ textarea {
   border-top: 3px solid var(--red);
 }
 @media (max-width: 720px) {
+  .community-store {
+    grid-template-columns: 1fr;
+  }
+  .community-contact-actions {
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  }
   .news-feature.has-cover {
     grid-template-columns: 1fr;
   }

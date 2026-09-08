@@ -32,6 +32,7 @@ import { AccountHub } from '../account/AccountHub.js';
 import { AdminHub, AdminStandaloneLayout, type AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
 import {
+  CommunityPage,
   EditorialPage,
   HomeHighlights,
   NewsPage,
@@ -112,7 +113,7 @@ export function App() {
           {route === '/cart' && <CartPage />}
           {route === '/tournaments' && <TournamentPage />}
           {route === '/news' && <NewsPage />}
-          {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
+          {route === '/community' && <CommunityPage navigate={navigate} />}
           {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}
           {adminArea && (
             <AccessGate requiredRole="ADMIN">

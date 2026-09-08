@@ -2,9 +2,12 @@ import { shortIdentifier } from '../admin/presentation.js';
 
 export type StoreSummary = Readonly<{
   branchId: string;
+  directions?: string;
+  mapUrl?: string;
   name: string;
   openingHours?: string;
   publicAddress?: string;
+  publicContacts?: string;
 }>;
 
 type Item = Readonly<Record<string, unknown>>;
@@ -16,6 +19,9 @@ export function firstStore(value: unknown): StoreSummary | null {
   const name = value.name;
   const publicAddress = value.publicAddress ?? value.public_address;
   const openingHours = value.openingHours ?? value.opening_hours;
+  const publicContacts = value.publicContacts ?? value.public_contacts;
+  const directions = value.directions;
+  const mapUrl = value.mapUrl ?? value.map_url;
   return {
     branchId,
     name:
@@ -26,6 +32,11 @@ export function firstStore(value: unknown): StoreSummary | null {
           : `Tienda ${shortIdentifier(branchId)}`,
     ...(typeof openingHours === 'string' && openingHours.trim() !== '' ? { openingHours } : {}),
     ...(typeof publicAddress === 'string' && publicAddress.trim() !== '' ? { publicAddress } : {}),
+    ...(typeof publicContacts === 'string' && publicContacts.trim() !== ''
+      ? { publicContacts }
+      : {}),
+    ...(typeof directions === 'string' && directions.trim() !== '' ? { directions } : {}),
+    ...(typeof mapUrl === 'string' && mapUrl.trim() !== '' ? { mapUrl } : {}),
   };
 }
 
