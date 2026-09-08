@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError, publicRequest } from '../identity/api.js';
 import { EditorialPage, HomeHighlights, StorePage } from './PublicPages.js';
@@ -15,6 +15,7 @@ vi.mock('../identity/api.js', async (importOriginal) => {
 });
 
 beforeEach(() => vi.clearAllMocks());
+afterEach(() => vi.unstubAllGlobals());
 
 describe('public home highlights', () => {
   it('renders only real commerce and editorial records returned by the server', async () => {
@@ -103,6 +104,25 @@ function homeEditorial(title: string, type: 'NEWS' | 'TOURNAMENT') {
 }
 
 describe('public Store cart action', () => {
+  it('keeps the long filter form collapsed initially on mobile', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        addEventListener: vi.fn(),
+        matches: true,
+        removeEventListener: vi.fn(),
+      })),
+    );
+    vi.mocked(publicRequest).mockResolvedValue({ items: [], nextCursor: null } as never);
+
+    render(<StorePage />);
+
+    expect(screen.queryByRole('search')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar filtros' }));
+    expect(screen.getByRole('search')).toBeInTheDocument();
+    expect(screen.getByLabelText('Buscar productos')).toBeInTheDocument();
+  });
+
   it('shows an explicit empty state when the catalog cannot return products', async () => {
     vi.mocked(publicRequest).mockRejectedValue(new Error('Catálogo temporalmente no disponible.'));
 
@@ -209,6 +229,68 @@ describe('public Store cart action', () => {
     expect(JSON.parse(String(lineCall?.[1]?.body))).toMatchObject({ preorderCampaignId });
   });
 
+  it('shows the published window, arrival and available capacity for a preorder', async () => {
+    const preorderCampaignId = '0198a8be-6677-7000-8000-000000000020';
+    const productId = '0198a8be-6677-7000-8000-000000000011';
+    const card = {
+      availableForPurchase: true,
+      availabilityStatus: 'AVAILABLE',
+      game: {
+        gameId: '0198a8be-6677-7000-8000-000000000030',
+        name: 'Pokémon',
+        slug: 'pokemon',
+      },
+      name: 'Caja en preventa',
+      priceAmountClp: 49_990,
+      preorderCampaignId,
+      primaryResource: {
+        altText: 'Caja en preventa',
+        heightPx: 800,
+        resourceId: '0198a8be-6677-7000-8000-000000000041',
+        widthPx: 600,
+      },
+      productId,
+      saleType: 'PREORDER',
+    } as const;
+    vi.mocked(publicRequest).mockImplementation(async (path) => {
+      if (path === `/api/v1/catalog/products/${productId}`) {
+        return {
+          item: {
+            ...card,
+            category: { categoryId: crypto.randomUUID(), name: 'Sellados' },
+            collection: null,
+            condition: 'SEALED',
+            description: 'Reserva sujeta a las condiciones publicadas.',
+            edition: null,
+            language: 'es-CL',
+            preorder: {
+              availableCapacity: 7,
+              capacity: 10,
+              closesAt: '2026-10-02T20:00:00.000Z',
+              estimatedArrivalText: 'Llegada estimada en octubre',
+              opensAt: '2026-09-02T20:00:00.000Z',
+              preorderCampaignId,
+            },
+            resources: [card.primaryResource],
+            sku: 'PRE-001',
+          },
+        } as never;
+      }
+      if (path.startsWith('/api/v1/catalog/products?')) {
+        return { items: [card], nextCursor: null } as never;
+      }
+      return { items: [], nextCursor: null } as never;
+    });
+
+    render(<StorePage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Ver detalle' }));
+
+    expect(await screen.findByText('Información de la campaña')).toBeInTheDocument();
+    expect(screen.getByText('Llegada estimada en octubre')).toBeInTheDocument();
+    expect(screen.getByText('7 de 10')).toBeInTheDocument();
+    expect(screen.getByText('Reserva sujeta a las condiciones publicadas.')).toBeInTheDocument();
+  });
+
   it('sends server-side filters and opens the real product detail', async () => {
     const productId = '0198a8be-6677-7000-8000-000000000012';
     const card = {
@@ -242,6 +324,16 @@ describe('public Store cart action', () => {
             description: 'Descripción pública',
             edition: 'FIRST EDITION',
             language: 'es-CL',
+            preorder: null,
+            resources: [
+              card.primaryResource,
+              {
+                altText: 'Reverso de la colección',
+                heightPx: 800,
+                resourceId: '0198a8be-6677-7000-8000-000000000043',
+                widthPx: 600,
+              },
+            ],
             sku: 'SKU-001',
           },
         } as never;
@@ -278,6 +370,11 @@ describe('public Store cart action', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ver detalle' }));
     expect(await screen.findByText('SKU-001')).toBeInTheDocument();
     expect(screen.getByText('Descripción pública')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Ver imagen 2: Reverso de la colección' }));
+    expect(screen.getByRole('img', { name: 'Reverso de la colección' })).toHaveAttribute(
+      'src',
+      '/api/v1/catalog/resources/0198a8be-6677-7000-8000-000000000043/content',
+    );
   });
 });
 

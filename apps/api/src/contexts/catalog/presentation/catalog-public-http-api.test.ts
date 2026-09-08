@@ -37,6 +37,8 @@ const detail = {
   description: 'Descripción pública',
   edition: 'FIRST EDITION',
   language: 'es-CL',
+  preorder: null,
+  resources: [primaryResource],
   sku: 'PK-001',
 };
 
@@ -139,8 +141,10 @@ describe('Public catalog HTTP API', () => {
         'language',
         'name',
         'priceAmountClp',
+        'preorder',
         'primaryResource',
         'productId',
+        'resources',
         'saleType',
         'sku',
       ].sort(),

@@ -112,9 +112,39 @@ export const catalogPublicProductDetailSchema = catalogPublicProductCardSchema
     description: z.string().nullable(),
     edition: z.string().nullable(),
     language: z.string().nullable(),
+    preorder: z
+      .object({
+        availableCapacity: z.number().int().nonnegative(),
+        capacity: z.number().int().positive(),
+        closesAt: z.iso.datetime({ offset: true }),
+        estimatedArrivalText: z.string().trim().min(1).max(500),
+        opensAt: z.iso.datetime({ offset: true }),
+        preorderCampaignId: normalizedUuidSchema,
+      })
+      .strict()
+      .nullable(),
+    resources: z.array(catalogPublicPrimaryResourceSchema).min(1),
     sku: z.string().min(1),
   })
-  .strict();
+  .strict()
+  .superRefine((product, context) => {
+    if (product.saleType === 'REGULAR' && product.preorder !== null) {
+      context.addIssue({
+        code: 'custom',
+        message: 'A regular product cannot expose preorder detail.',
+        path: ['preorder'],
+      });
+    }
+    if (
+      !product.resources.some(({ resourceId }) => resourceId === product.primaryResource.resourceId)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Product gallery must contain its primary resource.',
+        path: ['resources'],
+      });
+    }
+  });
 
 export const catalogPublicGameListResponseSchema = publicPage(catalogPublicGameItemSchema);
 export const catalogPublicCategoryListResponseSchema = publicPage(catalogPublicCategoryItemSchema);

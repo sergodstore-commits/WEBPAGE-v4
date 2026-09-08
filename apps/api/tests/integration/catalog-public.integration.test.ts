@@ -23,6 +23,8 @@ const ids = {
   productSecond: '0198a8be-6677-7000-8000-000000000402',
   productThird: '0198a8be-6677-7000-8000-000000000403',
   productUnpublished: '0198a8be-6677-7000-8000-000000000405',
+  preorderCampaign: '0198a8be-6677-7000-8000-000000000601',
+  preorderPool: '0198a8be-6677-7000-8000-000000000602',
   resourceCategoryDraft: '0198a8be-6677-7000-8000-000000000508',
   resourceCategoryPublic: '0198a8be-6677-7000-8000-000000000502',
   resourceCollectionPublic: '0198a8be-6677-7000-8000-000000000503',
@@ -331,7 +333,61 @@ describe('PostgreSQL public catalog queries', () => {
       edition: 'FIRST EDITION',
       language: 'es-CL',
       productId: ids.productFirst,
+      preorder: null,
       sku: 'SKU-Á1',
+    });
+    expect(detail.resources.map(({ resourceId }) => resourceId)).toEqual([
+      ids.resourceProductFirst,
+      ids.resourceProductSecondaryReplaced,
+      ids.resourceProductSecondaryRemoved,
+    ]);
+  });
+
+  it('returns only published preorder conditions and derived available capacity', async () => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        `INSERT INTO preorder_campaigns (
+           preorder_campaign_id, product_id, branch_id, operational_state, publication_status,
+           capacity, temporarily_reserved, committed, opens_at, closes_at,
+           estimated_arrival_text, published_at, created_by, created_at, updated_at
+         ) VALUES ($1, $2, $3, 'OPEN', 'PUBLISHED', 10, 1, 2,
+           CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP + INTERVAL '30 days',
+           'Llegada estimada en octubre', CURRENT_TIMESTAMP, $4, CURRENT_TIMESTAMP,
+           CURRENT_TIMESTAMP)`,
+        [ids.preorderCampaign, ids.productSecond, ids.branch, ids.admin],
+      );
+      await client.query(
+        `INSERT INTO preorder_stock_pools (
+           preorder_stock_pool_id, inventory_position_id, pool_type, campaign_id,
+           available_quantity, created_at, updated_at
+         ) SELECT $1, inventory_position_id, 'CAMPAIGN', $2, 0, CURRENT_TIMESTAMP,
+                  CURRENT_TIMESTAMP
+             FROM inventory_positions
+            WHERE product_id=$3 AND branch_id=$4`,
+        [ids.preorderPool, ids.preorderCampaign, ids.productSecond, ids.branch],
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    const detail = await service.getProduct(ids.productSecond);
+
+    expect(detail).toMatchObject({
+      availableForPurchase: true,
+      preorderCampaignId: ids.preorderCampaign,
+      preorder: {
+        availableCapacity: 7,
+        capacity: 10,
+        estimatedArrivalText: 'Llegada estimada en octubre',
+        preorderCampaignId: ids.preorderCampaign,
+      },
+      saleType: 'PREORDER',
     });
   });
 

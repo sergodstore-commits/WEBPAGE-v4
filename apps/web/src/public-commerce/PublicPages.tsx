@@ -47,6 +47,15 @@ interface ProductDetail extends ProductCard {
   readonly description: string | null;
   readonly edition: string | null;
   readonly language: string | null;
+  readonly preorder?: {
+    readonly availableCapacity: number;
+    readonly capacity: number;
+    readonly closesAt: string;
+    readonly estimatedArrivalText: string;
+    readonly opensAt: string;
+    readonly preorderCampaignId: string;
+  } | null;
+  readonly resources?: readonly PrimaryResource[];
   readonly sku: string;
 }
 
@@ -372,6 +381,17 @@ export function StorePage() {
   const [message, setMessage] = useState('Cargando catálogo…');
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filtersVisible, setFiltersVisible] = useState(
+    () =>
+      typeof window.matchMedia !== 'function' || !window.matchMedia('(max-width: 640px)').matches,
+  );
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const media = window.matchMedia('(max-width: 640px)');
+    const followViewport = () => setFiltersVisible(!media.matches);
+    media.addEventListener('change', followViewport);
+    return () => media.removeEventListener('change', followViewport);
+  }, []);
   const load = (nextFilters: CatalogFilters, cursor?: string) => {
     setLoading(true);
     setMessage(cursor === undefined ? 'Cargando catálogo…' : 'Cargando más productos…');
@@ -475,115 +495,128 @@ export function StorePage() {
       </p>
       <div className="catalog-layout">
         <aside className="catalog-filters cut-panel" aria-label="Filtros del catálogo">
-          <form onSubmit={search} role="search">
+          <div className="catalog-filter-heading">
             <h2>Buscar y filtrar</h2>
-            <label>
-              Buscar productos
-              <input
-                minLength={2}
-                onChange={(event) => update('q', event.target.value)}
-                placeholder="Juego, producto o colección"
-                value={filters.q}
-              />
-            </label>
-            <SelectFilter
-              label="Juego"
-              onChange={(value) => update('gameId', value)}
-              options={games.map((item) => ({ label: item.name, value: item.gameId ?? '' }))}
-              value={filters.gameId}
-            />
-            <SelectFilter
-              label="Categoría"
-              onChange={(value) => update('categoryId', value)}
-              options={categories.map((item) => ({
-                label: item.name,
-                value: item.categoryId ?? '',
-              }))}
-              value={filters.categoryId}
-            />
-            <SelectFilter
-              label="Colección"
-              onChange={(value) => update('collectionId', value)}
-              options={collections
-                .filter((item) => filters.gameId === '' || item.game?.gameId === filters.gameId)
-                .map((item) => ({ label: item.name, value: item.collectionId ?? '' }))}
-              value={filters.collectionId}
-            />
-            <div className="filter-pair">
-              <label>
-                Precio mínimo
-                <input
-                  min="0"
-                  onChange={(event) => update('minimumPriceClp', event.target.value)}
-                  type="number"
-                  value={filters.minimumPriceClp}
-                />
-              </label>
-              <label>
-                Precio máximo
-                <input
-                  min="0"
-                  onChange={(event) => update('maximumPriceClp', event.target.value)}
-                  type="number"
-                  value={filters.maximumPriceClp}
-                />
-              </label>
-            </div>
-            <SelectFilter
-              label="Idioma"
-              onChange={(value) => update('language', value)}
-              options={languages.map((value) => ({ label: value, value }))}
-              value={filters.language}
-            />
-            <SelectFilter
-              label="Edición"
-              onChange={(value) => update('edition', value)}
-              options={editions.map((value) => ({ label: value, value }))}
-              value={filters.edition}
-            />
-            <SelectFilter
-              label="Condición"
-              onChange={(value) => update('condition', value)}
-              options={conditions.map((value) => ({ label: value, value }))}
-              value={filters.condition}
-            />
-            <SelectFilter
-              label="Disponibilidad"
-              onChange={(value) =>
-                update('availabilityStatus', value as CatalogFilters['availabilityStatus'])
-              }
-              options={[
-                { label: 'Disponible', value: 'AVAILABLE' },
-                { label: 'Últimas unidades', value: 'LAST_UNITS' },
-                { label: 'Agotado', value: 'OUT_OF_STOCK' },
-              ]}
-              value={filters.availabilityStatus}
-            />
-            <SelectFilter
-              label="Tipo"
-              onChange={(value) => update('saleType', value as CatalogFilters['saleType'])}
-              options={[
-                { label: 'Producto regular', value: 'REGULAR' },
-                { label: 'Preventa', value: 'PREORDER' },
-              ]}
-              value={filters.saleType}
-            />
-            <SelectFilter
-              label="Ordenar"
-              onChange={(value) => update('sort', value as ProductSort)}
-              options={[
-                { label: 'Más nuevos', value: 'NEWEST' },
-                { label: 'Nombre A–Z', value: 'NAME_ASC' },
-                { label: 'Precio menor a mayor', value: 'PRICE_ASC' },
-                { label: 'Precio mayor a menor', value: 'PRICE_DESC' },
-              ]}
-              value={filters.sort}
-              withEmpty={false}
-            />
-            <button disabled={loading} type="submit">
-              Aplicar filtros
+            <button
+              aria-controls="catalog-filter-form"
+              aria-expanded={filtersVisible}
+              className="catalog-filter-toggle secondary"
+              onClick={() => setFiltersVisible((visible) => !visible)}
+              type="button"
+            >
+              {filtersVisible ? 'Ocultar filtros' : 'Mostrar filtros'}
             </button>
-          </form>
+          </div>
+          {filtersVisible && (
+            <form id="catalog-filter-form" onSubmit={search} role="search">
+              <label>
+                Buscar productos
+                <input
+                  minLength={2}
+                  onChange={(event) => update('q', event.target.value)}
+                  placeholder="Juego, producto o colección"
+                  value={filters.q}
+                />
+              </label>
+              <SelectFilter
+                label="Juego"
+                onChange={(value) => update('gameId', value)}
+                options={games.map((item) => ({ label: item.name, value: item.gameId ?? '' }))}
+                value={filters.gameId}
+              />
+              <SelectFilter
+                label="Categoría"
+                onChange={(value) => update('categoryId', value)}
+                options={categories.map((item) => ({
+                  label: item.name,
+                  value: item.categoryId ?? '',
+                }))}
+                value={filters.categoryId}
+              />
+              <SelectFilter
+                label="Colección"
+                onChange={(value) => update('collectionId', value)}
+                options={collections
+                  .filter((item) => filters.gameId === '' || item.game?.gameId === filters.gameId)
+                  .map((item) => ({ label: item.name, value: item.collectionId ?? '' }))}
+                value={filters.collectionId}
+              />
+              <div className="filter-pair">
+                <label>
+                  Precio mínimo
+                  <input
+                    min="0"
+                    onChange={(event) => update('minimumPriceClp', event.target.value)}
+                    type="number"
+                    value={filters.minimumPriceClp}
+                  />
+                </label>
+                <label>
+                  Precio máximo
+                  <input
+                    min="0"
+                    onChange={(event) => update('maximumPriceClp', event.target.value)}
+                    type="number"
+                    value={filters.maximumPriceClp}
+                  />
+                </label>
+              </div>
+              <SelectFilter
+                label="Idioma"
+                onChange={(value) => update('language', value)}
+                options={languages.map((value) => ({ label: value, value }))}
+                value={filters.language}
+              />
+              <SelectFilter
+                label="Edición"
+                onChange={(value) => update('edition', value)}
+                options={editions.map((value) => ({ label: value, value }))}
+                value={filters.edition}
+              />
+              <SelectFilter
+                label="Condición"
+                onChange={(value) => update('condition', value)}
+                options={conditions.map((value) => ({ label: value, value }))}
+                value={filters.condition}
+              />
+              <SelectFilter
+                label="Disponibilidad"
+                onChange={(value) =>
+                  update('availabilityStatus', value as CatalogFilters['availabilityStatus'])
+                }
+                options={[
+                  { label: 'Disponible', value: 'AVAILABLE' },
+                  { label: 'Últimas unidades', value: 'LAST_UNITS' },
+                  { label: 'Agotado', value: 'OUT_OF_STOCK' },
+                ]}
+                value={filters.availabilityStatus}
+              />
+              <SelectFilter
+                label="Tipo"
+                onChange={(value) => update('saleType', value as CatalogFilters['saleType'])}
+                options={[
+                  { label: 'Producto regular', value: 'REGULAR' },
+                  { label: 'Preventa', value: 'PREORDER' },
+                ]}
+                value={filters.saleType}
+              />
+              <SelectFilter
+                label="Ordenar"
+                onChange={(value) => update('sort', value as ProductSort)}
+                options={[
+                  { label: 'Más nuevos', value: 'NEWEST' },
+                  { label: 'Nombre A–Z', value: 'NAME_ASC' },
+                  { label: 'Precio menor a mayor', value: 'PRICE_ASC' },
+                  { label: 'Precio mayor a menor', value: 'PRICE_DESC' },
+                ]}
+                value={filters.sort}
+                withEmpty={false}
+              />
+              <button disabled={loading} type="submit">
+                Aplicar filtros
+              </button>
+            </form>
+          )}
         </aside>
         <div aria-busy={loading} className="catalog-results">
           <ActiveFilters
@@ -596,6 +629,7 @@ export function StorePage() {
           {detail && (
             <ProductDetailPanel
               detail={detail}
+              key={detail.productId}
               onAdd={() => void addToCart(detail)}
               onClose={() => setDetail(null)}
               pending={addingProductId === detail.productId}
@@ -743,14 +777,40 @@ function ProductDetailPanel({
   readonly onClose: () => void;
   readonly pending: boolean;
 }) {
+  const [selectedResource, setSelectedResource] = useState(detail.primaryResource);
+  const resources = detail.resources ?? [detail.primaryResource];
   return (
     <section aria-labelledby="product-detail-title" className="product-detail cut-panel">
-      <img
-        alt={detail.primaryResource.altText}
-        height={detail.primaryResource.heightPx}
-        src={resourceUrl(detail.primaryResource.resourceId)}
-        width={detail.primaryResource.widthPx}
-      />
+      <div className="product-gallery">
+        <img
+          alt={selectedResource.altText}
+          height={selectedResource.heightPx}
+          src={resourceUrl(selectedResource.resourceId)}
+          width={selectedResource.widthPx}
+        />
+        {resources.length > 1 && (
+          <div aria-label="Galería del producto" className="product-gallery-thumbnails">
+            {resources.map((resource, index) => (
+              <button
+                aria-label={`Ver imagen ${index + 1}: ${resource.altText}`}
+                aria-pressed={resource.resourceId === selectedResource.resourceId}
+                className="product-gallery-thumbnail"
+                key={resource.resourceId}
+                onClick={() => setSelectedResource(resource)}
+                type="button"
+              >
+                <img
+                  alt=""
+                  height={resource.heightPx}
+                  loading="lazy"
+                  src={resourceUrl(resource.resourceId)}
+                  width={resource.widthPx}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <div>
         <p className="eyebrow">Detalle de producto</p>
         <h2 id="product-detail-title">{detail.name}</h2>
@@ -773,6 +833,28 @@ function ProductDetailPanel({
           <dt>Disponibilidad</dt>
           <dd>{availabilityLabel(detail.availabilityStatus)}</dd>
         </dl>
+        {detail.saleType === 'PREORDER' && (
+          <section className="preorder-detail" aria-labelledby="preorder-detail-title">
+            <p className="card-kicker">Condiciones de preventa</p>
+            <h3 id="preorder-detail-title">Información de la campaña</h3>
+            {detail.preorder == null ? (
+              <p>No hay una campaña de preventa publicada actualmente.</p>
+            ) : (
+              <dl className="facts preorder-facts">
+                <dt>Inicio</dt>
+                <dd>{publicDateTime(detail.preorder.opensAt)}</dd>
+                <dt>Cierre</dt>
+                <dd>{publicDateTime(detail.preorder.closesAt)}</dd>
+                <dt>Llegada estimada</dt>
+                <dd>{detail.preorder.estimatedArrivalText}</dd>
+                <dt>Cupos disponibles</dt>
+                <dd>
+                  {detail.preorder.availableCapacity} de {detail.preorder.capacity}
+                </dd>
+              </dl>
+            )}
+          </section>
+        )}
         <p className="price">${detail.priceAmountClp.toLocaleString('es-CL')}</p>
         <div className="actions">
           <button className="secondary" onClick={onClose} type="button">
@@ -914,6 +996,14 @@ function filterDisplayValue(
 
 function resourceUrl(resourceId: string): string {
   return `/api/v1/catalog/resources/${resourceId}/content`;
+}
+
+function publicDateTime(value: string): string {
+  return new Intl.DateTimeFormat('es-CL', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'America/Santiago',
+  }).format(new Date(value));
 }
 
 async function addProductToCart(

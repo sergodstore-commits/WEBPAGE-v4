@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   catalogPublicFilterValuesQuerySchema,
   catalogPublicProductCardSchema,
+  catalogPublicProductDetailSchema,
   catalogPublicProductListQuerySchema,
   catalogPublicResourceIdSchema,
 } from './catalog-public.js';
@@ -101,6 +102,48 @@ describe('Public catalog contracts', () => {
         ...card,
         availabilityStatus: 'OUT_OF_STOCK',
       }),
+    ).toThrow();
+  });
+
+  it('accepts a real ordered gallery and public preorder conditions', () => {
+    const primaryResource = {
+      altText: 'Imagen principal',
+      heightPx: 640,
+      mimeType: 'image/webp' as const,
+      resourceId: id,
+      widthPx: 480,
+    };
+    const detail = {
+      availabilityStatus: 'AVAILABLE' as const,
+      availableForPurchase: true,
+      category: { categoryId: id, name: 'Sellados' },
+      collection: null,
+      condition: 'SEALED',
+      description: 'Condiciones publicadas del producto.',
+      edition: 'STANDARD',
+      game: { gameId: id, name: 'Juego', slug: 'juego' },
+      language: 'es-CL',
+      name: 'Caja en preventa',
+      preorder: {
+        availableCapacity: 7,
+        capacity: 10,
+        closesAt: '2026-10-02T20:00:00.000Z',
+        estimatedArrivalText: 'Octubre de 2026',
+        opensAt: '2026-09-02T20:00:00.000Z',
+        preorderCampaignId: id,
+      },
+      preorderCampaignId: id,
+      priceAmountClp: 49_990,
+      primaryResource,
+      productId: id,
+      resources: [primaryResource],
+      saleType: 'PREORDER' as const,
+      sku: 'PRE-001',
+    };
+    expect(catalogPublicProductDetailSchema.parse(detail)).toEqual(detail);
+    expect(() => catalogPublicProductDetailSchema.parse({ ...detail, resources: [] })).toThrow();
+    expect(() =>
+      catalogPublicProductDetailSchema.parse({ ...detail, saleType: 'REGULAR' }),
     ).toThrow();
   });
 

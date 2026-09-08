@@ -167,14 +167,49 @@ export class PgCatalogPublicQueryRepository
         `SELECT ${publicProductCardColumns},
                 p.sku, p.description, p.language, p.edition, p.condition,
                 c.category_id, c.name AS category_name,
-                co.collection_id, co.name AS collection_name
+                co.collection_id, co.name AS collection_name,
+                preorder_detail.preorder_campaign_id AS detail_preorder_campaign_id,
+                preorder_detail.capacity AS preorder_capacity,
+                preorder_detail.available_capacity AS preorder_available_capacity,
+                preorder_detail.opens_at AS preorder_opens_at,
+                preorder_detail.closes_at AS preorder_closes_at,
+                preorder_detail.estimated_arrival_text AS preorder_estimated_arrival_text
            ${publicProductFrom}
+           LEFT JOIN LATERAL (
+             SELECT campaign.preorder_campaign_id, campaign.capacity,
+                    GREATEST(
+                      campaign.capacity-campaign.temporarily_reserved-campaign.committed,
+                      0
+                    ) AS available_capacity,
+                    campaign.opens_at, campaign.closes_at, campaign.estimated_arrival_text
+               FROM preorder_campaigns campaign
+               JOIN branches campaign_branch
+                 ON campaign_branch.branch_id=campaign.branch_id
+                AND campaign_branch.state='ACTIVE'
+              WHERE campaign.product_id=p.product_id
+                AND campaign.publication_status='PUBLISHED'
+              ORDER BY (campaign.preorder_campaign_id=preorder.preorder_campaign_id) DESC,
+                       campaign.opens_at DESC, campaign.preorder_campaign_id DESC
+              LIMIT 1
+           ) preorder_detail ON p.sale_type='PREORDER'
            WHERE p.product_id = $1::uuid
              AND ${publicProductVisibilityClauses().join(' AND ')}`,
         [productId],
       );
       const row = detail.rows[0];
       if (row === undefined) return null;
+      const resources = await transaction.query<ProductGalleryRow>(
+        `SELECT resource.resource_id, resource.alt_text AS resource_alt_text,
+                resource.mime_type_real AS resource_mime_type,
+                resource.width_px AS resource_width_px,
+                resource.height_px AS resource_height_px
+           FROM product_media media
+           JOIN resource_assets resource
+             ON resource.resource_id=media.resource_id AND resource.state='ACTIVE'
+          WHERE media.product_id=$1::uuid
+          ORDER BY resource.position ASC, resource.resource_id ASC`,
+        [productId],
+      );
       return {
         ...mapProductCard(row),
         category: { categoryId: row.category_id, name: row.category_name },
@@ -186,6 +221,24 @@ export class PgCatalogPublicQueryRepository
         description: row.description,
         edition: row.edition,
         language: row.language,
+        preorder:
+          row.detail_preorder_campaign_id === null
+            ? null
+            : {
+                availableCapacity: requiredNonnegativeInteger(
+                  row.preorder_available_capacity,
+                  'Preorder available capacity',
+                ),
+                capacity: requiredPositiveInteger(row.preorder_capacity, 'Preorder capacity'),
+                closesAt: requiredDate(
+                  row.preorder_closes_at,
+                  'Preorder closing date',
+                ).toISOString(),
+                estimatedArrivalText: requiredText(row.preorder_estimated_arrival_text),
+                opensAt: requiredDate(row.preorder_opens_at, 'Preorder opening date').toISOString(),
+                preorderCampaignId: row.detail_preorder_campaign_id,
+              },
+        resources: resources.rows.map(mapGalleryResource),
         sku: row.sku,
       };
     });
@@ -423,9 +476,23 @@ interface ProductDetailRow extends ProductListRow {
   readonly collection_name: string | null;
   readonly condition: string | null;
   readonly description: string | null;
+  readonly detail_preorder_campaign_id: string | null;
   readonly edition: string | null;
   readonly language: string | null;
+  readonly preorder_available_capacity: string | null;
+  readonly preorder_capacity: string | null;
+  readonly preorder_closes_at: Date | null;
+  readonly preorder_estimated_arrival_text: string | null;
+  readonly preorder_opens_at: Date | null;
   readonly sku: string;
+}
+
+interface ProductGalleryRow extends QueryResultRow {
+  readonly resource_alt_text: string;
+  readonly resource_height_px: number;
+  readonly resource_id: string;
+  readonly resource_mime_type: CatalogPublicPrimaryResource['mimeType'];
+  readonly resource_width_px: number;
 }
 
 interface FilterValueRow extends QueryResultRow {
@@ -445,7 +512,10 @@ const publicProductFrom = `FROM products p
   JOIN categories c ON c.category_id = p.category_id
   LEFT JOIN collections co ON co.collection_id = p.collection_id
   LEFT JOIN LATERAL (
-    SELECT campaign.preorder_campaign_id
+    SELECT campaign.preorder_campaign_id, campaign.capacity,
+           campaign.capacity-campaign.temporarily_reserved-campaign.committed
+             AS available_capacity,
+           campaign.opens_at, campaign.closes_at, campaign.estimated_arrival_text
       FROM preorder_campaigns campaign
       JOIN branches campaign_branch
         ON campaign_branch.branch_id=campaign.branch_id AND campaign_branch.state='ACTIVE'
@@ -638,6 +708,38 @@ function mapProductCard(row: ProductListRow): CatalogPublicProductCard {
     productId: row.product_id,
     saleType: row.sale_type,
   };
+}
+
+function mapGalleryResource(row: ProductGalleryRow): CatalogPublicPrimaryResource {
+  return {
+    altText: row.resource_alt_text,
+    heightPx: row.resource_height_px,
+    mimeType: row.resource_mime_type,
+    resourceId: row.resource_id,
+    widthPx: row.resource_width_px,
+  };
+}
+
+function requiredPositiveInteger(value: string | null, label: string): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new Error(`${label} is invalid.`);
+  }
+  return parsed;
+}
+
+function requiredNonnegativeInteger(value: string | null, label: string): number {
+  if (value === null) throw new Error(`${label} is invalid.`);
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    throw new Error(`${label} is invalid.`);
+  }
+  return parsed;
+}
+
+function requiredDate(value: Date | null, label: string): Date {
+  if (value === null || !Number.isFinite(value.getTime())) throw new Error(`${label} is invalid.`);
+  return value;
 }
 
 function safeInteger(value: string): number {
