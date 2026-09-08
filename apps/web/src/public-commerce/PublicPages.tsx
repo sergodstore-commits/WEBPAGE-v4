@@ -99,6 +99,17 @@ interface EditorialEntry {
   readonly type: string;
 }
 
+type TournamentSection = 'completed' | 'hall' | 'legacy' | 'quests' | 'upcoming';
+
+interface TournamentContentState {
+  readonly errors: readonly string[];
+  readonly failedTypes: readonly string[];
+  readonly hall: readonly EditorialEntry[];
+  readonly loading: boolean;
+  readonly quests: readonly EditorialEntry[];
+  readonly tournaments: readonly EditorialEntry[];
+}
+
 type HomeRoute = '/community' | '/comics' | '/news' | '/shop' | '/tournaments';
 type HighlightStatus = 'error' | 'loading' | 'ready';
 
@@ -1028,6 +1039,241 @@ async function addProductToCart(
     });
     await add();
   }
+}
+
+export function TournamentPage() {
+  const [content, setContent] = useState<TournamentContentState>({
+    errors: [],
+    failedTypes: [],
+    hall: [],
+    loading: true,
+    quests: [],
+    tournaments: [],
+  });
+  const [selected, setSelected] = useState<EditorialEntry | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const types = ['TOURNAMENT', 'QUEST', 'HALL_OF_FAME'] as const;
+    void Promise.allSettled(
+      types.map((type) =>
+        publicRequest<{ items: EditorialEntry[] }>(
+          `/api/v1/content?limit=24&type=${encodeURIComponent(type)}`,
+        ),
+      ),
+    ).then((results) => {
+      if (!active) return;
+      const items = (index: number): EditorialEntry[] => {
+        const result = results[index];
+        return result?.status === 'fulfilled' ? result.value.items : [];
+      };
+      const errors = results.flatMap((result, index) =>
+        result.status === 'rejected'
+          ? [`No fue posible cargar ${tournamentTypeLabel(types[index] ?? 'TOURNAMENT')}.`]
+          : [],
+      );
+      setContent({
+        errors,
+        failedTypes: results.flatMap((result, index) =>
+          result.status === 'rejected' ? [types[index] ?? 'TOURNAMENT'] : [],
+        ),
+        hall: items(2),
+        loading: false,
+        quests: items(1),
+        tournaments: items(0),
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const upcoming = sortByEventDate(
+    content.tournaments.filter((item) => eventFromEditorial(item)?.status === 'UPCOMING'),
+    'ascending',
+  );
+  const completed = sortByEventDate(
+    content.tournaments.filter((item) => eventFromEditorial(item)?.status === 'COMPLETED'),
+    'descending',
+  );
+  const legacy = content.tournaments.filter((item) => eventFromEditorial(item) === null);
+
+  if (selected !== null) {
+    const event = eventFromEditorial(selected);
+    return (
+      <main className="page-frame editorial-page visual-public">
+        <article className="editorial-reader cut-panel">
+          <button className="button-secondary" onClick={() => setSelected(null)} type="button">
+            Volver a torneos y eventos
+          </button>
+          <p className="card-kicker">{tournamentTypeLabel(selected.type)}</p>
+          <h1>{selected.title}</h1>
+          {event && <p className="tournament-date">{publicDateTime(event.startsAt)}</p>}
+          <p className="editorial-reader-excerpt">{selected.excerpt}</p>
+          <EditorialDocumentView
+            document={documentFromMetadata(
+              selected.metadata,
+              selected.body,
+              selected.editorialEntryId,
+            )}
+          />
+        </article>
+      </main>
+    );
+  }
+
+  return (
+    <main className="page-frame editorial-page tournament-page visual-public">
+      <header className="section-heading editorial-heading cut-panel">
+        <div>
+          <p className="eyebrow">Juego organizado Sergod</p>
+          <h1>Torneos y comunidad</h1>
+          <p>
+            Próximos encuentros, resultados, podios, Quests y reconocimientos publicados por la
+            tienda. Esta sección es informativa y no administra rondas ni emparejamientos.
+          </p>
+        </div>
+        <div aria-label="Características de la sección" className="heading-stats">
+          <span>Información oficial</span>
+          <span>Resultados y fotos</span>
+        </div>
+      </header>
+      <p aria-live="polite" className="status">
+        {content.loading ? 'Cargando torneos y eventos…' : content.errors.join(' ')}
+      </p>
+      {!content.loading && (
+        <div className="tournament-sections">
+          {!content.failedTypes.includes('TOURNAMENT') && (
+            <>
+              <TournamentEditorialSection
+                empty="Aún no hay próximos torneos publicados."
+                items={upcoming}
+                onSelect={setSelected}
+                section="upcoming"
+                title="Próximos torneos"
+              />
+              <TournamentEditorialSection
+                empty="Aún no hay torneos realizados publicados."
+                items={completed}
+                onSelect={setSelected}
+                section="completed"
+                title="Torneos realizados"
+              />
+              {legacy.length > 0 && (
+                <TournamentEditorialSection
+                  empty=""
+                  items={legacy}
+                  onSelect={setSelected}
+                  section="legacy"
+                  title="Información de torneos"
+                />
+              )}
+            </>
+          )}
+          {!content.failedTypes.includes('QUEST') && (
+            <TournamentEditorialSection
+              empty="Aún no hay Eventos o Quests publicados."
+              items={content.quests}
+              onSelect={setSelected}
+              section="quests"
+              title="Eventos y Quests"
+            />
+          )}
+          {!content.failedTypes.includes('HALL_OF_FAME') && (
+            <TournamentEditorialSection
+              empty="Aún no hay reconocimientos publicados."
+              items={content.hall}
+              onSelect={setSelected}
+              section="hall"
+              title="Hall of Fame"
+            />
+          )}
+        </div>
+      )}
+    </main>
+  );
+}
+
+function TournamentEditorialSection({
+  empty,
+  items,
+  onSelect,
+  section,
+  title,
+}: {
+  readonly empty: string;
+  readonly items: readonly EditorialEntry[];
+  readonly onSelect: (item: EditorialEntry) => void;
+  readonly section: TournamentSection;
+  readonly title: string;
+}) {
+  return (
+    <section aria-labelledby={`tournament-${section}`} className="tournament-section cut-panel">
+      <div className="tournament-section-heading">
+        <p className="eyebrow">Archivo oficial</p>
+        <h2 id={`tournament-${section}`}>{title}</h2>
+      </div>
+      {items.length > 0 ? (
+        <div className="editorial-grid">
+          {items.map((item, index) => {
+            const event = eventFromEditorial(item);
+            return (
+              <article className="editorial-card" key={item.editorialEntryId}>
+                <span aria-hidden="true" className="editorial-index">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <p className="card-kicker">{tournamentTypeLabel(item.type)}</p>
+                <h3>{item.title}</h3>
+                {event && <p className="tournament-date">{publicDateTime(event.startsAt)}</p>}
+                <p>{item.excerpt}</p>
+                <button onClick={() => onSelect(item)} type="button">
+                  Ver detalle
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="tournament-section-empty">{empty}</p>
+      )}
+    </section>
+  );
+}
+
+function eventFromEditorial(
+  item: EditorialEntry,
+): { readonly startsAt: string; readonly status: 'COMPLETED' | 'UPCOMING' } | null {
+  const event = item.metadata.event;
+  if (typeof event !== 'object' || event === null || Array.isArray(event)) return null;
+  const startsAt = 'startsAt' in event ? event.startsAt : null;
+  const status = 'status' in event ? event.status : null;
+  if (
+    typeof startsAt !== 'string' ||
+    Number.isNaN(new Date(startsAt).getTime()) ||
+    (status !== 'UPCOMING' && status !== 'COMPLETED')
+  )
+    return null;
+  return { startsAt, status };
+}
+
+function tournamentTypeLabel(type: string): string {
+  const labels: Readonly<Record<string, string>> = {
+    HALL_OF_FAME: 'Hall of Fame',
+    QUEST: 'Quest',
+    TOURNAMENT: 'Torneo',
+  };
+  return labels[type] ?? 'Publicación';
+}
+
+function sortByEventDate(
+  items: readonly EditorialEntry[],
+  direction: 'ascending' | 'descending',
+): EditorialEntry[] {
+  return [...items].sort((left, right) => {
+    const leftTime = new Date(eventFromEditorial(left)?.startsAt ?? 0).getTime();
+    const rightTime = new Date(eventFromEditorial(right)?.startsAt ?? 0).getTime();
+    return direction === 'ascending' ? leftTime - rightTime : rightTime - leftTime;
+  });
 }
 
 export function EditorialPage({ type, title }: { readonly type: string; readonly title: string }) {

@@ -1816,16 +1816,28 @@ function EditorialComposer({
     reload?: string,
   ) => Promise<void>;
 }) {
+  const [type, setType] = useState('NEWS');
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const body = String(form.get('body'));
+    const eventMetadata =
+      type === 'TOURNAMENT' || type === 'QUEST'
+        ? {
+            event: {
+              startsAt: new Date(String(form.get('eventStartsAt'))).toISOString(),
+              status: String(form.get('eventStatus')),
+            },
+          }
+        : {};
     await onAction(
       '/api/v1/admin/content',
       {
         body,
         excerpt: String(form.get('excerpt')),
         metadata: {
+          ...eventMetadata,
           document: {
             blocks: [{ id: crypto.randomUUID(), text: body, type: 'TEXT' }],
             version: 1,
@@ -1833,12 +1845,13 @@ function EditorialComposer({
         },
         slug: String(form.get('slug')),
         title: String(form.get('title')),
-        type: String(form.get('type')),
+        type,
       },
       'POST',
       'content',
     );
-    event.currentTarget.reset();
+    formElement.reset();
+    setType('NEWS');
   };
   return (
     <section className="cut-panel admin-module">
@@ -1846,7 +1859,7 @@ function EditorialComposer({
       <form onSubmit={(event) => void submit(event)}>
         <label>
           Tipo
-          <select name="type">
+          <select name="type" onChange={(event) => setType(event.target.value)} value={type}>
             <option value="NEWS">Noticia</option>
             <option value="TOURNAMENT">Torneo informativo</option>
             <option value="COMMUNITY">Comunidad</option>
@@ -1856,6 +1869,21 @@ function EditorialComposer({
             <option value="HALL_OF_FAME">Hall of Fame</option>
           </select>
         </label>
+        {(type === 'TOURNAMENT' || type === 'QUEST') && (
+          <>
+            <label>
+              Estado del evento
+              <select defaultValue="UPCOMING" name="eventStatus">
+                <option value="UPCOMING">Próximo</option>
+                <option value="COMPLETED">Realizado</option>
+              </select>
+            </label>
+            <label>
+              Fecha y hora
+              <input name="eventStartsAt" required type="datetime-local" />
+            </label>
+          </>
+        )}
         <label>
           Título
           <input name="title" required />

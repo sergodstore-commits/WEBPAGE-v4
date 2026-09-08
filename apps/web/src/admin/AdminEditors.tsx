@@ -894,6 +894,11 @@ interface EditorialDraft {
   readonly type: string;
 }
 
+interface EditorialEventValue {
+  readonly startsAt: string;
+  readonly status: 'UPCOMING' | 'COMPLETED';
+}
+
 function EditorialVisualEditor({
   content,
   onAction,
@@ -941,6 +946,19 @@ function EditorialVisualEditor({
         blocks: draft.document.blocks.filter((_block, blockIndex) => blockIndex !== index),
         version: 1,
       },
+    });
+  };
+  const updateEvent = (patch: Partial<EditorialEventValue>) => {
+    setDraft((currentDraft) => {
+      if (currentDraft === null) return null;
+      const current = eventFromMetadata(currentDraft.metadata) ?? {
+        startsAt: '',
+        status: 'UPCOMING',
+      };
+      return {
+        ...currentDraft,
+        metadata: { ...currentDraft.metadata, event: { ...current, ...patch } },
+      };
     });
   };
   const save = async (event: FormEvent<HTMLFormElement>) => {
@@ -1024,7 +1042,13 @@ function EditorialVisualEditor({
             <label>
               Tipo
               <select
-                onChange={(event) => setDraft({ ...draft, type: event.target.value })}
+                onChange={(event) => {
+                  const type = event.target.value;
+                  const metadata = supportsEventMetadata(type)
+                    ? draft.metadata
+                    : withoutEventMetadata(draft.metadata);
+                  setDraft({ ...draft, metadata, type });
+                }}
                 value={draft.type}
               >
                 <option value="NEWS">Noticia</option>
@@ -1036,6 +1060,37 @@ function EditorialVisualEditor({
                 <option value="HALL_OF_FAME">Hall of Fame</option>
               </select>
             </label>
+            {supportsEventMetadata(draft.type) && (
+              <>
+                <label>
+                  Estado del evento
+                  <select
+                    onChange={(event) =>
+                      updateEvent({ status: event.target.value as EditorialEventValue['status'] })
+                    }
+                    value={eventFromMetadata(draft.metadata)?.status ?? 'UPCOMING'}
+                  >
+                    <option value="UPCOMING">Próximo</option>
+                    <option value="COMPLETED">Realizado</option>
+                  </select>
+                </label>
+                <label>
+                  Fecha y hora
+                  <input
+                    onChange={(event) =>
+                      updateEvent({
+                        startsAt: event.target.value
+                          ? new Date(event.target.value).toISOString()
+                          : '',
+                      })
+                    }
+                    required
+                    type="datetime-local"
+                    value={dateTimeLocalValue(eventFromMetadata(draft.metadata)?.startsAt)}
+                  />
+                </label>
+              </>
+            )}
             <label>
               Título
               <input
@@ -1227,6 +1282,31 @@ function editorialDraft(item: Item): EditorialDraft {
     title: String(item.title ?? ''),
     type: String(item.type ?? 'NEWS'),
   };
+}
+
+function supportsEventMetadata(type: string): boolean {
+  return type === 'TOURNAMENT' || type === 'QUEST';
+}
+
+function eventFromMetadata(metadata: Record<string, unknown>): EditorialEventValue | null {
+  const event = metadata.event;
+  if (!isItem(event)) return null;
+  const startsAt = typeof event.startsAt === 'string' ? event.startsAt : '';
+  const status = event.status;
+  if (status !== 'UPCOMING' && status !== 'COMPLETED') return null;
+  return { startsAt, status };
+}
+
+function withoutEventMetadata(metadata: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(metadata).filter(([key]) => key !== 'event'));
+}
+
+function dateTimeLocalValue(value: string | undefined): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
 }
 
 function EditorialAdminImage({

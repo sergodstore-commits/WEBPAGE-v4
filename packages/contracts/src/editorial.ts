@@ -12,6 +12,13 @@ export const editorialTypeSchema = z.enum([
 export const editorialStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']);
 export const editorialImagePlacementSchema = z.enum(['LEFT', 'CENTER', 'RIGHT', 'FULL']);
 export const editorialImageWidthSchema = z.enum(['SMALL', 'MEDIUM', 'LARGE']);
+export const editorialEventStatusSchema = z.enum(['UPCOMING', 'COMPLETED']);
+export const editorialEventMetadataSchema = z
+  .object({
+    startsAt: z.iso.datetime({ offset: true }),
+    status: editorialEventStatusSchema,
+  })
+  .strict();
 export const editorialTextBlockSchema = z
   .object({ id: z.uuid(), text: z.string().trim().min(1).max(10_000), type: z.literal('TEXT') })
   .strict();
@@ -43,7 +50,10 @@ export const editorialDocumentSchema = z
       context.addIssue({ code: 'custom', message: 'Editorial document text is too long.' });
   });
 export const editorialMetadataSchema = z
-  .object({ document: editorialDocumentSchema.optional() })
+  .object({
+    document: editorialDocumentSchema.optional(),
+    event: editorialEventMetadataSchema.optional(),
+  })
   .catchall(z.unknown());
 export const editorialImageUploadFieldsSchema = z
   .object({
@@ -65,7 +75,16 @@ export const editorialWriteSchema = z
     title: z.string().trim().min(1).max(200),
     type: editorialTypeSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((entry, context) => {
+    if (entry.metadata.event && entry.type !== 'TOURNAMENT' && entry.type !== 'QUEST') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Event metadata is only valid for tournaments and quests.',
+        path: ['metadata', 'event'],
+      });
+    }
+  });
 export const editorialListQuerySchema = z
   .object({
     cursor: z.uuid().optional(),
@@ -82,3 +101,4 @@ export type EditorialDocument = z.infer<typeof editorialDocumentSchema>;
 export type EditorialBlock = EditorialDocument['blocks'][number];
 export type EditorialImagePlacement = z.infer<typeof editorialImagePlacementSchema>;
 export type EditorialImageWidth = z.infer<typeof editorialImageWidthSchema>;
+export type EditorialEventMetadata = z.infer<typeof editorialEventMetadataSchema>;

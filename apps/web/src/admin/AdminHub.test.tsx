@@ -334,6 +334,13 @@ describe('AdminHub', () => {
     const added = textareas.at(-1);
     if (!added) throw new Error('Added editorial text block was not rendered.');
     fireEvent.change(added, { target: { value: 'Segundo bloque.' } });
+    fireEvent.change(screen.getByLabelText('Tipo'), { target: { value: 'TOURNAMENT' } });
+    fireEvent.change(screen.getByLabelText('Estado del evento'), {
+      target: { value: 'COMPLETED' },
+    });
+    fireEvent.change(screen.getByLabelText('Fecha y hora'), {
+      target: { value: '2026-08-10T18:00' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar publicación' }));
 
     await waitFor(() => {
@@ -350,6 +357,48 @@ describe('AdminHub', () => {
       expect(body.metadata.document.blocks[1]).toMatchObject({
         text: 'Segundo bloque.',
         type: 'TEXT',
+      });
+      expect(body.metadata.event).toEqual({
+        startsAt: expect.stringContaining('2026-08-10T'),
+        status: 'COMPLETED',
+      });
+    });
+  });
+
+  it('creates a tournament with the date and public classification required by its page', async () => {
+    render(<AdminHub area="content" navigate={vi.fn()} />);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Nuevo contenido editorial' }),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Tipo'), { target: { value: 'TOURNAMENT' } });
+    fireEvent.change(screen.getByLabelText('Estado del evento'), {
+      target: { value: 'UPCOMING' },
+    });
+    fireEvent.change(screen.getByLabelText('Fecha y hora'), {
+      target: { value: '2026-10-10T18:00' },
+    });
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Copa Sergod' } });
+    fireEvent.change(screen.getByLabelText('Slug'), { target: { value: 'copa-sergod' } });
+    fireEvent.change(screen.getByLabelText('Resumen'), { target: { value: 'Próxima fecha.' } });
+    fireEvent.change(screen.getByLabelText('Contenido'), {
+      target: { value: 'Bases del torneo.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+
+    await waitFor(() => {
+      const call = vi
+        .mocked(authorizedRequest)
+        .mock.calls.find(
+          ([path, init]) => path === '/api/v1/admin/content' && init?.method === 'POST',
+        );
+      const body = JSON.parse(String(call?.[1]?.body));
+      expect(body).toMatchObject({
+        metadata: {
+          event: { startsAt: expect.stringContaining('2026-10-10T'), status: 'UPCOMING' },
+        },
+        title: 'Copa Sergod',
+        type: 'TOURNAMENT',
       });
     });
   });

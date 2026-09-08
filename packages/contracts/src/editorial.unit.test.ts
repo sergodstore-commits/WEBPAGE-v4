@@ -39,6 +39,28 @@ describe('editorial document contract', () => {
     ).toMatchObject({ document: { version: 1 } });
   });
 
+  it('accepts dated tournament metadata while keeping legacy entries valid', () => {
+    expect(
+      editorialWriteSchema.parse({
+        ...base,
+        metadata: { event: { startsAt: '2026-10-10T18:00:00-03:00', status: 'UPCOMING' } },
+        type: 'TOURNAMENT',
+      }).metadata.event,
+    ).toEqual({ startsAt: '2026-10-10T18:00:00-03:00', status: 'UPCOMING' });
+    expect(
+      editorialWriteSchema.safeParse({ ...base, metadata: {}, type: 'TOURNAMENT' }).success,
+    ).toBe(true);
+  });
+
+  it('rejects event metadata on unrelated editorial types', () => {
+    expect(
+      editorialWriteSchema.safeParse({
+        ...base,
+        metadata: { event: { startsAt: '2026-10-10T18:00:00-03:00', status: 'UPCOMING' } },
+      }).success,
+    ).toBe(false);
+  });
+
   it('rejects unsafe markup-shaped blocks and unsupported positioning', () => {
     expect(() =>
       editorialWriteSchema.parse({

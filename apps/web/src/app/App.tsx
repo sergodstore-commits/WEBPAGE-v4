@@ -31,7 +31,12 @@ import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.j
 import { AccountHub } from '../account/AccountHub.js';
 import { AdminHub, AdminStandaloneLayout, type AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
-import { EditorialPage, HomeHighlights, StorePage } from '../public-commerce/PublicPages.js';
+import {
+  EditorialPage,
+  HomeHighlights,
+  StorePage,
+  TournamentPage,
+} from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
 
 export type Route =
@@ -104,7 +109,7 @@ export function App() {
           )}
           {route === '/shop' && <StorePage />}
           {route === '/cart' && <CartPage />}
-          {route === '/tournaments' && <EditorialPage title="Torneos" type="TOURNAMENT" />}
+          {route === '/tournaments' && <TournamentPage />}
           {route === '/news' && <EditorialPage title="Noticias" type="NEWS" />}
           {route === '/community' && <EditorialPage title="Comunidad" type="COMMUNITY" />}
           {route === '/comics' && <EditorialPage title="Cómics e historias" type="COMIC_SERIES" />}

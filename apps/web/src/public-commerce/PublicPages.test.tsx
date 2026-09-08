@@ -1,8 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError, publicRequest } from '../identity/api.js';
-import { EditorialPage, HomeHighlights, StorePage } from './PublicPages.js';
+import { EditorialPage, HomeHighlights, StorePage, TournamentPage } from './PublicPages.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -379,15 +379,103 @@ describe('public Store cart action', () => {
 });
 
 describe('public editorial sections', () => {
-  it('keeps tournaments informational and renders an explicit empty state', async () => {
+  it('organizes tournaments, quests and Hall of Fame without inventing competitive operations', async () => {
+    vi.mocked(publicRequest)
+      .mockResolvedValueOnce({
+        items: [
+          {
+            body: 'Bases del próximo torneo.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000101',
+            excerpt: 'Próxima fecha.',
+            metadata: {
+              event: { startsAt: '2026-10-10T18:00:00-03:00', status: 'UPCOMING' },
+            },
+            slug: 'copa-sergod',
+            title: 'Copa Sergod',
+            type: 'TOURNAMENT',
+          },
+          {
+            body: 'Podio y resumen del torneo.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000102',
+            excerpt: 'Resultados oficiales.',
+            metadata: {
+              event: { startsAt: '2026-08-10T18:00:00-04:00', status: 'COMPLETED' },
+            },
+            slug: 'liga-agosto',
+            title: 'Liga de agosto',
+            type: 'TOURNAMENT',
+          },
+          {
+            body: 'Información histórica.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000103',
+            excerpt: 'Publicación anterior.',
+            metadata: {},
+            slug: 'torneo-historico',
+            title: 'Torneo histórico',
+            type: 'TOURNAMENT',
+          },
+        ],
+      } as never)
+      .mockResolvedValueOnce({
+        items: [
+          {
+            body: 'Detalles de la Quest.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000104',
+            excerpt: 'Quest destacada.',
+            metadata: {},
+            slug: 'quest-sergod',
+            title: 'Quest Sergod',
+            type: 'QUEST',
+          },
+        ],
+      } as never)
+      .mockResolvedValueOnce({
+        items: [
+          {
+            body: 'Reconocimiento de la comunidad.',
+            editorialEntryId: '0198a8be-6677-7000-8000-000000000105',
+            excerpt: 'Jugador destacado.',
+            metadata: {},
+            slug: 'campeon-sergod',
+            title: 'Campeón Sergod',
+            type: 'HALL_OF_FAME',
+          },
+        ],
+      } as never);
+
+    render(<TournamentPage />);
+
+    expect(screen.getByText(/no administra rondas ni emparejamientos/iu)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Próximos torneos' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Torneos realizados' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Información de torneos' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Eventos y Quests' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeInTheDocument();
+    expect(screen.getByText('Copa Sergod')).toBeInTheDocument();
+    expect(screen.getByText('Liga de agosto')).toBeInTheDocument();
+    expect(screen.getByText('Torneo histórico')).toBeInTheDocument();
+    expect(screen.getByText('Quest Sergod')).toBeInTheDocument();
+    expect(screen.getByText('Campeón Sergod')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
+
+    const completed = screen
+      .getByRole('heading', { name: 'Torneos realizados' })
+      .closest('section');
+    if (!completed) throw new Error('Completed tournament section was not rendered.');
+    fireEvent.click(within(completed).getByRole('button', { name: 'Ver detalle' }));
+    expect(screen.getByText('Podio y resumen del torneo.')).toBeInTheDocument();
+  });
+
+  it('keeps tournaments informational and renders explicit empty sections', async () => {
     vi.mocked(publicRequest).mockResolvedValue({ items: [] } as never);
 
-    render(<EditorialPage title="Torneos" type="TOURNAMENT" />);
+    render(<TournamentPage />);
 
-    expect(screen.getByText(/no administra rondas/iu)).toBeInTheDocument();
-    expect(
-      await screen.findByRole('heading', { name: 'Aún no hay publicaciones para mostrar' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no administra rondas ni emparejamientos/iu)).toBeInTheDocument();
+    expect(await screen.findByText('Aún no hay próximos torneos publicados.')).toBeInTheDocument();
+    expect(screen.getByText('Aún no hay torneos realizados publicados.')).toBeInTheDocument();
+    expect(screen.getByText('Aún no hay Eventos o Quests publicados.')).toBeInTheDocument();
+    expect(screen.getByText('Aún no hay reconocimientos publicados.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
   });
 
