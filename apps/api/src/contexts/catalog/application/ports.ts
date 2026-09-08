@@ -24,6 +24,14 @@ export interface CatalogResourceValidationPort {
   }): Promise<ValidatedResourceDescriptor>;
 }
 
+export interface CatalogImageOptimizationPort {
+  optimize(input: {
+    readonly bytes: Uint8Array;
+    readonly declaredMimeType: CatalogImageMimeType;
+    readonly originalFilenameSafe: string;
+  }): Promise<Uint8Array>;
+}
+
 export interface CatalogPrivateStoragePort {
   downloadPrivateObject(secureStorageKey: string): Promise<Uint8Array>;
   privateObjectExists(secureStorageKey: string): Promise<boolean>;

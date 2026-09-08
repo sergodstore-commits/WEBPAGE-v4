@@ -35,7 +35,10 @@ import { UuidCatalogStorageKeyGenerator } from './contexts/catalog/infrastructur
 import { PgCatalogAdminAuthorizer } from './contexts/catalog/infrastructure/postgres-catalog-admin-authorizer.js';
 import { PgCatalogRepository } from './contexts/catalog/infrastructure/postgres-catalog-repository.js';
 import { PgCatalogPublicQueryRepository } from './contexts/catalog/infrastructure/postgres-catalog-public-query-repository.js';
-import { SharpCatalogImageValidator } from './contexts/catalog/infrastructure/sharp-catalog-image-validator.js';
+import {
+  SharpCatalogImageOptimizer,
+  SharpCatalogImageValidator,
+} from './contexts/catalog/infrastructure/sharp-catalog-image-validator.js';
 import { SupabaseCatalogPrivateStorage } from './contexts/catalog/infrastructure/supabase-catalog-private-storage.js';
 import { CatalogAdminHttpApi } from './contexts/catalog/presentation/catalog-admin-http-api.js';
 import {
@@ -243,6 +246,7 @@ if (identityConfig !== null && pool !== null) {
           catalogAuthorizer,
           new SharpCatalogImageValidator(),
           catalogStorage,
+          new SharpCatalogImageOptimizer(),
         );
   const catalogResourceService =
     catalogBinaryService === null

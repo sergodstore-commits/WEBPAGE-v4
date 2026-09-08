@@ -511,7 +511,10 @@ export function CatalogResourceManager({
               ))}
             </div>
           )}
-          <small>Se añadirá automáticamente al final de la galería.</small>
+          <small>
+            Se añadirá al final de la galería y el servidor reducirá su peso cuando sea posible sin
+            deformarla.
+          </small>
           <button disabled={!entityId || pendingUploads.length === 0}>Añadir a la galería</button>
         </form>
       </div>
@@ -1378,6 +1381,10 @@ function EditorialVisualEditor({
                   <option value="LARGE">Grande</option>
                 </select>
               </label>
+              <small>
+                El servidor reduce el peso de la imagen cuando es posible sin cambiar su formato ni
+                deformarla.
+              </small>
               <button>Subir e insertar</button>
             </form>
             <section className="editorial-live-preview" aria-label="Vista previa de la publicación">

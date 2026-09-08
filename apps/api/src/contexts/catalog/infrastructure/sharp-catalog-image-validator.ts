@@ -1,9 +1,12 @@
 import { createHash } from 'node:crypto';
 import { extname } from 'node:path';
 
-import sharp from 'sharp';
+import sharp, { type Sharp } from 'sharp';
 
-import type { CatalogResourceValidationPort } from '../application/ports.js';
+import type {
+  CatalogImageOptimizationPort,
+  CatalogResourceValidationPort,
+} from '../application/ports.js';
 import {
   catalogImageLimits,
   CatalogError,
@@ -18,6 +21,66 @@ const extensionMimeTypes = new Map<string, CatalogImageMimeType>([
   ['.png', 'image/png'],
   ['.webp', 'image/webp'],
 ]);
+
+export const catalogImageOptimizationMaximumDimensionPx = 2400;
+
+export class SharpCatalogImageOptimizer implements CatalogImageOptimizationPort {
+  async optimize(input: Parameters<CatalogImageOptimizationPort['optimize']>[0]) {
+    const bytes = Buffer.from(input.bytes);
+    const signatureMimeType = detectCatalogImageMimeTypeBySignature(bytes);
+    if (input.declaredMimeType !== signatureMimeType) {
+      throw validationError('CATALOG_RESOURCE_MIME_MISMATCH');
+    }
+    assertFilenameExtension(input.originalFilenameSafe, signatureMimeType);
+
+    let metadata: Awaited<ReturnType<ReturnType<typeof sharp>['metadata']>>;
+    try {
+      metadata = await sharp(bytes, {
+        animated: true,
+        failOn: 'error',
+        limitInputPixels: catalogImageLimits.maximumPixels,
+        sequentialRead: true,
+      }).metadata();
+    } catch {
+      throw validationError('CATALOG_RESOURCE_DECODE_FAILED');
+    }
+    if ((metadata.pages ?? 1) > 1) return bytes;
+
+    const width = metadata.width;
+    const height = metadata.height;
+    if (width === undefined || height === undefined || width <= 0 || height <= 0) {
+      throw validationError('CATALOG_RESOURCE_DIMENSIONS_INVALID');
+    }
+    const scale = Math.min(
+      1,
+      catalogImageOptimizationMaximumDimensionPx / width,
+      catalogImageOptimizationMaximumDimensionPx / height,
+    );
+    const canResize =
+      scale < 1 && Math.min(width, height) * scale >= catalogImageLimits.minimumDimensionPx;
+
+    try {
+      let pipeline = sharp(bytes, {
+        failOn: 'error',
+        limitInputPixels: catalogImageLimits.maximumPixels,
+        sequentialRead: true,
+      }).rotate();
+      if (canResize) {
+        pipeline = pipeline.resize({
+          fit: 'inside',
+          height: catalogImageOptimizationMaximumDimensionPx,
+          kernel: 'lanczos3',
+          width: catalogImageOptimizationMaximumDimensionPx,
+          withoutEnlargement: true,
+        });
+      }
+      const optimized = await encodeOptimized(pipeline, signatureMimeType).toBuffer();
+      return optimized.byteLength < bytes.byteLength ? optimized : bytes;
+    } catch {
+      throw validationError('CATALOG_RESOURCE_DECODE_FAILED');
+    }
+  }
+}
 
 export class SharpCatalogImageValidator implements CatalogResourceValidationPort {
   async validate(
@@ -105,6 +168,14 @@ function assertFilenameExtension(filename: string, detectedMimeType: CatalogImag
   if (extension === '' || extensionMimeTypes.get(extension) !== detectedMimeType) {
     throw validationError('CATALOG_RESOURCE_EXTENSION_MISMATCH');
   }
+}
+
+function encodeOptimized(pipeline: Sharp, mimeType: CatalogImageMimeType): Sharp {
+  if (mimeType === 'image/jpeg') return pipeline.jpeg({ quality: 85 });
+  if (mimeType === 'image/png') return pipeline.png({ compressionLevel: 9, effort: 8 });
+  if (mimeType === 'image/webp')
+    return pipeline.webp({ alphaQuality: 100, effort: 3, quality: 85, smartSubsample: true });
+  return pipeline.avif({ chromaSubsampling: '4:4:4', effort: 1, quality: 55 });
 }
 
 function isJpeg(bytes: Buffer): boolean {

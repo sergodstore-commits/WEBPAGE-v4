@@ -19,7 +19,10 @@ import type {
 import { PgCatalogRepository } from '../../src/contexts/catalog/infrastructure/postgres-catalog-repository.js';
 import { UuidCatalogStorageKeyGenerator } from '../../src/contexts/catalog/infrastructure/catalog-storage-key-generator.js';
 import { PgCatalogAdminAuthorizer } from '../../src/contexts/catalog/infrastructure/postgres-catalog-admin-authorizer.js';
-import { SharpCatalogImageValidator } from '../../src/contexts/catalog/infrastructure/sharp-catalog-image-validator.js';
+import {
+  SharpCatalogImageOptimizer,
+  SharpCatalogImageValidator,
+} from '../../src/contexts/catalog/infrastructure/sharp-catalog-image-validator.js';
 import { createPostgresPool } from '../../src/platform/persistence/postgres.js';
 import { createCatalogImageFixture } from '../support/catalog-image-fixtures.js';
 
@@ -43,6 +46,7 @@ const authorizer: CatalogAdminAuthorizer = {
   },
 };
 const validator: CatalogResourceValidationPort = new SharpCatalogImageValidator();
+const optimizer = new SharpCatalogImageOptimizer();
 const storage: CatalogStorageInventoryPort = {
   async downloadPrivateObject(key) {
     const bytes = storedObjects.get(key);
@@ -187,7 +191,7 @@ beforeAll(async () => {
     uuids,
     new UuidCatalogStorageKeyGenerator(uuids),
   );
-  service = new CatalogService(repository, authorizer, validator, storage);
+  service = new CatalogService(repository, authorizer, validator, storage, optimizer);
   resourceAdminService = new CatalogResourceAdminService(repository, authorizer, service);
   adminService = new CatalogEntityAdminService(repository, authorizer);
   securedAdminService = new CatalogEntityAdminService(
@@ -673,6 +677,11 @@ describe('PostgreSQL Catalog foundation', () => {
     ] as const;
     for (const [mimeType, extension] of formats) {
       const bytes = await createCatalogImageFixture(mimeType);
+      const optimized = await optimizer.optimize({
+        bytes,
+        declaredMimeType: mimeType,
+        originalFilenameSafe: `catalog.${extension}`,
+      });
       const result = await service.ingestCatalogImage({
         altText: `Recurso ${extension}`,
         bytes,
@@ -697,11 +706,11 @@ describe('PostgreSQL Catalog foundation', () => {
         [result.resourceId],
       );
       expect(persisted.rows[0]).toMatchObject({
-        byte_size: String(bytes.byteLength),
+        byte_size: String(optimized.byteLength),
         height_px: 320,
         mime_type_real: mimeType,
         original_filename_safe: `catalog.${extension}`,
-        sha256_hex: createHash('sha256').update(bytes).digest('hex'),
+        sha256_hex: createHash('sha256').update(optimized).digest('hex'),
         state: 'ACTIVE',
         width_px: 320,
       });
@@ -713,7 +722,7 @@ describe('PostgreSQL Catalog foundation', () => {
     }
   });
 
-  it('keeps invalid stored content quarantined', async () => {
+  it('keeps invalid metadata quarantined without storing unsafe bytes', async () => {
     await expect(
       service.ingestCatalogImage({
         altText: 'MIME incompatible',
@@ -728,7 +737,7 @@ describe('PostgreSQL Catalog foundation', () => {
       `SELECT state FROM resource_assets ORDER BY uploaded_at DESC`,
     );
     expect(resources.rows).toEqual([{ state: 'QUARANTINED' }]);
-    expect(storedObjects).toHaveLength(1);
+    expect(storedObjects).toHaveLength(0);
   });
 
   it('retains the private binary when an unreferenced resource is removed', async () => {

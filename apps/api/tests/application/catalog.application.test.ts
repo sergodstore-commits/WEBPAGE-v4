@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CatalogService } from '../../src/contexts/catalog/application/catalog-service.js';
 import type {
   CatalogAdminAuthorizer,
+  CatalogImageOptimizationPort,
   CatalogPrivateStoragePort,
   CatalogRepository,
   CatalogResourceValidationPort,
@@ -18,7 +19,7 @@ const context: ExecutionContext = {
   idempotencyKey: 'catalog-command-1',
 };
 
-function subject() {
+function subject(optimizer?: CatalogImageOptimizationPort) {
   const repository = {
     activateResource: vi.fn().mockResolvedValue({ replayed: false, resourceId: 'resource-1' }),
     attachCatalogMedia: vi.fn(),
@@ -63,7 +64,7 @@ function subject() {
   return {
     authorizer,
     repository,
-    service: new CatalogService(repository, authorizer, validator, storage),
+    service: new CatalogService(repository, authorizer, validator, storage, optimizer),
     storage,
     validator,
   };
@@ -134,6 +135,34 @@ describe('Catalog application', () => {
         idempotencyKey: context.idempotencyKey,
         resourceId: 'resource-1',
       }),
+    );
+  });
+
+  it('stores and validates the optimized bytes instead of the larger submission', async () => {
+    const optimized = new Uint8Array([3, 2, 1]);
+    const optimizer: CatalogImageOptimizationPort = {
+      optimize: vi.fn().mockResolvedValue(optimized),
+    };
+    const test = subject(optimizer);
+    vi.mocked(test.storage.downloadPrivateObject).mockResolvedValue(optimized);
+
+    await test.service.ingestCatalogImage({
+      altText: 'Recurso optimizado',
+      bytes: new Uint8Array([1, 2, 3, 4, 5]),
+      context,
+      declaredMimeType: 'image/png',
+      originalFilename: 'resource.png',
+      position: 1,
+    });
+
+    expect(optimizer.optimize).toHaveBeenCalledWith(
+      expect.objectContaining({ originalFilenameSafe: 'resource.png' }),
+    );
+    expect(test.storage.uploadPrivateObject).toHaveBeenCalledWith(
+      expect.objectContaining({ bytes: optimized }),
+    );
+    expect(test.validator.validate).toHaveBeenCalledWith(
+      expect.objectContaining({ bytes: optimized }),
     );
   });
 

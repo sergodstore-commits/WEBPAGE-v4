@@ -21,6 +21,7 @@ import {
 } from '../domain/catalog.js';
 import type {
   CatalogAdminAuthorizer,
+  CatalogImageOptimizationPort,
   CatalogPrivateStoragePort,
   CatalogRepository,
   CatalogResourceValidationPort,
@@ -32,6 +33,7 @@ export class CatalogService {
     private readonly authorizer: CatalogAdminAuthorizer,
     private readonly validator: CatalogResourceValidationPort,
     private readonly storage: CatalogPrivateStoragePort,
+    private readonly optimizer?: CatalogImageOptimizationPort,
   ) {}
 
   async createGame(input: {
@@ -318,20 +320,23 @@ export class CatalogService {
     readonly resourceClass: ResourceClass;
     readonly storageFolder?: string;
   }) {
-    const bytes =
+    const submittedBytes =
       input.bytes.byteLength <= catalogImageLimits.maximumByteSize
         ? Buffer.from(input.bytes)
         : input.bytes;
-    const registered = await this.registerQuarantinedResource({ ...input, bytes });
+    const registered = await this.registerQuarantinedResource({
+      ...input,
+      bytes: submittedBytes,
+    });
     try {
-      if (bytes.byteLength === 0) {
+      if (submittedBytes.byteLength === 0) {
         throw new CatalogError(
           'CATALOG_RESOURCE_EMPTY',
           'VALIDATION',
           'Catalog image bytes are required.',
         );
       }
-      if (bytes.byteLength > catalogImageLimits.maximumByteSize) {
+      if (submittedBytes.byteLength > catalogImageLimits.maximumByteSize) {
         throw new CatalogError(
           'CATALOG_RESOURCE_TOO_LARGE',
           'VALIDATION',
@@ -346,9 +351,20 @@ export class CatalogService {
         );
       }
 
+      const declaredMimeType = input.declaredMimeType as CatalogImageMimeType;
+      const originalFilenameSafe = normalizeSafeFilename(input.originalFilename);
+      const bytes =
+        this.optimizer === undefined
+          ? submittedBytes
+          : await this.optimizer.optimize({
+              bytes: submittedBytes,
+              declaredMimeType,
+              originalFilenameSafe,
+            });
+
       await this.storage.uploadPrivateObject({
         bytes,
-        declaredMimeType: input.declaredMimeType as CatalogImageMimeType,
+        declaredMimeType,
         secureStorageKey: registered.secureStorageKey,
       });
       if (!(await this.storage.privateObjectExists(registered.secureStorageKey))) {
@@ -362,8 +378,8 @@ export class CatalogService {
       const descriptor = parseValidatedResourceDescriptor(
         await this.validator.validate({
           bytes: storedBytes,
-          declaredMimeType: input.declaredMimeType,
-          originalFilenameSafe: normalizeSafeFilename(input.originalFilename),
+          declaredMimeType,
+          originalFilenameSafe,
           secureStorageKey: registered.secureStorageKey,
         }),
       );

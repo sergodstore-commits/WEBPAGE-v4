@@ -1,12 +1,18 @@
 import { createHash } from 'node:crypto';
 
+import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 
 import { createCatalogImageFixture } from '../../../../tests/support/catalog-image-fixtures.js';
 import type { CatalogImageMimeType } from '../domain/catalog.js';
-import { SharpCatalogImageValidator } from './sharp-catalog-image-validator.js';
+import {
+  catalogImageOptimizationMaximumDimensionPx,
+  SharpCatalogImageOptimizer,
+  SharpCatalogImageValidator,
+} from './sharp-catalog-image-validator.js';
 
 const validator = new SharpCatalogImageValidator();
+const optimizer = new SharpCatalogImageOptimizer();
 const storageKey = '0198a8be-6677-7000-8000-000000000003';
 
 const filenames: Record<CatalogImageMimeType, string> = {
@@ -103,6 +109,73 @@ describe('Sharp catalog image validation', () => {
     await expect(validate(tooManyPixels, 'image/png', 'asset.png')).rejects.toMatchObject({
       code: 'CATALOG_RESOURCE_MEGAPIXELS_EXCEEDED',
     });
+  });
+});
+
+describe('Sharp catalog image optimization', () => {
+  it('reduces oversized images without changing their format or proportions', async () => {
+    const bytes = await createCatalogImageFixture('image/jpeg', 2560, 1440);
+    const optimized = await optimizer.optimize({
+      bytes,
+      declaredMimeType: 'image/jpeg',
+      originalFilenameSafe: 'asset.jpg',
+    });
+    const metadata = await sharp(optimized).metadata();
+
+    expect(optimized.byteLength).toBeLessThan(bytes.byteLength);
+    expect(metadata).toMatchObject({
+      format: 'jpeg',
+      height: 1350,
+      width: catalogImageOptimizationMaximumDimensionPx,
+    });
+    await expect(validate(optimized, 'image/jpeg', 'asset.jpg')).resolves.toMatchObject({
+      heightPx: 1350,
+      widthPx: catalogImageOptimizationMaximumDimensionPx,
+    });
+  });
+
+  for (const mimeType of Object.keys(filenames) as CatalogImageMimeType[]) {
+    it(`keeps an efficient ${mimeType} in its original safe format`, async () => {
+      const bytes = await createCatalogImageFixture(mimeType, 640, 480);
+      const optimized = await optimizer.optimize({
+        bytes,
+        declaredMimeType: mimeType,
+        originalFilenameSafe: filenames[mimeType],
+      });
+      const metadata = await sharp(optimized).metadata();
+
+      expect(optimized.byteLength).toBeLessThanOrEqual(bytes.byteLength);
+      expect(metadata.format).toBe(mimeType === 'image/avif' ? 'heif' : mimeType.split('/')[1]);
+      expect(metadata.width).toBe(640);
+      expect(metadata.height).toBe(480);
+      await expect(validate(optimized, mimeType, filenames[mimeType])).resolves.toMatchObject({
+        heightPx: 480,
+        widthPx: 640,
+      });
+    });
+  }
+
+  it('never enlarges an already suitable image', async () => {
+    const bytes = await createCatalogImageFixture('image/webp');
+    const optimized = await optimizer.optimize({
+      bytes,
+      declaredMimeType: 'image/webp',
+      originalFilenameSafe: 'asset.webp',
+    });
+    const metadata = await sharp(optimized).metadata();
+    expect(metadata).toMatchObject({ height: 320, width: 320 });
+    expect(optimized.byteLength).toBeLessThanOrEqual(bytes.byteLength);
+  });
+
+  it('rejects a false MIME declaration before optimization', async () => {
+    const bytes = await createCatalogImageFixture('image/png');
+    await expect(
+      optimizer.optimize({
+        bytes,
+        declaredMimeType: 'image/jpeg',
+        originalFilenameSafe: 'asset.jpg',
+      }),
+    ).rejects.toMatchObject({ code: 'CATALOG_RESOURCE_MIME_MISMATCH' });
   });
 });
 
