@@ -228,6 +228,19 @@
   pública devolvió esa configuración y `/register` reemplazó el bloqueo por la casilla obligatoria
   “Acepto Términos y condiciones · 1.0”. No se creó una cuenta ni se aceptó el contrato en nombre de
   un cliente.
+- La primera confirmación de correo creada por el propietario verificó la identidad en Supabase,
+  pero terminó en `localhost` porque Auth conservaba `http://localhost:3000` como Site URL y Render
+  aún publicaba una Preview antigua como `WEB_APP_URL`. Supabase PROD quedó limitado al dominio
+  oficial y a los callbacks exactos de confirmación, recuperación y cambio de correo. Render quedó
+  `Live` en `dep-dagdru0u01pc73fe2u7g` con `WEB_APP_URL=https://www.sergodstore.cl`.
+- La identidad `animeloco221345@gmail.com`, creada y confirmada personalmente por el propietario,
+  se reconcilió mediante el callback oficial de la aplicación. La comprobación posterior confirmó
+  una única cuenta `CLIENTE`, estado `ACTIVE` y verificación interna `VERIFIED`; no se efectuó
+  escritura SQL directa ni se registró una aceptación contractual en su nombre.
+- La copia privada `.runtime/codex/sergod-production.env` se volvió a sincronizar desde el servicio
+  Render final, conservando un respaldo previo. La validación confirmó que API y web apuntan al
+  Supabase PROD `kbhbaackrgwgvxxqdlwx`, al dominio oficial y a las mismas credenciales Flow de
+  producción, sin exponer valores secretos en evidencia.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
