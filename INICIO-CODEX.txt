@@ -1,19 +1,19 @@
 Trabaja exclusivamente dentro de la carpeta de proyecto que tienes abierta.
 
-Este workspace es autocontenido y está preparado para ser iniciado por un Codex sin contexto previo. No necesitas conocer conversaciones, repositorios ni decisiones anteriores.
+Este repositorio corresponde a Sergod Store Web V1 ya liberado. Comienza leyendo AGENTS.md,
+docs/CURRENT/INDEX.md y docs/CURRENT/IMPLEMENTATION-STATUS.md. docs/CURRENT/ es la única autoridad
+normativa del producto.
 
-Tu primera acción es leer AGENTS.md y obedecer desde allí el protocolo del proyecto. docs/CURRENT/ es la única autoridad normativa del producto. .codex-mission/ define la secuencia temporal de trabajo y debes leer únicamente el stage actual indicado por STATE.json.
+La ausencia de .codex-mission/ es intencional: la misión de construcción y release terminó. Para
+cualquier mantenimiento nuevo, carga solo el CURRENT pertinente al cambio y usa
+codex-system/CONTEXT-ROUTING.json como índice, no como autoridad de producto.
 
-Prioridad operativa: completar Sergod Store Web V1 con máxima eficiencia de contexto, créditos/tokens y tiempo, sin reducir calidad, seguridad, pruebas ni cumplimiento de CURRENT.
+Ejecuta directamente terminal, Git, pruebas, diagnósticos, correcciones y scripts que el entorno
+permita. No delegues al propietario trabajo técnico que puedas realizar. Conserva secretos fuera de
+Git, no mezcles producción con proyectos antiguos y no amplíes el alcance sin una instrucción actual
+del propietario.
 
-Este V4 corrige los hallazgos conocidos de V3 y defectos adicionales descubiertos con PostgreSQL local real, pero no declara completitud local absoluta. Comienza por auditarlo contra CURRENT, reproduce los gates y exige evidencia real antes de aceptar proveedores o entornos externos.
-
-Ejecuta tú mismo terminal, PowerShell, Git, npm, PostgreSQL local, pruebas, diagnósticos, correcciones, commits y scripts que el entorno permita. No me delegues trabajo técnico que puedas realizar directamente.
-
-Usa un solo agente por defecto. No uses subagentes, worktrees paralelos ni orquestadores multiagente salvo que AGENTS.md y codex-system/AGENT-POLICY.md permitan una excepción crítica y la ganancia justifique el costo de contexto.
-
-Las Skills Sergod repo-local ya están en .agents/skills/. No las reinstales globalmente. Las Skills externas solo pueden usarse conforme a codex-system/EXTERNAL-SKILLS.json, bajo demanda y en el stage autorizado.
-
-Si falta una credencial o acceso externo que no impida trabajo independiente, registra DEFERRED_EXTERNAL y continúa. No realices operaciones destructivas de producción ni promociones a producción antes del stage autorizado.
-
-Comienza ahora. Continúa autónomamente stage por stage hasta completar la misión o encontrar un bloqueo verdaderamente humano que no pueda diferirse.
+Usa un solo agente por defecto y aplica las Skills Sergod repo-local bajo .agents/skills/. Antes de
+publicar, ejecuta pruebas proporcionales al cambio y el gate final exigido por CURRENT. Registra
+hallazgos reales como FAIL hasta corregirlos y consolida evidencia permanente en
+docs/CURRENT/IMPLEMENTATION-STATUS.md.

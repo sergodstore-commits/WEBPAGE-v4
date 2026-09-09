@@ -9,7 +9,7 @@ Jerarquía:
 1. instrucción expresa actual del propietario;
 2. `docs/CURRENT/` como conjunto coherente;
 3. `AGENTS.md` para disciplina operativa;
-4. `.codex-mission/STATE.json` + stage actual para secuencia temporal;
+4. `.codex-mission/STATE.json` + stage actual para secuencia temporal, solo mientras exista la misión;
 5. `codex-system/` para eficiencia y disciplina operativa, nunca como autoridad de producto;
 6. Skills Sergod repo-local en `.agents/skills/`;
 7. Skills de terceros aprobadas;
@@ -23,12 +23,12 @@ Al iniciar una sesión:
 
 1. leer `README.md`;
 2. leer `docs/CURRENT/INDEX.md`;
-3. leer `.codex-mission/MISSION.md` si existe;
-4. leer `.codex-mission/STATE.json`;
-5. consultar `codex-system/CONTEXT-ROUTING.json` para el stage actual;
-6. leer los documentos CURRENT indicados por ese routing;
-7. leer **solo** el archivo de stage que `STATE.json` marca como `currentStageFile`;
-8. ejecutar `npm run codex:prepare` si el índice de contexto falta o está desactualizado.
+3. leer `docs/CURRENT/IMPLEMENTATION-STATUS.md`;
+4. si `.codex-mission/STATE.json` existe, leer también `MISSION.md`, consultar
+   `codex-system/CONTEXT-ROUTING.json` y cargar únicamente el stage actual y sus documentos CURRENT;
+5. si `.codex-mission/` ya no existe, tratar la misión como finalizada y trabajar desde
+   `IMPLEMENTATION-STATUS.md` más el mínimo CURRENT correspondiente al cambio solicitado;
+6. ejecutar `npm run codex:prepare` si el índice de contexto falta o está desactualizado.
 
 No cargar deliberadamente el contenido de stages futuros. Sus nombres pueden existir en la cola de estado, pero sus instrucciones se revelan progresivamente.
 
@@ -77,7 +77,8 @@ Durante la misión se permiten local, mocks/fixtures, sandbox, staging y preview
 - No force-push.
 - No enlazar un remote hasta la fase indicada.
 - Antes de una operación de alto impacto, crear checkpoint recuperable cuando corresponda.
-- Si una sesión se interrumpe, reconciliar Git, `STATE.json` e `IMPLEMENTATION-STATUS.md` antes de continuar.
+- Si una sesión se interrumpe, reconciliar Git e `IMPLEMENTATION-STATUS.md`; incluir `STATE.json`
+  únicamente mientras exista una misión activa.
 
 ## 9. Diseño
 

@@ -2,7 +2,9 @@
 
 Objetivo: minimizar créditos, contexto y tiempo **sin reducir** seguridad, corrección ni gates.
 
-1. Leer solo `AGENTS.md`, `docs/CURRENT/INDEX.md`, `STATE.json`, stage actual y documentos que `CONTEXT-ROUTING.json` asigne al stage.
+1. Leer `AGENTS.md`, `docs/CURRENT/INDEX.md` e `IMPLEMENTATION-STATUS.md`. Si existe
+   `.codex-mission/STATE.json`, añadir el stage actual y los documentos que
+   `CONTEXT-ROUTING.json` le asigne; después del release, cargar solo el CURRENT pertinente al cambio.
 2. Usar `rg`, símbolos, imports y `repo-index.json` para localizar antes de abrir archivos completos.
 3. No releer archivos cuyo hash no cambió salvo que un fallo obligue a ampliar contexto.
 4. Ejecutar primero tests afectados; ampliar a contexto/suite completa únicamente por dependencia, fallo o gate del stage.

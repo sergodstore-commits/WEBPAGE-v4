@@ -17,8 +17,7 @@ function check(condition, message) {
 const required = [
   'AGENTS.md',
   'docs/CURRENT/INDEX.md',
-  '.codex-mission/MISSION.md',
-  '.codex-mission/STATE.json',
+  'docs/CURRENT/IMPLEMENTATION-STATUS.md',
   'codex-system/EFFICIENCY-POLICY.md',
   'codex-system/AGENT-POLICY.md',
   'codex-system/CONTEXT-ROUTING.json',
@@ -26,6 +25,13 @@ const required = [
   'codex-system/MIGRATION-BASELINE.json',
 ];
 for (const p of required) check(exists(p), `required:${p}`);
+
+const missionFiles = ['.codex-mission/MISSION.md', '.codex-mission/STATE.json'];
+const missionFileCount = missionFiles.filter(exists).length;
+check(
+  missionFileCount === 0 || missionFileCount === missionFiles.length,
+  'mission-files-absent-after-release-or-complete-while-active',
+);
 
 const ownSkills = [
   'sergod-efficiency-governor',
@@ -94,6 +100,11 @@ if (exists('.codex-mission/STATE.json') && exists('codex-system/CONTEXT-ROUTING.
 
 if (exists('codex-system/EXTERNAL-SKILLS.json')) {
   const ext = readJson('codex-system/EXTERNAL-SKILLS.json');
+  const validStageIds = new Set(
+    exists('.codex-mission/STATE.json')
+      ? readJson('.codex-mission/STATE.json').queue.map((item) => item.id)
+      : Object.keys(readJson('codex-system/CONTEXT-ROUTING.json').stages),
+  );
   check(
     /^https:\/\/github\.com\/composio-community\/awesome-codex-skills\.git$/.test(
       ext.source.repository,
@@ -106,11 +117,7 @@ if (exists('codex-system/EXTERNAL-SKILLS.json')) {
   for (const s of approved) {
     check(Boolean(s.path && s.expectedBlobs?.['SKILL.md']), `external-approved-pinned:${s.name}`);
     for (const stage of s.allowedStages ?? []) {
-      const state = readJson('.codex-mission/STATE.json');
-      check(
-        state.queue.some((x) => x.id === stage),
-        `external-stage-valid:${s.name}:${stage}`,
-      );
+      check(validStageIds.has(stage), `external-stage-valid:${s.name}:${stage}`);
     }
   }
 }

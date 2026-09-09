@@ -12,8 +12,10 @@ Cada capacidad implementada debe estar respaldada por CURRENT. Código, contrato
 
 1. Abrir únicamente esta carpeta como workspace.
 2. Abrir `INICIO-CODEX.txt` y entregarlo completo como primer mensaje.
-3. Codex lee `AGENTS.md`, `docs/CURRENT/`, `.codex-mission/MISSION.md`, `.codex-mission/STATE.json` y solo el stage actual.
-4. Codex prepara por sí mismo dependencias, terminal, Git, Skills y verificaciones según las instrucciones del workspace.
+3. Codex lee `AGENTS.md`, `docs/CURRENT/INDEX.md` y `docs/CURRENT/IMPLEMENTATION-STATUS.md`.
+4. Si existe `.codex-mission/`, Codex lee únicamente el stage actual; su ausencia después del release
+   significa que la misión terminó y no es un archivo faltante.
+5. Codex prepara por sí mismo dependencias, terminal, Git, Skills y verificaciones según las instrucciones del workspace.
 
 ## Seguridad
 

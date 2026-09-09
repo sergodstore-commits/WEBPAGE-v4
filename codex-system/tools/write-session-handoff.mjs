@@ -11,7 +11,10 @@ const git = (args, fallback = '') => {
     return fallback;
   }
 };
-const state = JSON.parse(fs.readFileSync(path.join(root, '.codex-mission', 'STATE.json'), 'utf8'));
+const statePath = path.join(root, '.codex-mission', 'STATE.json');
+const state = fs.existsSync(statePath)
+  ? JSON.parse(fs.readFileSync(statePath, 'utf8'))
+  : { currentStageId: null, deferredExternal: [], status: 'COMPLETE' };
 const lines = git(['status', '--porcelain=v1']).split(/\r?\n/).filter(Boolean);
 const out = {
   schemaVersion: 1,

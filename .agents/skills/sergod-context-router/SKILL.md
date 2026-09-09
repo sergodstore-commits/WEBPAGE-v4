@@ -5,9 +5,10 @@ description: Selecciona el contexto mínimo correcto para un stage o cambio de S
 
 # Sergod Context Router
 
-1. Leer `STATE.json` y obtener `currentStageId`.
-2. Consultar `codex-system/CONTEXT-ROUTING.json` para ese stage.
-3. Cargar `alwaysRead`, el stage actual y solo los documentos CURRENT listados.
+1. Cargar `alwaysRead` desde `codex-system/CONTEXT-ROUTING.json`.
+2. Si `.codex-mission/STATE.json` existe, obtener `currentStageId` y consultar el routing de ese stage.
+3. Durante la misión, cargar el stage actual y solo los documentos CURRENT listados; después del
+   release, cargar únicamente los documentos CURRENT pertinentes al cambio solicitado.
 4. Buscar primero bajo `searchRoots`; ampliar fuera de ellos únicamente por una dependencia concreta, import, error o contrato.
-5. No abrir stages futuros para obtener contexto.
+5. No abrir stages futuros para obtener contexto mientras exista una misión activa.
 6. Si un archivo no cambió y su hash ya está en `repo-index.json`, no releerlo sin una razón nueva.

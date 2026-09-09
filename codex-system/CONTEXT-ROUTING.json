@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Minimum-context routing for V4 audit, external acceptance, and release. Product authority remains docs/CURRENT.",
-  "alwaysRead": ["AGENTS.md", "docs/CURRENT/INDEX.md", ".codex-mission/STATE.json"],
+  "alwaysRead": ["AGENTS.md", "docs/CURRENT/INDEX.md", "docs/CURRENT/IMPLEMENTATION-STATUS.md"],
   "stages": {
     "00-baseline": {
       "docs": [

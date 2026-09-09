@@ -27,6 +27,9 @@ Thumbs.db
 .tmp/
 tmp/
 
+# Local source exports; approved production assets live under design/approved/
+deliverables/
+
 # Local portable development services
 .tools/
 .runtime/

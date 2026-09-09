@@ -11,7 +11,7 @@ Orden operativo:
 1. instrucción actual del propietario;
 2. `docs/CURRENT/`;
 3. `AGENTS.md`;
-4. `.codex-mission/STATE.json` + stage actual;
+4. `.codex-mission/STATE.json` + stage actual mientras exista la misión;
 5. políticas de este directorio;
 6. Skills Sergod en `.agents/skills/`;
 7. Skills de terceros.
@@ -25,6 +25,10 @@ npm run codex:prepare
 ```
 
 Ese comando no instala dependencias ni usa red. Valida el sistema Codex y genera `.runtime/codex/repo-index.json` usando hashes y metadatos del repositorio.
+
+Después del release, `.codex-mission/` debe estar ausente. En ese modo, el estado consolidado se lee
+desde `docs/CURRENT/IMPLEMENTATION-STATUS.md` y los comandos de preparación y handoff siguen siendo
+válidos.
 
 Las Skills Sergod son **repo-local** en `.agents/skills/`; no necesitan copiarse al perfil global. Las Skills externas se evalúan y adquieren solo bajo demanda mediante `bootstrap/use-external-skill.ps1` y el registro fijado en `EXTERNAL-SKILLS.json`.
 
