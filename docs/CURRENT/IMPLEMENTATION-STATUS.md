@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-08. Release productivo con `FAIL` abierto en el registro
+> Estado auditado hasta el 2026-09-09. Release productivo con `FAIL` abierto en el registro
 > CLIENTE: producción no tiene documentos legales activos y la interfaz lo mantiene deshabilitado
 > por seguridad. Por decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -215,9 +215,13 @@
 - El único antecedente localizado en el Supabase antiguo `skhsmsgmceldmapdvcqo` era un fixture que
   apuntaba a `https://example.com/sergod-store/terms-v1`. No se migró a producción porque no es un
   documento legal real y CURRENT prohíbe convertir placeholders en alcance o evidencia.
-- El cierre requiere texto legal aprobado por el propietario, una ubicación pública real y la
-  activación versionada del documento mediante el flujo administrativo existente. Hasta entonces,
-  registro CLIENTE y aceptación final del lote `421a50c` permanecen en `FAIL`.
+- El propietario aprobó expresamente el 2026-09-09 el texto preparado como versión 1.0, con vigencia
+  desde esa fecha e identificación de Francisco Javier Pizarro Ávila, persona natural, RUT
+  19.910.774-7, domicilio legal en Los Carrera 5142, Copiapó. La página pública está preparada en
+  `/legal/terms` dentro del lote local, sin afirmar una revisión jurídica profesional inexistente.
+- El cierre todavía requiere publicar esa ubicación, comprobarla visualmente en Preview y activar
+  la versión mediante el flujo administrativo existente. Hasta entonces, registro CLIENTE y
+  aceptación final permanecen en `FAIL`.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

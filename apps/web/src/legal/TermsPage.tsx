@@ -4,16 +4,14 @@ export function TermsPage() {
       <header className="legal-hero cut-panel">
         <p className="eyebrow">Información legal</p>
         <h1>Términos y condiciones</h1>
-        <p className="legal-version">
-          Borrador 0.2 · pendiente de aprobación · 9 de septiembre de 2026
-        </p>
+        <p className="legal-version">Versión 1.0 · vigente desde el 9 de septiembre de 2026</p>
         <p>
           Reglas aplicables al registro, las compras regulares y las preventas realizadas en Sergod
           Store.
         </p>
       </header>
 
-      <article className="legal-document" aria-label="Borrador de términos y condiciones">
+      <article className="legal-document" aria-label="Términos y condiciones de Sergod Store">
         <section>
           <h2>1. Identificación y contacto</h2>
           <p>

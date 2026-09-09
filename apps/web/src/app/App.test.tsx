@@ -111,6 +111,7 @@ describe('IdentityAccess presentation', () => {
       screen.getByText(/nombre de fantasía.+Francisco Javier Pizarro Ávila/),
     ).toBeInTheDocument();
     expect(screen.getByText(/RUT 19\.910\.774-7/)).toBeInTheDocument();
+    expect(screen.getByText(/Versión 1\.0 · vigente desde/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Términos' })).toBeInTheDocument();
   });
 

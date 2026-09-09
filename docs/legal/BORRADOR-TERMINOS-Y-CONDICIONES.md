@@ -1,15 +1,17 @@
-# Borrador de Términos y Condiciones — Sergod Store
+# Términos y Condiciones — Sergod Store
 
-> **BORRADOR 0.2 — 9 de septiembre de 2026 — NO PUBLICAR NI ACTIVAR TODAVÍA.**
+> **VERSIÓN 1.0 — Vigente desde el 9 de septiembre de 2026.**
 >
-> Este documento incorpora la identificación entregada por el propietario, pero todavía requiere
-> su aprobación expresa y revisión profesional antes de utilizarse como texto contractual. No
-> reemplaza asesoría jurídica.
+> Texto aprobado expresamente por el propietario, Francisco Javier Pizarro Ávila, el 9 de septiembre
+> de 2026 para su publicación y activación en Sergod Store. No reemplaza asesoría jurídica y se
+> recomienda su revisión por un profesional competente.
 
-## Validaciones pendientes antes de aprobar
+## Estado y revisión futura
 
-- Fecha de entrada en vigor y número de versión definitivo: **[PENDIENTE]**.
-- Revisión jurídica del tratamiento de datos antes del 1 de diciembre de 2026: **[PENDIENTE]**.
+- Versión y fecha de entrada en vigor aprobadas por el propietario: **1.0 — 9 de septiembre de
+  2026**.
+- El apartado de datos personales y la operación correspondiente deberán revisarse antes del 1 de
+  diciembre de 2026, cuando entra en vigor el nuevo régimen de la Ley 21.719.
 
 ## 1. Identificación y contacto
 
@@ -200,7 +202,7 @@ respetar las reglas y mecanismos de oposición aplicables.
 
 La Ley 21.719 modifica sustancialmente el régimen chileno de protección de datos a partir del 1 de
 diciembre de 2026. Este apartado y la operación correspondiente deben revisarse antes de esa fecha;
-este borrador no pretende anticipar por sí solo todos los ajustes exigibles bajo el nuevo régimen.
+esta versión no pretende anticipar por sí sola todos los ajustes exigibles bajo el nuevo régimen.
 
 ## 15. Seguridad y uso indebido
 
@@ -230,7 +232,7 @@ protección de datos vigente.
 Nada en este documento restringe el derecho del consumidor a acudir al Servicio Nacional del
 Consumidor o a los tribunales competentes.
 
-## Fuentes oficiales utilizadas para este borrador
+## Fuentes oficiales utilizadas para esta versión
 
 - Biblioteca del Congreso Nacional, Ley 19.496:
   https://www.bcn.cl/leychile/navegar?idNorma=61438
