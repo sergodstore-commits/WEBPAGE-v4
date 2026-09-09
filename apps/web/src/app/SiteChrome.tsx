@@ -141,6 +141,9 @@ export function SiteFooter({ navigate }: Pick<SiteChromeProps, 'navigate'>) {
         <button onClick={() => navigate('/account/overview')} type="button">
           Mi cuenta
         </button>
+        <button onClick={() => navigate('/legal/terms')} type="button">
+          Términos
+        </button>
       </nav>
       <p className="footer-note">Sergod Store · Copiapó, Chile</p>
     </footer>

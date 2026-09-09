@@ -102,6 +102,18 @@ describe('IdentityAccess presentation', () => {
     expect(screen.getByRole('heading', { name: 'Carrito' })).toBeInTheDocument();
   });
 
+  it('keeps the public terms route available from a direct link', () => {
+    window.history.replaceState({}, '', '/legal/terms');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Términos y condiciones' })).toBeInTheDocument();
+    expect(
+      screen.getByText(/nombre de fantasía.+Francisco Javier Pizarro Ávila/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/RUT 19\.910\.774-7/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Términos' })).toBeInTheDocument();
+  });
+
   it('presents an explicit 404 state for an unknown direct link', () => {
     window.history.replaceState({}, '', '/unknown-page');
     render(<App />);

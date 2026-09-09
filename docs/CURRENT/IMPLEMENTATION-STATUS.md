@@ -1,28 +1,30 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-08. Release productivo `PASS`. Por decisión expresa del
+> Estado auditado hasta el 2026-09-08. Release productivo con `FAIL` abierto en el registro
+> CLIENTE: producción no tiene documentos legales activos y la interfaz lo mantiene deshabilitado
+> por seguridad. Por decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
 > operación V1.
 
-| Área                                                                                 | Estado local verificable | Evidencia                                                                          | Pendiente separado                     |
-| ------------------------------------------------------------------------------------ | ------------------------ | ---------------------------------------------------------------------------------- | -------------------------------------- |
-| Foundation, Identity, Catalog, Inventory, Promotions, Loyalty, Preorders, Cart y POS | Producción PASS          | Artefacto aceptado promovido; operaciones cliente/Admin trazadas                   | Contenido real a cargo del propietario |
-| Orders + Checkout                                                                    | Producción PASS          | Compras `REGULAR` y `PREORDER`, historial, reservas y Flow                         | Ninguno                                |
-| Promotions + Loyalty en Order                                                        | Producción PASS          | Reserva/consumo/liberación idempotentes; límite global concurrente en PostgreSQL   | Ninguno                                |
-| `FREIGHT_COLLECT`                                                                    | Producción PASS          | Costo `0`, fuera del total, sin domicilio y compra PREORDER aceptada               | Ninguno                                |
-| Payments Core                                                                        | Producción Flow PASS     | Reconciliación autoritativa e idempotente; Webpay no se ofrece                     | Ninguno                                |
-| Flow                                                                                 | Producción PASS          | Credenciales firmadas y sesión productiva real pendiente, sin completar cobro      | Ninguno                                |
-| Webpay Plus                                                                          | Fuera de producción V1   | Adaptador histórico probado en Integración, sin credenciales ni opción visible     | Ninguno por decisión del propietario   |
-| Fulfillment                                                                          | Producción PASS          | `PENDING → PREPARING → SHIPPED → FULFILLED` con historial remoto                   | Ninguno                                |
-| Cuenta cliente                                                                       | Producción PASS          | Perfil, pedidos, preventas, puntos, preferencias, estado y renovación real         | Ninguno                                |
-| Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                | Carga operativa del propietario        |
-| Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                      | Catálogo/contenido del propietario     |
-| Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados         | Contenido del propietario              |
-| Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin            | Ninguno                                |
-| Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                                |
-| Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                                |
-| Despliegue web                                                                       | Producción PASS          | Vercel `68b4fa5`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                                |
-| Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                                |
+| Área                                                                                 | Estado local verificable | Evidencia                                                                             | Pendiente separado                        |
+| ------------------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Foundation, Identity, Catalog, Inventory, Promotions, Loyalty, Preorders, Cart y POS | FAIL parcial en Identity | Login Admin y áreas restantes PASS; registro CLIENTE bloqueado sin documentos legales | Incorporar y activar documento legal real |
+| Orders + Checkout                                                                    | Producción PASS          | Compras `REGULAR` y `PREORDER`, historial, reservas y Flow                            | Ninguno                                   |
+| Promotions + Loyalty en Order                                                        | Producción PASS          | Reserva/consumo/liberación idempotentes; límite global concurrente en PostgreSQL      | Ninguno                                   |
+| `FREIGHT_COLLECT`                                                                    | Producción PASS          | Costo `0`, fuera del total, sin domicilio y compra PREORDER aceptada                  | Ninguno                                   |
+| Payments Core                                                                        | Producción Flow PASS     | Reconciliación autoritativa e idempotente; Webpay no se ofrece                        | Ninguno                                   |
+| Flow                                                                                 | Producción PASS          | Credenciales firmadas y sesión productiva real pendiente, sin completar cobro         | Ninguno                                   |
+| Webpay Plus                                                                          | Fuera de producción V1   | Adaptador histórico probado en Integración, sin credenciales ni opción visible        | Ninguno por decisión del propietario      |
+| Fulfillment                                                                          | Producción PASS          | `PENDING → PREPARING → SHIPPED → FULFILLED` con historial remoto                      | Ninguno                                   |
+| Cuenta cliente                                                                       | Producción PASS          | Perfil, pedidos, preventas, puntos, preferencias, estado y renovación real            | Ninguno                                   |
+| Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                   | Carga operativa del propietario           |
+| Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                         | Catálogo/contenido del propietario        |
+| Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados            | Contenido del propietario                 |
+| Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin               | Ninguno                                   |
+| Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                       | Ninguno                                   |
+| Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados          | Ninguno                                   |
+| Despliegue web                                                                       | Producción PASS          | Vercel `68b4fa5`, dominio canónico, sesión persistente y configuración alineada       | Ninguno                                   |
+| Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia    | Ninguno                                   |
 
 ## Gates locales reproducidos
 
@@ -205,10 +207,22 @@
   continúa exclusivamente local, pendiente de una única subida a Preview y aceptación real antes de
   cualquier promoción productiva.
 
+## Hallazgo productivo abierto — 2026-09-08
+
+- `GET /api/v1/identity/registration/legal-documents` responde HTTP 200 con `documents: []`; la
+  pantalla de registro muestra correctamente «El registro aún no está habilitado» y no permite
+  crear cuentas sin una aceptación legal verificable.
+- El único antecedente localizado en el Supabase antiguo `skhsmsgmceldmapdvcqo` era un fixture que
+  apuntaba a `https://example.com/sergod-store/terms-v1`. No se migró a producción porque no es un
+  documento legal real y CURRENT prohíbe convertir placeholders en alcance o evidencia.
+- El cierre requiere texto legal aprobado por el propietario, una ubicación pública real y la
+  activación versionada del documento mediante el flujo administrativo existente. Hasta entonces,
+  registro CLIENTE y aceptación final del lote `421a50c` permanecen en `FAIL`.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
-No quedan comprobaciones externas diferidas ni gates de Release pendientes. La carga del catálogo y
-del contenido real desde Admin es operación del propietario, no una carencia técnica ni un fixture de
-aceptación que deba publicarse.
+No quedan comprobaciones externas diferidas por falta de credenciales. Permanece el `FAIL` de
+registro CLIENTE descrito arriba. La carga del catálogo y del contenido real desde Admin es operación
+del propietario, no una carencia técnica ni un fixture de aceptación que deba publicarse.
 
 Los hallazgos locales conocidos de V3 y los defectos adicionales expuestos por PostgreSQL real fueron corregidos y tienen pruebas focalizadas. Cualquier hallazgo nuevo debe registrarse como `FAIL`, no reinterpretarse como `DEFERRED_EXTERNAL`.

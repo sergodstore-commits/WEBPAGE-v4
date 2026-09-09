@@ -40,6 +40,7 @@ import {
   TournamentPage,
 } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
+import { TermsPage } from '../legal/TermsPage.js';
 
 export type Route =
   | '/'
@@ -69,6 +70,7 @@ export type Route =
   | '/auth/callback/email-change'
   | '/auth/callback/recovery'
   | '/login'
+  | '/legal/terms'
   | '/not-found'
   | '/recover'
   | '/register';
@@ -94,6 +96,7 @@ export function App() {
           {route === '/' && <Home navigate={navigate} />}
           {route === '/register' && <Registration navigate={navigate} />}
           {route === '/login' && <Login navigate={navigate} />}
+          {route === '/legal/terms' && <TermsPage />}
           {route === '/recover' && <Recovery navigate={navigate} />}
           {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
           {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
@@ -832,6 +835,7 @@ function routeFromLocation(): Route {
     '/auth/callback/email-change',
     '/auth/callback/recovery',
     '/login',
+    '/legal/terms',
     '/recover',
     '/register',
   ];
