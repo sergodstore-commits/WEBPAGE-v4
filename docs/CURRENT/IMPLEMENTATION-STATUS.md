@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-09. Release productivo en `8c16c66`; el registro CLIENTE vuelve a
+> Estado auditado hasta el 2026-09-09. Release productivo en `3cd66ad`; el registro CLIENTE vuelve a
 > estar habilitado con aceptación obligatoria y versionada de los Términos y condiciones 1.0. Por
 > decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -23,7 +23,7 @@
 | Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin            | Ninguno                              |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
-| Despliegue web                                                                       | Producción PASS          | Vercel `68b4fa5`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
+| Despliegue web                                                                       | Producción PASS          | Vercel `3cd66ad`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
 ## Gates locales reproducidos
@@ -241,6 +241,19 @@
   Render final, conservando un respaldo previo. La validación confirmó que API y web apuntan al
   Supabase PROD `kbhbaackrgwgvxxqdlwx`, al dominio oficial y a las mismas credenciales Flow de
   producción, sin exponer valores secretos en evidencia.
+- El cierre técnico `3cd66ad` quedó `Ready` en Vercel mediante
+  `KqE38CgJyuwaLNZrhPQEXcfSgJnq` y `Live` en Render mediante `dep-dagelo3ncjis73bnc9cg`.
+  El smoke productivo verificó `/health`, catálogo, contenido, Inicio, Login, Registro y POS con
+  HTTP 200, además de CSP, HSTS, `Permissions-Policy`, `Referrer-Policy`, `nosniff` y protección de
+  framing. La aceptación de autenticación pasó login, persistencia, renovación, cierre e
+  invalidación de sesión y solicitud de recuperación.
+- El gate local final pasó 111 archivos y 449 pruebas (1 omisión documentada), build completo y
+  auditoría de dependencias con 0 vulnerabilidades. `sharp` quedó en 0.35.4 y `vitest` en 4.1.11.
+- La limpieza externa dejó un único destino por plataforma: Supabase
+  `sergod-store-production` (`kbhbaackrgwgvxxqdlwx`), Vercel `sergod-store-v4` y Render
+  `sergod-store-api-v4` (`srv-da3ij5flk1mc7380htcg`). Se eliminaron los Supabase antiguos
+  `sergod-store` y `sergod-store-web-v1`, y el proyecto Vercel antiguo `sergod-store`; el servicio
+  Render histórico ya no existía. No se tocó ningún recurso productivo final.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

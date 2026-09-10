@@ -1,18 +1,24 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "classification": "NON_SECRET_OPERATIONAL_TARGETS",
   "supabase": {
-    "staging": {
-      "projectId": "skhsmsgmceldmapdvcqo",
-      "projectName": "sergod-store-web-v1",
-      "role": "STAGING_INTEGRATION",
-      "verifyBeforeUse": true
-    },
     "production": {
       "role": "PRODUCTION",
       "projectId": "kbhbaackrgwgvxxqdlwx",
       "projectName": "sergod-store-production"
-    }
+    },
+    "retiredProjects": [
+      {
+        "projectId": "xuqitrlxmdjuuyhmnavn",
+        "projectName": "sergod-store",
+        "status": "DELETED_2026-09-09"
+      },
+      {
+        "projectId": "skhsmsgmceldmapdvcqo",
+        "projectName": "sergod-store-web-v1",
+        "status": "DELETED_2026-09-09"
+      }
+    ]
   },
   "vercel": {
     "existingProjectId": "prj_UvrLFfLAmEkoDCutlX4VaAVDB8ct",
@@ -20,7 +26,13 @@
     "existingTeamId": "team_cAzQMS9tsrBKGL4v6PA40ZFo",
     "domains": ["sergodstore.cl", "www.sergodstore.cl"],
     "role": "FRONTEND",
-    "verifyBeforeLinkingNewRepo": true
+    "verifyBeforeLinkingNewRepo": true,
+    "retiredProjects": [
+      {
+        "projectName": "sergod-store",
+        "status": "DELETED_2026-09-09"
+      }
+    ]
   },
   "render": {
     "role": "API_AND_CRON_TARGET",
