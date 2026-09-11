@@ -366,6 +366,66 @@ describe('AdminHub', () => {
     });
   });
 
+  it('finishes an editorial image upload without losing the submitted form', async () => {
+    render(<AdminHub area="content" navigate={vi.fn()} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar publicación' }));
+    fireEvent.change(await screen.findByLabelText('Publicación'), {
+      target: { value: '0198a8be-6677-7000-8000-000000000301' },
+    });
+    await screen.findByText('Publicación cargada en el editor visual.');
+    const fallback = vi.mocked(authorizedRequest).getMockImplementation();
+    vi.mocked(authorizedRequest).mockImplementation(async (path, init) => {
+      if (!(path.endsWith('/resources') && init?.method === 'POST'))
+        return fallback?.(path, init) as never;
+      return {
+        item: {
+          body: 'Texto inicial.',
+          editorialEntryId: '0198a8be-6677-7000-8000-000000000301',
+          excerpt: 'Resumen inicial.',
+          metadata: {
+            document: {
+              blocks: [
+                {
+                  id: '0198a8be-6677-7000-8000-000000000302',
+                  text: 'Texto inicial.',
+                  type: 'TEXT',
+                },
+                {
+                  altText: 'Portada temporal',
+                  id: '0198a8be-6677-7000-8000-000000000303',
+                  resourceId: '0198a8be-6677-7000-8000-000000000304',
+                  size: 'MEDIUM',
+                  type: 'IMAGE',
+                  wrap: 'CENTER',
+                },
+              ],
+              version: 1,
+            },
+          },
+          slug: 'noticia-inicial',
+          status: 'DRAFT',
+          title: 'Noticia inicial',
+          type: 'NEWS',
+        },
+      } as never;
+    });
+    const file = new File(['image'], 'cover.png', { type: 'image/png' });
+    fireEvent.change(screen.getByLabelText('Archivo'), { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText('Descripción accesible'), {
+      target: { value: 'Portada temporal' },
+    });
+    const uploadForm = screen.getByRole('heading', { name: 'Insertar imagen' }).closest('form');
+    if (!uploadForm) throw new Error('Editorial upload form was not rendered.');
+    fireEvent.submit(uploadForm);
+
+    expect(
+      await screen.findByText(
+        'Imagen insertada en la publicación. Puedes moverla o cambiar su ajuste.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Cannot read properties of null/u)).not.toBeInTheDocument();
+  });
+
   it('creates a tournament with the date and public classification required by its page', async () => {
     render(<AdminHub area="content" navigate={vi.fn()} />);
 
@@ -462,6 +522,10 @@ describe('AdminHub', () => {
     fireEvent.change(fields.getByLabelText('Nombre'), { target: { value: 'Caja editada' } });
     fireEvent.change(fields.getByLabelText('SKU'), { target: { value: 'PKM-EDIT' } });
     fireEvent.change(fields.getByLabelText('Precio CLP'), { target: { value: '45990' } });
+    expect(fields.getByLabelText('Idioma (código internacional)')).toHaveAttribute(
+      'placeholder',
+      'Ej.: es-CL',
+    );
     fireEvent.click(fields.getByRole('button', { name: 'Guardar producto' }));
 
     await waitFor(() => {

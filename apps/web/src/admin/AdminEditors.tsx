@@ -135,8 +135,13 @@ export function CatalogEditors({
             </select>
           </label>
           <label>
-            Idioma
-            <input name="language" />
+            Idioma (código internacional)
+            <input
+              name="language"
+              pattern="[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*"
+              placeholder="Ej.: es-CL"
+              title="Usa un código de idioma, por ejemplo es-CL."
+            />
           </label>
           <label>
             Edición
@@ -677,7 +682,10 @@ function CatalogResourcePreview({
   readonly owner: (typeof owners)[number]['segment'];
   readonly resourceId: string;
 }) {
-  const [source, setSource] = useState('');
+  const [preview, setPreview] = useState<{ readonly failed: boolean; readonly source: string }>({
+    failed: false,
+    source: '',
+  });
   useEffect(() => {
     let active = true;
     let objectUrl = '';
@@ -687,17 +695,18 @@ function CatalogResourcePreview({
       .then((blob) => {
         if (!active) return;
         objectUrl = URL.createObjectURL(blob);
-        setSource(objectUrl);
+        setPreview({ failed: false, source: objectUrl });
       })
       .catch(() => {
-        if (active) setSource('');
+        if (active) setPreview({ failed: true, source: '' });
       });
     return () => {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [entityId, owner, resourceId]);
-  return source ? <img alt={alt} src={source} /> : <span>Imagen no disponible</span>;
+  if (preview.source) return <img alt={alt} src={preview.source} />;
+  return <span>{preview.failed ? 'Imagen no disponible' : 'Cargando imagen…'}</span>;
 }
 
 export function RecordEditors({
@@ -1114,19 +1123,20 @@ function EditorialVisualEditor({
   const upload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (draft === null) return;
+    const form = event.currentTarget;
     setMessage('Subiendo y validando imagen…');
     try {
       const result = await authorizedRequest<{ item: Item }>(
         `/api/v1/admin/content/${draft.id}/resources`,
         {
-          body: new FormData(event.currentTarget),
+          body: new FormData(form),
           headers: { 'idempotency-key': crypto.randomUUID() },
           method: 'POST',
         },
       );
       setDraft(editorialDraft(result.item));
       setMessage('Imagen insertada en la publicación. Puedes moverla o cambiar su ajuste.');
-      event.currentTarget.reset();
+      form.reset();
     } catch (error) {
       setMessage(messageOf(error));
     }

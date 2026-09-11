@@ -207,6 +207,8 @@ const messages: Readonly<Record<string, string>> = Object.freeze({
   IDEMPOTENCY_KEY_REQUIRED: 'A valid Idempotency-Key is required.',
   INTERNAL_ERROR: 'The request could not be completed.',
   INVENTORY_POSITION_NOT_FOUND: 'Inventory position was not found.',
+  INVENTORY_CONFIGURATION_REQUIRED:
+    'Configure the global low-stock threshold before operating inventory.',
   REQUEST_TOO_LARGE: 'Request is too large.',
   ROUTE_NOT_FOUND: 'Route was not found.',
   STATE_CONFLICT: 'The requested operation conflicts with inventory requirements.',
@@ -225,6 +227,8 @@ function mapPublicError(error: unknown) {
   if (error instanceof InventoryError) {
     if (error.code === 'INVENTORY_ACCESS_DENIED') return publicError(403, 'ACCESS_DENIED');
     if (error.code === 'INVENTORY_POSITION_NOT_FOUND') return publicError(404, error.code);
+    if (error.code === 'INVENTORY_DEFAULT_THRESHOLD_REQUIRED')
+      return publicError(409, 'INVENTORY_CONFIGURATION_REQUIRED');
     if (error.code.includes('IDEMPOTENCY')) return publicError(409, 'IDEMPOTENCY_KEY_CONFLICT');
     if (error.category === 'VALIDATION') return publicError(422, 'VALIDATION_FAILED');
     if (error.category === 'INFRASTRUCTURE') return publicError(503, 'DEPENDENCY_UNAVAILABLE');

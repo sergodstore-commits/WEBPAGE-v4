@@ -1,6 +1,6 @@
 import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
 
-import { authorizedRequest } from '../identity/api.js';
+import { ApiError, authorizedRequest } from '../identity/api.js';
 import { readCoverage } from '../service-coverage/api.js';
 import { StoreField } from '../service-coverage/StoreField.js';
 import { firstStoreFromCoverage, type StoreSummary } from '../service-coverage/store.js';
@@ -1339,8 +1339,13 @@ function CatalogComposer({
             </select>
           </label>
           <label>
-            Idioma
-            <input name="language" />
+            Idioma (código internacional)
+            <input
+              name="language"
+              pattern="[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*"
+              placeholder="Ej.: es-CL"
+              title="Usa un código de idioma, por ejemplo es-CL."
+            />
           </label>
           <label>
             Edición
@@ -1950,6 +1955,8 @@ function nullableDate(value: FormDataEntryValue | null): string | null {
   return text === '' ? null : new Date(text).toISOString();
 }
 function messageOf(error: unknown): string {
+  if (error instanceof ApiError && error.code === 'INVENTORY_CONFIGURATION_REQUIRED')
+    return 'Antes de operar inventario, crea y activa “Umbral de últimas unidades” en Ajustes.';
   return error instanceof Error ? error.message : 'No fue posible completar la operación.';
 }
 

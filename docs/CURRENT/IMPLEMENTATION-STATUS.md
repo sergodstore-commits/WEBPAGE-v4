@@ -255,6 +255,31 @@
   `sergod-store` y `sergod-store-web-v1`, y el proyecto Vercel antiguo `sergod-store`; el servicio
   Render histórico ya no existía. No se tocó ningún recurso productivo final.
 
+## Auditoría funcional acumulada — 2026-09-11
+
+- La carga y edición real de imágenes de producto se comprobó contra producción: el objeto privado,
+  sus metadatos y la portada sobrevivieron nuevas lecturas. El editor de catálogo ahora solicita el
+  idioma como código internacional y valida ejemplos como `es-CL`; la galería distingue la carga
+  pendiente de una imagen realmente no disponible.
+- La carga editorial real conservó imagen, ajuste y tamaño, y una nueva lectura confirmó su
+  persistencia. Se corrigió el uso tardío del formulario después de la operación asíncrona, que podía
+  mostrar un error al intentar limpiarlo pese a que la imagen ya se había guardado.
+- Inventario informa de forma accionable cuando falta el único dato operativo aún no definido por el
+  propietario: el umbral global de últimas unidades. La API devuelve conflicto de configuración en
+  vez de presentarlo como dependencia caída, y Admin indica exactamente dónde activarlo.
+- La aceptación reversible `ACCEPT-POS-FUNCTIONAL-20260911051801` completó una venta regular POS,
+  validó su consumo de stock y restauró producto, inventario, recursos auxiliares, configuración y
+  medio temporal. Dos ventas técnicas incompletas de intentos previos quedaron descartadas mediante
+  la API normal; la venta aprobada permanece como evidencia auditable.
+- La aceptación reversible `ACCEPT-COMMERCE-20260911052153` comprobó catálogo e imagen públicos,
+  detalle de producto, inicio de sesión CLIENTE, alta y actualización del carrito, persistencia tras
+  releerlo, selección de retiro y revalidación de checkout. No creó un pedido ni inició un cobro; la
+  línea, el stock, las publicaciones, las imágenes auxiliares y la configuración temporal quedaron
+  restaurados.
+- El gate acumulado pasó formato, lint, tipos, 111 archivos de pruebas con 450 aprobadas y 1 omisión
+  documentada, y compilación productiva completa. Las 80 pruebas focales de navegación, cuenta,
+  catálogo, imágenes, carrito, checkout, inventario y POS también pasaron.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación

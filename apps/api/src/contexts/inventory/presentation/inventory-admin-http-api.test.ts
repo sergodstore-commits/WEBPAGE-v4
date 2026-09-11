@@ -164,5 +164,26 @@ describe('Inventory administrative HTTP API', () => {
     expect(response.status).toBe(409);
     expect(text).toContain('STATE_CONFLICT');
     expect(text).not.toContain('table internal');
+
+    inventory.adjust.mockRejectedValueOnce(
+      new InventoryError(
+        'INVENTORY_DEFAULT_THRESHOLD_REQUIRED',
+        'INFRASTRUCTURE',
+        'internal configuration detail',
+      ),
+    );
+    response = await request(`/api/v1/admin/inventory/products/${productId}/adjustments`, {
+      body: JSON.stringify({
+        direction: 'POSITIVE',
+        investigationReference: 'INV-4',
+        quantity: 1,
+        reason: 'Corrección',
+      }),
+      method: 'POST',
+    });
+    const configurationText = await response.text();
+    expect(response.status).toBe(409);
+    expect(configurationText).toContain('INVENTORY_CONFIGURATION_REQUIRED');
+    expect(configurationText).not.toContain('internal configuration detail');
   });
 });
