@@ -23,7 +23,7 @@
 | Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin            | Ninguno                              |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
-| Despliegue web                                                                       | Producción PASS          | Vercel `3cd66ad`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
+| Despliegue web                                                                       | Producción PASS          | Vercel `3c3dd12`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
 ## Gates locales reproducidos
@@ -279,6 +279,14 @@
 - El gate acumulado pasó formato, lint, tipos, 111 archivos de pruebas con 450 aprobadas y 1 omisión
   documentada, y compilación productiva completa. Las 80 pruebas focales de navegación, cuenta,
   catálogo, imágenes, carrito, checkout, inventario y POS también pasaron.
+- GitHub publicó `3c3dd12` en `main`; Render lo dejó `Live` en
+  `dep-dahp2mqd0e5s73bucf3g` y Vercel sirvió el paquete `index-CCSn4E_5.js` con las correcciones.
+  El smoke posterior confirmó redirección canónica a `www`, HTTP 200 y ausencia de referencias a los
+  proyectos Supabase antiguos.
+- La limpieza final archivó el producto `ACCEPT-FUNC-20260910`, retiró su recurso activo y archivó
+  `PRUEBA TEMPORAL EDITORIAL CODEX 20260910`. La comprobación SQL de solo lectura confirmó stock y
+  reservas `0/0`, todas las configuraciones y medios temporales retirados, y las dos ventas de intentos
+  fallidos en `DISCARDED`; las ventas aprobadas permanecen `COMPLETED` como evidencia inmutable.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
