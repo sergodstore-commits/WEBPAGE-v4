@@ -291,7 +291,8 @@
   activada y releída mediante la API administrativa. También aclaró que el POS se usa para registrar la
   venta física y descontar el inventario compartido, nunca para procesar el pago. La interfaz lo declara
   expresamente y presenta el medio recibido solo como referencia auditable de un pago efectuado fuera
-  de la página, conforme a las reglas POS de CURRENT.
+  de la página, conforme a las reglas POS de CURRENT. Producción dejó activa una única opción
+  `VENTA_PRESENCIAL`, descrita como pago fuera de la página y sin integración con un proveedor.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
