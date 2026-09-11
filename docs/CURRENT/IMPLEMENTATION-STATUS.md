@@ -287,6 +287,11 @@
   `PRUEBA TEMPORAL EDITORIAL CODEX 20260910`. La comprobación SQL de solo lectura confirmó stock y
   reservas `0/0`, todas las configuraciones y medios temporales retirados, y las dos ventas de intentos
   fallidos en `DISCARDED`; las ventas aprobadas permanecen `COMPLETED` como evidencia inmutable.
+- El propietario fijó el umbral operativo de últimas unidades en `3`; la versión productiva fue creada,
+  activada y releída mediante la API administrativa. También aclaró que el POS se usa para registrar la
+  venta física y descontar el inventario compartido, nunca para procesar el pago. La interfaz lo declara
+  expresamente y presenta el medio recibido solo como referencia auditable de un pago efectuado fuera
+  de la página, conforme a las reglas POS de CURRENT.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

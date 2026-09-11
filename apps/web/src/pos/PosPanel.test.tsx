@@ -123,8 +123,8 @@ it('renders the productive POS controls without collecting card data', async () 
   expect(screen.getByRole('heading', { name: 'POS' })).toBeInTheDocument();
   expect(screen.getByRole('tab', { name: 'Caja' })).toHaveAttribute('aria-selected', 'true');
 
-  fireEvent.click(screen.getByRole('tab', { name: 'Medios de pago' }));
-  expect(screen.getByRole('heading', { name: 'Nuevo medio externo' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('tab', { name: 'Medios recibidos' }));
+  expect(screen.getByRole('heading', { name: 'Nueva forma de pago recibido' })).toBeInTheDocument();
   expect(screen.queryByRole('heading', { name: 'Nueva venta' })).not.toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('tab', { name: 'Historial y cierre' }));
@@ -160,7 +160,13 @@ it('renders the productive POS controls without collecting card data', async () 
     'src',
     '/api/v1/catalog/resources/resource-1/content',
   );
-  expect(screen.getByRole('button', { name: /Cobrar/iu })).toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: /Registrar venta y descontar stock/iu }),
+  ).toBeInTheDocument();
+  expect(screen.getByText(/El pago se realiza fuera de esta página\./u)).toBeInTheDocument();
+  expect(
+    screen.getByText('Solo se guarda como referencia; el POS no procesa el pago.'),
+  ).toBeInTheDocument();
   expect(screen.queryByText(/número de tarjeta|\bcvv\b|\bpan\b/iu)).not.toBeInTheDocument();
   expect(screen.getByText(/NO INCLUIDO — ENVÍO POR PAGAR/iu)).toBeInTheDocument();
   expect(screen.queryByRole('textbox', { name: /^Dirección$/iu })).not.toBeInTheDocument();

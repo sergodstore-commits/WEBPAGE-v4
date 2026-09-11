@@ -301,7 +301,10 @@ export function PosPanel() {
         <div>
           <p className="eyebrow">Caja presencial</p>
           <h2>POS</h2>
-          <p>Busca productos, arma la venta y registra el pago desde una sola pantalla.</p>
+          <p>
+            Registra la venta presencial y descuenta sus unidades del mismo stock que usa la tienda
+            online. El pago se realiza fuera de esta página.
+          </p>
         </div>
         <div className="pos-live-state" aria-label="Estado de la caja">
           <span>{sale ? 'Venta abierta' : 'Sin venta abierta'}</span>
@@ -312,7 +315,7 @@ export function PosPanel() {
         {[
           ['SALE', 'Caja'],
           ['REPORTS', 'Historial y cierre'],
-          ['METHODS', 'Medios de pago'],
+          ['METHODS', 'Medios recibidos'],
         ].map(([value, label]) => (
           <button
             aria-selected={workspace === value}
@@ -643,13 +646,14 @@ export function PosPanel() {
             </section>
             <form className="pos-payment-form" onSubmit={(event) => void action(event, 'COMPLETE')}>
               <label>
-                Medio de pago
+                Medio recibido fuera de la página
                 <MethodSelect
                   allowEmpty={Number(sale.item.total_amount_clp ?? 0) === 0}
                   loading={optionsLoading}
                   methods={activeMethods}
                   name="methodId"
                 />
+                <small>Solo se guarda como referencia; el POS no procesa el pago.</small>
               </label>
               <label>
                 Referencia
@@ -666,7 +670,7 @@ export function PosPanel() {
                   (Number(sale.item.total_amount_clp ?? 0) > 0 && activeMethods.length === 0)
                 }
               >
-                <span>Cobrar</span>
+                <span>Registrar venta y descontar stock</span>
                 <strong>{formatClp(sale.item.total_amount_clp)}</strong>
               </button>
             </form>
@@ -679,7 +683,7 @@ export function PosPanel() {
           hidden={workspace !== 'METHODS'}
           onSubmit={(event) => void action(event, 'METHOD')}
         >
-          <h2>Nuevo medio externo</h2>
+          <h2>Nueva forma de pago recibido</h2>
           <label>
             Código
             <input name="code" pattern="[A-Z][A-Z0-9_]{1,31}" required />
