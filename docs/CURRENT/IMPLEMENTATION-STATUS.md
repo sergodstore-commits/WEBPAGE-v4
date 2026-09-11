@@ -294,6 +294,26 @@
   de la página, conforme a las reglas POS de CURRENT. Producción dejó activa una única opción
   `VENTA_PRESENCIAL`, descrita como pago fuera de la página y sin integración con un proveedor.
 
+## Renovación visual final local — 2026-09-11
+
+- Se incorporó una capa visual transversal basada exclusivamente en recursos sin texto de la biblioteca
+  aprobada. Los derivados técnicos provienen del material 4x entregado por el propietario, se publican
+  como WebP y conservan separados los originales. El logo oficial no fue modificado.
+- Inicio, navegación, Tienda, Torneos, Noticias, Comunidad, Cómics, carrito, checkout, cuenta, Admin y
+  POS comparten ahora el lenguaje gráfico negro/rojo/blanco con acento cian, tramas, marcos, cortes y
+  ornamentos angulares. La composición mantiene todo el contenido y las acciones como HTML accesible;
+  no usa rótulos horneados ni altera contratos, estados o reglas de negocio.
+- La biblioteca pública contiene 37 derivados utilizados, con un peso total aproximado de 3,2 MB. Una
+  prueba automática verifica que cada URL visual resuelva a un archivo existente, que no queden recursos
+  sin uso y que no ingresen las variantes rechazadas con texto.
+- La revisión visual local comprobó Inicio en escritorio y móvil, además de Tienda y Noticias en
+  escritorio. Corrigió una superposición móvil del panel informativo y confirmó navegación, jerarquía,
+  estados vacíos y ausencia de cortes en el ancho móvil fiable del navegador de captura.
+- El gate integral local pasó formato, lint, tipos, 112 archivos de pruebas con 452 aprobadas y 1 omisión
+  documentada, y compilación productiva completa. Un primer intento agotó por 395 ms el límite de una
+  prueba API no afectada; la prueba focal pasó en 241 ms y la repetición completa terminó verde. Este
+  conjunto permanece local y todavía no ha sido promovido a Preview ni Producción.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación

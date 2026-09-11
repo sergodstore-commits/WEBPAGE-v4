@@ -55,7 +55,7 @@
   --focus-ring: 3px solid var(--color-focus);
 
   /* Fuentes aprobadas; el texto siempre se superpone como HTML. */
-  --asset-halftone-red: url('../../../../design/approved/ui/sheet_01/textures_02.png');
+  --asset-halftone-red: url('/assets/sergod/ui/sheet_01/textures_02.webp');
 
   /* Alias temporales para componentes existentes durante la migración visual. */
   --ink: var(--color-canvas);

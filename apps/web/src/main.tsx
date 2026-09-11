@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
 import { initializeSession } from './identity/api';
 import './styles/global.css';
+import './styles/visual-system.css';
 
 const rootElement = document.querySelector<HTMLDivElement>('#root');
 

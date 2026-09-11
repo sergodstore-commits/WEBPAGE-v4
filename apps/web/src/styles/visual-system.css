@@ -1,0 +1,1026 @@
+/*
+ * Capa visual final Sergod Store.
+ * Los recursos son derivados WebP de la biblioteca aprobada y el contenido sigue siendo HTML.
+ */
+:root {
+  --sergod-ui: '/assets/sergod/ui';
+  --sergod-red-glow: rgb(226 29 47 / 34%);
+  --sergod-cyan-glow: rgb(49 215 229 / 22%);
+  --sergod-grid: rgb(255 255 255 / 4%);
+  --sergod-panel-black: rgb(8 9 11 / 94%);
+  --sergod-panel-raised: rgb(18 20 24 / 96%);
+  --sergod-edge: rgb(255 255 255 / 18%);
+}
+
+html {
+  background: #050607;
+  scrollbar-color: var(--red) #090a0c;
+}
+
+body {
+  background:
+    linear-gradient(90deg, transparent 0 49.8%, rgb(255 255 255 / 2%) 50%, transparent 50.2%) 0 0 /
+      5rem 5rem,
+    linear-gradient(0deg, transparent 0 49.8%, rgb(255 255 255 / 2%) 50%, transparent 50.2%) 0 0 /
+      5rem 5rem,
+    radial-gradient(circle at 8% 16%, var(--sergod-red-glow), transparent 25rem),
+    radial-gradient(circle at 94% 48%, var(--sergod-cyan-glow), transparent 23rem),
+    linear-gradient(145deg, #050607 0%, #111318 48%, #07080a 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background:
+    url('/assets/sergod/ui/sheet_03/pattern_03.webp') right 8% top 16% / 23rem auto no-repeat,
+    url('/assets/sergod/ui/sheet_01/textures_01.webp') left 4% bottom 15% / 17rem auto no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+::selection {
+  background: var(--red);
+  color: #fff;
+}
+
+.site-header {
+  min-height: 5.75rem;
+  border-bottom: 0;
+  background: linear-gradient(90deg, rgb(8 9 11 / 98%) 0 72%, rgb(28 8 12 / 98%)), #08090b;
+  box-shadow:
+    0 0.22rem 0 var(--red),
+    0 0.42rem 0 #050607,
+    0 1rem 2.5rem rgb(0 0 0 / 40%);
+}
+
+.site-header::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: 0;
+  bottom: -0.2rem;
+  width: min(29rem, 35vw);
+  height: 100%;
+  background: url('/assets/sergod/ui/sheet_01/textures_08.webp') right center / contain no-repeat;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.brand {
+  position: relative;
+  isolation: isolate;
+}
+
+.brand::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -0.55rem -1.2rem;
+  background: url('/assets/sergod/ui/sheet_03/banner_01.webp') center / 100% 100% no-repeat;
+  opacity: 0.7;
+}
+
+.brand img {
+  height: 4rem;
+  filter: drop-shadow(0 0.3rem 0 rgb(0 0 0 / 80%));
+}
+
+.site-header nav button {
+  border: 1px solid transparent;
+  font-family: var(--display-font);
+  font-style: italic;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.site-header nav button:hover,
+.site-header nav button:focus-visible {
+  border-color: rgb(255 255 255 / 24%);
+  background: rgb(255 255 255 / 6%);
+}
+
+.site-header nav button[aria-current='page'] {
+  border-color: rgb(255 255 255 / 24%);
+  background: linear-gradient(105deg, var(--red-dark) 0 72%, transparent 72%), #0d0f12;
+  box-shadow:
+    inset 0 -0.18rem 0 var(--cyan),
+    0.25rem 0.25rem 0 #000;
+}
+
+.site-header nav button[aria-current='page']::after {
+  display: none;
+}
+
+.menu-toggle {
+  border: 2px solid var(--paper);
+  background: var(--red-dark);
+  clip-path: polygon(
+    0.5rem 0,
+    100% 0,
+    100% calc(100% - 0.5rem),
+    calc(100% - 0.5rem) 100%,
+    0 100%,
+    0 0.5rem
+  );
+}
+
+.panel,
+.wide-panel,
+.cut-panel,
+.admin-standalone-panel {
+  position: relative;
+}
+
+.panel,
+.wide-panel {
+  border: 2px solid var(--sergod-edge);
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 4%), transparent 42%), var(--sergod-panel-raised);
+  box-shadow:
+    0.65rem 0.65rem 0 #050607,
+    0.85rem 0.85rem 0 var(--red-dark);
+  clip-path: polygon(
+    0 0,
+    calc(100% - 1.4rem) 0,
+    100% 1.4rem,
+    100% 100%,
+    1.4rem 100%,
+    0 calc(100% - 1.4rem)
+  );
+}
+
+button:not(.brand):not(.menu-toggle),
+.button-link {
+  border: 1px solid rgb(255 255 255 / 34%);
+  border-radius: 0;
+  box-shadow: 0.2rem 0.2rem 0 #050607;
+  clip-path: polygon(0.55rem 0, 100% 0, calc(100% - 0.55rem) 100%, 0 100%);
+}
+
+button.secondary,
+.button-secondary,
+.secondary-link {
+  background: #f7f7f4;
+  color: #08090b;
+}
+
+input,
+select,
+textarea {
+  border-width: 2px;
+  border-color: #454a54;
+  background: linear-gradient(90deg, rgb(255 255 255 / 2%), transparent 35%), #090a0d;
+  box-shadow: inset 0.2rem 0 0 rgb(226 29 47 / 30%);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: #656b76;
+}
+
+.page-frame,
+.home-page {
+  position: relative;
+}
+
+.home-page {
+  margin-top: clamp(1.35rem, 3vw, 2.5rem);
+}
+
+.commerce-hero {
+  min-height: clamp(34rem, 68vh, 48rem);
+  background:
+    linear-gradient(90deg, rgb(5 6 7 / 98%) 0 46%, rgb(5 6 7 / 76%) 68%, rgb(5 6 7 / 20%)),
+    url('/assets/sergod/ui/sheet_01/textures_08.webp') right 7% center / min(44rem, 62vw) auto
+      no-repeat,
+    linear-gradient(130deg, #090a0d 0 60%, #4f0911 60% 72%, #08090b 72%);
+}
+
+.commerce-hero::before {
+  top: auto;
+  right: -3%;
+  bottom: -7%;
+  width: min(38rem, 52vw);
+  aspect-ratio: 1.35;
+  background: url('/assets/sergod/ui/sheet_01/fx_01.webp') center / contain no-repeat;
+  clip-path: none;
+  transform: rotate(-4deg);
+  opacity: 0.68;
+}
+
+.commerce-hero::after {
+  background:
+    url('/assets/sergod/ui/sheet_01/fx_03.webp') right 7% bottom 12% / min(25rem, 34vw) auto
+      no-repeat,
+    repeating-linear-gradient(115deg, transparent 0 28px, rgb(255 255 255 / 3%) 28px 30px);
+  opacity: 0.76;
+}
+
+.commerce-hero h1 {
+  font-size: clamp(3rem, 7.4vw, 6.6rem);
+  line-height: 0.88;
+  text-shadow:
+    0.055em 0.055em 0 #000,
+    0.095em 0.095em 0 var(--red-dark);
+}
+
+.hero-lead {
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+}
+
+.hero-service {
+  padding-bottom: 4.5rem;
+  border: 0;
+  background:
+    linear-gradient(rgb(9 10 13 / 91%), rgb(9 10 13 / 91%)),
+    url('/assets/sergod/ui/sheet_02/frame_02.webp') center / 100% 100% no-repeat;
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 14%),
+    0.45rem 0.45rem 0 var(--cyan);
+}
+
+.hero-service::after {
+  content: '';
+  position: absolute;
+  right: -1.6rem;
+  bottom: -0.8rem;
+  width: 8rem;
+  aspect-ratio: 1;
+  background: url('/assets/sergod/ui/sheet_02/ornament_08.webp') center / contain no-repeat;
+  filter: drop-shadow(0.3rem 0.3rem 0 #000);
+  pointer-events: none;
+}
+
+.section-banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 9rem;
+  border: 0;
+  background:
+    linear-gradient(90deg, rgb(112 10 20 / 94%), rgb(9 10 13 / 92%)),
+    url('/assets/sergod/ui/sheet_03/banner_03.webp') center / 100% 100% no-repeat;
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 24%),
+    0.45rem 0.45rem 0 #050607;
+}
+
+.section-banner::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: 3%;
+  width: min(19rem, 33vw);
+  height: 150%;
+  background: url('/assets/sergod/ui/sheet_02/pattern_01.webp') center / cover no-repeat;
+  transform: rotate(-8deg);
+  opacity: 0.42;
+}
+
+.home-highlight-section {
+  position: relative;
+}
+
+.home-highlight-heading {
+  min-height: 6.5rem;
+  padding: 0.85rem 1rem 0.85rem 7.5rem;
+  border: 0;
+  background:
+    linear-gradient(90deg, rgb(14 16 20 / 96%), rgb(14 16 20 / 55%)),
+    url('/assets/sergod/ui/sheet_03/banner_02.webp') left center / 100% 100% no-repeat;
+}
+
+.home-highlight-section:nth-child(1) .home-highlight-heading::before,
+.home-highlight-section:nth-child(2) .home-highlight-heading::before,
+.home-highlight-section:nth-child(3) .home-highlight-heading::before,
+.home-highlight-section:nth-child(4) .home-highlight-heading::before,
+.home-highlight-section:nth-child(5) .home-highlight-heading::before {
+  content: '';
+  position: absolute;
+  left: 1.1rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0.28rem 0.28rem 0 #000);
+}
+
+.home-highlight-section:nth-child(1) .home-highlight-heading::before {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_01.webp');
+}
+
+.home-highlight-section:nth-child(2) .home-highlight-heading::before {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_08.webp');
+}
+
+.home-highlight-section:nth-child(3) .home-highlight-heading::before {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_02.webp');
+}
+
+.home-highlight-section:nth-child(4) .home-highlight-heading::before {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_04.webp');
+}
+
+.home-highlight-section:nth-child(5) .home-highlight-heading::before {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_03.webp');
+}
+
+.commerce-card,
+.editorial-card,
+.feature-strip,
+.metric {
+  border: 2px solid #393e47;
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(150deg, rgb(255 255 255 / 5%), transparent 42%), var(--sergod-panel-raised);
+  box-shadow:
+    0.45rem 0.45rem 0 #050607,
+    inset 0 -0.22rem 0 rgb(226 29 47 / 18%);
+}
+
+.commerce-card:hover,
+.editorial-card:hover,
+.feature-strip:hover {
+  border-color: #666c77;
+  border-top-color: var(--cyan);
+  transform: translateY(-0.18rem);
+}
+
+.commerce-card {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 1.15rem) 0,
+    100% 1.15rem,
+    100% 100%,
+    1rem 100%,
+    0 calc(100% - 1rem)
+  );
+}
+
+.product-media {
+  min-height: 15rem;
+  background:
+    url('/assets/sergod/ui/sheet_03/pattern_02.webp') center / cover,
+    #1a1c21;
+}
+
+.product-media::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border: 0.45rem solid transparent;
+  border-image: url('/assets/sergod/ui/sheet_03/frame_01.webp') 70 fill / 0.65rem / 0 stretch;
+  pointer-events: none;
+}
+
+.product-media img {
+  position: relative;
+  z-index: 1;
+}
+
+.product-card-body {
+  position: relative;
+  background: linear-gradient(135deg, rgb(226 29 47 / 12%), transparent 45%), #111317;
+}
+
+.product-card-body::before,
+.home-highlight-heading::after,
+.tournament-section-heading::after {
+  content: '';
+  display: block;
+  width: min(18rem, 88%);
+  height: 1.4rem;
+  background: url('/assets/sergod/ui/sheet_02/divider_01.webp') left center / contain no-repeat;
+  opacity: 0.8;
+}
+
+.product-card-body::before {
+  position: absolute;
+  top: -0.6rem;
+  right: 0.5rem;
+}
+
+.home-highlight-heading::after {
+  position: absolute;
+  left: 7.5rem;
+  bottom: -0.7rem;
+}
+
+.feature-strip::after {
+  right: -0.8rem;
+  bottom: -0.8rem;
+  width: 10rem;
+  background: url('/assets/sergod/ui/sheet_01/bottom_fx_04.webp') center / contain no-repeat;
+  clip-path: none;
+  opacity: 0.72;
+}
+
+.feature-strip:nth-child(2)::after {
+  background-image: url('/assets/sergod/ui/sheet_01/bottom_fx_06.webp');
+}
+
+.section-heading {
+  min-height: 14rem;
+  isolation: isolate;
+  overflow: hidden;
+  border: 2px solid var(--sergod-edge);
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(90deg, rgb(9 10 13 / 98%) 0 57%, rgb(9 10 13 / 60%) 82%, transparent),
+    url('/assets/sergod/ui/sheet_02/pattern_03.webp') right center / 42rem auto no-repeat,
+    #101217;
+  box-shadow:
+    0.55rem 0.55rem 0 #050607,
+    0.75rem 0.75rem 0 var(--red-dark);
+}
+
+.section-heading::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: clamp(1rem, 5vw, 4rem);
+  top: 50%;
+  width: clamp(7rem, 15vw, 12rem);
+  aspect-ratio: 1;
+  background: var(--page-ornament, url('/assets/sergod/ui/sheet_02/ornament_05.webp')) center /
+    contain no-repeat;
+  filter: drop-shadow(0.45rem 0.45rem 0 #000);
+  opacity: 0.92;
+  transform: translateY(-50%) rotate(-4deg);
+}
+
+.section-heading::after {
+  right: -2rem;
+  bottom: -3.3rem;
+  width: 18rem;
+  background: url('/assets/sergod/ui/sheet_01/fx_04.webp') center / contain no-repeat;
+  opacity: 0.24;
+}
+
+.store-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_01.webp');
+}
+
+.tournament-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_02.webp');
+}
+
+.news-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_04.webp');
+}
+
+.community-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_03.webp');
+}
+
+.comics-page,
+.comic-reader-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_07.webp');
+}
+
+.cart-page,
+.checkout-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_08.webp');
+}
+
+.catalog-filters,
+.checkout-option,
+.checkout-summary,
+.cart-group,
+.account-panel,
+.admin-module,
+.admin-quick-actions,
+.admin-activity-summary,
+.pos-card {
+  border: 2px solid #353a43;
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 4%), transparent 38%), var(--sergod-panel-raised);
+  box-shadow: 0.45rem 0.45rem 0 #050607;
+}
+
+.catalog-filters::after,
+.checkout-option::after,
+.account-panel::after,
+.admin-module::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 6rem;
+  height: 6rem;
+  background: url('/assets/sergod/ui/sheet_01/textures_06.webp') right bottom / contain no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.editorial-heading,
+.cart-heading,
+.checkout-heading,
+.admin-heading {
+  background:
+    linear-gradient(90deg, rgb(8 9 11 / 98%) 0 60%, rgb(42 8 13 / 76%) 85%, transparent),
+    url('/assets/sergod/ui/sheet_01/textures_08.webp') right center / 38rem auto no-repeat,
+    #101217;
+}
+
+.editorial-card::after {
+  background: url('/assets/sergod/ui/sheet_01/bottom_fx_02.webp') center / contain no-repeat;
+  clip-path: none;
+  opacity: 0.32;
+}
+
+.editorial-reader,
+.comic-series-detail,
+.comic-chapters,
+.community-activities,
+.community-store,
+.tournament-section,
+.news-feature {
+  border: 2px solid #3a3f48;
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 4%), transparent 45%), var(--sergod-panel-raised);
+  box-shadow: 0.5rem 0.5rem 0 #050607;
+}
+
+.tournament-section-heading {
+  position: relative;
+  padding-bottom: 1.1rem;
+}
+
+.tournament-section-heading::after {
+  position: absolute;
+  left: 0;
+  bottom: -0.25rem;
+}
+
+.news-feature.has-cover > img,
+.news-card-cover,
+.comic-series-card > img,
+.editorial-image-block img,
+.product-gallery > img {
+  outline: 1px solid rgb(255 255 255 / 18%);
+  outline-offset: -0.5rem;
+}
+
+.editorial-image-block img,
+.product-gallery > img {
+  box-shadow:
+    0.45rem 0.45rem 0 #050607,
+    0.65rem 0.65rem 0 var(--red-dark);
+}
+
+.editorial-empty,
+.catalog-empty,
+.empty-state,
+.pos-empty-catalog,
+.pos-empty-ticket {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgb(12 14 17 / 96%), rgb(12 14 17 / 76%)),
+    url('/assets/sergod/ui/sheet_02/frame_01.webp') center / 100% 100% no-repeat;
+}
+
+.editorial-empty::after,
+.catalog-empty::after,
+.empty-state::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  bottom: -1rem;
+  width: 8rem;
+  height: 8rem;
+  background: url('/assets/sergod/ui/sheet_03/ui_badge_04.webp') center / contain no-repeat;
+  opacity: 0.36;
+  pointer-events: none;
+}
+
+.account-nav {
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(rgb(10 11 14 / 92%), rgb(10 11 14 / 92%)),
+    url('/assets/sergod/ui/sheet_02/pattern_02.webp') center / cover;
+  box-shadow: 0.5rem 0.5rem 0 #050607;
+}
+
+.account-nav::before {
+  content: '';
+  display: block;
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 0.5rem;
+  background: url('/assets/sergod/ui/sheet_02/ornament_05.webp') center / contain no-repeat;
+}
+
+.account-nav nav a,
+.admin-sidebar a {
+  border: 1px solid #383d46;
+  background: rgb(12 14 17 / 90%);
+  clip-path: polygon(
+    0.55rem 0,
+    100% 0,
+    100% calc(100% - 0.55rem),
+    calc(100% - 0.55rem) 100%,
+    0 100%
+  );
+}
+
+.account-nav nav a:hover,
+.admin-sidebar a:hover {
+  border-color: var(--cyan);
+  background: #20242a;
+}
+
+.metric {
+  overflow: hidden;
+}
+
+.metric::before {
+  content: '';
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.25rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: url('/assets/sergod/ui/sheet_03/ui_badge_03.webp') center / contain no-repeat;
+  opacity: 0.22;
+}
+
+.metric:nth-child(2)::before {
+  background-image: url('/assets/sergod/ui/sheet_03/ui_badge_08.webp');
+}
+
+.metric:nth-child(3)::before {
+  background-image: url('/assets/sergod/ui/sheet_03/ui_badge_10.webp');
+}
+
+.metric:nth-child(4)::before {
+  background-image: url('/assets/sergod/ui/sheet_03/ui_badge_09.webp');
+}
+
+.admin-heading {
+  --page-ornament: url('/assets/sergod/ui/sheet_03/ui_badge_06.webp');
+}
+
+.admin-heading::after {
+  background: url('/assets/sergod/ui/sheet_01/fx_01.webp') center / contain no-repeat;
+  clip-path: none;
+  opacity: 0.34;
+}
+
+.admin-sidebar {
+  border: 2px solid #343942;
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(rgb(9 10 13 / 94%), rgb(9 10 13 / 94%)),
+    url('/assets/sergod/ui/sheet_03/pattern_03.webp') center / cover;
+  box-shadow:
+    0.45rem 0.45rem 0 #050607,
+    inset 0.2rem 0 0 rgb(49 215 229 / 35%);
+}
+
+.admin-sidebar-heading::before {
+  content: '';
+  display: block;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin-bottom: 0.35rem;
+  background: url('/assets/sergod/ui/sheet_02/ornament_06.webp') center / contain no-repeat;
+}
+
+.admin-action-grid a {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #383d46;
+  border-left: 5px solid var(--red);
+  background: linear-gradient(115deg, rgb(255 255 255 / 5%), transparent 56%), #101216;
+}
+
+.admin-action-grid a::after {
+  content: '';
+  position: absolute;
+  right: -1rem;
+  bottom: -1.2rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  background: url('/assets/sergod/ui/sheet_01/bottom_fx_06.webp') center / contain no-repeat;
+  opacity: 0.22;
+}
+
+.admin-task-tabs,
+.catalog-admin-tabs {
+  border: 2px solid #373c45;
+  border-top: 3px solid var(--red);
+  background:
+    linear-gradient(rgb(7 8 10 / 94%), rgb(7 8 10 / 94%)),
+    url('/assets/sergod/ui/sheet_02/pattern_01.webp') center / cover;
+  box-shadow: 0.35rem 0.35rem 0 #050607;
+}
+
+.pos-workstation {
+  overflow: hidden;
+  border: 2px solid #3e434d;
+  border-top: 5px solid var(--red);
+  background:
+    linear-gradient(rgb(11 13 16 / 96%), rgb(11 13 16 / 96%)),
+    url('/assets/sergod/ui/sheet_02/pattern_03.webp') center / cover;
+  box-shadow:
+    0.65rem 0.65rem 0 #050607,
+    0.85rem 0.85rem 0 var(--red-dark);
+}
+
+.pos-workstation-heading {
+  position: relative;
+  min-height: 9rem;
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  background:
+    linear-gradient(90deg, rgb(8 9 11 / 98%) 0 60%, rgb(8 9 11 / 58%)),
+    url('/assets/sergod/ui/sheet_03/banner_01.webp') right center / min(38rem, 60%) 100% no-repeat;
+  border-bottom: 3px solid var(--red);
+}
+
+.pos-workstation-heading::after {
+  content: '';
+  position: absolute;
+  right: clamp(1rem, 4vw, 3rem);
+  top: 50%;
+  width: 6rem;
+  height: 6rem;
+  background: url('/assets/sergod/ui/sheet_03/ui_badge_06.webp') center / contain no-repeat;
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+
+.pos-register-layout {
+  border: 2px solid #3a3f48;
+  box-shadow: 0.45rem 0.45rem 0 #050607;
+}
+
+.pos-product-pane {
+  background:
+    linear-gradient(rgb(15 17 21 / 95%), rgb(15 17 21 / 95%)),
+    url('/assets/sergod/ui/sheet_03/pattern_02.webp') center / cover;
+}
+
+.pos-ticket-pane {
+  background:
+    linear-gradient(rgb(8 9 11 / 96%), rgb(8 9 11 / 96%)),
+    url('/assets/sergod/ui/sheet_03/pattern_01.webp') center / cover;
+}
+
+.pos-product-tile {
+  border: 2px solid #454a54;
+  background: #f3f3ef;
+  color: #08090b;
+  box-shadow: 0.3rem 0.3rem 0 #050607;
+}
+
+.pos-product-tile:hover:not(:disabled),
+.pos-product-tile[aria-pressed='true'] {
+  border-color: var(--red);
+  box-shadow:
+    0.3rem 0.3rem 0 #050607,
+    inset 0 -0.3rem 0 var(--red);
+}
+
+.pos-pay-button {
+  min-height: 4.5rem;
+  background: linear-gradient(110deg, var(--red-dark), var(--red));
+  font-family: var(--display-font);
+  font-size: 1.25rem;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 13rem;
+  border-top: 4px solid var(--red);
+  background:
+    linear-gradient(90deg, rgb(5 6 7 / 98%), rgb(5 6 7 / 84%)),
+    url('/assets/sergod/ui/sheet_01/textures_08.webp') right center / min(44rem, 65vw) auto
+      no-repeat,
+    #050607;
+  box-shadow: inset 0 0.25rem 0 #050607;
+}
+
+.site-footer::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: 2%;
+  bottom: -2rem;
+  width: min(26rem, 42vw);
+  height: 12rem;
+  background: url('/assets/sergod/ui/sheet_01/bottom_fx_06.webp') right bottom / contain no-repeat;
+  opacity: 0.38;
+}
+
+.site-footer nav button:hover,
+.site-footer nav button:focus-visible {
+  color: var(--cyan);
+  background: rgb(255 255 255 / 5%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .commerce-card,
+  .editorial-card,
+  .feature-strip,
+  .admin-action-grid a,
+  .account-nav nav a,
+  .admin-sidebar a {
+    transition:
+      transform 150ms ease,
+      border-color 150ms ease,
+      background-color 150ms ease;
+  }
+}
+
+@media (max-width: 980px) {
+  .site-header {
+    min-height: 5rem;
+  }
+
+  .brand img {
+    height: 3.5rem;
+  }
+
+  .header-navigation.is-open {
+    margin: 0 -0.25rem -0.45rem;
+    padding: 0.75rem;
+    border-top: 1px solid #343942;
+    background: #090a0d;
+    box-shadow: 0 0.6rem 0.8rem rgb(0 0 0 / 45%);
+  }
+
+  .site-header nav button {
+    min-height: 3rem;
+  }
+
+  .commerce-hero {
+    min-height: 38rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  }
+
+  .section-heading::before {
+    opacity: 0.48;
+  }
+}
+
+@media (max-width: 640px) {
+  body::before {
+    opacity: 0.07;
+  }
+
+  .page-frame,
+  .home-page {
+    width: min(calc(100% - 1.25rem), var(--content));
+  }
+
+  .site-header::after {
+    width: 55vw;
+  }
+
+  .primary-navigation,
+  .utility-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .commerce-hero {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    background:
+      linear-gradient(rgb(5 6 7 / 84%), rgb(5 6 7 / 96%)),
+      url('/assets/sergod/ui/sheet_01/textures_08.webp') right top / 26rem auto no-repeat,
+      #090a0d;
+  }
+
+  .commerce-hero::before,
+  .commerce-hero::after {
+    opacity: 0.24;
+  }
+
+  .commerce-hero h1 {
+    max-width: 9ch;
+    font-size: clamp(2.65rem, 14vw, 3.8rem);
+  }
+
+  .hero-copy {
+    min-width: 0;
+  }
+
+  .hero-service {
+    width: 100%;
+    padding: 1.25rem 1.25rem 4.5rem;
+  }
+
+  .hero-service::after {
+    right: -0.3rem;
+    bottom: -1.2rem;
+    width: 5.5rem;
+    opacity: 0.42;
+  }
+
+  .section-banner {
+    min-height: 0;
+    background:
+      linear-gradient(155deg, rgb(130 10 22 / 94%) 0 50%, rgb(9 10 13 / 96%) 50%),
+      url('/assets/sergod/ui/sheet_03/banner_03.webp') center / 100% 100% no-repeat;
+  }
+
+  .home-highlight-heading {
+    min-height: 0;
+    padding: 5.5rem 1rem 1rem;
+    align-items: flex-start;
+  }
+
+  .home-highlight-section:nth-child(n) .home-highlight-heading::before {
+    top: 0.35rem;
+    left: 0.8rem;
+    width: 4.7rem;
+    height: 4.7rem;
+  }
+
+  .home-highlight-heading::after {
+    left: 1rem;
+  }
+
+  .section-heading {
+    min-height: 13rem;
+    padding-top: 6.5rem;
+    background:
+      linear-gradient(rgb(9 10 13 / 86%), rgb(9 10 13 / 96%)),
+      url('/assets/sergod/ui/sheet_02/pattern_03.webp') right top / 26rem auto no-repeat,
+      #101217;
+  }
+
+  .section-heading::before {
+    right: auto;
+    left: 1rem;
+    top: 0.65rem;
+    width: 5.5rem;
+    transform: rotate(-4deg);
+    opacity: 0.74;
+  }
+
+  .heading-stats {
+    display: none;
+  }
+
+  .product-media {
+    min-height: 13rem;
+  }
+
+  .account-nav::before {
+    margin-inline: 0;
+  }
+
+  .pos-workstation-heading {
+    padding-top: 6.5rem;
+  }
+
+  .pos-workstation-heading::after {
+    right: auto;
+    left: 1rem;
+    top: 0.5rem;
+    transform: none;
+  }
+
+  .site-footer::after {
+    width: 65vw;
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (forced-colors: active) {
+  body,
+  .site-header,
+  .site-footer,
+  .section-heading,
+  .commerce-hero,
+  .admin-sidebar,
+  .pos-workstation {
+    background-image: none;
+  }
+}
