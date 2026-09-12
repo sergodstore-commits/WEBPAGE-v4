@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { authorizedRequest, publicRequest } from '../identity/api.js';
@@ -22,6 +22,20 @@ beforeEach(() => {
 });
 
 describe('editor de apariencia web', () => {
+  it('permite recuperar una capa tapada desde la lista ordenada', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir imagen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir texto' }));
+    const list = within(screen.getByRole('list', { name: 'Lista de capas' }));
+    expect(list.getAllByRole('button')[0]).toHaveTextContent('Nuevo texto');
+    fireEvent.click(list.getByRole('button', { name: /Impacto rojo/u }));
+    expect(screen.getByRole('combobox', { name: 'Imagen aprobada' })).toHaveValue('burst-red');
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar capa' }));
+    expect(list.queryByRole('button', { name: /Impacto rojo/u })).toBeNull();
+    expect(list.getByRole('button', { name: /Nuevo texto/u })).toBeInTheDocument();
+  });
+
   it('impide reemplazar la apariencia si su lectura falla', async () => {
     vi.mocked(publicRequest).mockRejectedValue(new Error('offline'));
     render(<AppearanceEditor />);

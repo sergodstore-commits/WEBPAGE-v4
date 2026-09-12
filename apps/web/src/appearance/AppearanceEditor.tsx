@@ -234,7 +234,9 @@ export function AppearanceEditor() {
         <div>
           <p className="eyebrow">{pageLabels[page]}</p>
           <h2>Capas y posición</h2>
-          <p>Arrastra una capa dentro de la vista previa o ajusta sus controles.</p>
+          <p>
+            Arrastra una capa en el esquema o selecciónala en la lista para ajustar sus controles.
+          </p>
         </div>
         <div className="actions">
           <button
@@ -288,7 +290,7 @@ export function AppearanceEditor() {
           ref={canvas}
         >
           <div className="appearance-canvas-copy">
-            <small>Vista previa · {pageLabels[page]}</small>
+            <small>Esquema de capas · {pageLabels[page]}</small>
             <strong>
               {page === 'home' ? 'Tu próxima jugada comienza aquí.' : pageLabels[page]}
             </strong>
@@ -315,6 +317,32 @@ export function AppearanceEditor() {
         </div>
 
         <fieldset disabled={!loaded || saving} className="appearance-inspector">
+          <h2>Capas de {pageLabels[page]}</h2>
+          <p>{layers.length} de 24 capas · las primeras de la lista quedan delante.</p>
+          <ol className="appearance-layer-list" aria-label="Lista de capas">
+            {[...layers]
+              .sort((a, b) => b.zIndex - a.zIndex || layers.indexOf(b) - layers.indexOf(a))
+              .map((layer) => (
+                <li key={layer.id}>
+                  <button
+                    aria-pressed={selectedId === layer.id}
+                    className="secondary"
+                    onClick={() => setSelectedId(layer.id)}
+                    type="button"
+                  >
+                    <span>
+                      {layer.kind === 'TEXT'
+                        ? layer.content || 'Texto vacío'
+                        : assetLabels[layer.assetId ?? 'burst-red']}
+                    </span>
+                    <small>
+                      Orden {layer.zIndex}
+                      {layer.hiddenOnMobile ? ' · Oculta en móvil' : ''}
+                    </small>
+                  </button>
+                </li>
+              ))}
+          </ol>
           <h2>Propiedades de la capa</h2>
           {selected ? (
             <>

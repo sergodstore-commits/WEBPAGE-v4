@@ -363,6 +363,11 @@
   más allá de seis adornos, revisión visual Admin y aceptación remota del guardado. No se considera
   terminado el editor libre solicitado. El bloque permanece local y no está desplegado.
 
+- Continuación del 2026-09-12: el editor incorpora una lista ordenada de capas para seleccionar
+  elementos tapados, consultar su orden/visibilidad y quitarlos de forma individual. El área de dibujo
+  se identifica como esquema de capas, ya que todavía no representa una vista previa fiel del sitio.
+  Pasaron siete pruebas focales del editor y la compilación web con verificación de tipos.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación

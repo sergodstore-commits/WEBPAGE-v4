@@ -1213,6 +1213,35 @@ textarea:hover {
   gap: 0.35rem;
 }
 
+.appearance-layer-list {
+  display: grid;
+  gap: 0.4rem;
+  max-height: 18rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+}
+
+.appearance-layer-list button {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 2.75rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+  clip-path: none !important;
+}
+
+.appearance-layer-list button[aria-pressed='true'] {
+  outline: 3px solid var(--cyan);
+  outline-offset: -3px;
+}
+
+.appearance-layer-list small {
+  font-size: 0.7rem;
+}
+
 .appearance-inspector input[type='range'] {
   width: 100%;
   min-height: 2rem;
