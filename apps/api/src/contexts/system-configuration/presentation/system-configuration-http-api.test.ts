@@ -36,6 +36,7 @@ const service = {
   createVersion: vi.fn().mockResolvedValue({ item, replayed: false }),
   editDraft: vi.fn().mockResolvedValue({ item, replayed: false }),
   getActive: vi.fn().mockResolvedValue({ ...item, state: 'ACTIVE' }),
+  getPublicSiteAppearance: vi.fn().mockResolvedValue({ layout: null }),
   getVersion: vi.fn().mockResolvedValue(item),
   listDefinitions: vi.fn().mockResolvedValue({ items: [] }),
   listVersions: vi.fn().mockResolvedValue({ items: [item], nextCursor: null }),
@@ -77,6 +78,14 @@ function request(path: string, init: RequestInit = {}) {
 }
 
 describe('SystemConfiguration HTTP API', () => {
+  it('exposes only the active appearance document without authentication', async () => {
+    const response = await fetch(`${origin}/api/v1/site-appearance`);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ layout: null });
+    expect(identity.authorize).not.toHaveBeenCalled();
+    expect((await fetch(`${origin}/api/v1/site-appearance`, { method: 'POST' })).status).toBe(404);
+  });
+
   it('exposes bounded reads and all version mutations with ADMIN authorization', async () => {
     const routes: readonly [string, RequestInit, number][] = [
       ['/api/v1/admin/system-configurations/definitions', { method: 'GET' }, 200],

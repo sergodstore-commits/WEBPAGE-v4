@@ -3,7 +3,7 @@ export interface ConfigurationDefinition {
   readonly maximum?: number;
   readonly minimum?: number;
   readonly scope: 'GLOBAL';
-  readonly valueType: 'INTEGER' | 'REFERENCE';
+  readonly valueType: 'INTEGER' | 'REFERENCE' | 'TEXT';
 }
 
 export const configurationKeys = [
@@ -15,6 +15,7 @@ export const configurationKeys = [
   'RESOURCE_IMAGE_MAX_WIDTH_PX',
   'RESOURCE_IMAGE_MAX_HEIGHT_PX',
   'RESOURCE_IMAGE_MAX_MEGAPIXELS',
+  'WEB_APPEARANCE_LAYOUT',
 ] as const;
 
 export type ConfigurationKey = (typeof configurationKeys)[number];
@@ -56,5 +57,12 @@ export const configurationRegistry: readonly ConfigurationDefinition[] = Object.
     minimum: 1,
     scope: 'GLOBAL',
     valueType: 'INTEGER',
+  },
+  {
+    key: 'WEB_APPEARANCE_LAYOUT',
+    maximum: 65_536,
+    minimum: 1,
+    scope: 'GLOBAL',
+    valueType: 'TEXT',
   },
 ]);

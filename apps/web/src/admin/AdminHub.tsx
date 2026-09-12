@@ -43,6 +43,7 @@ export type AdminArea =
 export type AdminRoute =
   | '/admin'
   | '/admin/accounts'
+  | '/admin/appearance'
   | '/admin/audit'
   | '/admin/catalog'
   | '/admin/configuration'
@@ -190,7 +191,10 @@ const adminNavigationGroups = [
   },
   {
     label: 'Contenido',
-    links: [{ label: 'Publicaciones', route: '/admin/content' }],
+    links: [
+      { label: 'Publicaciones', route: '/admin/content' },
+      { label: 'Apariencia web', route: '/admin/appearance' },
+    ],
   },
   {
     label: 'Administración',
@@ -236,6 +240,11 @@ const dashboardActions = [
     description: 'Editar dirección, horario y cobertura.',
     label: 'Configurar tienda',
     route: '/admin/service-coverage',
+  },
+  {
+    description: 'Mover imágenes y textos por capas en la portada.',
+    label: 'Editar apariencia web',
+    route: '/admin/appearance',
   },
 ] as const satisfies readonly {
   readonly description: string;

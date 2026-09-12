@@ -44,6 +44,25 @@ export class SystemConfigurationHttpApi implements HttpRouteHandler {
 
   async handle(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
     const url = new URL(request.url ?? '/', 'http://local.invalid');
+    if (url.pathname === '/api/v1/site-appearance') {
+      const correlationId = randomUUID();
+      response.setHeader('x-correlation-id', correlationId);
+      if (request.method !== 'GET') {
+        return sendError(response, correlationId, 404, 'ROUTE_NOT_FOUND');
+      }
+      try {
+        assertNoQuery(url);
+        return sendJson(
+          response,
+          200,
+          await this.configurations.getPublicSiteAppearance(),
+          correlationId,
+        );
+      } catch (error) {
+        const mapped = mapPublicError(error);
+        return sendError(response, correlationId, mapped.status, mapped.code);
+      }
+    }
     if (!url.pathname.startsWith('/api/v1/admin/system-configurations')) return false;
     const correlationId = randomUUID();
     response.setHeader('x-correlation-id', correlationId);

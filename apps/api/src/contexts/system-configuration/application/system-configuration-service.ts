@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 
 import {
   configurationRegistry,
+  siteAppearanceLayoutSchema,
   type ConfigurationKey,
   type CreateSystemConfiguration,
   type EditSystemConfiguration,
@@ -73,6 +74,20 @@ export class SystemConfigurationService {
     const value = await this.repository.findActive(key);
     if (value === null) throw notFound();
     return serialize(value);
+  }
+
+  async getPublicSiteAppearance() {
+    const value = await this.repository.findActive('WEB_APPEARANCE_LAYOUT');
+    if (value === null || typeof value.value !== 'string') return { layout: null };
+    const parsed = siteAppearanceLayoutSchema.safeParse(JSON.parse(value.value));
+    if (!parsed.success) {
+      throw new SystemConfigurationError(
+        'SYSTEM_CONFIGURATION_VALUE_INVALID',
+        'INFRASTRUCTURE',
+        'Active appearance configuration is invalid.',
+      );
+    }
+    return { layout: parsed.data };
   }
 
   async createVersion(context: ExecutionContext, body: CreateSystemConfiguration) {

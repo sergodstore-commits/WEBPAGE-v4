@@ -54,7 +54,10 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
       </a>
       <header className="site-header">
         <button aria-label="Ir al inicio" className="brand" onClick={() => go('/')} type="button">
-          <img alt="Sergod Store" src="/assets/sergod/logo_sergod_store_oficial.png" />
+          <img
+            alt="Sergod Store"
+            src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
+          />
         </button>
         <button
           aria-expanded={menuOpen}
@@ -128,7 +131,7 @@ export function SiteFooter({ navigate }: Pick<SiteChromeProps, 'navigate'>) {
   return (
     <footer className="site-footer">
       <div className="footer-brand">
-        <img alt="Sergod Store" src="/assets/sergod/logo_sergod_store_oficial.png" />
+        <img alt="Sergod Store" src="/assets/sergod/logo_sergod_store_oficial_transparente.webp" />
         <p>Tienda TCG, comunidad y competencia en un solo lugar.</p>
       </div>
       <nav aria-label="Enlaces del pie">

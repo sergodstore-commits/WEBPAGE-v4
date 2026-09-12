@@ -83,7 +83,7 @@ export class PgSystemConfigurationRepository implements SystemConfigurationRepos
         [input.configurationKey],
       );
       const id = this.uuids.generate();
-      const columns = valueColumns(input.value);
+      const columns = valueColumns(input.value, input.configurationKey);
       await transaction.query(
         `INSERT INTO system_configurations(
           system_configuration_id,configuration_key,scope,branch_id,value_type,
@@ -120,7 +120,7 @@ export class PgSystemConfigurationRepository implements SystemConfigurationRepos
     return this.idempotent(input, async (transaction, now) => {
       const current = await lockConfiguration(transaction, input.systemConfigurationId);
       if (current.state !== 'DRAFT') throw conflict('SYSTEM_CONFIGURATION_IMMUTABLE');
-      const columns = valueColumns(input.value);
+      const columns = valueColumns(input.value, current.configuration_key);
       if (columns.valueType !== current.value_type) {
         throw validation('SYSTEM_CONFIGURATION_VALUE_INVALID');
       }
@@ -341,7 +341,7 @@ async function validateReferenceForActivation(
   }
 }
 
-function valueColumns(value: SystemConfigurationValue) {
+function valueColumns(value: SystemConfigurationValue, key: ConfigurationKey) {
   if (typeof value === 'number') {
     return {
       booleanValue: null,
@@ -360,6 +360,15 @@ function valueColumns(value: SystemConfigurationValue) {
       valueType: 'BOOLEAN' as const,
     };
   }
+  if (key === 'WEB_APPEARANCE_LAYOUT') {
+    return {
+      booleanValue: null,
+      integerValue: null,
+      referenceId: null,
+      textValue: value,
+      valueType: 'TEXT' as const,
+    };
+  }
   return {
     booleanValue: null,
     integerValue: null,
@@ -373,6 +382,7 @@ function mapConfiguration(row: SystemConfigurationRow): SystemConfigurationView 
   let value: SystemConfigurationValue;
   if (row.value_type === 'INTEGER') value = safeInteger(row.integer_value);
   else if (row.value_type === 'REFERENCE' && row.reference_id !== null) value = row.reference_id;
+  else if (row.value_type === 'TEXT' && row.text_value !== null) value = row.text_value;
   else throw new Error('System configuration row contains an unsupported value type.');
   return {
     activatedAt: row.activated_at,
@@ -471,6 +481,6 @@ interface SystemConfigurationRow extends QueryResultRow {
   readonly state: SystemConfigurationState;
   readonly system_configuration_id: string;
   readonly text_value: string | null;
-  readonly value_type: 'INTEGER' | 'REFERENCE';
+  readonly value_type: 'INTEGER' | 'REFERENCE' | 'TEXT';
   readonly version_number: string;
 }

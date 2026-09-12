@@ -12,6 +12,7 @@ const stylesDirectory = join(webDirectory, 'src', 'styles');
 const stylesheet = ['tokens.css', 'global.css', 'visual-system.css']
   .map((file) => readFileSync(join(stylesDirectory, file), 'utf8'))
   .join('\n');
+const siteChrome = readFileSync(join(webDirectory, 'src', 'app', 'SiteChrome.tsx'), 'utf8');
 
 function filesBelow(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -41,5 +42,17 @@ describe('biblioteca visual pública', () => {
 
     expect(published.every((file) => file.endsWith('.webp'))).toBe(true);
     expect(published.some((file) => textAssets.test(file))).toBe(false);
+  });
+
+  it('usa el derivado transparente del logo sin alterar el original aprobado', () => {
+    const derivative = join(
+      publicDirectory,
+      'assets',
+      'sergod',
+      'logo_sergod_store_oficial_transparente.webp',
+    );
+    expect(existsSync(derivative)).toBe(true);
+    expect(siteChrome).toContain('/assets/sergod/logo_sergod_store_oficial_transparente.webp');
+    expect(siteChrome).not.toContain('src="/assets/sergod/logo_sergod_store_oficial.png"');
   });
 });

@@ -1,4 +1,13 @@
-import { Component, type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  Component,
+  lazy,
+  Suspense,
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   accounts,
@@ -29,7 +38,7 @@ import { PosPanel } from '../pos/PosPanel.js';
 import { CheckoutPanel } from '../checkout/CheckoutPanel.js';
 import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.js';
 import { AccountHub } from '../account/AccountHub.js';
-import { AdminHub, AdminStandaloneLayout, type AdminArea } from '../admin/AdminHub.js';
+import type { AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
 import {
   ComicsPage,
@@ -41,6 +50,18 @@ import {
 } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
 import { TermsPage } from '../legal/TermsPage.js';
+import { AppearanceLayers } from '../appearance/SiteAppearance.js';
+import { useSiteAppearance } from '../appearance/useSiteAppearance.js';
+
+const AdminHub = lazy(async () => ({
+  default: (await import('../admin/AdminHub.js')).AdminHub,
+}));
+const AdminStandaloneLayout = lazy(async () => ({
+  default: (await import('../admin/AdminHub.js')).AdminStandaloneLayout,
+}));
+const AppearanceEditor = lazy(async () => ({
+  default: (await import('../appearance/AppearanceEditor.js')).AppearanceEditor,
+}));
 
 export type Route =
   | '/'
@@ -48,6 +69,7 @@ export type Route =
   | '/account/overview'
   | '/admin'
   | '/admin/accounts'
+  | '/admin/appearance'
   | '/admin/audit'
   | '/admin/catalog'
   | '/admin/configuration'
@@ -92,79 +114,106 @@ export function App() {
     <div className="app-shell">
       <SiteChrome navigate={navigate} route={route} />
       <RouteErrorBoundary key={route}>
-        <div id="main-content" tabIndex={-1}>
-          {route === '/' && <Home navigate={navigate} />}
-          {route === '/register' && <Registration navigate={navigate} />}
-          {route === '/login' && <Login navigate={navigate} />}
-          {route === '/legal/terms' && <TermsPage />}
-          {route === '/recover' && <Recovery navigate={navigate} />}
-          {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
-          {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
-            <EmailCallback kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'} />
-          )}
-          {route === '/account' && (
-            <AccessGate>
-              <Account navigate={navigate} />
-            </AccessGate>
-          )}
-          {route === '/account/overview' && (
-            <AccessGate>
-              <AccountHub />
-            </AccessGate>
-          )}
-          {route === '/shop' && <StorePage />}
-          {route === '/cart' && <CartPage />}
-          {route === '/tournaments' && <TournamentPage />}
-          {route === '/news' && <NewsPage />}
-          {route === '/community' && <CommunityPage navigate={navigate} />}
-          {route === '/comics' && <ComicsPage />}
-          {adminArea && (
-            <AccessGate requiredRole="ADMIN">
-              <AdminHub area={adminArea} navigate={navigate} />
-            </AccessGate>
-          )}
-          {route === '/checkout' && <CheckoutPanel />}
-          {route === '/admin/accounts' && (
-            <AccessGate requiredRole="ADMIN">
-              <AdminStandaloneLayout
-                currentRoute="/admin/accounts"
-                description="Busca una cuenta y administra únicamente las acciones disponibles para ella."
-                navigate={navigate}
-                title="Clientes y usuarios"
-              >
-                <AccountsPanel />
-              </AdminStandaloneLayout>
-            </AccessGate>
-          )}
-          {route === '/admin/pos' && (
-            <AccessGate requiredRole="ADMIN">
-              <AdminStandaloneLayout
-                currentRoute="/admin/pos"
-                description="Caja presencial, inventario compartido y registro auditable del dinero recibido."
-                navigate={navigate}
-                title="POS"
-              >
-                <PosPanel />
-              </AdminStandaloneLayout>
-            </AccessGate>
-          )}
-          {route === '/admin/service-coverage' && (
-            <AccessGate requiredRole="ADMIN">
-              <AdminStandaloneLayout
-                currentRoute="/admin/service-coverage"
-                description="Dirección, horario, contacto, retiro y cobertura pública de despacho."
-                navigate={navigate}
-                title="Datos de la tienda"
-              >
-                <ServiceCoveragePanel />
-              </AdminStandaloneLayout>
-            </AccessGate>
-          )}
-          {route === '/not-found' && <NotFound navigate={navigate} />}
-        </div>
+        <Suspense fallback={<RouteLoading />}>
+          <div id="main-content" tabIndex={-1}>
+            {route === '/' && <Home navigate={navigate} />}
+            {route === '/register' && <Registration navigate={navigate} />}
+            {route === '/login' && <Login navigate={navigate} />}
+            {route === '/legal/terms' && <TermsPage />}
+            {route === '/recover' && <Recovery navigate={navigate} />}
+            {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
+            {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
+              <EmailCallback
+                kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'}
+              />
+            )}
+            {route === '/account' && (
+              <AccessGate>
+                <Account navigate={navigate} />
+              </AccessGate>
+            )}
+            {route === '/account/overview' && (
+              <AccessGate>
+                <AccountHub />
+              </AccessGate>
+            )}
+            {route === '/shop' && <StorePage />}
+            {route === '/cart' && <CartPage />}
+            {route === '/tournaments' && <TournamentPage />}
+            {route === '/news' && <NewsPage />}
+            {route === '/community' && <CommunityPage navigate={navigate} />}
+            {route === '/comics' && <ComicsPage />}
+            {adminArea && (
+              <AccessGate requiredRole="ADMIN">
+                <AdminHub area={adminArea} navigate={navigate} />
+              </AccessGate>
+            )}
+            {route === '/checkout' && <CheckoutPanel />}
+            {route === '/admin/accounts' && (
+              <AccessGate requiredRole="ADMIN">
+                <AdminStandaloneLayout
+                  currentRoute="/admin/accounts"
+                  description="Busca una cuenta y administra únicamente las acciones disponibles para ella."
+                  navigate={navigate}
+                  title="Clientes y usuarios"
+                >
+                  <AccountsPanel />
+                </AdminStandaloneLayout>
+              </AccessGate>
+            )}
+            {route === '/admin/appearance' && (
+              <AccessGate requiredRole="ADMIN">
+                <AdminStandaloneLayout
+                  currentRoute="/admin/appearance"
+                  description="Organiza imágenes y textos por capas, revisa su posición y publica una versión persistente."
+                  navigate={navigate}
+                  title="Apariencia web"
+                >
+                  <AppearanceEditor />
+                </AdminStandaloneLayout>
+              </AccessGate>
+            )}
+            {route === '/admin/pos' && (
+              <AccessGate requiredRole="ADMIN">
+                <AdminStandaloneLayout
+                  currentRoute="/admin/pos"
+                  description="Caja presencial, inventario compartido y registro auditable del dinero recibido."
+                  navigate={navigate}
+                  title="POS"
+                >
+                  <PosPanel />
+                </AdminStandaloneLayout>
+              </AccessGate>
+            )}
+            {route === '/admin/service-coverage' && (
+              <AccessGate requiredRole="ADMIN">
+                <AdminStandaloneLayout
+                  currentRoute="/admin/service-coverage"
+                  description="Dirección, horario, contacto, retiro y cobertura pública de despacho."
+                  navigate={navigate}
+                  title="Datos de la tienda"
+                >
+                  <ServiceCoveragePanel />
+                </AdminStandaloneLayout>
+              </AccessGate>
+            )}
+            {route === '/not-found' && <NotFound navigate={navigate} />}
+          </div>
+        </Suspense>
       </RouteErrorBoundary>
       <SiteFooter navigate={navigate} />
     </div>
+  );
+}
+
+function RouteLoading() {
+  return (
+    <main aria-busy="true" className="page-frame visual-public">
+      <section className="access-gate cut-panel">
+        <p className="eyebrow">Cargando herramientas</p>
+        <h1>Preparando esta sección</h1>
+      </section>
+    </main>
   );
 }
 
@@ -303,37 +352,67 @@ function AccessGate({
 }
 
 function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
+  const appearance = useSiteAppearance();
+  const launcherEntries = [
+    { eyebrow: 'Catálogo', label: 'Tienda', route: '/shop' },
+    { eyebrow: 'Competencia', label: 'Torneos', route: '/tournaments' },
+    { eyebrow: 'Actualidad', label: 'Noticias', route: '/news' },
+    { eyebrow: 'Encuentros', label: 'Comunidad', route: '/community' },
+    { eyebrow: 'Historias', label: 'Cómics', route: '/comics' },
+  ] as const;
   return (
     <main className="home-page visual-public">
-      <section className="commerce-hero">
-        <div className="hero-copy">
-          <p className="eyebrow">TCG · Comunidad · Competencia</p>
-          <span aria-hidden="true" className="hero-rule" />
-          <h1>Tu próxima jugada comienza aquí.</h1>
-          <p className="hero-lead">
-            Compra productos TCG, asegura preventas y mantente al día con la comunidad Sergod.
-          </p>
-          <div className="actions">
-            <button onClick={() => navigate('/shop')} type="button">
-              Explorar tienda
+      <section aria-label="Inicio Sergod Store" className="launcher-shell">
+        <header className="launcher-topbar">
+          <span>Inicio Sergod</span>
+          <strong>Elige tu próxima ruta</strong>
+          <span aria-label="Sitio operativo" className="launcher-status">
+            En línea
+          </span>
+        </header>
+        <nav aria-label="Accesos principales" className="launcher-menu">
+          {launcherEntries.map((entry, index) => (
+            <button key={entry.route} onClick={() => navigate(entry.route)} type="button">
+              <span aria-hidden="true" className="launcher-icon" />
+              <span>
+                <small>{entry.eyebrow}</small>
+                <strong>{entry.label}</strong>
+              </span>
+              <b aria-hidden="true">{String(index + 1).padStart(2, '0')}</b>
             </button>
-            <button className="secondary" onClick={() => navigate('/tournaments')} type="button">
-              Ver torneos
-            </button>
+          ))}
+        </nav>
+        <section className="commerce-hero launcher-stage">
+          <AppearanceLayers layers={appearance.home.layers} />
+          <div className="hero-copy">
+            <p className="eyebrow">TCG · Comunidad · Competencia</p>
+            <span aria-hidden="true" className="hero-rule" />
+            <h1>Tu próxima jugada comienza aquí.</h1>
+            <p className="hero-lead">
+              Compra productos TCG, asegura preventas y mantente al día con la comunidad Sergod.
+            </p>
+            <div className="actions">
+              <button onClick={() => navigate('/shop')} type="button">
+                Explorar tienda
+              </button>
+              <button className="secondary" onClick={() => navigate('/tournaments')} type="button">
+                Ver torneos
+              </button>
+            </div>
           </div>
-        </div>
-        <aside className="hero-service cut-panel">
-          <div className="service-heading">
-            <span aria-hidden="true">!</span>
-            <p className="card-kicker">Compra con claridad</p>
-          </div>
-          <ul>
-            <li>Stock y precios confirmados por el servidor</li>
-            <li>Retiro en tienda</li>
-            <li>Despacho por pagar a agencia</li>
-            <li>Pago online mediante proveedores autorizados</li>
-          </ul>
-        </aside>
+          <aside className="hero-service cut-panel">
+            <div className="service-heading">
+              <span aria-hidden="true">!</span>
+              <p className="card-kicker">Compra con claridad</p>
+            </div>
+            <ul>
+              <li>Stock y precios confirmados por el servidor</li>
+              <li>Retiro en tienda</li>
+              <li>Despacho por pagar a agencia</li>
+              <li>Pago online mediante proveedores autorizados</li>
+            </ul>
+          </aside>
+        </section>
       </section>
       <section aria-labelledby="home-sections-title" className="home-sections">
         <header className="section-banner">
@@ -813,6 +892,7 @@ function routeFromLocation(): Route {
     '/account/overview',
     '/admin',
     '/admin/accounts',
+    '/admin/appearance',
     '/admin/audit',
     '/admin/catalog',
     '/admin/configuration',

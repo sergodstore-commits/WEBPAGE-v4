@@ -1,13 +1,14 @@
 import { z } from 'zod';
 
 import { configurationKeys, configurationRegistry } from './configuration-registry.js';
+import { siteAppearanceLayoutSchema } from './site-appearance.js';
 
 export const systemConfigurationKeySchema = z.enum(configurationKeys);
 export const systemConfigurationStateSchema = z.enum(['DRAFT', 'ACTIVE', 'RETIRED']);
 export const systemConfigurationValueSchema = z.union([
   z.number().int().safe(),
   z.boolean(),
-  z.string().min(1).max(2048),
+  z.string().min(1).max(65_536),
 ]);
 const reasonSchema = z.string().trim().min(1).max(500);
 
@@ -47,10 +48,32 @@ export const createSystemConfigurationSchema = z
       }
       return;
     }
-    if (typeof input.value !== 'string' || !z.uuid().safeParse(input.value).success) {
+    if (definition.valueType === 'REFERENCE') {
+      if (typeof input.value !== 'string' || !z.uuid().safeParse(input.value).success) {
+        context.addIssue({ code: 'custom', message: 'Configuration value is invalid.' });
+      }
+      return;
+    }
+    if (
+      typeof input.value !== 'string' ||
+      input.value.length < (definition.minimum ?? 1) ||
+      input.value.length > (definition.maximum ?? 65_536)
+    ) {
+      context.addIssue({ code: 'custom', message: 'Configuration value is invalid.' });
+      return;
+    }
+    if (input.configurationKey === 'WEB_APPEARANCE_LAYOUT' && !validSiteAppearance(input.value)) {
       context.addIssue({ code: 'custom', message: 'Configuration value is invalid.' });
     }
   });
+
+function validSiteAppearance(value: string): boolean {
+  try {
+    return siteAppearanceLayoutSchema.safeParse(JSON.parse(value)).success;
+  } catch {
+    return false;
+  }
+}
 
 export const editSystemConfigurationSchema = z
   .object({ reason: reasonSchema, value: systemConfigurationValueSchema })

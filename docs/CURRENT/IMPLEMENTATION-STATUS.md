@@ -20,7 +20,7 @@
 | Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                | Carga operativa del propietario      |
 | Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                      | Catálogo/contenido del propietario   |
 | Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados         | Contenido del propietario            |
-| Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual aprobado y QA escritorio/móvil de rutas públicas y Admin            | Ninguno                              |
+| Diseño y accesibilidad                                                               | Revisión local en curso  | Preview visual rechazada por recortes y composición; corrección local verificable  | Aceptación visual del propietario    |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
 | Despliegue web                                                                       | Producción PASS          | Vercel `3c3dd12`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
@@ -313,6 +313,35 @@
   documentada, y compilación productiva completa. Un primer intento agotó por 395 ms el límite de una
   prueba API no afectada; la prueba focal pasó en 241 ms y la repetición completa terminó verde. Este
   conjunto permanece local y todavía no ha sido promovido a Preview ni Producción.
+
+## Corrección visual y apariencia administrable — 2026-09-12
+
+- El propietario rechazó la composición de la Preview anterior por recursos deformados o recortados,
+  ubicación incorrecta de adornos, logo con rectángulo negro, tipografía genérica y una portada que no
+  comunicaba suficientemente la idea de launcher. Esta aceptación prevalece sobre el QA técnico anterior:
+  la renovación del 2026-09-11 ya no se considera visualmente aprobada.
+- El archivo oficial del logo se conserva intacto. Como la fuente aprobada está codificada realmente como
+  JPEG sin canal alfa pese a su extensión `.png`, la web usa un derivado técnico WebP con transparencia;
+  cabecera y pie dejaron de mostrar el rectángulo negro sin recortar, recolorear o sustituir el original.
+- Los marcos y banners dejaron de estirarse a `100% × 100%`. Se retiraron seis derivados que quedaron sin
+  uso y los adornos restantes se muestran con proporción conservada. La portada local adopta una estructura
+  de launcher con accesos reales a Tienda, Torneos, Noticias, Comunidad y Cómics; los rótulos continúan como
+  texto HTML accesible y no como palabras horneadas en imágenes.
+- Por solicitud expresa del propietario se añadió una capacidad nueva, acotada a la portada, en
+  `/admin/appearance`: permite añadir capas de texto o recursos aprobados, arrastrarlas, ajustar posición,
+  tamaño y profundidad, ocultarlas en móvil, quitarlas y publicar una versión. Los controles comerciales y
+  la navegación permanecen protegidos fuera del documento editable.
+- La apariencia se persiste como configuración global `WEB_APPEARANCE_LAYOUT`, validada contra un esquema
+  cerrado (máximo 24 capas, seis recursos aprobados, posiciones y profundidades acotadas), con borrador,
+  activación, historial, autorización ADMIN, idempotencia y auditoría existentes. La lectura pública expone
+  únicamente la versión activa; no publica actores, motivos ni historial administrativo.
+- La migración prospectiva `023_web_appearance_configuration` pasó actualización `001–022 → 023` y una
+  instalación limpia `001 → 023` sobre PostgreSQL 18.4. El historial protegido conservó sus 31 archivos sin
+  cambios. El gate integral pasó formato, lint, tipos, 114 archivos de prueba, 459 pruebas aprobadas y 1
+  omisión documentada, además de la compilación productiva. Administración y el editor de apariencia se
+  cargan bajo demanda: el paquete inicial bajó a 333,61 kB y la compilación dejó de advertir por tamaño. El
+  conjunto continúa solo local: requiere despliegue de API/Preview y aceptación visual antes de cualquier
+  promoción a producción.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

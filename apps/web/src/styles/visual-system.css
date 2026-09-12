@@ -75,12 +75,7 @@ body::before {
 }
 
 .brand::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: -0.55rem -1.2rem;
-  background: url('/assets/sergod/ui/sheet_03/banner_01.webp') center / 100% 100% no-repeat;
-  opacity: 0.7;
+  display: none;
 }
 
 .brand img {
@@ -192,6 +187,206 @@ textarea:hover {
   margin-top: clamp(1.35rem, 3vw, 2.5rem);
 }
 
+.launcher-shell {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border: 2px solid rgb(255 255 255 / 26%);
+  border-top: 5px solid var(--red);
+  background: #08090b;
+  box-shadow:
+    0.75rem 0.75rem 0 #020304,
+    0.95rem 0.95rem 0 var(--red-dark);
+  clip-path: polygon(0 0, calc(100% - 2rem) 0, 100% 2rem, 100% 100%, 0 100%);
+}
+
+.launcher-topbar {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  min-height: 3.25rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 2px solid #343942;
+  background: linear-gradient(100deg, #16191e, #08090b 60%, #2f080e);
+  font-family: var(--display-font);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.launcher-topbar > strong {
+  color: var(--paper);
+  font-style: italic;
+}
+
+.launcher-topbar > span:first-child {
+  color: var(--muted);
+}
+
+.launcher-status {
+  justify-self: end;
+  color: var(--cyan);
+}
+
+.launcher-status::before {
+  content: '';
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.45rem;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 0.7rem var(--cyan);
+}
+
+.launcher-menu {
+  display: grid;
+  min-width: 0;
+  max-width: 100%;
+  align-content: center;
+  gap: 0.55rem;
+  padding: 1rem 0.8rem;
+  border-right: 2px solid #343942;
+  background:
+    linear-gradient(rgb(9 10 13 / 93%), rgb(9 10 13 / 93%)),
+    url('/assets/sergod/ui/sheet_03/pattern_03.webp') center / 24rem auto;
+}
+
+.launcher-menu button {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  min-height: 4.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 2px solid #414650 !important;
+  border-left: 5px solid var(--red) !important;
+  background: linear-gradient(115deg, #20242a, #0c0e11 72%);
+  color: var(--paper);
+  text-align: left;
+  clip-path: polygon(0 0, calc(100% - 0.8rem) 0, 100% 0.8rem, 100% 100%, 0 100%) !important;
+}
+
+.launcher-menu button:hover,
+.launcher-menu button:focus-visible {
+  border-color: var(--cyan) !important;
+  background: linear-gradient(115deg, #4f0b14, #111318 72%);
+  transform: translateX(0.2rem);
+}
+
+.launcher-menu button > span:not(.launcher-icon) {
+  display: grid;
+  min-width: 0;
+}
+
+.launcher-menu small {
+  color: var(--cyan);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.launcher-menu strong {
+  font-family: var(--display-font);
+  font-size: 1.05rem;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.launcher-menu b {
+  align-self: start;
+  color: rgb(255 255 255 / 35%);
+  font-size: 0.65rem;
+}
+
+.launcher-icon {
+  width: 3rem;
+  height: 3rem;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0.18rem 0.18rem 0 #000);
+}
+
+.launcher-menu button:nth-child(1) .launcher-icon {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_01.webp');
+}
+
+.launcher-menu button:nth-child(2) .launcher-icon {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_02.webp');
+}
+
+.launcher-menu button:nth-child(3) .launcher-icon {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_04.webp');
+}
+
+.launcher-menu button:nth-child(4) .launcher-icon {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_03.webp');
+}
+
+.launcher-menu button:nth-child(5) .launcher-icon {
+  background-image: url('/assets/sergod/ui/sheet_02/ornament_07.webp');
+}
+
+.launcher-stage {
+  margin: 0;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  box-shadow: none;
+}
+
+.appearance-layers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.appearance-layer {
+  position: absolute;
+  display: block;
+  transform: translateY(-50%);
+}
+
+.appearance-layer img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.appearance-layer-text {
+  color: var(--paper);
+  font-family: var(--display-font);
+  font-size: clamp(1rem, 2.5vw, 2.3rem);
+  font-style: italic;
+  line-height: 0.95;
+  text-shadow:
+    0.08em 0.08em 0 #050607,
+    0.13em 0.13em 0 var(--red-dark);
+  text-transform: uppercase;
+}
+
+.launcher-stage > .hero-copy,
+.launcher-stage > .hero-service {
+  z-index: 5;
+}
+
+.launcher-stage .hero-copy,
+.launcher-stage .hero-copy > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.launcher-stage .hero-lead {
+  overflow-wrap: anywhere;
+}
+
 .commerce-hero {
   min-height: clamp(34rem, 68vh, 48rem);
   background:
@@ -203,14 +398,14 @@ textarea:hover {
 
 .commerce-hero::before {
   top: auto;
-  right: -3%;
-  bottom: -7%;
-  width: min(38rem, 52vw);
+  right: 1%;
+  bottom: 1%;
+  width: min(26rem, 34vw);
   aspect-ratio: 1.35;
   background: url('/assets/sergod/ui/sheet_01/fx_01.webp') center / contain no-repeat;
   clip-path: none;
-  transform: rotate(-4deg);
-  opacity: 0.68;
+  transform: none;
+  opacity: 0.38;
 }
 
 .commerce-hero::after {
@@ -235,10 +430,9 @@ textarea:hover {
 
 .hero-service {
   padding-bottom: 4.5rem;
-  border: 0;
-  background:
-    linear-gradient(rgb(9 10 13 / 91%), rgb(9 10 13 / 91%)),
-    url('/assets/sergod/ui/sheet_02/frame_02.webp') center / 100% 100% no-repeat;
+  border: 2px solid rgb(255 255 255 / 24%);
+  border-top: 4px solid var(--cyan);
+  background: linear-gradient(145deg, rgb(255 255 255 / 6%), transparent 52%), rgb(9 10 13 / 94%);
   box-shadow:
     inset 0 0 0 2px rgb(255 255 255 / 14%),
     0.45rem 0.45rem 0 var(--cyan);
@@ -262,9 +456,7 @@ textarea:hover {
   overflow: hidden;
   min-height: 9rem;
   border: 0;
-  background:
-    linear-gradient(90deg, rgb(112 10 20 / 94%), rgb(9 10 13 / 92%)),
-    url('/assets/sergod/ui/sheet_03/banner_03.webp') center / 100% 100% no-repeat;
+  background: linear-gradient(102deg, rgb(142 10 24 / 96%) 0 38%, rgb(9 10 13 / 96%) 72%), #090a0d;
   box-shadow:
     inset 0 0 0 2px rgb(255 255 255 / 24%),
     0.45rem 0.45rem 0 #050607;
@@ -290,9 +482,12 @@ textarea:hover {
   min-height: 6.5rem;
   padding: 0.85rem 1rem 0.85rem 7.5rem;
   border: 0;
-  background:
-    linear-gradient(90deg, rgb(14 16 20 / 96%), rgb(14 16 20 / 55%)),
-    url('/assets/sergod/ui/sheet_03/banner_02.webp') left center / 100% 100% no-repeat;
+  background: linear-gradient(
+    105deg,
+    rgb(126 9 21 / 92%) 0 6.2rem,
+    rgb(14 16 20 / 96%) 6.2rem 76%,
+    rgb(31 6 10 / 96%)
+  );
 }
 
 .home-highlight-section:nth-child(1) .home-highlight-heading::before,
@@ -372,9 +567,9 @@ textarea:hover {
   content: '';
   position: absolute;
   z-index: 2;
-  inset: 0;
-  border: 0.45rem solid transparent;
-  border-image: url('/assets/sergod/ui/sheet_03/frame_01.webp') 70 fill / 0.65rem / 0 stretch;
+  inset: 0.45rem;
+  border: 2px solid rgb(255 255 255 / 32%);
+  clip-path: polygon(0 0, calc(100% - 1rem) 0, 100% 1rem, 100% 100%, 0 100%);
   pointer-events: none;
 }
 
@@ -583,9 +778,7 @@ textarea:hover {
 .pos-empty-ticket {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(90deg, rgb(12 14 17 / 96%), rgb(12 14 17 / 76%)),
-    url('/assets/sergod/ui/sheet_02/frame_01.webp') center / 100% 100% no-repeat;
+  background: linear-gradient(105deg, rgb(12 14 17 / 98%), rgb(38 7 12 / 92%));
 }
 
 .editorial-empty::after,
@@ -740,9 +933,7 @@ textarea:hover {
   position: relative;
   min-height: 9rem;
   padding: 1.5rem clamp(1rem, 3vw, 2rem);
-  background:
-    linear-gradient(90deg, rgb(8 9 11 / 98%) 0 60%, rgb(8 9 11 / 58%)),
-    url('/assets/sergod/ui/sheet_03/banner_01.webp') right center / min(38rem, 60%) 100% no-repeat;
+  background: linear-gradient(105deg, rgb(8 9 11 / 98%) 0 64%, rgb(91 8 17 / 92%));
   border-bottom: 3px solid var(--red);
 }
 
@@ -831,6 +1022,169 @@ textarea:hover {
   background: rgb(255 255 255 / 5%);
 }
 
+.appearance-editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.appearance-toolbar {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+  padding: 1.1rem;
+  border: 2px solid #3a3f48;
+  border-left: 5px solid var(--red);
+  background: var(--sergod-panel-raised);
+}
+
+.appearance-toolbar h2,
+.appearance-inspector h2 {
+  margin: 0.25rem 0;
+  font-family: var(--display-font);
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.appearance-toolbar p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.appearance-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  gap: 1rem;
+  align-items: start;
+}
+
+.appearance-canvas {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 3px solid #4b515d;
+  border-top: 5px solid var(--red);
+  background:
+    linear-gradient(90deg, rgb(7 8 10 / 96%) 0 58%, rgb(7 8 10 / 70%)),
+    url('/assets/sergod/ui/sheet_03/pattern_03.webp') center / cover,
+    #08090b;
+  box-shadow: 0.45rem 0.45rem 0 #050607;
+  touch-action: none;
+}
+
+.appearance-canvas::after {
+  content: '';
+  position: absolute;
+  z-index: 50;
+  inset: 0;
+  border: 1px solid rgb(49 215 229 / 30%);
+  pointer-events: none;
+}
+
+.appearance-canvas-copy {
+  position: absolute;
+  z-index: 0;
+  left: 7%;
+  top: 20%;
+  display: grid;
+  width: 48%;
+  gap: 0.5rem;
+  color: rgb(255 255 255 / 25%);
+  pointer-events: none;
+}
+
+.appearance-canvas-copy small {
+  color: rgb(49 215 229 / 45%);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.appearance-canvas-copy strong {
+  font-family: var(--display-font);
+  font-size: clamp(1.1rem, 3.8vw, 3.8rem);
+  font-style: italic;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.appearance-editor-layer {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  min-height: 2.75rem;
+  padding: 0.3rem;
+  border: 2px dashed rgb(255 255 255 / 45%) !important;
+  background: rgb(5 6 7 / 24%);
+  color: var(--paper);
+  cursor: grab;
+  transform: translateY(-50%);
+  clip-path: none !important;
+  touch-action: none;
+}
+
+.appearance-editor-layer:active {
+  cursor: grabbing;
+}
+
+.appearance-editor-layer[aria-pressed='true'] {
+  border-color: var(--cyan) !important;
+  box-shadow:
+    0 0 0 2px #050607,
+    0 0 0 4px var(--cyan);
+}
+
+.appearance-editor-layer img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.appearance-editor-layer.is-text {
+  font-family: var(--display-font);
+  font-size: clamp(0.75rem, 1.8vw, 1.5rem);
+  font-style: italic;
+  line-height: 1;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.appearance-inspector {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 2px solid #3a3f48;
+  border-top: 5px solid var(--cyan);
+  background: var(--sergod-panel-raised);
+  box-shadow: 0.35rem 0.35rem 0 #050607;
+}
+
+.appearance-inspector label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.appearance-inspector input[type='range'] {
+  width: 100%;
+  min-height: 2rem;
+  padding: 0;
+  accent-color: var(--red);
+  box-shadow: none;
+}
+
+.appearance-checkbox {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.appearance-checkbox input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .commerce-card,
   .editorial-card,
@@ -860,6 +1214,43 @@ textarea:hover {
     border-top: 1px solid #343942;
     background: #090a0d;
     box-shadow: 0 0.6rem 0.8rem rgb(0 0 0 / 45%);
+  }
+
+  .launcher-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .launcher-topbar,
+  .launcher-menu,
+  .launcher-stage {
+    grid-column: 1;
+  }
+
+  .launcher-menu {
+    grid-template-columns: repeat(5, minmax(8rem, 1fr));
+    align-content: stretch;
+    padding: 0.7rem;
+    border-right: 0;
+    border-bottom: 2px solid #343942;
+    overflow-x: auto;
+  }
+
+  .launcher-menu button {
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    min-height: 4rem;
+  }
+
+  .launcher-menu b {
+    display: none;
+  }
+
+  .launcher-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .appearance-workspace {
+    grid-template-columns: 1fr;
   }
 
   .site-header nav button {
@@ -895,6 +1286,42 @@ textarea:hover {
     grid-template-columns: 1fr;
   }
 
+  .launcher-shell {
+    clip-path: polygon(0 0, calc(100% - 1.1rem) 0, 100% 1.1rem, 100% 100%, 0 100%);
+  }
+
+  .launcher-topbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .launcher-topbar > strong {
+    display: none;
+  }
+
+  .launcher-menu {
+    display: flex;
+    gap: 0.5rem;
+    scrollbar-color: var(--red) #08090b;
+  }
+
+  .launcher-menu button {
+    flex: 0 0 10.5rem;
+  }
+
+  .appearance-layer.is-hidden-mobile {
+    display: none;
+  }
+
+  .appearance-toolbar {
+    display: grid;
+    align-items: start;
+  }
+
+  .appearance-toolbar .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
   .commerce-hero {
     min-height: 0;
     grid-template-columns: 1fr;
@@ -912,11 +1339,23 @@ textarea:hover {
 
   .commerce-hero h1 {
     max-width: 9ch;
-    font-size: clamp(2.65rem, 14vw, 3.8rem);
+    font-size: clamp(2.35rem, 11.5vw, 3.2rem);
+    overflow-wrap: anywhere;
   }
 
   .hero-copy {
     min-width: 0;
+  }
+
+  .launcher-stage {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 1.25rem;
+  }
+
+  .launcher-stage .hero-copy,
+  .launcher-stage .hero-copy > * {
+    width: auto;
+    max-width: calc(100vw - 5rem);
   }
 
   .hero-service {
@@ -933,9 +1372,7 @@ textarea:hover {
 
   .section-banner {
     min-height: 0;
-    background:
-      linear-gradient(155deg, rgb(130 10 22 / 94%) 0 50%, rgb(9 10 13 / 96%) 50%),
-      url('/assets/sergod/ui/sheet_03/banner_03.webp') center / 100% 100% no-repeat;
+    background: linear-gradient(155deg, rgb(130 10 22 / 94%) 0 50%, rgb(9 10 13 / 96%) 50%);
   }
 
   .home-highlight-heading {

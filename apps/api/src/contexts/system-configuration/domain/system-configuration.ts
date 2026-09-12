@@ -1,5 +1,6 @@
 import {
   configurationRegistry,
+  siteAppearanceLayoutSchema,
   type ConfigurationDefinition,
   type ConfigurationKey,
   type SystemConfigurationValue,
@@ -43,8 +44,26 @@ export function validateConfigurationValue(
     if (definition.maximum !== undefined && integer > definition.maximum) throw invalidValue();
     return integer;
   }
-  if (typeof value !== 'string' || !uuidPattern.test(value)) throw invalidValue();
-  return value.toLowerCase();
+  if (definition.valueType === 'REFERENCE') {
+    if (typeof value !== 'string' || !uuidPattern.test(value)) throw invalidValue();
+    return value.toLowerCase();
+  }
+  if (
+    typeof value !== 'string' ||
+    value.length < (definition.minimum ?? 1) ||
+    value.length > (definition.maximum ?? 65_536)
+  ) {
+    throw invalidValue();
+  }
+  if (definition.key === 'WEB_APPEARANCE_LAYOUT') {
+    try {
+      if (!siteAppearanceLayoutSchema.safeParse(JSON.parse(value)).success) throw invalidValue();
+    } catch (error) {
+      if (error instanceof SystemConfigurationError) throw error;
+      throw invalidValue();
+    }
+  }
+  return value;
 }
 
 export function normalizeConfigurationReason(value: string): string {

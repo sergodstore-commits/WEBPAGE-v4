@@ -16,6 +16,7 @@ export * from './metadata-registry.js';
 export * from './promotions-admin.js';
 export * from './preorders-admin.js';
 export * from './service-coverage.js';
+export * from './site-appearance.js';
 export * from './pos.js';
 export * from './payload-registry.js';
 export * from './registry.js';

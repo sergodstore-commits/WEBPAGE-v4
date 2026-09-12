@@ -23,7 +23,7 @@ export interface SystemConfigurationView {
   readonly state: SystemConfigurationState;
   readonly systemConfigurationId: string;
   readonly value: SystemConfigurationValue;
-  readonly valueType: 'INTEGER' | 'REFERENCE';
+  readonly valueType: 'INTEGER' | 'REFERENCE' | 'TEXT';
   readonly versionNumber: number;
 }
 
