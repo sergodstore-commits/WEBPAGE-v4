@@ -50,7 +50,7 @@ import {
 } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
 import { TermsPage } from '../legal/TermsPage.js';
-import { AppearanceLayers } from '../appearance/SiteAppearance.js';
+import { AppearanceLayers, AppearanceRegion } from '../appearance/SiteAppearance.js';
 import { useSiteAppearance } from '../appearance/useSiteAppearance.js';
 
 const AdminHub = lazy(async () => ({
@@ -137,12 +137,32 @@ export function App() {
                 <AccountHub />
               </AccessGate>
             )}
-            {route === '/shop' && <StorePage />}
+            {route === '/shop' && (
+              <AppearanceRegion page="shop">
+                <StorePage />
+              </AppearanceRegion>
+            )}
             {route === '/cart' && <CartPage />}
-            {route === '/tournaments' && <TournamentPage />}
-            {route === '/news' && <NewsPage />}
-            {route === '/community' && <CommunityPage navigate={navigate} />}
-            {route === '/comics' && <ComicsPage />}
+            {route === '/tournaments' && (
+              <AppearanceRegion page="tournaments">
+                <TournamentPage />
+              </AppearanceRegion>
+            )}
+            {route === '/news' && (
+              <AppearanceRegion page="news">
+                <NewsPage />
+              </AppearanceRegion>
+            )}
+            {route === '/community' && (
+              <AppearanceRegion page="community">
+                <CommunityPage navigate={navigate} />
+              </AppearanceRegion>
+            )}
+            {route === '/comics' && (
+              <AppearanceRegion page="comics">
+                <ComicsPage />
+              </AppearanceRegion>
+            )}
             {adminArea && (
               <AccessGate requiredRole="ADMIN">
                 <AdminHub area={adminArea} navigate={navigate} />
@@ -366,9 +386,7 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
         <header className="launcher-topbar">
           <span>Inicio Sergod</span>
           <strong>Elige tu próxima ruta</strong>
-          <span aria-label="Sitio operativo" className="launcher-status">
-            En línea
-          </span>
+          <span className="launcher-status">Sergod Store</span>
         </header>
         <nav aria-label="Accesos principales" className="launcher-menu">
           {launcherEntries.map((entry, index) => (
@@ -406,10 +424,10 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
               <p className="card-kicker">Compra con claridad</p>
             </div>
             <ul>
-              <li>Stock y precios confirmados por el servidor</li>
+              <li>Disponibilidad y precios actualizados</li>
               <li>Retiro en tienda</li>
               <li>Despacho por pagar a agencia</li>
-              <li>Pago online mediante proveedores autorizados</li>
+              <li>Pago online con Flow</li>
             </ul>
           </aside>
         </section>

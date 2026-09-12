@@ -101,6 +101,56 @@ beforeEach(async () => {
 });
 
 describe('PostgreSQL SystemConfiguration administration', () => {
+  it('persists appearance across new readers and exposes only the activated version', async () => {
+    const layout = {
+      version: 1,
+      home: { layers: [] },
+      shop: { layers: [] },
+      tournaments: { layers: [] },
+      community: { layers: [] },
+      comics: { layers: [] },
+      news: {
+        layers: [
+          {
+            kind: 'TEXT',
+            id: 'saved-news',
+            content: 'Noticia guardada',
+            hiddenOnMobile: false,
+            width: 30,
+            x: 10,
+            y: 30,
+            zIndex: 8,
+          },
+        ],
+      },
+    };
+    const first = await create(
+      JSON.stringify(layout),
+      'WEB_APPEARANCE_LAYOUT',
+      'appearance-create',
+    );
+    expect(await service.getPublicSiteAppearance()).toEqual({ layout: null });
+    const activateContext = context(adminId, 'appearance-activate');
+    const activation = { nextState: 'ACTIVE' as const, reason: 'Publish acceptance appearance' };
+    await service.transition(activateContext, first.item.systemConfigurationId, activation);
+    expect(
+      (await service.transition(activateContext, first.item.systemConfigurationId, activation))
+        .replayed,
+    ).toBe(true);
+    const freshReader = new SystemConfigurationService(
+      new PgSystemConfigurationRepository(pool, clock, uuids),
+      new PgSystemConfigurationAdminAuthorizer(pool),
+    );
+    expect(await freshReader.getPublicSiteAppearance()).toEqual({ layout });
+    await create(JSON.stringify({ ...layout, news: { layers: [] } }), 'WEB_APPEARANCE_LAYOUT');
+    expect(await freshReader.getPublicSiteAppearance()).toEqual({ layout });
+    const saved = await pool.query(
+      'SELECT text_value FROM system_configurations WHERE system_configuration_id=$1',
+      [first.item.systemConfigurationId],
+    );
+    expect(JSON.parse(saved.rows[0].text_value)).toEqual(layout);
+  });
+
   it('accepts 5760, rejects unknown keys and incompatible or out-of-range values', async () => {
     const created = await create(5760);
     expect(created.item).toMatchObject({

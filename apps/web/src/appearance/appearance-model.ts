@@ -18,7 +18,12 @@ export const appearanceAssets = {
 export const appearanceAssetIds = Object.keys(appearanceAssets) as SiteAppearanceAssetId[];
 
 export const defaultAppearanceLayout: SiteAppearanceLayout = {
+  comics: { layers: [] },
+  community: { layers: [] },
   home: { layers: [] },
+  news: { layers: [] },
+  shop: { layers: [] },
+  tournaments: { layers: [] },
   version: 1,
 };
 

@@ -12,6 +12,17 @@ export const siteAppearanceAssetIds = [
 export const siteAppearanceAssetIdSchema = z.enum(siteAppearanceAssetIds);
 export type SiteAppearanceAssetId = z.infer<typeof siteAppearanceAssetIdSchema>;
 
+export const siteAppearancePageIds = [
+  'home',
+  'shop',
+  'tournaments',
+  'news',
+  'community',
+  'comics',
+] as const;
+export const siteAppearancePageIdSchema = z.enum(siteAppearancePageIds);
+export type SiteAppearancePageId = z.infer<typeof siteAppearancePageIdSchema>;
+
 export const siteAppearanceLayerSchema = z
   .object({
     assetId: siteAppearanceAssetIdSchema.optional(),
@@ -37,16 +48,30 @@ export const siteAppearanceLayerSchema = z
     }
   });
 
+const siteAppearancePageSchema = z
+  .object({ layers: z.array(siteAppearanceLayerSchema).max(24) })
+  .strict();
+
 export const siteAppearanceLayoutSchema = z
   .object({
-    home: z.object({ layers: z.array(siteAppearanceLayerSchema).max(24) }).strict(),
+    comics: siteAppearancePageSchema,
+    community: siteAppearancePageSchema,
+    home: siteAppearancePageSchema,
+    news: siteAppearancePageSchema,
+    shop: siteAppearancePageSchema,
+    tournaments: siteAppearancePageSchema,
     version: z.literal(1),
   })
   .strict()
   .superRefine((layout, context) => {
-    const ids = layout.home.layers.map(({ id }) => id);
-    if (new Set(ids).size !== ids.length) {
-      context.addIssue({ code: 'custom', message: 'Appearance layer identifiers must be unique.' });
+    for (const pageId of siteAppearancePageIds) {
+      const ids = layout[pageId].layers.map(({ id }) => id);
+      if (new Set(ids).size !== ids.length) {
+        context.addIssue({
+          code: 'custom',
+          message: `Appearance layer identifiers must be unique within ${pageId}.`,
+        });
+      }
     }
   });
 

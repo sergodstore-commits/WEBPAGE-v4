@@ -7,9 +7,11 @@ import {
 } from 'react';
 
 import {
+  siteAppearanceLayoutSchema,
   type SiteAppearanceAssetId,
   type SiteAppearanceLayout,
   type SiteAppearanceLayer,
+  type SiteAppearancePageId,
 } from '@sergod/contracts';
 
 import { authorizedRequest, publicRequest } from '../identity/api.js';
@@ -29,37 +31,76 @@ const assetLabels: Readonly<Record<SiteAppearanceAssetId, string>> = {
   'halftone-red': 'Trama halftone',
 };
 
+const pageLabels: Readonly<Record<SiteAppearancePageId, string>> = {
+  comics: 'Cómics',
+  community: 'Comunidad',
+  home: 'Portada',
+  news: 'Noticias',
+  shop: 'Tienda',
+  tournaments: 'Torneos',
+};
+
+const pageIds: readonly SiteAppearancePageId[] = [
+  'home',
+  'shop',
+  'tournaments',
+  'news',
+  'community',
+  'comics',
+];
+
 export function AppearanceEditor() {
   const [layout, setLayout] = useState<SiteAppearanceLayout>(defaultAppearanceLayout);
+  const [page, setPage] = useState<SiteAppearancePageId>('home');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [message, setMessage] = useState('Cargando apariencia publicada…');
   const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const busy = useRef(false);
+  const pendingPublish = useRef<{
+    value: string;
+    createKey: string;
+    activateKey: string;
+    versionId?: string;
+  } | null>(null);
   const canvas = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
-  const layers = layout.home.layers;
+  const layers = layout[page].layers;
   const selected = useMemo(
     () => layers.find(({ id }) => id === selectedId) ?? null,
     [layers, selectedId],
   );
 
   useEffect(() => {
+    let active = true;
     void publicRequest<{ readonly layout: SiteAppearanceLayout | null }>('/api/v1/site-appearance')
-      .then(({ layout: loaded }) => {
-        if (loaded !== null) setLayout(loaded);
+      .then(({ layout: received }) => {
+        if (!active) return;
+        if (received !== null) setLayout(siteAppearanceLayoutSchema.parse(received));
+        setLoaded(true);
         setMessage(
-          loaded === null
+          received === null
             ? 'Aún no hay una versión publicada. Puedes crear la primera.'
             : 'Apariencia publicada cargada.',
         );
       })
-      .catch(() => setMessage('No fue posible cargar la apariencia publicada.'));
+      .catch(() => {
+        if (active)
+          setMessage(
+            'No fue posible cargar la apariencia publicada. Recarga antes de editar para conservar la versión existente.',
+          );
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const updateLayer = (id: string, change: Partial<SiteAppearanceLayer>) => {
+    if (!loaded || busy.current) return;
     setLayout((current) => ({
       ...current,
-      home: {
-        layers: current.home.layers.map((layer) =>
+      [page]: {
+        layers: current[page].layers.map((layer) =>
           layer.id === id ? ({ ...layer, ...change } as SiteAppearanceLayer) : layer,
         ),
       },
@@ -67,6 +108,7 @@ export function AppearanceEditor() {
   };
 
   const beginDrag = (event: ReactPointerEvent<HTMLButtonElement>, layer: SiteAppearanceLayer) => {
+    if (!loaded || busy.current) return;
     const bounds = canvas.current?.getBoundingClientRect();
     if (!bounds) return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -99,6 +141,7 @@ export function AppearanceEditor() {
   };
 
   const addLayer = (kind: SiteAppearanceLayer['kind']) => {
+    if (!loaded || busy.current || layers.length >= 24) return;
     const id = `${kind.toLowerCase()}-${crypto.randomUUID().slice(0, 8)}`;
     const layer: SiteAppearanceLayer =
       kind === 'ASSET'
@@ -124,42 +167,63 @@ export function AppearanceEditor() {
           };
     setLayout((current) => ({
       ...current,
-      home: { layers: [...current.home.layers, layer] },
+      [page]: { layers: [...current[page].layers, layer] },
     }));
     setSelectedId(id);
   };
 
   const publish = async () => {
-    if (saving) return;
+    if (busy.current || !loaded) return;
+    if (!siteAppearanceLayoutSchema.safeParse(layout).success) {
+      setMessage(
+        'Revisa las capas: cada texto debe tener entre 1 y 160 caracteres y cada sección admite hasta 24 capas.',
+      );
+      return;
+    }
+    busy.current = true;
     setSaving(true);
     setMessage('Guardando y publicando…');
     try {
-      const created = await authorizedRequest<{
-        readonly item: { readonly systemConfigurationId: string };
-      }>('/api/v1/admin/system-configurations', {
-        body: JSON.stringify({
-          configurationKey: 'WEB_APPEARANCE_LAYOUT',
-          reason: 'Edición desde Apariencia web',
-          value: JSON.stringify(layout),
-        }),
-        headers: { 'idempotency-key': crypto.randomUUID() },
-        method: 'POST',
-      });
+      const value = JSON.stringify(layout);
+      if (pendingPublish.current?.value !== value) {
+        pendingPublish.current = {
+          value,
+          createKey: crypto.randomUUID(),
+          activateKey: crypto.randomUUID(),
+        };
+      }
+      const attempt = pendingPublish.current;
+      if (!attempt.versionId) {
+        const created = await authorizedRequest<{
+          readonly item: { readonly systemConfigurationId: string };
+        }>('/api/v1/admin/system-configurations', {
+          body: JSON.stringify({
+            configurationKey: 'WEB_APPEARANCE_LAYOUT',
+            reason: 'Edición desde Apariencia web',
+            value: attempt.value,
+          }),
+          headers: { 'idempotency-key': attempt.createKey },
+          method: 'POST',
+        });
+        attempt.versionId = created.item.systemConfigurationId;
+      }
       await authorizedRequest(
-        `/api/v1/admin/system-configurations/${created.item.systemConfigurationId}/state-transitions`,
+        `/api/v1/admin/system-configurations/${attempt.versionId}/state-transitions`,
         {
           body: JSON.stringify({
             nextState: 'ACTIVE',
             reason: 'Publicar apariencia desde el editor visual',
           }),
-          headers: { 'idempotency-key': crypto.randomUUID() },
+          headers: { 'idempotency-key': attempt.activateKey },
           method: 'POST',
         },
       );
-      setMessage('Apariencia publicada. La portada ya usará esta versión.');
+      pendingPublish.current = null;
+      setMessage('Apariencia publicada. Las secciones públicas ya usarán esta versión.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No fue posible publicar la apariencia.');
     } finally {
+      busy.current = false;
       setSaving(false);
     }
   };
@@ -168,26 +232,55 @@ export function AppearanceEditor() {
     <section className="appearance-editor">
       <div className="appearance-toolbar">
         <div>
-          <p className="eyebrow">Portada</p>
+          <p className="eyebrow">{pageLabels[page]}</p>
           <h2>Capas y posición</h2>
           <p>Arrastra una capa dentro de la vista previa o ajusta sus controles.</p>
         </div>
         <div className="actions">
-          <button onClick={() => addLayer('ASSET')} type="button">
+          <button
+            disabled={!loaded || saving || layers.length >= 24}
+            onClick={() => addLayer('ASSET')}
+            type="button"
+          >
             Añadir imagen
           </button>
-          <button className="secondary" onClick={() => addLayer('TEXT')} type="button">
+          <button
+            disabled={!loaded || saving || layers.length >= 24}
+            className="secondary"
+            onClick={() => addLayer('TEXT')}
+            type="button"
+          >
             Añadir texto
           </button>
-          <button disabled={saving} onClick={() => void publish()} type="button">
+          <button disabled={!loaded || saving} onClick={() => void publish()} type="button">
             {saving ? 'Publicando…' : 'Guardar y publicar'}
           </button>
         </div>
       </div>
 
+      <nav aria-label="Sección que se está editando" className="appearance-page-tabs">
+        {pageIds.map((pageId) => (
+          <button
+            aria-pressed={page === pageId}
+            className={page === pageId ? 'is-active' : 'secondary'}
+            key={pageId}
+            onClick={() => {
+              setPage(pageId);
+              setSelectedId(null);
+            }}
+            type="button"
+          >
+            {pageLabels[pageId]}
+          </button>
+        ))}
+      </nav>
+
       <div className="appearance-workspace">
         <div
           className="appearance-canvas"
+          onPointerCancel={() => {
+            drag.current = null;
+          }}
           onPointerMove={moveDrag}
           onPointerUp={() => {
             drag.current = null;
@@ -195,8 +288,10 @@ export function AppearanceEditor() {
           ref={canvas}
         >
           <div className="appearance-canvas-copy">
-            <small>TCG · Comunidad · Competencia</small>
-            <strong>Tu próxima jugada comienza aquí.</strong>
+            <small>Vista previa · {pageLabels[page]}</small>
+            <strong>
+              {page === 'home' ? 'Tu próxima jugada comienza aquí.' : pageLabels[page]}
+            </strong>
           </div>
           {layers.map((layer) => (
             <button
@@ -204,6 +299,8 @@ export function AppearanceEditor() {
               aria-pressed={selectedId === layer.id}
               className={`appearance-editor-layer is-${layer.kind.toLowerCase()}`}
               key={layer.id}
+              disabled={saving}
+              onClick={() => setSelectedId(layer.id)}
               onPointerDown={(event) => beginDrag(event, layer)}
               style={layerStyle(layer)}
               type="button"
@@ -217,7 +314,7 @@ export function AppearanceEditor() {
           ))}
         </div>
 
-        <aside className="appearance-inspector">
+        <fieldset disabled={!loaded || saving} className="appearance-inspector">
           <h2>Propiedades de la capa</h2>
           {selected ? (
             <>
@@ -225,6 +322,7 @@ export function AppearanceEditor() {
                 <label>
                   Texto
                   <textarea
+                    maxLength={160}
                     value={selected.content}
                     onChange={(event) => updateLayer(selected.id, { content: event.target.value })}
                   />
@@ -290,7 +388,9 @@ export function AppearanceEditor() {
                 onClick={() => {
                   setLayout((current) => ({
                     ...current,
-                    home: { layers: current.home.layers.filter(({ id }) => id !== selected.id) },
+                    [page]: {
+                      layers: current[page].layers.filter(({ id }) => id !== selected.id),
+                    },
                   }));
                   setSelectedId(null);
                 }}
@@ -302,7 +402,7 @@ export function AppearanceEditor() {
           ) : (
             <p>Selecciona una capa o añade una nueva.</p>
           )}
-        </aside>
+        </fieldset>
       </div>
       <p className="status" role="status">
         {message}

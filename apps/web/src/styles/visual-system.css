@@ -338,6 +338,22 @@ textarea:hover {
   width: 100%;
   border: 0;
   box-shadow: none;
+  padding: clamp(1.5rem, 3vw, 3rem);
+}
+
+.launcher-stage > .appearance-layers {
+  position: absolute;
+  z-index: auto;
+}
+
+.launcher-stage .hero-copy {
+  container-type: inline-size;
+}
+
+.launcher-stage .hero-copy h1 {
+  max-width: 100%;
+  font-size: clamp(1.8rem, 13cqw, 4.6rem);
+  overflow-wrap: anywhere;
 }
 
 .appearance-layers {
@@ -345,6 +361,16 @@ textarea:hover {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+.appearance-region {
+  position: relative;
+  isolation: isolate;
+}
+
+.appearance-region-content {
+  position: relative;
+  z-index: 5;
 }
 
 .appearance-layer {
@@ -1058,6 +1084,24 @@ textarea:hover {
   align-items: start;
 }
 
+.appearance-page-tabs {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding: 0 0 0.9rem;
+  scrollbar-width: thin;
+}
+
+.appearance-page-tabs button {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+}
+
+.appearance-page-tabs button.is-active {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgb(49 215 229 / 22%);
+}
+
 .appearance-canvas {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -1153,6 +1197,8 @@ textarea:hover {
 }
 
 .appearance-inspector {
+  min-width: 0;
+  margin: 0;
   display: grid;
   gap: 0.8rem;
   padding: 1rem;
@@ -1227,7 +1273,7 @@ textarea:hover {
   }
 
   .launcher-menu {
-    grid-template-columns: repeat(5, minmax(8rem, 1fr));
+    grid-template-columns: repeat(5, minmax(10.5rem, 1fr));
     align-content: stretch;
     padding: 0.7rem;
     border-right: 0;

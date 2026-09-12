@@ -50,6 +50,8 @@ describe('system configuration contracts', () => {
 
   it('accepts only bounded, approved web appearance layers', () => {
     const layout = JSON.stringify({
+      comics: { layers: [] },
+      community: { layers: [] },
       home: {
         layers: [
           {
@@ -64,6 +66,9 @@ describe('system configuration contracts', () => {
           },
         ],
       },
+      news: { layers: [] },
+      shop: { layers: [] },
+      tournaments: { layers: [] },
       version: 1,
     });
     expect(

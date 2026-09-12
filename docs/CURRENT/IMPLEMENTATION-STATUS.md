@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-09. Release productivo en `3cd66ad`; el registro CLIENTE vuelve a
+> Estado auditado hasta el 2026-09-12. Release productivo en `3cd66ad`; el registro CLIENTE vuelve a
 > estar habilitado con aceptación obligatoria y versionada de los Términos y condiciones 1.0. Por
 > decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -32,13 +32,13 @@
 - `npm ci`: PASS.
 - Runner oficial `scripts/codex/verify-local.ps1 -RunLocalIntegration`: `LOCAL_VERIFICATION=PASS` y salida natural `0` el 2026-08-23.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit, Application, Contract y Web: 109 archivos / 429 pruebas PASS y 1 SKIP documentado.
+- Unit, Application, Contract y Web: 115 archivos / 462 pruebas PASS y 1 SKIP documentado.
   Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro
   idempotente, estado 404 explícito, editor visual por bloques y lectura editorial pública.
-- Integration local: 14 archivos / 168 pruebas PASS sobre PostgreSQL 18.4. La migración editorial
-  pasó tanto upgrade del baseline como instalación limpia `001`–`022` el 2026-09-02.
+- Integration local: 14 archivos / 169 pruebas PASS sobre PostgreSQL 18.4. La migración de apariencia
+  pasó tanto upgrade del baseline como instalación limpia `001`–`023` el 2026-09-12.
 - `codex:prepare`: 135 checks PASS; 8 Skills locales válidas.
-- Migraciones protegidas: 31 intactas; `016`–`022` y mirrors Supabase son prospectivas.
+- Migraciones protegidas: 31 intactas; `016`–`023` y mirrors Supabase son prospectivas.
 - `npm audit`: 0 vulnerabilidades.
 - Auditoría de entrega: sin archivos/directorios vacíos, `.env` reales ni placeholders bloqueantes.
 - QA manual local: Inicio, Tienda, Editorial, Carrito, Checkout, Cuenta y accesos Admin revisados en escritorio/móvil; sin overflow horizontal y con acciones móviles de al menos 44 px.
@@ -327,21 +327,41 @@
   uso y los adornos restantes se muestran con proporción conservada. La portada local adopta una estructura
   de launcher con accesos reales a Tienda, Torneos, Noticias, Comunidad y Cómics; los rótulos continúan como
   texto HTML accesible y no como palabras horneadas en imágenes.
-- Por solicitud expresa del propietario se añadió una capacidad nueva, acotada a la portada, en
-  `/admin/appearance`: permite añadir capas de texto o recursos aprobados, arrastrarlas, ajustar posición,
-  tamaño y profundidad, ocultarlas en móvil, quitarlas y publicar una versión. Los controles comerciales y
-  la navegación permanecen protegidos fuera del documento editable.
+- Por solicitud expresa del propietario se añadió `/admin/appearance` para Portada, Tienda, Torneos,
+  Noticias, Comunidad y Cómics. Cada sección conserva capas independientes de texto o recursos aprobados
+  que se pueden arrastrar, redimensionar, ordenar, ocultar en móvil, quitar y publicar. Las capas de orden
+  0–4 quedan detrás del contenido y las de orden 6–30 pueden superponerse; los controles comerciales y la
+  navegación permanecen protegidos fuera del documento editable.
 - La apariencia se persiste como configuración global `WEB_APPEARANCE_LAYOUT`, validada contra un esquema
-  cerrado (máximo 24 capas, seis recursos aprobados, posiciones y profundidades acotadas), con borrador,
+  cerrado (máximo 24 capas por sección, seis recursos aprobados, posiciones y profundidades acotadas), con borrador,
   activación, historial, autorización ADMIN, idempotencia y auditoría existentes. La lectura pública expone
   únicamente la versión activa; no publica actores, motivos ni historial administrativo.
 - La migración prospectiva `023_web_appearance_configuration` pasó actualización `001–022 → 023` y una
   instalación limpia `001 → 023` sobre PostgreSQL 18.4. El historial protegido conservó sus 31 archivos sin
-  cambios. El gate integral pasó formato, lint, tipos, 114 archivos de prueba, 459 pruebas aprobadas y 1
+  cambios. El gate integral pasó formato, lint, tipos, 115 archivos de prueba, 462 pruebas aprobadas y 1
   omisión documentada, además de la compilación productiva. Administración y el editor de apariencia se
   cargan bajo demanda: el paquete inicial bajó a 333,61 kB y la compilación dejó de advertir por tamaño. El
   conjunto continúa solo local: requiere despliegue de API/Preview y aceptación visual antes de cualquier
   promoción a producción.
+
+## Revisión del editor y cierre local — 2026-09-12
+
+- Se impide editar/publicar mientras carga la apariencia o si la lectura falla, para no sustituir una
+  versión existente por un documento vacío. Los reintentos conservan borrador y clave de activación;
+  se bloquea el doble envío, se limita la cantidad de capas y se valida el documento antes de publicar.
+- Las capas se pueden seleccionar con teclado y los textos públicos permanecen accesibles. La prueba
+  PostgreSQL focal aprobó 8 casos, incluida persistencia desde un lector nuevo, borrador no público y
+  activación idempotente. Las seis pruebas del editor aprobaron carga, reintento y nueva lectura.
+- Se corrigió el título del launcher para ajustarlo al ancho real de su columna y la posición de las
+  capas que una regla CSS heredada alteraba. La revisión local de Inicio comprobó escritorio y anchos
+  de 390/768 px; no hubo desbordamiento horizontal ni imágenes rotas en la lectura móvil. Las consultas
+  comerciales locales no disponían de API activa: esta revisión visual no certifica contenido remoto.
+- El gate integral aprobó formato, lint, tipos, 115 archivos, 465 pruebas y una omisión documentada,
+  además de compilación API/web sin advertencia de tamaño.
+- Pendientes concretos: una vista previa fiel de la página dentro del editor, convertir los elementos
+  existentes en capas editables (actualmente se agregan capas sobre la composición), ampliar la biblioteca
+  más allá de seis adornos, revisión visual Admin y aceptación remota del guardado. No se considera
+  terminado el editor libre solicitado. El bloque permanece local y no está desplegado.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
