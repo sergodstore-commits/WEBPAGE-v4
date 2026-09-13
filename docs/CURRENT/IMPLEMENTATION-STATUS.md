@@ -418,12 +418,18 @@
 - La sesión Admin real se comprobó posteriormente en la alias de la rama. El editor se protegió
   correctamente y mantuvo deshabilitada la edición porque la API productiva aún responde `404` en
   `GET /api/v1/site-appearance`. También se encontró que la política propia de Vercel impedía la vista
-  incrustada: la aplicación cambió `frame-ancestors` a `'self'` y eliminó la directiva heredada
-  `X-Frame-Options`, con prueba contractual; la política moderna continúa impidiendo framing externo.
-  `99e5de9` quedó `Ready` en Preview; no obstante,
+  incrustada: la aplicación cambió `frame-ancestors` a `'self'` y `X-Frame-Options` a `SAMEORIGIN`, con
+  prueba contractual, sin permitir framing externo. `99e5de9` quedó `Ready` en Preview; no obstante,
   Vercel Authentication intercepta las URLs protegidas con un `302` y `X-Frame-Options: DENY`, por lo
   que la vista real seguirá bloqueada exclusivamente en esas Previews mientras esa protección externa
   esté activa. Producción no se promovió.
+- La alias `codex/staging-acceptance` se agregó de forma explícita a las excepciones de Deployment
+  Protection: pasó a responder `200` sin redirección de Vercel y conservó CSP limitada a `'self'`. La
+  página de vista previa cargó correctamente como navegación independiente. El iframe siguió rechazado
+  dentro del navegador integrado de Codex incluso al retirar temporalmente `X-Frame-Options`; por ello se
+  restauró `SAMEORIGIN` y no se debilitó la defensa contra clickjacking. Esta limitación del entorno de
+  inspección no convierte en PASS el iframe: debe comprobarse en un navegador normal cuando la API nueva
+  permita cargar el editor.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
