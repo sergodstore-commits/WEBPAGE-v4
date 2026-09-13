@@ -399,6 +399,10 @@
   combinaciones renderizaron contenido principal, sin imágenes rotas ni overflow horizontal; a 390 px no
   hubo controles menores de 44 px. Como la API comercial no estaba activa durante esta revisión, el PASS
   es estructural y responsive: no certifica contenido remoto ni sus estados con datos reales.
+- El gate acumulado posterior al editor y al catálogo visual aprobó lint, tipos, compilación API/web y
+  115 archivos con 477 pruebas aprobadas más una omisión documentada: 283 unitarias, 45 de aplicación,
+  56 de contrato y 93 web. La integración PostgreSQL completa volvió a aprobar 14 archivos/170 pruebas
+  en 243,85 segundos con el contrato ampliado de apariencia.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
