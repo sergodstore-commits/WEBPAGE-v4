@@ -449,8 +449,7 @@
   compilaciones web. La Preview exacta sirvió el CSS actualizado y la API temporal continuó HTTP 200.
 - La publicación remota del diseño base completó el ciclo `guardar → activar → recargar → leer` y el
   editor mostró `Apariencia publicada cargada` después de una nueva lectura. El endpoint público devolvió
-  un layout versión 1 no nulo y Portada, Tienda, Torneos, Noticias, Comunidad y Cómics respondieron HTTP
-  200. Continúan pendientes la aceptación visual final del propietario y el gate previo a producción; no
+  un layout versión 1 no nulo y Portada, Tienda, Torneos, Noticias, Comunidad y Cómics respondieron HTTP 200. Continúan pendientes la aceptación visual final del propietario y el gate previo a producción; no
   corresponde eliminar recursos temporales antes de esos pasos.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
