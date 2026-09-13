@@ -1234,12 +1234,24 @@ textarea:hover {
   gap: 0.25rem;
   width: 100%;
   min-height: 2.75rem;
+  border: 1px solid #414650;
+  border-left: 4px solid var(--red);
+  background: #0c0e11;
+  color: var(--paper);
   text-align: left;
   overflow-wrap: anywhere;
   clip-path: none !important;
 }
 
+.appearance-layer-list button:hover,
+.appearance-layer-list button:focus-visible {
+  border-color: var(--cyan);
+  background: #20242a;
+}
+
 .appearance-layer-list button[aria-pressed='true'] {
+  border-left-color: var(--cyan);
+  background: linear-gradient(105deg, #4f0b14, #111318 72%);
   outline: 3px solid var(--cyan);
   outline-offset: -3px;
 }
@@ -1325,6 +1337,9 @@ textarea:hover {
   gap: 0.4rem;
   min-height: 7.5rem;
   padding: 0.5rem;
+  border: 1px solid #414650;
+  background: #0c0e11;
+  color: var(--paper);
   text-align: left;
 }
 
@@ -1511,11 +1526,25 @@ textarea:hover {
   .appearance-toolbar .actions {
     display: grid;
     grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .appearance-live-preview > header {
     display: grid;
     align-items: start;
+  }
+
+  .appearance-canvas {
+    min-height: 18rem;
+    aspect-ratio: 4 / 3;
+  }
+
+  .appearance-range {
+    grid-template-columns: 1fr;
+  }
+
+  .appearance-asset-grid {
+    grid-template-columns: 1fr;
   }
 
   .commerce-hero {
@@ -1550,8 +1579,22 @@ textarea:hover {
 
   .launcher-stage .hero-copy,
   .launcher-stage .hero-copy > * {
-    width: auto;
-    max-width: calc(100vw - 5rem);
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .launcher-stage .hero-copy {
+    overflow: hidden;
+  }
+
+  .launcher-stage .hero-copy .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .launcher-stage .hero-copy .actions button {
+    width: 100%;
   }
 
   .hero-service {
