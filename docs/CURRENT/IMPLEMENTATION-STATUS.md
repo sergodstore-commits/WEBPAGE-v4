@@ -447,9 +447,11 @@
   los controles visuales recuperan la jerarquía negro/rojo/cian y la portada móvil limita texto y acciones
   al ancho disponible. Aprobaron 96 pruebas web, tres comprobaciones de la biblioteca visual, tipos y dos
   compilaciones web. La Preview exacta sirvió el CSS actualizado y la API temporal continuó HTTP 200.
-- Continúa pendiente la aceptación reversible del guardado/publicación remota y la revisión visual final
-  del borrador en escritorio/teléfono. No corresponde promover a producción ni eliminar recursos antiguos
-  hasta completar esos pasos y el gate final.
+- La publicación remota del diseño base completó el ciclo `guardar → activar → recargar → leer` y el
+  editor mostró `Apariencia publicada cargada` después de una nueva lectura. El endpoint público devolvió
+  un layout versión 1 no nulo y Portada, Tienda, Torneos, Noticias, Comunidad y Cómics respondieron HTTP
+  200. Continúan pendientes la aceptación visual final del propietario y el gate previo a producción; no
+  corresponde eliminar recursos temporales antes de esos pasos.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
