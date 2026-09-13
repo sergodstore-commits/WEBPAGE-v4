@@ -418,8 +418,9 @@
 - La sesión Admin real se comprobó posteriormente en la alias de la rama. El editor se protegió
   correctamente y mantuvo deshabilitada la edición porque la API productiva aún responde `404` en
   `GET /api/v1/site-appearance`. También se encontró que la política propia de Vercel impedía la vista
-  incrustada: la aplicación cambió `frame-ancestors` a `'self'` y `X-Frame-Options` a `SAMEORIGIN`, con
-  prueba contractual, sin permitir framing externo. `99e5de9` quedó `Ready` en Preview; no obstante,
+  incrustada: la aplicación cambió `frame-ancestors` a `'self'` y eliminó la directiva heredada
+  `X-Frame-Options`, con prueba contractual; la política moderna continúa impidiendo framing externo.
+  `99e5de9` quedó `Ready` en Preview; no obstante,
   Vercel Authentication intercepta las URLs protegidas con un `302` y `X-Frame-Options: DENY`, por lo
   que la vista real seguirá bloqueada exclusivamente en esas Previews mientras esa protección externa
   esté activa. Producción no se promovió.
