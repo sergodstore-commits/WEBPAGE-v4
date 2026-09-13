@@ -449,8 +449,21 @@
   compilaciones web. La Preview exacta sirvió el CSS actualizado y la API temporal continuó HTTP 200.
 - La publicación remota del diseño base completó el ciclo `guardar → activar → recargar → leer` y el
   editor mostró `Apariencia publicada cargada` después de una nueva lectura. El endpoint público devolvió
-  un layout versión 1 no nulo y Portada, Tienda, Torneos, Noticias, Comunidad y Cómics respondieron HTTP 200. Continúan pendientes la aceptación visual final del propietario y el gate previo a producción; no
-  corresponde eliminar recursos temporales antes de esos pasos.
+  un layout versión 1 no nulo y Portada, Tienda, Torneos, Noticias, Comunidad y Cómics respondieron HTTP 200.
+- Los commits `2305848` y `18994f9` cerraron los dos hallazgos responsive finales: el lienzo de apariencia
+  dejó de imponer un ancho mínimo efectivo en teléfonos y el adorno del encabezado administrativo dejó de
+  superponerse al título móvil. La revisión posterior a 390 y 1.280 px confirmó contenido principal visible,
+  cero imágenes rotas y cero desbordamiento horizontal en las seis rutas públicas y en Apariencia, POS,
+  Catálogo y Contenido. A 390 px tampoco quedaron controles interactivos menores de 44 px.
+- El gate integral previo a promoción aprobó formato, lint, tipos, compilación API/web y 116 archivos de
+  prueba: 478 pruebas aprobadas y una omisión documentada. La aceptación visual aislada y el gate local
+  están cerrados.
+- El respaldo productivo inmediato `sergod-production-public-20260913-144809.dump.aes` quedó cifrado y
+  autenticado fuera de Git. Su restauración desechable reprodujo 82 tablas y 7.539 filas sin diferencias
+  frente a Producción; SHA-256
+  `161E1246F5C180E989792901FE021CFDF0D3B2A9CF28FD27D740FAA94C28C266`. Producción continúa pendiente
+  únicamente de promoción coordinada y smoke posterior. No corresponde eliminar recursos temporales antes
+  de completar y documentar esos pasos.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
