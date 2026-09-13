@@ -431,6 +431,26 @@
   inspección no convierte en PASS el iframe: debe comprobarse en un navegador normal cuando la API nueva
   permita cargar el editor.
 
+## Aceptación visual aislada — 2026-09-13
+
+- Se creó una infraestructura temporal gratuita y completamente aislada para aceptar el conjunto visual:
+  Supabase `sergod-store-staging-temporal`, Render `sergod-store-api-staging-temporal` y la Preview de
+  `codex/staging-acceptance`. Las 23 migraciones, el bucket privado `catalog-assets`, la identidad Admin y
+  el bootstrap inicial quedaron operativos sin copiar datos productivos. Salud de API, lectura pública de
+  apariencia, login Admin y persistencia de sesión respondieron correctamente. Con la excepción limitada
+  a esta rama, la página real también se renderizó dentro del editor sin debilitar el framing externo.
+- La Preview se enruta únicamente a la API y Supabase temporales. El dominio canónico, `origin/main` y los
+  tres recursos productivos finales permanecen sin cambios. Antes de promover se debe restaurar en
+  `vercel.json` el destino productivo `https://sergod-store-api-v4.onrender.com`.
+- Los commits `9529cfe` y `e7c73a1` corrigieron el espacio del editor en portátiles y teléfonos: el panel
+  lateral se repliega antes de comprimir el trabajo, el lienzo y el inspector se apilan cuando corresponde,
+  los controles visuales recuperan la jerarquía negro/rojo/cian y la portada móvil limita texto y acciones
+  al ancho disponible. Aprobaron 96 pruebas web, tres comprobaciones de la biblioteca visual, tipos y dos
+  compilaciones web. La Preview exacta sirvió el CSS actualizado y la API temporal continuó HTTP 200.
+- Continúa pendiente la aceptación reversible del guardado/publicación remota y la revisión visual final
+  del borrador en escritorio/teléfono. No corresponde promover a producción ni eliminar recursos antiguos
+  hasta completar esos pasos y el gate final.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación
