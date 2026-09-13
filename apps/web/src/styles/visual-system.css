@@ -1404,6 +1404,24 @@ textarea:hover {
   }
 }
 
+@media (max-width: 1280px) {
+  .appearance-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .appearance-inspector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .appearance-inspector > h2,
+  .appearance-inspector > p,
+  .appearance-element-controls,
+  .appearance-asset-picker {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 980px) {
   .site-header {
     min-height: 5rem;
@@ -1455,6 +1473,10 @@ textarea:hover {
   }
 
   .appearance-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .appearance-inspector {
     grid-template-columns: 1fr;
   }
 
