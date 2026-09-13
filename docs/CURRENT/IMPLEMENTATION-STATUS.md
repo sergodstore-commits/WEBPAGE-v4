@@ -20,7 +20,7 @@
 | Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                | Carga operativa del propietario      |
 | Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                      | Catálogo/contenido del propietario   |
 | Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados         | Contenido del propietario            |
-| Diseño y accesibilidad                                                               | Revisión local en curso  | Preview visual rechazada por recortes y composición; corrección local verificable  | Aceptación visual del propietario    |
+| Diseño y accesibilidad                                                               | Preview técnica en curso | Corrección visual desplegada y rutas públicas responsive verificadas               | Aceptación Admin y del propietario   |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
 | Despliegue web                                                                       | Producción PASS          | Vercel `3c3dd12`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
@@ -415,6 +415,14 @@
   la inspección visual autenticada y el guardado remoto continúan pendientes. Además, la API productiva
   todavía ejecuta el contrato anterior: no debe intentarse publicar la nueva estructura hasta desplegar
   de forma coordinada la API y, después, aceptar la Preview con una sesión Admin real.
+- La sesión Admin real se comprobó posteriormente en la alias de la rama. El editor se protegió
+  correctamente y mantuvo deshabilitada la edición porque la API productiva aún responde `404` en
+  `GET /api/v1/site-appearance`. También se encontró que la política propia de Vercel impedía la vista
+  incrustada: la aplicación cambió `frame-ancestors` a `'self'` y `X-Frame-Options` a `SAMEORIGIN`, con
+  prueba contractual, sin permitir framing externo. `99e5de9` quedó `Ready` en Preview; no obstante,
+  Vercel Authentication intercepta las URLs protegidas con un `302` y `X-Frame-Options: DENY`, por lo
+  que la vista real seguirá bloqueada exclusivamente en esas Previews mientras esa protección externa
+  esté activa. Producción no se promovió.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
