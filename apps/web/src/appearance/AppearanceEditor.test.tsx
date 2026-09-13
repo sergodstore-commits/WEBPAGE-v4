@@ -79,6 +79,28 @@ describe('editor de apariencia web', () => {
     );
   });
 
+  it('ofrece alineación, valores exactos y duplicado para operar una capa con rapidez', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir texto' }));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Alineación de la capa' })).getByText('Centro'),
+    );
+    expect(screen.getByRole('slider', { name: /Posición horizontal/u })).toHaveValue('36');
+    const sizeControl = screen.getByText('Tamaño: 28').closest('.appearance-range');
+    if (!sizeControl) throw new Error('No se encontró el control exacto de tamaño.');
+    fireEvent.change(within(sizeControl as HTMLElement).getByRole('spinbutton'), {
+      target: { value: '40' },
+    });
+    expect(screen.getByRole('slider', { name: /Tamaño/u })).toHaveValue('40');
+    fireEvent.click(screen.getByRole('button', { name: 'Duplicar capa' }));
+    expect(
+      within(screen.getByRole('list', { name: 'Lista de capas' })).getAllByRole('button'),
+    ).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Traer al frente' }));
+    expect(screen.getByRole('slider', { name: /Orden de capa/u })).toHaveValue('30');
+  });
+
   it('permite recolocar elementos visuales existentes sin exponer controles funcionales', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');

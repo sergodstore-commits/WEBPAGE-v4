@@ -246,6 +246,21 @@ export function AppearanceEditor() {
     setSelectedElementId(null);
   };
 
+  const duplicateLayer = (layer: SiteAppearanceLayer) => {
+    if (!loaded || busy.current || layers.length >= 24) return;
+    const duplicate: SiteAppearanceLayer = {
+      ...layer,
+      id: `${layer.kind.toLowerCase()}-${crypto.randomUUID().slice(0, 8)}`,
+      x: Math.min(100 - layer.width, layer.x + 3),
+      y: Math.min(92, layer.y + 3),
+    };
+    setLayout((current) => ({
+      ...current,
+      [page]: { ...current[page], layers: [...current[page].layers, duplicate] },
+    }));
+    selectLayer(duplicate);
+  };
+
   const publish = async () => {
     if (busy.current || !loaded) return;
     if (!siteAppearanceLayoutSchema.safeParse(layout).success) {
@@ -601,6 +616,63 @@ export function AppearanceEditor() {
                 />
                 Ocultar en teléfonos
               </label>
+              <div
+                aria-label="Alineación de la capa"
+                className="appearance-quick-actions"
+                role="group"
+              >
+                <button
+                  className="secondary"
+                  onClick={() => updateLayer(selected.id, { x: 0 })}
+                  type="button"
+                >
+                  Izquierda
+                </button>
+                <button
+                  className="secondary"
+                  onClick={() =>
+                    updateLayer(selected.id, { x: rounded((100 - selected.width) / 2) })
+                  }
+                  type="button"
+                >
+                  Centro
+                </button>
+                <button
+                  className="secondary"
+                  onClick={() => updateLayer(selected.id, { x: 100 - selected.width })}
+                  type="button"
+                >
+                  Derecha
+                </button>
+              </div>
+              <div
+                aria-label="Orden rápido de la capa"
+                className="appearance-quick-actions"
+                role="group"
+              >
+                <button
+                  className="secondary"
+                  onClick={() => updateLayer(selected.id, { zIndex: 30 })}
+                  type="button"
+                >
+                  Traer al frente
+                </button>
+                <button
+                  className="secondary"
+                  onClick={() => updateLayer(selected.id, { zIndex: 0 })}
+                  type="button"
+                >
+                  Enviar al fondo
+                </button>
+              </div>
+              <button
+                className="secondary"
+                disabled={layers.length >= 24}
+                onClick={() => duplicateLayer(selected)}
+                type="button"
+              >
+                Duplicar capa
+              </button>
               <button
                 className="secondary"
                 onClick={() => {
@@ -683,17 +755,30 @@ function Range({
   readonly value: number;
 }) {
   return (
-    <label>
-      {label}: {Math.round(value)}
-      <input
-        max={max}
-        min={min}
-        onChange={(event) => onChange(Number(event.target.value))}
-        step="1"
-        type="range"
-        value={value}
-      />
-    </label>
+    <div className="appearance-range">
+      <label>
+        {label}: {Math.round(value)}
+        <input
+          max={max}
+          min={min}
+          onChange={(event) => onChange(Number(event.target.value))}
+          step="1"
+          type="range"
+          value={value}
+        />
+      </label>
+      <label>
+        Valor exacto
+        <input
+          max={max}
+          min={min}
+          onChange={(event) => onChange(Number(event.target.value))}
+          step="1"
+          type="number"
+          value={value}
+        />
+      </label>
+    </div>
   );
 }
 

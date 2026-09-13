@@ -358,8 +358,8 @@
   comerciales locales no disponían de API activa: esta revisión visual no certifica contenido remoto.
 - El gate integral aprobó formato, lint, tipos, 115 archivos, 465 pruebas y una omisión documentada,
   además de compilación API/web sin advertencia de tamaño.
-- Pendientes concretos: mejorar las operaciones del editor, completar la revisión visual Admin y
-  realizar la aceptación remota del guardado. No se
+- Pendientes concretos: completar la revisión visual Admin y realizar la aceptación remota del
+  guardado. No se
   considera terminado el editor libre solicitado. El bloque permanece local y no está desplegado.
 
 - Continuación del 2026-09-12: el editor incorpora una lista ordenada de capas para seleccionar
@@ -388,6 +388,10 @@
   publicadas. Un generador reproducible obtiene el catálogo desde el manifiesto y las pruebas comprueban
   tanto el conjunto cerrado como la selección visual por categoría. Aprobaron lint, compilación web,
   73 archivos/283 pruebas unitarias y 13 archivos/92 pruebas web.
+- La operación fina del editor añade entrada numérica exacta junto a cada deslizador, alineación rápida
+  izquierda/centro/derecha, envío al frente o fondo y duplicado con desplazamiento seguro. El límite de
+  24 capas continúa aplicándose también al duplicar. El gate focal aprobó 13 pruebas del editor y la
+  suite web completa aprobó 13 archivos/93 pruebas, además de lint, tipos y compilación.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
