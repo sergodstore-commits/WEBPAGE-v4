@@ -392,6 +392,9 @@
   izquierda/centro/derecha, envío al frente o fondo y duplicado con desplazamiento seguro. El límite de
   24 capas continúa aplicándose también al duplicar. El gate focal aprobó 13 pruebas del editor y la
   suite web completa aprobó 13 archivos/93 pruebas, además de lint, tipos y compilación.
+- La QA visual local final de Portada cubrió 390, 768 y 1.280 px. En los tres tamaños el título quedó
+  visible, no hubo imágenes rotas ni overflow horizontal; teléfono y tableta tampoco mostraron controles
+  menores de 44 px. Los únicos controles de 40 px corresponden a la navegación compacta de escritorio.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
