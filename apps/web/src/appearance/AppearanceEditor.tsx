@@ -10,6 +10,7 @@ import {
 import {
   siteAppearanceLayoutSchema,
   type SiteAppearanceAssetId,
+  type SiteAppearanceElement,
   type SiteAppearanceLayout,
   type SiteAppearanceLayer,
   type SiteAppearancePageId,
@@ -19,7 +20,10 @@ import { authorizedRequest, publicRequest } from '../identity/api.js';
 import {
   appearanceAssetIds,
   appearanceAssets,
+  appearanceElementLabels,
   defaultAppearanceLayout,
+  defaultAppearanceElements,
+  hydrateAppearanceLayout,
   layerStyle,
 } from './appearance-model.js';
 import {
@@ -67,6 +71,7 @@ export function AppearanceEditor() {
   const [layout, setLayout] = useState<SiteAppearanceLayout>(defaultAppearanceLayout);
   const [page, setPage] = useState<SiteAppearancePageId>('home');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [message, setMessage] = useState('Cargando apariencia publicada…');
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -82,10 +87,12 @@ export function AppearanceEditor() {
   const previewFrame = useRef<HTMLIFrameElement>(null);
   const drag = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
   const layers = layout[page].layers;
+  const elements = layout[page].elements ?? [];
   const selected = useMemo(
     () => layers.find(({ id }) => id === selectedId) ?? null,
     [layers, selectedId],
   );
+  const selectedElement = elements.find(({ id }) => id === selectedElementId) ?? null;
   const sendPreview = useCallback(() => {
     previewFrame.current?.contentWindow?.postMessage(
       { layout, type: appearancePreviewMessageType },
@@ -116,7 +123,8 @@ export function AppearanceEditor() {
     void publicRequest<{ readonly layout: SiteAppearanceLayout | null }>('/api/v1/site-appearance')
       .then(({ layout: received }) => {
         if (!active) return;
-        if (received !== null) setLayout(siteAppearanceLayoutSchema.parse(received));
+        if (received !== null)
+          setLayout(hydrateAppearanceLayout(siteAppearanceLayoutSchema.parse(received)));
         setLoaded(true);
         setMessage(
           received === null
@@ -140,8 +148,22 @@ export function AppearanceEditor() {
     setLayout((current) => ({
       ...current,
       [page]: {
+        ...current[page],
         layers: current[page].layers.map((layer) =>
           layer.id === id ? ({ ...layer, ...change } as SiteAppearanceLayer) : layer,
+        ),
+      },
+    }));
+  };
+
+  const updateElement = (id: string, change: Partial<SiteAppearanceElement>) => {
+    if (!loaded || busy.current) return;
+    setLayout((current) => ({
+      ...current,
+      [page]: {
+        ...current[page],
+        elements: (current[page].elements ?? []).map((element) =>
+          element.id === id ? ({ ...element, ...change } as SiteAppearanceElement) : element,
         ),
       },
     }));
@@ -207,9 +229,10 @@ export function AppearanceEditor() {
           };
     setLayout((current) => ({
       ...current,
-      [page]: { layers: [...current[page].layers, layer] },
+      [page]: { ...current[page], layers: [...current[page].layers, layer] },
     }));
     setSelectedId(id);
+    setSelectedElementId(null);
   };
 
   const publish = async () => {
@@ -309,6 +332,7 @@ export function AppearanceEditor() {
             onClick={() => {
               setPage(pageId);
               setSelectedId(null);
+              setSelectedElementId(null);
             }}
             type="button"
           >
@@ -342,7 +366,10 @@ export function AppearanceEditor() {
               className={`appearance-editor-layer is-${layer.kind.toLowerCase()}`}
               key={layer.id}
               disabled={saving}
-              onClick={() => setSelectedId(layer.id)}
+              onClick={() => {
+                setSelectedId(layer.id);
+                setSelectedElementId(null);
+              }}
               onPointerDown={(event) => beginDrag(event, layer)}
               style={layerStyle(layer)}
               type="button"
@@ -357,6 +384,86 @@ export function AppearanceEditor() {
         </div>
 
         <fieldset disabled={!loaded || saving} className="appearance-inspector">
+          <h2>Elementos existentes</h2>
+          <p>
+            Textos y marcos visuales se pueden recolocar. Navegación, compras y formularios
+            permanecen protegidos.
+          </p>
+          <ol className="appearance-layer-list" aria-label="Elementos existentes de la página">
+            {elements.map((element) => (
+              <li key={element.id}>
+                <button
+                  aria-pressed={selectedElementId === element.id}
+                  className="secondary"
+                  onClick={() => {
+                    setSelectedElementId(element.id);
+                    setSelectedId(null);
+                  }}
+                  type="button"
+                >
+                  <span>{appearanceElementLabels[element.id]}</span>
+                  <small>
+                    Orden {element.zIndex}
+                    {element.hiddenOnMobile ? ' · Oculto en móvil' : ''}
+                  </small>
+                </button>
+              </li>
+            ))}
+          </ol>
+          {selectedElement && (
+            <div className="appearance-element-controls">
+              <h2>Propiedades del elemento</h2>
+              <Range
+                label="Desplazamiento horizontal"
+                max={50}
+                min={-50}
+                onChange={(offsetX) => updateElement(selectedElement.id, { offsetX })}
+                value={selectedElement.offsetX}
+              />
+              <Range
+                label="Desplazamiento vertical"
+                max={50}
+                min={-50}
+                onChange={(offsetY) => updateElement(selectedElement.id, { offsetY })}
+                value={selectedElement.offsetY}
+              />
+              <Range
+                label="Ancho"
+                max={120}
+                min={40}
+                onChange={(width) => updateElement(selectedElement.id, { width })}
+                value={selectedElement.width}
+              />
+              <Range
+                label="Orden del elemento"
+                max={30}
+                onChange={(zIndex) => updateElement(selectedElement.id, { zIndex })}
+                value={selectedElement.zIndex}
+              />
+              <label className="appearance-checkbox">
+                <input
+                  checked={selectedElement.hiddenOnMobile}
+                  onChange={(event) =>
+                    updateElement(selectedElement.id, { hiddenOnMobile: event.target.checked })
+                  }
+                  type="checkbox"
+                />
+                Ocultar en teléfonos
+              </label>
+              <button
+                className="secondary"
+                onClick={() => {
+                  const original = defaultAppearanceElements[page].find(
+                    ({ id }) => id === selectedElement.id,
+                  );
+                  if (original) updateElement(selectedElement.id, original);
+                }}
+                type="button"
+              >
+                Restablecer posición
+              </button>
+            </div>
+          )}
           <h2>Capas de {pageLabels[page]}</h2>
           <p>{layers.length} de 24 capas · las primeras de la lista quedan delante.</p>
           <ol className="appearance-layer-list" aria-label="Lista de capas">
@@ -367,7 +474,10 @@ export function AppearanceEditor() {
                   <button
                     aria-pressed={selectedId === layer.id}
                     className="secondary"
-                    onClick={() => setSelectedId(layer.id)}
+                    onClick={() => {
+                      setSelectedId(layer.id);
+                      setSelectedElementId(null);
+                    }}
                     type="button"
                   >
                     <span>
@@ -457,6 +567,7 @@ export function AppearanceEditor() {
                   setLayout((current) => ({
                     ...current,
                     [page]: {
+                      ...current[page],
                       layers: current[page].layers.filter(({ id }) => id !== selected.id),
                     },
                   }));

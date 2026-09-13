@@ -50,7 +50,12 @@ import {
 } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
 import { TermsPage } from '../legal/TermsPage.js';
-import { AppearanceLayers, AppearanceRegion } from '../appearance/SiteAppearance.js';
+import {
+  AppearanceElement,
+  AppearanceLayers,
+  AppearancePageElements,
+  AppearanceRegion,
+} from '../appearance/SiteAppearance.js';
 import { useSiteAppearance } from '../appearance/useSiteAppearance.js';
 import { SiteAppearancePreviewProvider } from '../appearance/SiteAppearancePreview.js';
 import { routeWithAppearancePreview } from './appearance-preview-route.js';
@@ -385,68 +390,84 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
     { eyebrow: 'Historias', label: 'Cómics', route: '/comics' },
   ] as const;
   return (
-    <main className="home-page visual-public">
-      <section aria-label="Inicio Sergod Store" className="launcher-shell">
-        <header className="launcher-topbar">
-          <span>Inicio Sergod</span>
-          <strong>Elige tu próxima ruta</strong>
-          <span className="launcher-status">Sergod Store</span>
-        </header>
-        <nav aria-label="Accesos principales" className="launcher-menu">
-          {launcherEntries.map((entry, index) => (
-            <button key={entry.route} onClick={() => navigate(entry.route)} type="button">
-              <span aria-hidden="true" className="launcher-icon" />
-              <span>
-                <small>{entry.eyebrow}</small>
-                <strong>{entry.label}</strong>
-              </span>
-              <b aria-hidden="true">{String(index + 1).padStart(2, '0')}</b>
-            </button>
-          ))}
-        </nav>
-        <section className="commerce-hero launcher-stage">
-          <AppearanceLayers layers={appearance.home.layers} />
-          <div className="hero-copy">
-            <p className="eyebrow">TCG · Comunidad · Competencia</p>
-            <span aria-hidden="true" className="hero-rule" />
-            <h1>Tu próxima jugada comienza aquí.</h1>
-            <p className="hero-lead">
-              Compra productos TCG, asegura preventas y mantente al día con la comunidad Sergod.
-            </p>
-            <div className="actions">
-              <button onClick={() => navigate('/shop')} type="button">
-                Explorar tienda
+    <AppearancePageElements page="home">
+      <main className="home-page visual-public">
+        <section aria-label="Inicio Sergod Store" className="launcher-shell">
+          <header className="launcher-topbar">
+            <span>Inicio Sergod</span>
+            <strong>Elige tu próxima ruta</strong>
+            <span className="launcher-status">Sergod Store</span>
+          </header>
+          <nav aria-label="Accesos principales" className="launcher-menu">
+            {launcherEntries.map((entry, index) => (
+              <button key={entry.route} onClick={() => navigate(entry.route)} type="button">
+                <span aria-hidden="true" className="launcher-icon" />
+                <span>
+                  <small>{entry.eyebrow}</small>
+                  <strong>{entry.label}</strong>
+                </span>
+                <b aria-hidden="true">{String(index + 1).padStart(2, '0')}</b>
               </button>
-              <button className="secondary" onClick={() => navigate('/tournaments')} type="button">
-                Ver torneos
-              </button>
+            ))}
+          </nav>
+          <section className="commerce-hero launcher-stage">
+            <AppearanceLayers layers={appearance.home.layers} />
+            <div className="hero-copy">
+              <AppearanceElement id="home-eyebrow">
+                <p className="eyebrow">TCG · Comunidad · Competencia</p>
+              </AppearanceElement>
+              <span aria-hidden="true" className="hero-rule" />
+              <AppearanceElement id="home-title">
+                <h1>Tu próxima jugada comienza aquí.</h1>
+              </AppearanceElement>
+              <AppearanceElement id="home-lead">
+                <p className="hero-lead">
+                  Compra productos TCG, asegura preventas y mantente al día con la comunidad Sergod.
+                </p>
+              </AppearanceElement>
+              <div className="actions">
+                <button onClick={() => navigate('/shop')} type="button">
+                  Explorar tienda
+                </button>
+                <button
+                  className="secondary"
+                  onClick={() => navigate('/tournaments')}
+                  type="button"
+                >
+                  Ver torneos
+                </button>
+              </div>
             </div>
-          </div>
-          <aside className="hero-service cut-panel">
-            <div className="service-heading">
-              <span aria-hidden="true">!</span>
-              <p className="card-kicker">Compra con claridad</p>
-            </div>
-            <ul>
-              <li>Disponibilidad y precios actualizados</li>
-              <li>Retiro en tienda</li>
-              <li>Despacho por pagar a agencia</li>
-              <li>Pago online con Flow</li>
-            </ul>
-          </aside>
+            <AppearanceElement id="home-service">
+              <aside className="hero-service cut-panel">
+                <div className="service-heading">
+                  <span aria-hidden="true">!</span>
+                  <p className="card-kicker">Compra con claridad</p>
+                </div>
+                <ul>
+                  <li>Disponibilidad y precios actualizados</li>
+                  <li>Retiro en tienda</li>
+                  <li>Despacho por pagar a agencia</li>
+                  <li>Pago online con Flow</li>
+                </ul>
+              </aside>
+            </AppearanceElement>
+          </section>
         </section>
-      </section>
-      <section aria-labelledby="home-sections-title" className="home-sections">
-        <header className="section-banner">
-          <div>
-            <p className="eyebrow">Elige tu próxima ruta</p>
-            <h2 id="home-sections-title">Explora Sergod</h2>
-          </div>
-          <p>Tienda, comunidad y contenido editorial conectados en una misma experiencia.</p>
-        </header>
-        <HomeHighlights navigate={navigate} />
-      </section>
-    </main>
+        <section aria-labelledby="home-sections-title" className="home-sections">
+          <AppearanceElement id="home-sections-heading">
+            <header className="section-banner">
+              <div>
+                <p className="eyebrow">Elige tu próxima ruta</p>
+                <h2 id="home-sections-title">Explora Sergod</h2>
+              </div>
+              <p>Tienda, comunidad y contenido editorial conectados en una misma experiencia.</p>
+            </header>
+          </AppearanceElement>
+          <HomeHighlights navigate={navigate} />
+        </section>
+      </main>
+    </AppearancePageElements>
   );
 }
 

@@ -358,10 +358,9 @@
   comerciales locales no disponían de API activa: esta revisión visual no certifica contenido remoto.
 - El gate integral aprobó formato, lint, tipos, 115 archivos, 465 pruebas y una omisión documentada,
   además de compilación API/web sin advertencia de tamaño.
-- Pendientes concretos: convertir los elementos existentes en capas editables (actualmente se agregan
-  capas sobre la composición), ampliar la biblioteca
-  más allá de seis adornos, revisión visual Admin y aceptación remota del guardado. No se considera
-  terminado el editor libre solicitado. El bloque permanece local y no está desplegado.
+- Pendientes concretos: ampliar la biblioteca más allá de seis adornos, mejorar las operaciones del
+  editor, completar la revisión visual Admin y realizar la aceptación remota del guardado. No se
+  considera terminado el editor libre solicitado. El bloque permanece local y no está desplegado.
 
 - Continuación del 2026-09-12: el editor incorpora una lista ordenada de capas para seleccionar
   elementos tapados, consultar su orden/visibilidad y quitarlos de forma individual. El área de dibujo
@@ -375,6 +374,13 @@
   borrador al navegar dentro de la vista. Una respuesta pública incompleta se descarta sin reemplazar el
   diseño seguro. Las pruebas focales de App/editor aprobaron 22 casos; el gate web completo aprobó 13
   archivos y 89 pruebas, junto con lint, tipos y compilación de producción.
+- Catorce elementos visuales que ya forman parte de Portada, Tienda, Torneos, Noticias, Comunidad y
+  Cómics se exponen ahora como elementos seleccionables. El administrador puede ajustar desplazamiento,
+  ancho, profundidad y visibilidad móvil, o restablecer la posición original. El contrato conserva
+  compatibilidad con versiones publicadas anteriores, impide trasladar elementos entre secciones y deja
+  fuera del documento editable los botones de navegación, compra y formularios. Aprobaron 29 pruebas
+  focales, 91 pruebas web completas, lint, tipos y compilación. La revisión local de Portada confirmó a
+  390 px cero imágenes rotas, cero overflow horizontal y cero botones menores de 44 px.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

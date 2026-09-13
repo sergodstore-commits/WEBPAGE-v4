@@ -1,9 +1,23 @@
-import type { ReactNode } from 'react';
+import {
+  cloneElement,
+  createContext,
+  useContext,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 
-import type { SiteAppearanceLayer, SiteAppearancePageId } from '@sergod/contracts';
+import type {
+  SiteAppearanceElement,
+  SiteAppearanceElementId,
+  SiteAppearanceLayer,
+  SiteAppearancePageId,
+} from '@sergod/contracts';
 
-import { appearanceAssets, layerStyle } from './appearance-model.js';
+import { appearanceAssets, elementStyle, layerStyle } from './appearance-model.js';
 import { useSiteAppearance } from './useSiteAppearance.js';
+
+const AppearanceElementsContext = createContext<readonly SiteAppearanceElement[]>([]);
 
 export function AppearanceLayers({ layers }: { readonly layers: readonly SiteAppearanceLayer[] }) {
   if (layers.length === 0) return null;
@@ -36,9 +50,43 @@ export function AppearanceRegion({
 }) {
   const layout = useSiteAppearance();
   return (
-    <div className="appearance-region">
-      <AppearanceLayers layers={layout[page].layers} />
-      <div className="appearance-region-content">{children}</div>
-    </div>
+    <AppearancePageElements page={page}>
+      <div className="appearance-region">
+        <AppearanceLayers layers={layout[page].layers} />
+        <div className="appearance-region-content">{children}</div>
+      </div>
+    </AppearancePageElements>
   );
+}
+
+export function AppearancePageElements({
+  children,
+  page,
+}: {
+  readonly children: ReactNode;
+  readonly page: SiteAppearancePageId;
+}) {
+  const layout = useSiteAppearance();
+  return (
+    <AppearanceElementsContext.Provider value={layout[page].elements ?? []}>
+      {children}
+    </AppearanceElementsContext.Provider>
+  );
+}
+
+export function AppearanceElement({
+  children,
+  id,
+}: {
+  readonly children: ReactElement<{ className?: string; style?: CSSProperties }>;
+  readonly id: SiteAppearanceElementId;
+}) {
+  const elements = useContext(AppearanceElementsContext);
+  const element = elements.find((candidate) => candidate.id === id);
+  if (!element) return children;
+  return cloneElement(children, {
+    className:
+      `${children.props.className ?? ''} appearance-editable-element${element.hiddenOnMobile ? ' is-hidden-mobile' : ''}`.trim(),
+    style: { ...children.props.style, ...elementStyle(element) },
+  });
 }

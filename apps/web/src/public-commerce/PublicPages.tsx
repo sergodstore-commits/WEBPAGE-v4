@@ -3,6 +3,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { ApiError, authorizedRequest, currentSession, publicRequest } from '../identity/api.js';
 import { EditorialDocumentView } from '../editorial/EditorialDocument.js';
 import { documentFromMetadata } from '../editorial/editorial-document-model.js';
+import { AppearanceElement } from '../appearance/SiteAppearance.js';
 import { firstStore, type StoreSummary } from '../service-coverage/store.js';
 
 interface ProductCard {
@@ -491,17 +492,21 @@ export function StorePage() {
   return (
     <main className="page-frame store-page visual-public">
       <header className="section-heading catalog-heading cut-panel">
-        <div>
-          <p className="eyebrow">Tienda TCG</p>
-          <h1>Catálogo</h1>
-          <p>
-            Productos regulares y preventas. Precio, stock y descuentos se confirman en servidor.
-          </p>
-        </div>
-        <div aria-label="Garantías del catálogo" className="heading-stats">
-          <span>Stock confirmado</span>
-          <span>Precio de servidor</span>
-        </div>
+        <AppearanceElement id="shop-heading-copy">
+          <div>
+            <p className="eyebrow">Tienda TCG</p>
+            <h1>Catálogo</h1>
+            <p>
+              Productos regulares y preventas. Precio, stock y descuentos se confirman en servidor.
+            </p>
+          </div>
+        </AppearanceElement>
+        <AppearanceElement id="shop-heading-stats">
+          <div aria-label="Garantías del catálogo" className="heading-stats">
+            <span>Stock confirmado</span>
+            <span>Precio de servidor</span>
+          </div>
+        </AppearanceElement>
       </header>
       <p aria-live="polite" className="status">
         {message}
@@ -1127,18 +1132,22 @@ export function TournamentPage() {
   return (
     <main className="page-frame editorial-page tournament-page visual-public">
       <header className="section-heading editorial-heading cut-panel">
-        <div>
-          <p className="eyebrow">Juego organizado Sergod</p>
-          <h1>Torneos y comunidad</h1>
-          <p>
-            Próximos encuentros, resultados, podios, Quests y reconocimientos publicados por la
-            tienda. Esta sección es informativa y no administra rondas ni emparejamientos.
-          </p>
-        </div>
-        <div aria-label="Características de la sección" className="heading-stats">
-          <span>Información oficial</span>
-          <span>Resultados y fotos</span>
-        </div>
+        <AppearanceElement id="tournaments-heading-copy">
+          <div>
+            <p className="eyebrow">Juego organizado Sergod</p>
+            <h1>Torneos y comunidad</h1>
+            <p>
+              Próximos encuentros, resultados, podios, Quests y reconocimientos publicados por la
+              tienda. Esta sección es informativa y no administra rondas ni emparejamientos.
+            </p>
+          </div>
+        </AppearanceElement>
+        <AppearanceElement id="tournaments-heading-stats">
+          <div aria-label="Características de la sección" className="heading-stats">
+            <span>Información oficial</span>
+            <span>Resultados y fotos</span>
+          </div>
+        </AppearanceElement>
       </header>
       <p aria-live="polite" className="status">
         {content.loading ? 'Cargando torneos y eventos…' : content.errors.join(' ')}
@@ -1335,18 +1344,22 @@ export function NewsPage() {
   return (
     <main className="page-frame editorial-page news-page visual-public">
       <header className="section-heading editorial-heading cut-panel">
-        <div>
-          <p className="eyebrow">Actualidad Sergod</p>
-          <h1>Noticias</h1>
-          <p>
-            Novedades oficiales de la tienda y de la comunidad, organizadas para encontrarlas
-            fácilmente.
-          </p>
-        </div>
-        <div aria-label="Características de la sección" className="heading-stats">
-          <span>Portada editorial</span>
-          <span>Artículos completos</span>
-        </div>
+        <AppearanceElement id="news-heading-copy">
+          <div>
+            <p className="eyebrow">Actualidad Sergod</p>
+            <h1>Noticias</h1>
+            <p>
+              Novedades oficiales de la tienda y de la comunidad, organizadas para encontrarlas
+              fácilmente.
+            </p>
+          </div>
+        </AppearanceElement>
+        <AppearanceElement id="news-heading-stats">
+          <div aria-label="Características de la sección" className="heading-stats">
+            <span>Portada editorial</span>
+            <span>Artículos completos</span>
+          </div>
+        </AppearanceElement>
       </header>
       <p aria-live="polite" className="status">
         {message}
@@ -1454,14 +1467,16 @@ export function CommunityPage({ navigate }: { readonly navigate: (route: HomeRou
   return (
     <main className="page-frame editorial-page community-page visual-public">
       <header className="section-heading editorial-heading cut-panel">
-        <div>
-          <p className="eyebrow">La comunidad Sergod</p>
-          <h1>Juega, comparte y participa</h1>
-          <p>
-            Actividades, juegos y encuentros publicados por Sergod Store, junto con la información
-            real para visitarnos o contactarnos.
-          </p>
-        </div>
+        <AppearanceElement id="community-heading-copy">
+          <div>
+            <p className="eyebrow">La comunidad Sergod</p>
+            <h1>Juega, comparte y participa</h1>
+            <p>
+              Actividades, juegos y encuentros publicados por Sergod Store, junto con la información
+              real para visitarnos o contactarnos.
+            </p>
+          </div>
+        </AppearanceElement>
         <div aria-label="Accesos de comunidad" className="heading-stats">
           <button onClick={() => navigate('/tournaments')} type="button">
             Torneos y Quests
@@ -1703,15 +1718,21 @@ export function ComicsPage() {
   return (
     <main className="page-frame editorial-page comics-page visual-public">
       <header className="section-heading editorial-heading cut-panel">
-        <div>
-          <p className="eyebrow">Historias Sergod</p>
-          <h1>Cómics e historias</h1>
-          <p>Explora las series publicadas por la tienda y lee sus capítulos completos en orden.</p>
-        </div>
-        <div aria-label="Características de la sección" className="heading-stats">
-          <span>Series y capítulos</span>
-          <span>Lector con imágenes</span>
-        </div>
+        <AppearanceElement id="comics-heading-copy">
+          <div>
+            <p className="eyebrow">Historias Sergod</p>
+            <h1>Cómics e historias</h1>
+            <p>
+              Explora las series publicadas por la tienda y lee sus capítulos completos en orden.
+            </p>
+          </div>
+        </AppearanceElement>
+        <AppearanceElement id="comics-heading-stats">
+          <div aria-label="Características de la sección" className="heading-stats">
+            <span>Series y capítulos</span>
+            <span>Lector con imágenes</span>
+          </div>
+        </AppearanceElement>
       </header>
       <p aria-live="polite" className="status">
         {message}

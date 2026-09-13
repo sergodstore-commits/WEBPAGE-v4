@@ -1,9 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { siteAppearanceLayoutSchema } from '@sergod/contracts';
+
 import { authorizedRequest, publicRequest } from '../identity/api.js';
 import { AppearanceEditor } from './AppearanceEditor.js';
-import { AppearanceLayers } from './SiteAppearance.js';
+import { AppearanceElement, AppearanceLayers, AppearancePageElements } from './SiteAppearance.js';
 import { defaultAppearanceLayout } from './appearance-model.js';
 import { useSiteAppearance } from './useSiteAppearance.js';
 
@@ -61,6 +63,28 @@ describe('editor de apariencia web', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Quitar capa' }));
     expect(list.queryByRole('button', { name: /Impacto rojo/u })).toBeNull();
     expect(list.getByRole('button', { name: /Nuevo texto/u })).toBeInTheDocument();
+  });
+
+  it('permite recolocar elementos visuales existentes sin exponer controles funcionales', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+    const elements = within(
+      screen.getByRole('list', { name: 'Elementos existentes de la página' }),
+    );
+    fireEvent.click(elements.getByRole('button', { name: /Título principal/u }));
+    fireEvent.change(screen.getByRole('slider', { name: /Desplazamiento horizontal/u }), {
+      target: { value: '12' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar y publicar' }));
+    await waitFor(() => expect(authorizedRequest).toHaveBeenCalledTimes(2));
+    const request = JSON.parse(String(vi.mocked(authorizedRequest).mock.calls[0]?.[1]?.body)) as {
+      value: string;
+    };
+    const saved = siteAppearanceLayoutSchema.parse(JSON.parse(request.value));
+    expect(saved.home.elements?.find(({ id }) => id === 'home-title')?.offsetX).toBe(12);
+    expect(
+      screen.getByText(/Navegación, compras y formularios permanecen protegidos/u),
+    ).toBeInTheDocument();
   });
 
   it('impide reemplazar la apariencia si su lectura falla', async () => {
@@ -194,5 +218,32 @@ describe('editor de apariencia web', () => {
       'src',
       expect.stringContaining('fx_01.webp'),
     );
+  });
+
+  it('aplica la posición guardada al elemento existente correspondiente', () => {
+    const layout = {
+      ...defaultAppearanceLayout,
+      home: {
+        ...defaultAppearanceLayout.home,
+        elements: defaultAppearanceLayout.home.elements?.map((element) =>
+          element.id === 'home-title' ? { ...element, offsetX: 14, zIndex: 9 } : element,
+        ),
+      },
+    };
+    vi.mocked(publicRequest).mockResolvedValue({ layout });
+    const { container } = render(
+      <AppearancePageElements page="home">
+        <AppearanceElement id="home-title">
+          <h1>Vista editable</h1>
+        </AppearanceElement>
+      </AppearancePageElements>,
+    );
+    return waitFor(() => {
+      expect(container.querySelector('h1')).toHaveStyle({
+        transform: 'translate(14%, 0%)',
+        width: '100%',
+        zIndex: '9',
+      });
+    });
   });
 });

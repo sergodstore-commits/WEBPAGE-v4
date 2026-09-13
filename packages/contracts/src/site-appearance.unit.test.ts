@@ -29,4 +29,67 @@ describe('site appearance contract', () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it('accepts bounded positioning for existing visual elements', () => {
+    const result = siteAppearanceLayoutSchema.safeParse({
+      ...emptyLayout,
+      home: {
+        elements: [
+          {
+            hiddenOnMobile: false,
+            id: 'home-title',
+            offsetX: 12,
+            offsetY: -8,
+            width: 90,
+            zIndex: 8,
+          },
+        ],
+        layers: [],
+      },
+      version: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects unbounded positioning for existing visual elements', () => {
+    const result = siteAppearanceLayoutSchema.safeParse({
+      ...emptyLayout,
+      home: {
+        elements: [
+          {
+            hiddenOnMobile: false,
+            id: 'home-title',
+            offsetX: 75,
+            offsetY: 0,
+            width: 90,
+            zIndex: 8,
+          },
+        ],
+        layers: [],
+      },
+      version: 1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects moving an element into a different public section', () => {
+    const result = siteAppearanceLayoutSchema.safeParse({
+      ...emptyLayout,
+      news: {
+        elements: [
+          {
+            hiddenOnMobile: false,
+            id: 'home-title',
+            offsetX: 0,
+            offsetY: 0,
+            width: 100,
+            zIndex: 5,
+          },
+        ],
+        layers: [],
+      },
+      version: 1,
+    });
+    expect(result.success).toBe(false);
+  });
 });
