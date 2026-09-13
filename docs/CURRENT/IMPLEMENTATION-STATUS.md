@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-12. Release productivo en `3cd66ad`; el registro CLIENTE vuelve a
+> Estado auditado hasta el 2026-09-13. Release productivo en `c1ccd5a`; el registro CLIENTE vuelve a
 > estar habilitado con aceptación obligatoria y versionada de los Términos y condiciones 1.0. Por
 > decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -20,10 +20,10 @@
 | Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                | Carga operativa del propietario      |
 | Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                      | Catálogo/contenido del propietario   |
 | Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados         | Contenido del propietario            |
-| Diseño y accesibilidad                                                               | Preview técnica en curso | Corrección visual desplegada y rutas públicas responsive verificadas               | Aceptación Admin y del propietario   |
+| Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual final, editor por capas y responsive verificados                    | Carga visual del propietario         |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
-| Despliegue web                                                                       | Producción PASS          | Vercel `3c3dd12`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
+| Despliegue web                                                                       | Producción PASS          | Vercel `c1ccd5a`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
 ## Gates locales reproducidos
@@ -32,7 +32,7 @@
 - `npm ci`: PASS.
 - Runner oficial `scripts/codex/verify-local.ps1 -RunLocalIntegration`: `LOCAL_VERIFICATION=PASS` y salida natural `0` el 2026-08-23.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit, Application, Contract y Web: 115 archivos / 462 pruebas PASS y 1 SKIP documentado.
+- Unit, Application, Contract y Web: 116 archivos / 478 pruebas PASS y 1 SKIP documentado.
   Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro
   idempotente, estado 404 explícito, editor visual por bloques y lectura editorial pública.
 - Integration local: 14 archivos / 169 pruebas PASS sobre PostgreSQL 18.4. La migración de apariencia
@@ -461,9 +461,30 @@
 - El respaldo productivo inmediato `sergod-production-public-20260913-144809.dump.aes` quedó cifrado y
   autenticado fuera de Git. Su restauración desechable reprodujo 82 tablas y 7.539 filas sin diferencias
   frente a Producción; SHA-256
-  `161E1246F5C180E989792901FE021CFDF0D3B2A9CF28FD27D740FAA94C28C266`. Producción continúa pendiente
-  únicamente de promoción coordinada y smoke posterior. No corresponde eliminar recursos temporales antes
-  de completar y documentar esos pasos.
+  `161E1246F5C180E989792901FE021CFDF0D3B2A9CF28FD27D740FAA94C28C266`. Este respaldo cerró el prerrequisito
+  inmediato para la promoción coordinada; los recursos temporales pueden retirarse únicamente después de
+  conservar esta evidencia y confirmar sus destinos exactos.
+
+## Promoción visual productiva — 2026-09-13
+
+- `main` avanzó de forma directa, sin reescribir historia, desde `0042a32` hasta el checkpoint recuperable
+  `c1ccd5a`. Vercel dejó ese commit `Ready` en el dominio canónico y Render lo dejó `Live` en
+  `sergod-store-api-v4`; la web conserva rewrites y CSP dirigidos únicamente a la API productiva.
+- `GET /health` respondió HTTP 200 tanto en la API como mediante `www.sergodstore.cl`. La migración
+  prospectiva de apariencia quedó disponible y `GET /api/v1/site-appearance` respondió HTTP 200. Producción
+  aún no contiene una personalización publicada, por lo que la web usa deliberadamente el diseño base final
+  y Admin permite crear su primera versión sin copiar datos de staging.
+- Portada, Tienda, Torneos, Noticias, Comunidad y Cómics, junto con Login, Registro, Apariencia, POS,
+  Catálogo y Contenido, respondieron HTTP 200. La sesión Admin sobrevivió la promoción y Apariencia cargó
+  el editor por capas con su vista real incrustada.
+- La revisión final del dominio canónico a 390 y 1.280 px confirmó contenido principal visible, cero
+  imágenes rotas y cero desbordamiento horizontal en las seis rutas públicas. A 390 px no hubo controles
+  interactivos menores de 44 px. Apariencia, POS, Catálogo y Contenido también cargaron sin imágenes rotas
+  ni desbordamiento en móvil; la revisión de Apariencia en escritorio volvió a cerrar esos mismos controles.
+- El artefacto productivo sirvió `index-CkNuOU4b.js` e `index-yxcQij4i.css`, y mantuvo
+  `frame-ancestors 'self'`, `X-Frame-Options: SAMEORIGIN` y conexión permitida únicamente a Supabase y a
+  `sergod-store-api-v4.onrender.com`. El rollback inmediato de código es `0042a32` y el respaldo cifrado
+  previo continúa disponible fuera de Git.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
