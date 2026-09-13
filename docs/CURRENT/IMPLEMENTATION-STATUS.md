@@ -395,6 +395,10 @@
 - La QA visual local final de Portada cubrió 390, 768 y 1.280 px. En los tres tamaños el título quedó
   visible, no hubo imágenes rotas ni overflow horizontal; teléfono y tableta tampoco mostraron controles
   menores de 44 px. Los únicos controles de 40 px corresponden a la navegación compacta de escritorio.
+- Tienda, Torneos, Noticias, Comunidad y Cómics se recorrieron localmente a 390 y 1.280 px. Las diez
+  combinaciones renderizaron contenido principal, sin imágenes rotas ni overflow horizontal; a 390 px no
+  hubo controles menores de 44 px. Como la API comercial no estaba activa durante esta revisión, el PASS
+  es estructural y responsive: no certifica contenido remoto ni sus estados con datos reales.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
