@@ -65,6 +65,20 @@ describe('editor de apariencia web', () => {
     expect(list.getByRole('button', { name: /Nuevo texto/u })).toBeInTheDocument();
   });
 
+  it('agrupa los recursos aprobados y permite elegirlos mediante miniaturas', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir imagen' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Categoría visual' }), {
+      target: { value: 'Marcos' },
+    });
+    const thumbnails = within(screen.getByLabelText('Miniaturas de Marcos'));
+    fireEvent.click(thumbnails.getByRole('button', { name: 'Marcos 01 · lámina 02' }));
+    expect(screen.getByRole('combobox', { name: 'Imagen aprobada' })).toHaveValue(
+      'sheet-02-frame-01',
+    );
+  });
+
   it('permite recolocar elementos visuales existentes sin exponer controles funcionales', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');

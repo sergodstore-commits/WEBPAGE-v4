@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 
+import { siteAppearanceAssetIds } from '@sergod/contracts';
 import type {
   SiteAppearanceAssetId,
   SiteAppearanceElement,
@@ -9,16 +10,59 @@ import type {
   SiteAppearancePageId,
 } from '@sergod/contracts';
 
-export const appearanceAssets = {
+const legacyAppearanceAssets: Readonly<Partial<Record<SiteAppearanceAssetId, string>>> = {
   'burst-red': '/assets/sergod/ui/sheet_01/fx_01.webp',
   'brush-cyan': '/assets/sergod/ui/sheet_01/textures_08.webp',
   'brush-red': '/assets/sergod/ui/sheet_01/textures_02.webp',
   'brush-white': '/assets/sergod/ui/sheet_01/textures_06.webp',
   'fragments-red': '/assets/sergod/ui/sheet_01/bottom_fx_06.webp',
   'halftone-red': '/assets/sergod/ui/sheet_03/pattern_03.webp',
-} as const;
+};
 
-export const appearanceAssetIds = Object.keys(appearanceAssets) as SiteAppearanceAssetId[];
+export const appearanceAssetIds = [...siteAppearanceAssetIds];
+export const appearanceAssets: Readonly<Record<SiteAppearanceAssetId, string>> = Object.fromEntries(
+  appearanceAssetIds.map((id) => [id, legacyAppearanceAssets[id] ?? generatedAssetPath(id)]),
+) as Record<SiteAppearanceAssetId, string>;
+
+const categoryLabels: Readonly<Record<string, string>> = {
+  alert: 'Barras de alerta',
+  banner: 'Banners',
+  bottom: 'Efectos inferiores',
+  divider: 'Divisores',
+  dividers: 'Divisores',
+  frame: 'Marcos',
+  frames: 'Marcos',
+  fx: 'Efectos',
+  ornament: 'Adornos',
+  pattern: 'Patrones',
+  small: 'Marcos pequeños',
+  texture: 'Texturas',
+  textures: 'Texturas',
+  ui: 'Insignias y flechas',
+};
+
+const legacyAssetLabels: Readonly<Partial<Record<SiteAppearanceAssetId, string>>> = {
+  'burst-red': 'Impacto rojo',
+  'brush-cyan': 'Pincelada cian',
+  'brush-red': 'Pincelada roja',
+  'brush-white': 'Pincelada blanca',
+  'fragments-red': 'Fragmentos rojos',
+  'halftone-red': 'Trama halftone',
+};
+
+export function appearanceAssetCategory(id: SiteAppearanceAssetId): string {
+  if (!id.startsWith('sheet-')) return 'Destacados';
+  return categoryLabels[id.split('-')[2] ?? ''] ?? 'Otros';
+}
+
+export function appearanceAssetLabel(id: SiteAppearanceAssetId): string {
+  if (!id.startsWith('sheet-')) {
+    return legacyAssetLabels[id] ?? id;
+  }
+  const parts = id.split('-');
+  const number = parts.at(-1) ?? '';
+  return `${appearanceAssetCategory(id)} ${number} · lámina ${parts[1]}`;
+}
 
 export const appearanceElementLabels: Readonly<Record<SiteAppearanceElementId, string>> = {
   'comics-heading-copy': 'Texto de portada de Cómics',
@@ -112,4 +156,10 @@ function defaults(...ids: readonly SiteAppearanceElementId[]): readonly SiteAppe
     width: 100,
     zIndex: 5,
   }));
+}
+
+function generatedAssetPath(id: SiteAppearanceAssetId): string {
+  const match = /^sheet-(\d{2})-(.+)$/u.exec(id);
+  if (!match) throw new Error(`Unknown approved appearance asset: ${id}`);
+  return `/assets/sergod/approved-ui/sheet_${match[1]}/${match[2]?.replaceAll('-', '_')}.png`;
 }

@@ -19,6 +19,8 @@ import {
 import { authorizedRequest, publicRequest } from '../identity/api.js';
 import {
   appearanceAssetIds,
+  appearanceAssetCategory,
+  appearanceAssetLabel,
   appearanceAssets,
   appearanceElementLabels,
   defaultAppearanceLayout,
@@ -30,15 +32,6 @@ import {
   appearancePreviewMessageType,
   appearancePreviewReadyType,
 } from './appearance-preview-context.js';
-
-const assetLabels: Readonly<Record<SiteAppearanceAssetId, string>> = {
-  'burst-red': 'Impacto rojo',
-  'brush-cyan': 'Pincelada cian',
-  'brush-red': 'Pincelada roja',
-  'brush-white': 'Pincelada blanca',
-  'fragments-red': 'Fragmentos rojos',
-  'halftone-red': 'Trama halftone',
-};
 
 const pageLabels: Readonly<Record<SiteAppearancePageId, string>> = {
   comics: 'Cómics',
@@ -67,6 +60,15 @@ const previewPaths: Readonly<Record<SiteAppearancePageId, string>> = {
   tournaments: '/tournaments',
 };
 
+const groupedAppearanceAssets = appearanceAssetIds.reduce<Record<string, SiteAppearanceAssetId[]>>(
+  (groups, assetId) => {
+    const category = appearanceAssetCategory(assetId);
+    (groups[category] ??= []).push(assetId);
+    return groups;
+  },
+  {},
+);
+
 export function AppearanceEditor() {
   const [layout, setLayout] = useState<SiteAppearanceLayout>(defaultAppearanceLayout);
   const [page, setPage] = useState<SiteAppearancePageId>('home');
@@ -76,6 +78,7 @@ export function AppearanceEditor() {
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'DESKTOP' | 'MOBILE'>('DESKTOP');
+  const [assetCategory, setAssetCategory] = useState('Destacados');
   const busy = useRef(false);
   const pendingPublish = useRef<{
     value: string;
@@ -169,6 +172,14 @@ export function AppearanceEditor() {
     }));
   };
 
+  const selectLayer = (layer: SiteAppearanceLayer) => {
+    setSelectedId(layer.id);
+    setSelectedElementId(null);
+    if (layer.kind === 'ASSET' && layer.assetId) {
+      setAssetCategory(appearanceAssetCategory(layer.assetId));
+    }
+  };
+
   const beginDrag = (event: ReactPointerEvent<HTMLButtonElement>, layer: SiteAppearanceLayer) => {
     if (!loaded || busy.current) return;
     const bounds = canvas.current?.getBoundingClientRect();
@@ -179,7 +190,7 @@ export function AppearanceEditor() {
       offsetX: event.clientX - bounds.left - (layer.x / 100) * bounds.width,
       offsetY: event.clientY - bounds.top - (layer.y / 100) * bounds.height,
     };
-    setSelectedId(layer.id);
+    selectLayer(layer);
   };
 
   const moveDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -361,15 +372,12 @@ export function AppearanceEditor() {
           </div>
           {layers.map((layer) => (
             <button
-              aria-label={`Seleccionar capa ${layer.kind === 'TEXT' ? layer.content : assetLabels[layer.assetId ?? 'burst-red']}`}
+              aria-label={`Seleccionar capa ${layer.kind === 'TEXT' ? layer.content : appearanceAssetLabel(layer.assetId ?? 'burst-red')}`}
               aria-pressed={selectedId === layer.id}
               className={`appearance-editor-layer is-${layer.kind.toLowerCase()}`}
               key={layer.id}
               disabled={saving}
-              onClick={() => {
-                setSelectedId(layer.id);
-                setSelectedElementId(null);
-              }}
+              onClick={() => selectLayer(layer)}
               onPointerDown={(event) => beginDrag(event, layer)}
               style={layerStyle(layer)}
               type="button"
@@ -474,16 +482,13 @@ export function AppearanceEditor() {
                   <button
                     aria-pressed={selectedId === layer.id}
                     className="secondary"
-                    onClick={() => {
-                      setSelectedId(layer.id);
-                      setSelectedElementId(null);
-                    }}
+                    onClick={() => selectLayer(layer)}
                     type="button"
                   >
                     <span>
                       {layer.kind === 'TEXT'
                         ? layer.content || 'Texto vacío'
-                        : assetLabels[layer.assetId ?? 'burst-red']}
+                        : appearanceAssetLabel(layer.assetId ?? 'burst-red')}
                     </span>
                     <small>
                       Orden {layer.zIndex}
@@ -506,23 +511,58 @@ export function AppearanceEditor() {
                   />
                 </label>
               ) : (
-                <label>
-                  Imagen aprobada
-                  <select
-                    value={selected.assetId}
-                    onChange={(event) =>
-                      updateLayer(selected.id, {
-                        assetId: event.target.value as SiteAppearanceAssetId,
-                      })
-                    }
+                <div className="appearance-asset-picker">
+                  <label>
+                    Categoría visual
+                    <select
+                      onChange={(event) => setAssetCategory(event.target.value)}
+                      value={assetCategory}
+                    >
+                      {Object.keys(groupedAppearanceAssets).map((category) => (
+                        <option key={category}>{category}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Imagen aprobada
+                    <select
+                      value={selected.assetId}
+                      onChange={(event) => {
+                        const assetId = event.target.value as SiteAppearanceAssetId;
+                        setAssetCategory(appearanceAssetCategory(assetId));
+                        updateLayer(selected.id, { assetId });
+                      }}
+                    >
+                      {Object.entries(groupedAppearanceAssets).map(([category, assetIds]) => (
+                        <optgroup key={category} label={category}>
+                          {assetIds.map((assetId) => (
+                            <option key={assetId} value={assetId}>
+                              {appearanceAssetLabel(assetId)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </label>
+                  <div
+                    aria-label={`Miniaturas de ${assetCategory}`}
+                    className="appearance-asset-grid"
                   >
-                    {appearanceAssetIds.map((assetId) => (
-                      <option key={assetId} value={assetId}>
-                        {assetLabels[assetId]}
-                      </option>
+                    {groupedAppearanceAssets[assetCategory]?.map((assetId) => (
+                      <button
+                        aria-pressed={selected.assetId === assetId}
+                        className="secondary"
+                        key={assetId}
+                        onClick={() => updateLayer(selected.id, { assetId })}
+                        title={appearanceAssetLabel(assetId)}
+                        type="button"
+                      >
+                        <img alt="" loading="lazy" src={appearanceAssets[assetId]} />
+                        <span>{appearanceAssetLabel(assetId)}</span>
+                      </button>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                </div>
               )}
               <Range
                 label="Posición horizontal"

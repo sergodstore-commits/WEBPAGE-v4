@@ -358,8 +358,8 @@
   comerciales locales no disponían de API activa: esta revisión visual no certifica contenido remoto.
 - El gate integral aprobó formato, lint, tipos, 115 archivos, 465 pruebas y una omisión documentada,
   además de compilación API/web sin advertencia de tamaño.
-- Pendientes concretos: ampliar la biblioteca más allá de seis adornos, mejorar las operaciones del
-  editor, completar la revisión visual Admin y realizar la aceptación remota del guardado. No se
+- Pendientes concretos: mejorar las operaciones del editor, completar la revisión visual Admin y
+  realizar la aceptación remota del guardado. No se
   considera terminado el editor libre solicitado. El bloque permanece local y no está desplegado.
 
 - Continuación del 2026-09-12: el editor incorpora una lista ordenada de capas para seleccionar
@@ -381,6 +381,13 @@
   fuera del documento editable los botones de navegación, compra y formularios. Aprobaron 29 pruebas
   focales, 91 pruebas web completas, lint, tipos y compilación. La revisión local de Portada confirmó a
   390 px cero imágenes rotas, cero overflow horizontal y cero botones menores de 44 px.
+- La biblioteca del editor dejó de limitarse a seis adornos: incorpora los 106 recursos sin texto del
+  manifiesto aprobado, agrupados por tipo y presentados con miniaturas. Los PNG públicos conservan los
+  bytes originales; la verificación comparó los 106 SHA-256 sin diferencias. El contrato admite 112
+  identificadores cerrados —106 oficiales y seis alias heredados— para no invalidar apariencias ya
+  publicadas. Un generador reproducible obtiene el catálogo desde el manifiesto y las pruebas comprueban
+  tanto el conjunto cerrado como la selección visual por categoría. Aprobaron lint, compilación web,
+  73 archivos/283 pruebas unitarias y 13 archivos/92 pruebas web.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

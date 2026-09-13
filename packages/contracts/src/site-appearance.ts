@@ -1,13 +1,8 @@
 import { z } from 'zod';
 
-export const siteAppearanceAssetIds = [
-  'burst-red',
-  'brush-cyan',
-  'brush-red',
-  'brush-white',
-  'fragments-red',
-  'halftone-red',
-] as const;
+import { siteAppearanceAssetIds } from './site-appearance-assets.js';
+
+export { siteAppearanceAssetIds } from './site-appearance-assets.js';
 
 export const siteAppearanceAssetIdSchema = z.enum(siteAppearanceAssetIds);
 export type SiteAppearanceAssetId = z.infer<typeof siteAppearanceAssetIdSchema>;

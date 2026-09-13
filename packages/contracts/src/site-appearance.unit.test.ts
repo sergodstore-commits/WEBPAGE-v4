@@ -1,12 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { siteAppearanceLayoutSchema, siteAppearancePageIds } from './site-appearance.js';
+import {
+  siteAppearanceAssetIds,
+  siteAppearanceLayoutSchema,
+  siteAppearancePageIds,
+} from './site-appearance.js';
 
 const emptyLayout = Object.fromEntries(
   siteAppearancePageIds.map((pageId) => [pageId, { layers: [] }]),
 );
 
 describe('site appearance contract', () => {
+  it('keeps legacy aliases and every approved visual resource in a closed catalog', () => {
+    expect(siteAppearanceAssetIds).toHaveLength(112);
+    expect(new Set(siteAppearanceAssetIds).size).toBe(112);
+    expect(siteAppearanceAssetIds).toContain('burst-red');
+    expect(siteAppearanceAssetIds).toContain('sheet-03-banner-03');
+  });
+
   it('accepts one independently editable layer collection per public section', () => {
     expect(siteAppearanceLayoutSchema.safeParse({ ...emptyLayout, version: 1 }).success).toBe(true);
   });
