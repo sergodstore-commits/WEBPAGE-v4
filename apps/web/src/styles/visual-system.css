@@ -1671,6 +1671,10 @@ textarea:hover {
     opacity: 0.74;
   }
 
+  .admin-heading::before {
+    display: none;
+  }
+
   .heading-stats {
     display: none;
   }
