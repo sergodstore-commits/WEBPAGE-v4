@@ -403,6 +403,18 @@
   115 archivos con 477 pruebas aprobadas más una omisión documentada: 283 unitarias, 45 de aplicación,
   56 de contrato y 93 web. La integración PostgreSQL completa volvió a aprobar 14 archivos/170 pruebas
   en 243,85 segundos con el contrato ampliado de apariencia.
+- El conjunto acumulado se subió únicamente a `codex/staging-acceptance` en `a446552`; `main`, Producción
+  y el dominio canónico no se modificaron. Vercel dejó `Ready` la Preview exacta
+  `sergod-store-v4-3fjfbwges-sergod-store.vercel.app`. Portada, Tienda, Torneos, Noticias, Comunidad y
+  Cómics se recorrieron allí a 390 y 1.280 px: las doce combinaciones mostraron su título y contenido,
+  sin imágenes rotas ni desbordamiento horizontal; a 390 px tampoco hubo controles interactivos menores
+  de 44 px. La Tienda no registró errores de consola durante la comprobación.
+- Un recurso de la nueva biblioteca aprobada se comprobó directamente desde la Preview y conservó sus
+  dimensiones originales de 450 × 151 px, confirmando que el catálogo está incluido en el artefacto
+  desplegado. La alias de la rama protege `/admin/appearance`, pero no conserva una sesión Admin; por ello
+  la inspección visual autenticada y el guardado remoto continúan pendientes. Además, la API productiva
+  todavía ejecuta el contrato anterior: no debe intentarse publicar la nueva estructura hasta desplegar
+  de forma coordinada la API y, después, aceptar la Preview con una sesión Admin real.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
