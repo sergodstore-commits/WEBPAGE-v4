@@ -52,6 +52,8 @@ import { SiteChrome, SiteFooter } from './SiteChrome.js';
 import { TermsPage } from '../legal/TermsPage.js';
 import { AppearanceLayers, AppearanceRegion } from '../appearance/SiteAppearance.js';
 import { useSiteAppearance } from '../appearance/useSiteAppearance.js';
+import { SiteAppearancePreviewProvider } from '../appearance/SiteAppearancePreview.js';
+import { routeWithAppearancePreview } from './appearance-preview-route.js';
 
 const AdminHub = lazy(async () => ({
   default: (await import('../admin/AdminHub.js')).AdminHub,
@@ -106,123 +108,125 @@ export function App() {
     return () => window.removeEventListener('popstate', listener);
   }, []);
   const navigate = (next: Route) => {
-    window.history.pushState({}, '', next);
+    window.history.pushState({}, '', routeWithAppearancePreview(next, window.location.search));
     setRoute(next);
   };
 
   return (
-    <div className="app-shell">
-      <SiteChrome navigate={navigate} route={route} />
-      <RouteErrorBoundary key={route}>
-        <Suspense fallback={<RouteLoading />}>
-          <div id="main-content" tabIndex={-1}>
-            {route === '/' && <Home navigate={navigate} />}
-            {route === '/register' && <Registration navigate={navigate} />}
-            {route === '/login' && <Login navigate={navigate} />}
-            {route === '/legal/terms' && <TermsPage />}
-            {route === '/recover' && <Recovery navigate={navigate} />}
-            {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
-            {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
-              <EmailCallback
-                kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'}
-              />
-            )}
-            {route === '/account' && (
-              <AccessGate>
-                <Account navigate={navigate} />
-              </AccessGate>
-            )}
-            {route === '/account/overview' && (
-              <AccessGate>
-                <AccountHub />
-              </AccessGate>
-            )}
-            {route === '/shop' && (
-              <AppearanceRegion page="shop">
-                <StorePage />
-              </AppearanceRegion>
-            )}
-            {route === '/cart' && <CartPage />}
-            {route === '/tournaments' && (
-              <AppearanceRegion page="tournaments">
-                <TournamentPage />
-              </AppearanceRegion>
-            )}
-            {route === '/news' && (
-              <AppearanceRegion page="news">
-                <NewsPage />
-              </AppearanceRegion>
-            )}
-            {route === '/community' && (
-              <AppearanceRegion page="community">
-                <CommunityPage navigate={navigate} />
-              </AppearanceRegion>
-            )}
-            {route === '/comics' && (
-              <AppearanceRegion page="comics">
-                <ComicsPage />
-              </AppearanceRegion>
-            )}
-            {adminArea && (
-              <AccessGate requiredRole="ADMIN">
-                <AdminHub area={adminArea} navigate={navigate} />
-              </AccessGate>
-            )}
-            {route === '/checkout' && <CheckoutPanel />}
-            {route === '/admin/accounts' && (
-              <AccessGate requiredRole="ADMIN">
-                <AdminStandaloneLayout
-                  currentRoute="/admin/accounts"
-                  description="Busca una cuenta y administra únicamente las acciones disponibles para ella."
-                  navigate={navigate}
-                  title="Clientes y usuarios"
-                >
-                  <AccountsPanel />
-                </AdminStandaloneLayout>
-              </AccessGate>
-            )}
-            {route === '/admin/appearance' && (
-              <AccessGate requiredRole="ADMIN">
-                <AdminStandaloneLayout
-                  currentRoute="/admin/appearance"
-                  description="Organiza imágenes y textos por capas, revisa su posición y publica una versión persistente."
-                  navigate={navigate}
-                  title="Apariencia web"
-                >
-                  <AppearanceEditor />
-                </AdminStandaloneLayout>
-              </AccessGate>
-            )}
-            {route === '/admin/pos' && (
-              <AccessGate requiredRole="ADMIN">
-                <AdminStandaloneLayout
-                  currentRoute="/admin/pos"
-                  description="Caja presencial, inventario compartido y registro auditable del dinero recibido."
-                  navigate={navigate}
-                  title="POS"
-                >
-                  <PosPanel />
-                </AdminStandaloneLayout>
-              </AccessGate>
-            )}
-            {route === '/admin/service-coverage' && (
-              <AccessGate requiredRole="ADMIN">
-                <AdminStandaloneLayout
-                  currentRoute="/admin/service-coverage"
-                  description="Dirección, horario, contacto, retiro y cobertura pública de despacho."
-                  navigate={navigate}
-                  title="Datos de la tienda"
-                >
-                  <ServiceCoveragePanel />
-                </AdminStandaloneLayout>
-              </AccessGate>
-            )}
-            {route === '/not-found' && <NotFound navigate={navigate} />}
-          </div>
-        </Suspense>
-      </RouteErrorBoundary>
-      <SiteFooter navigate={navigate} />
-    </div>
+    <SiteAppearancePreviewProvider>
+      <div className="app-shell">
+        <SiteChrome navigate={navigate} route={route} />
+        <RouteErrorBoundary key={route}>
+          <Suspense fallback={<RouteLoading />}>
+            <div id="main-content" tabIndex={-1}>
+              {route === '/' && <Home navigate={navigate} />}
+              {route === '/register' && <Registration navigate={navigate} />}
+              {route === '/login' && <Login navigate={navigate} />}
+              {route === '/legal/terms' && <TermsPage />}
+              {route === '/recover' && <Recovery navigate={navigate} />}
+              {route === '/auth/callback/recovery' && <RecoveryCallback navigate={navigate} />}
+              {(route === '/auth/callback/confirm' || route === '/auth/callback/email-change') && (
+                <EmailCallback
+                  kind={route === '/auth/callback/confirm' ? 'confirmación' : 'cambio'}
+                />
+              )}
+              {route === '/account' && (
+                <AccessGate>
+                  <Account navigate={navigate} />
+                </AccessGate>
+              )}
+              {route === '/account/overview' && (
+                <AccessGate>
+                  <AccountHub />
+                </AccessGate>
+              )}
+              {route === '/shop' && (
+                <AppearanceRegion page="shop">
+                  <StorePage />
+                </AppearanceRegion>
+              )}
+              {route === '/cart' && <CartPage />}
+              {route === '/tournaments' && (
+                <AppearanceRegion page="tournaments">
+                  <TournamentPage />
+                </AppearanceRegion>
+              )}
+              {route === '/news' && (
+                <AppearanceRegion page="news">
+                  <NewsPage />
+                </AppearanceRegion>
+              )}
+              {route === '/community' && (
+                <AppearanceRegion page="community">
+                  <CommunityPage navigate={navigate} />
+                </AppearanceRegion>
+              )}
+              {route === '/comics' && (
+                <AppearanceRegion page="comics">
+                  <ComicsPage />
+                </AppearanceRegion>
+              )}
+              {adminArea && (
+                <AccessGate requiredRole="ADMIN">
+                  <AdminHub area={adminArea} navigate={navigate} />
+                </AccessGate>
+              )}
+              {route === '/checkout' && <CheckoutPanel />}
+              {route === '/admin/accounts' && (
+                <AccessGate requiredRole="ADMIN">
+                  <AdminStandaloneLayout
+                    currentRoute="/admin/accounts"
+                    description="Busca una cuenta y administra únicamente las acciones disponibles para ella."
+                    navigate={navigate}
+                    title="Clientes y usuarios"
+                  >
+                    <AccountsPanel />
+                  </AdminStandaloneLayout>
+                </AccessGate>
+              )}
+              {route === '/admin/appearance' && (
+                <AccessGate requiredRole="ADMIN">
+                  <AdminStandaloneLayout
+                    currentRoute="/admin/appearance"
+                    description="Organiza imágenes y textos por capas, revisa su posición y publica una versión persistente."
+                    navigate={navigate}
+                    title="Apariencia web"
+                  >
+                    <AppearanceEditor />
+                  </AdminStandaloneLayout>
+                </AccessGate>
+              )}
+              {route === '/admin/pos' && (
+                <AccessGate requiredRole="ADMIN">
+                  <AdminStandaloneLayout
+                    currentRoute="/admin/pos"
+                    description="Caja presencial, inventario compartido y registro auditable del dinero recibido."
+                    navigate={navigate}
+                    title="POS"
+                  >
+                    <PosPanel />
+                  </AdminStandaloneLayout>
+                </AccessGate>
+              )}
+              {route === '/admin/service-coverage' && (
+                <AccessGate requiredRole="ADMIN">
+                  <AdminStandaloneLayout
+                    currentRoute="/admin/service-coverage"
+                    description="Dirección, horario, contacto, retiro y cobertura pública de despacho."
+                    navigate={navigate}
+                    title="Datos de la tienda"
+                  >
+                    <ServiceCoveragePanel />
+                  </AdminStandaloneLayout>
+                </AccessGate>
+              )}
+              {route === '/not-found' && <NotFound navigate={navigate} />}
+            </div>
+          </Suspense>
+        </RouteErrorBoundary>
+        <SiteFooter navigate={navigate} />
+      </div>
+    </SiteAppearancePreviewProvider>
   );
 }
 

@@ -10,6 +10,7 @@ import {
   register,
 } from '../identity/api.js';
 import { App, RouteErrorBoundary } from './App';
+import { routeWithAppearancePreview } from './appearance-preview-route.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
   const original = await importOriginal<typeof import('../identity/api.js')>();
@@ -49,6 +50,13 @@ describe('IdentityAccess presentation', () => {
     expect(screen.getByRole('heading', { name: /tu próxima jugada/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Explorar tienda' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument();
+  });
+
+  it('preserves draft appearance mode when navigating inside the real preview', () => {
+    expect(routeWithAppearancePreview('/shop', '?appearance-preview=1')).toBe(
+      '/shop?appearance-preview=1',
+    );
+    expect(routeWithAppearancePreview('/shop', '')).toBe('/shop');
   });
 
   it('offers only verified email login and exposes no phone authentication controls', () => {

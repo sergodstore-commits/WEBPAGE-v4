@@ -5,6 +5,7 @@ import { authorizedRequest, publicRequest } from '../identity/api.js';
 import { AppearanceEditor } from './AppearanceEditor.js';
 import { AppearanceLayers } from './SiteAppearance.js';
 import { defaultAppearanceLayout } from './appearance-model.js';
+import { useSiteAppearance } from './useSiteAppearance.js';
 
 vi.mock('../identity/api.js', () => ({
   authorizedRequest: vi.fn(),
@@ -22,6 +23,32 @@ beforeEach(() => {
 });
 
 describe('editor de apariencia web', () => {
+  it('ignora una respuesta pública incompleta y conserva un diseño seguro', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({ items: [] });
+    function Consumer() {
+      return <span>{useSiteAppearance().home.layers.length}</span>;
+    }
+    render(<Consumer />);
+    expect(screen.getByText('0')).toBeInTheDocument();
+    await waitFor(() => expect(publicRequest).toHaveBeenCalled());
+    expect(screen.getByText('0')).toBeInTheDocument();
+  });
+
+  it('muestra la página real elegida y permite alternar a teléfono', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+    const homePreview = screen.getByTitle('Vista real de Portada');
+    expect(homePreview).toHaveAttribute('src', '/?appearance-preview=1');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Noticias' }));
+    expect(screen.getByTitle('Vista real de Noticias')).toHaveAttribute(
+      'src',
+      '/news?appearance-preview=1',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Teléfono' }));
+    expect(screen.getByTitle('Vista real de Noticias').parentElement).toHaveClass('is-mobile');
+  });
+
   it('permite recuperar una capa tapada desde la lista ordenada', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');

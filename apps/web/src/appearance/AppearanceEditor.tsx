@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -21,6 +22,10 @@ import {
   defaultAppearanceLayout,
   layerStyle,
 } from './appearance-model.js';
+import {
+  appearancePreviewMessageType,
+  appearancePreviewReadyType,
+} from './appearance-preview-context.js';
 
 const assetLabels: Readonly<Record<SiteAppearanceAssetId, string>> = {
   'burst-red': 'Impacto rojo',
@@ -49,6 +54,15 @@ const pageIds: readonly SiteAppearancePageId[] = [
   'comics',
 ];
 
+const previewPaths: Readonly<Record<SiteAppearancePageId, string>> = {
+  comics: '/comics',
+  community: '/community',
+  home: '/',
+  news: '/news',
+  shop: '/shop',
+  tournaments: '/tournaments',
+};
+
 export function AppearanceEditor() {
   const [layout, setLayout] = useState<SiteAppearanceLayout>(defaultAppearanceLayout);
   const [page, setPage] = useState<SiteAppearancePageId>('home');
@@ -56,6 +70,7 @@ export function AppearanceEditor() {
   const [message, setMessage] = useState('Cargando apariencia publicada…');
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<'DESKTOP' | 'MOBILE'>('DESKTOP');
   const busy = useRef(false);
   const pendingPublish = useRef<{
     value: string;
@@ -64,12 +79,37 @@ export function AppearanceEditor() {
     versionId?: string;
   } | null>(null);
   const canvas = useRef<HTMLDivElement>(null);
+  const previewFrame = useRef<HTMLIFrameElement>(null);
   const drag = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
   const layers = layout[page].layers;
   const selected = useMemo(
     () => layers.find(({ id }) => id === selectedId) ?? null,
     [layers, selectedId],
   );
+  const sendPreview = useCallback(() => {
+    previewFrame.current?.contentWindow?.postMessage(
+      { layout, type: appearancePreviewMessageType },
+      window.location.origin,
+    );
+  }, [layout]);
+
+  useEffect(() => {
+    const receiveReady = (event: MessageEvent<unknown>) => {
+      if (
+        event.origin === window.location.origin &&
+        event.source === previewFrame.current?.contentWindow &&
+        typeof event.data === 'object' &&
+        event.data !== null &&
+        'type' in event.data &&
+        event.data.type === appearancePreviewReadyType
+      ) {
+        sendPreview();
+      }
+    };
+    window.addEventListener('message', receiveReady);
+    sendPreview();
+    return () => window.removeEventListener('message', receiveReady);
+  }, [page, sendPreview]);
 
   useEffect(() => {
     let active = true;
@@ -432,6 +472,45 @@ export function AppearanceEditor() {
           )}
         </fieldset>
       </div>
+
+      <section aria-labelledby="appearance-live-preview" className="appearance-live-preview">
+        <header>
+          <div>
+            <p className="eyebrow">Resultado sin publicar</p>
+            <h2 id="appearance-live-preview">Vista real · {pageLabels[page]}</h2>
+            <p>
+              Esta vista usa la página verdadera y recibe los cambios del borrador mientras editas.
+            </p>
+          </div>
+          <div aria-label="Tamaño de la vista" className="actions" role="group">
+            <button
+              aria-pressed={previewDevice === 'DESKTOP'}
+              className={previewDevice === 'DESKTOP' ? '' : 'secondary'}
+              onClick={() => setPreviewDevice('DESKTOP')}
+              type="button"
+            >
+              Escritorio
+            </button>
+            <button
+              aria-pressed={previewDevice === 'MOBILE'}
+              className={previewDevice === 'MOBILE' ? '' : 'secondary'}
+              onClick={() => setPreviewDevice('MOBILE')}
+              type="button"
+            >
+              Teléfono
+            </button>
+          </div>
+        </header>
+        <div className={`appearance-preview-viewport is-${previewDevice.toLowerCase()}`}>
+          <iframe
+            key={page}
+            onLoad={sendPreview}
+            ref={previewFrame}
+            src={`${previewPaths[page]}?appearance-preview=1`}
+            title={`Vista real de ${pageLabels[page]}`}
+          />
+        </div>
+      </section>
       <p className="status" role="status">
         {message}
       </p>

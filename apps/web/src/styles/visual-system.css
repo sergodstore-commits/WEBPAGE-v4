@@ -1242,6 +1242,50 @@ textarea:hover {
   font-size: 0.7rem;
 }
 
+.appearance-live-preview {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 2px solid #3a3f48;
+  border-top: 5px solid var(--red);
+  background: var(--sergod-panel-raised);
+}
+
+.appearance-live-preview > header {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.appearance-live-preview h2,
+.appearance-live-preview p {
+  margin-block: 0.25rem;
+}
+
+.appearance-preview-viewport {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 3px solid #050607;
+  outline: 1px solid #4b515d;
+  background: #050607;
+  transition: width 180ms ease;
+}
+
+.appearance-preview-viewport.is-mobile {
+  width: min(390px, 100%);
+}
+
+.appearance-preview-viewport iframe {
+  display: block;
+  width: 100%;
+  height: min(52rem, 75vh);
+  border: 0;
+  background: #050607;
+}
+
 .appearance-inspector input[type='range'] {
   width: 100%;
   min-height: 2rem;
@@ -1395,6 +1439,11 @@ textarea:hover {
   .appearance-toolbar .actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .appearance-live-preview > header {
+    display: grid;
+    align-items: start;
   }
 
   .commerce-hero {

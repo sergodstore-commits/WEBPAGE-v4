@@ -358,8 +358,8 @@
   comerciales locales no disponían de API activa: esta revisión visual no certifica contenido remoto.
 - El gate integral aprobó formato, lint, tipos, 115 archivos, 465 pruebas y una omisión documentada,
   además de compilación API/web sin advertencia de tamaño.
-- Pendientes concretos: una vista previa fiel de la página dentro del editor, convertir los elementos
-  existentes en capas editables (actualmente se agregan capas sobre la composición), ampliar la biblioteca
+- Pendientes concretos: convertir los elementos existentes en capas editables (actualmente se agregan
+  capas sobre la composición), ampliar la biblioteca
   más allá de seis adornos, revisión visual Admin y aceptación remota del guardado. No se considera
   terminado el editor libre solicitado. El bloque permanece local y no está desplegado.
 
@@ -367,6 +367,14 @@
   elementos tapados, consultar su orden/visibilidad y quitarlos de forma individual. El área de dibujo
   se identifica como esquema de capas, ya que todavía no representa una vista previa fiel del sitio.
   Pasaron siete pruebas focales del editor y la compilación web con verificación de tipos.
+- La integración local completa terminó correctamente en 244 segundos: 14 archivos y 170 pruebas
+  aprobadas. Los intentos anteriores se habían interrumpido antes de que Vitest imprimiera el resultado;
+  la inspección local confirmó progreso entre suites y ausencia de deadlock.
+- El editor incorpora una segunda vista basada en la página pública real, actualizada desde el borrador
+  mediante mensajería limitada al mismo origen. Permite alternar escritorio/teléfono y conserva el modo
+  borrador al navegar dentro de la vista. Una respuesta pública incompleta se descarta sin reemplazar el
+  diseño seguro. Las pruebas focales de App/editor aprobaron 22 casos; el gate web completo aprobó 13
+  archivos y 89 pruebas, junto con lint, tipos y compilación de producción.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
