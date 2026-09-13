@@ -1557,7 +1557,7 @@ textarea:hover {
   }
 
   .appearance-canvas {
-    min-height: 18rem;
+    min-height: 0;
     aspect-ratio: 4 / 3;
   }
 
