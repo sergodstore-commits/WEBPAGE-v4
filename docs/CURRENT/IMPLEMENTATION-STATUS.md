@@ -485,6 +485,13 @@
   `frame-ancestors 'self'`, `X-Frame-Options: SAMEORIGIN` y conexión permitida únicamente a Supabase y a
   `sergod-store-api-v4.onrender.com`. El rollback inmediato de código es `0042a32` y el respaldo cifrado
   previo continúa disponible fuera de Git.
+- La limpieza posterior eliminó Supabase temporal `gadfbiuzssrftpvjycor`, Render temporal
+  `srv-daj9ebtg1s2s739t15t0` y las ramas remotas `codex/staging-acceptance` y
+  `codex/final-visual-system`. Vercel conserva únicamente las variables Supabase de Producción, retiró la
+  excepción pública de la alias temporal y muestra `No Active Branches`; sus despliegues anteriores quedan
+  solo como historial protegido por la retención del proveedor, no como proyectos ni versiones activas.
+  Permanecen exclusivamente `main`, Supabase PROD `kbhbaackrgwgvxxqdlwx`, Render PROD
+  `srv-da3ij5flk1mc7380htcg`, Vercel `sergod-store-v4` y el dominio canónico.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
