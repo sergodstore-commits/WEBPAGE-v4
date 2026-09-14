@@ -99,24 +99,48 @@ export async function login(input: {
     body: JSON.stringify(input),
     method: 'POST',
   });
-  const { data, error } = await client.auth.setSession({
-    access_token: created.accessToken,
-    refresh_token: created.refreshToken,
-  });
+  let result: Awaited<ReturnType<typeof client.auth.setSession>>;
+  try {
+    result = await client.auth.setSession({
+      access_token: created.accessToken,
+      refresh_token: created.refreshToken,
+    });
+  } catch (error) {
+    await discardUnpersistedSession(client, created.accessToken);
+    throw sessionPersistenceError(providerErrorReference(error));
+  }
+  const { data, error } = result;
   if (error !== null || data.session === null) {
-    await request('/api/v1/identity/session', {
-      headers: { authorization: `Bearer ${created.accessToken}` },
-      method: 'DELETE',
-    }).catch(() => undefined);
-    await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
-    updateSession(null);
-    const reference = error?.code ?? error?.name ?? 'SESSION_NOT_RETURNED';
-    throw new ApiError(
-      'SESSION_PERSISTENCE_FAILED',
-      `La sesión fue validada, pero no pudo guardarse de forma segura. Referencia: ${reference}.`,
-    );
+    await discardUnpersistedSession(client, created.accessToken);
+    throw sessionPersistenceError(providerErrorReference(error));
   }
   updateSession(mapSession(data.session));
+}
+
+async function discardUnpersistedSession(
+  client: SupabaseClient,
+  accessToken: string,
+): Promise<void> {
+  await request('/api/v1/identity/session', {
+    headers: { authorization: `Bearer ${accessToken}` },
+    method: 'DELETE',
+  }).catch(() => undefined);
+  await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+  updateSession(null);
+}
+
+function providerErrorReference(error: unknown): string {
+  if (typeof error !== 'object' || error === null) return 'SESSION_NOT_RETURNED';
+  if ('code' in error && typeof error.code === 'string' && error.code !== '') return error.code;
+  if ('name' in error && typeof error.name === 'string' && error.name !== '') return error.name;
+  return 'SESSION_NOT_RETURNED';
+}
+
+function sessionPersistenceError(reference: string): ApiError {
+  return new ApiError(
+    'SESSION_PERSISTENCE_FAILED',
+    `La sesión fue validada, pero no pudo guardarse de forma segura. Referencia: ${reference}.`,
+  );
 }
 
 export async function completeEmailCallback(

@@ -128,6 +128,33 @@ describe('browser session lifecycle', () => {
     });
   });
 
+  it('normalizes a provider exception thrown while persisting the browser session', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            accessToken: 'api-access',
+            expiresAt: 1_900_000_000,
+            refreshToken: 'api-refresh',
+          }),
+          { headers: { 'content-type': 'application/json' }, status: 200 },
+        ),
+      ),
+    );
+    supabase.auth.setSession.mockRejectedValue({ name: 'AuthRetryableFetchError' });
+
+    await expect(
+      login({ email: 'cliente@example.test', password: 'correct horse battery staple' }),
+    ).rejects.toMatchObject({
+      code: 'SESSION_PERSISTENCE_FAILED',
+      message:
+        'La sesión fue validada, pero no pudo guardarse de forma segura. Referencia: AuthRetryableFetchError.',
+    });
+    expect(supabase.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(currentSession()).toBeNull();
+  });
+
   it('does not discard a successful login when a delayed initial event has no session', async () => {
     vi.stubGlobal(
       'fetch',
