@@ -41,6 +41,28 @@ describe('editor de apariencia web', () => {
     ).toBeInTheDocument();
   });
 
+  it('cambia la imagen de un acceso sin convertir su ruta en una capa libre', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+
+    fireEvent.click(screen.getByRole('button', { name: /Tienda.*vínculo fijo/u }));
+    fireEvent.click(screen.getByRole('button', { name: 'Usar Impacto rojo en Tienda' }));
+
+    expect(screen.getByText('/shop')).toBeInTheDocument();
+    expect(screen.getByText(/Vínculo protegido/u)).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Lista de capas' })).toBeEmptyDOMElement();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar y publicar' }));
+    await waitFor(() => expect(authorizedRequest).toHaveBeenCalledTimes(2));
+    const request = JSON.parse(String(vi.mocked(authorizedRequest).mock.calls[0]?.[1]?.body)) as {
+      value: string;
+    };
+    const saved = siteAppearanceLayoutSchema.parse(JSON.parse(request.value));
+    expect(saved.home.elements?.find(({ id }) => id === 'home-link-shop')?.assetId).toBe(
+      'burst-red',
+    );
+  });
+
   it('añade títulos visuales como capas editables en vez de texto horneado', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');

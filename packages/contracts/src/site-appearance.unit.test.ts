@@ -62,6 +62,28 @@ describe('site appearance contract', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts an approved image for a protected linked element', () => {
+    const result = siteAppearanceLayoutSchema.safeParse({
+      ...emptyLayout,
+      home: {
+        elements: [
+          {
+            assetId: 'sheet-02-ornament-02',
+            hiddenOnMobile: false,
+            id: 'home-link-tournaments',
+            offsetX: 0,
+            offsetY: 0,
+            width: 100,
+            zIndex: 5,
+          },
+        ],
+        layers: [],
+      },
+      version: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('rejects unbounded positioning for existing visual elements', () => {
     const result = siteAppearanceLayoutSchema.safeParse({
       ...emptyLayout,

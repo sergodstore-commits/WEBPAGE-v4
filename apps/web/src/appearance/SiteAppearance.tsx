@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import type {
+  SiteAppearanceAssetId,
   SiteAppearanceElement,
   SiteAppearanceElementId,
   SiteAppearanceLayer,
@@ -89,4 +90,21 @@ export function AppearanceElement({
       `${children.props.className ?? ''} appearance-editable-element${element.hiddenOnMobile ? ' is-hidden-mobile' : ''}`.trim(),
     style: { ...children.props.style, ...elementStyle(element) },
   });
+}
+
+export function AppearanceLinkedAsset({
+  fallbackAssetId,
+  id,
+}: {
+  readonly fallbackAssetId: SiteAppearanceAssetId;
+  readonly id: SiteAppearanceElementId;
+}) {
+  const elements = useContext(AppearanceElementsContext);
+  const element = elements.find((candidate) => candidate.id === id);
+  const assetId = element?.assetId ?? fallbackAssetId;
+  return (
+    <span aria-hidden="true" className="launcher-icon">
+      <img alt="" src={appearanceAssets[assetId]} />
+    </span>
+  );
 }

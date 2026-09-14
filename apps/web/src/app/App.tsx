@@ -52,6 +52,7 @@ import { SiteChrome, SiteFooter } from './SiteChrome.js';
 import { TermsPage } from '../legal/TermsPage.js';
 import {
   AppearanceElement,
+  AppearanceLinkedAsset,
   AppearanceLayers,
   AppearancePageElements,
   AppearanceRegion,
@@ -383,11 +384,41 @@ function AccessGate({
 function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   const appearance = useSiteAppearance();
   const launcherEntries = [
-    { eyebrow: 'Catálogo', label: 'Tienda', route: '/shop' },
-    { eyebrow: 'Competencia', label: 'Torneos', route: '/tournaments' },
-    { eyebrow: 'Actualidad', label: 'Noticias', route: '/news' },
-    { eyebrow: 'Encuentros', label: 'Comunidad', route: '/community' },
-    { eyebrow: 'Historias', label: 'Cómics', route: '/comics' },
+    {
+      appearanceId: 'home-link-shop',
+      eyebrow: 'Catálogo',
+      icon: 'sheet-02-ornament-01',
+      label: 'Tienda',
+      route: '/shop',
+    },
+    {
+      appearanceId: 'home-link-tournaments',
+      eyebrow: 'Competencia',
+      icon: 'sheet-02-ornament-02',
+      label: 'Torneos',
+      route: '/tournaments',
+    },
+    {
+      appearanceId: 'home-link-news',
+      eyebrow: 'Actualidad',
+      icon: 'sheet-02-ornament-04',
+      label: 'Noticias',
+      route: '/news',
+    },
+    {
+      appearanceId: 'home-link-community',
+      eyebrow: 'Encuentros',
+      icon: 'sheet-02-ornament-03',
+      label: 'Comunidad',
+      route: '/community',
+    },
+    {
+      appearanceId: 'home-link-comics',
+      eyebrow: 'Historias',
+      icon: 'sheet-02-ornament-07',
+      label: 'Cómics',
+      route: '/comics',
+    },
   ] as const;
   return (
     <AppearancePageElements page="home">
@@ -401,7 +432,7 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
           <nav aria-label="Accesos principales" className="launcher-menu">
             {launcherEntries.map((entry, index) => (
               <button key={entry.route} onClick={() => navigate(entry.route)} type="button">
-                <span aria-hidden="true" className="launcher-icon" />
+                <AppearanceLinkedAsset fallbackAssetId={entry.icon} id={entry.appearanceId} />
                 <span>
                   <small>{entry.eyebrow}</small>
                   <strong>{entry.label}</strong>

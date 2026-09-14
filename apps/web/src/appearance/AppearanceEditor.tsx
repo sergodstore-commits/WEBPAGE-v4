@@ -27,6 +27,7 @@ import {
   defaultAppearanceElements,
   hydrateAppearanceLayout,
   layerStyle,
+  linkedAppearanceElements,
 } from './appearance-model.js';
 import {
   appearancePreviewMessageType,
@@ -148,6 +149,7 @@ export function AppearanceEditor() {
   const [assetCategory, setAssetCategory] = useState('Destacados');
   const [libraryCategory, setLibraryCategory] = useState('Destacados');
   const [assetSearch, setAssetSearch] = useState('');
+  const [toolPanel, setToolPanel] = useState<'LIBRARY' | 'PROPERTIES'>('LIBRARY');
   const busy = useRef(false);
   const pendingPublish = useRef<{
     value: string;
@@ -165,6 +167,10 @@ export function AppearanceEditor() {
     [layers, selectedId],
   );
   const selectedElement = elements.find(({ id }) => id === selectedElementId) ?? null;
+  const selectedLinkedElement = selectedElement
+    ? linkedAppearanceElements[selectedElement.id]
+    : undefined;
+  const linkedElements = elements.filter((element) => linkedAppearanceElements[element.id]);
   const visibleLibraryAssets = useMemo(() => {
     const query = assetSearch.normalize('NFC').trim().toLocaleLowerCase('es');
     return appearanceAssetIds.filter((assetId) => {
@@ -258,6 +264,23 @@ export function AppearanceEditor() {
     if (layer.kind === 'ASSET' && layer.assetId) {
       setAssetCategory(appearanceAssetCategory(layer.assetId));
     }
+  };
+
+  const selectElement = (element: SiteAppearanceElement) => {
+    setSelectedElementId(element.id);
+    setSelectedId(null);
+    if (element.assetId) setAssetCategory(appearanceAssetCategory(element.assetId));
+  };
+
+  const applyLibraryAsset = (assetId: SiteAppearanceAssetId) => {
+    if (selectedElement && linkedAppearanceElements[selectedElement.id]) {
+      updateElement(selectedElement.id, { assetId });
+      setAssetCategory(appearanceAssetCategory(assetId));
+      setToolPanel('PROPERTIES');
+      return;
+    }
+    addLayer('ASSET', assetId);
+    setToolPanel('PROPERTIES');
   };
 
   const beginDrag = (event: ReactPointerEvent<HTMLButtonElement>, layer: SiteAppearanceLayer) => {
@@ -386,6 +409,7 @@ export function AppearanceEditor() {
     }));
     setSelectedId(presetLayers[2]?.id ?? null);
     setSelectedElementId(null);
+    setToolPanel('PROPERTIES');
   };
 
   const publish = async () => {
@@ -449,9 +473,10 @@ export function AppearanceEditor() {
       <div className="appearance-toolbar">
         <div>
           <p className="eyebrow">{pageLabels[page]}</p>
-          <h2>Capas y posición</h2>
+          <h2>Editor visual</h2>
           <p>
-            Arrastra una capa en el esquema o selecciónala en la lista para ajustar sus controles.
+            Mantén la página real a la vista y usa los paneles laterales para elegir o ajustar cada
+            elemento.
           </p>
         </div>
         <div className="actions">
@@ -474,6 +499,24 @@ export function AppearanceEditor() {
             {saving ? 'Publicando…' : 'Guardar y publicar'}
           </button>
         </div>
+        <div aria-label="Herramientas de diseño" className="appearance-tool-switch" role="group">
+          <button
+            aria-pressed={toolPanel === 'LIBRARY'}
+            className={toolPanel === 'LIBRARY' ? '' : 'secondary'}
+            onClick={() => setToolPanel('LIBRARY')}
+            type="button"
+          >
+            Elementos
+          </button>
+          <button
+            aria-pressed={toolPanel === 'PROPERTIES'}
+            className={toolPanel === 'PROPERTIES' ? '' : 'secondary'}
+            onClick={() => setToolPanel('PROPERTIES')}
+            type="button"
+          >
+            Propiedades
+          </button>
+        </div>
       </div>
 
       <nav aria-label="Sección que se está editando" className="appearance-page-tabs">
@@ -494,18 +537,52 @@ export function AppearanceEditor() {
         ))}
       </nav>
 
-      <section aria-labelledby="appearance-library-title" className="appearance-library">
+      <section
+        aria-labelledby="appearance-library-title"
+        className={`appearance-library${toolPanel === 'LIBRARY' ? ' is-active' : ''}`}
+      >
         <header>
           <div>
             <p className="eyebrow">Biblioteca incluida</p>
             <h2 id="appearance-library-title">Galería de elementos</h2>
             <p>
-              Elige una imagen para añadirla directamente a {pageLabels[page]}. Después podrás
-              moverla, cambiar su tamaño y ordenar sus capas.
+              {selectedLinkedElement
+                ? `Elige la nueva imagen de ${selectedLinkedElement.label}. Su vínculo ${selectedLinkedElement.route} no cambiará.`
+                : `Elige una imagen para añadirla a ${pageLabels[page]}; aparecerá de inmediato en la vista.`}
             </p>
           </div>
           <strong>{appearanceAssetIds.length} elementos disponibles</strong>
         </header>
+        {linkedElements.length > 0 && (
+          <div className="appearance-linked-accesses">
+            <div>
+              <h3>Accesos vinculados</h3>
+              <p>
+                Selecciona un acceso y luego una imagen. Solo cambia su aspecto; el destino queda
+                protegido.
+              </p>
+            </div>
+            <div aria-label="Accesos vinculados de la portada" role="group">
+              {linkedElements.map((element) => {
+                const linked = linkedAppearanceElements[element.id];
+                if (!linked) return null;
+                return (
+                  <button
+                    aria-pressed={selectedElementId === element.id}
+                    className="secondary"
+                    key={element.id}
+                    onClick={() => selectElement(element)}
+                    type="button"
+                  >
+                    {element.assetId && <img alt="" src={appearanceAssets[element.assetId]} />}
+                    <span>{linked.label}</span>
+                    <small>{linked.route} · vínculo fijo</small>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="appearance-presets">
           <div>
             <h3>Plantillas editables</h3>
@@ -559,12 +636,20 @@ export function AppearanceEditor() {
         <div aria-label="Elementos visuales disponibles" className="appearance-library-grid">
           {visibleLibraryAssets.map((assetId) => (
             <button
-              aria-label={`Añadir ${appearanceAssetLabel(assetId)}`}
+              aria-label={
+                selectedLinkedElement
+                  ? `Usar ${appearanceAssetLabel(assetId)} en ${selectedLinkedElement.label}`
+                  : `Añadir ${appearanceAssetLabel(assetId)}`
+              }
               className="secondary"
               disabled={!loaded || saving || layers.length >= 24}
               key={assetId}
-              onClick={() => addLayer('ASSET', assetId)}
-              title={`Añadir ${appearanceAssetLabel(assetId)} a ${pageLabels[page]}`}
+              onClick={() => applyLibraryAsset(assetId)}
+              title={
+                selectedLinkedElement
+                  ? `Cambiar la imagen de ${selectedLinkedElement.label}; conserva ${selectedLinkedElement.route}`
+                  : `Añadir ${appearanceAssetLabel(assetId)} a ${pageLabels[page]}`
+              }
               type="button"
             >
               <img alt="" loading="lazy" src={appearanceAssets[assetId]} />
@@ -591,7 +676,7 @@ export function AppearanceEditor() {
           ref={canvas}
         >
           <div className="appearance-canvas-copy">
-            <small>Esquema de capas · {pageLabels[page]}</small>
+            <small>Ajuste libre avanzado · {pageLabels[page]}</small>
             <strong>
               {page === 'home' ? 'Tu próxima jugada comienza aquí.' : pageLabels[page]}
             </strong>
@@ -617,7 +702,10 @@ export function AppearanceEditor() {
           ))}
         </div>
 
-        <fieldset disabled={!loaded || saving} className="appearance-inspector">
+        <fieldset
+          disabled={!loaded || saving}
+          className={`appearance-inspector${toolPanel === 'PROPERTIES' ? ' is-active' : ''}`}
+        >
           <h2>Elementos existentes</h2>
           <p>
             Textos y marcos visuales se pueden recolocar. Navegación, compras y formularios
@@ -629,10 +717,7 @@ export function AppearanceEditor() {
                 <button
                   aria-pressed={selectedElementId === element.id}
                   className="secondary"
-                  onClick={() => {
-                    setSelectedElementId(element.id);
-                    setSelectedId(null);
-                  }}
+                  onClick={() => selectElement(element)}
                   type="button"
                 >
                   <span>{appearanceElementLabels[element.id]}</span>
@@ -647,43 +732,63 @@ export function AppearanceEditor() {
           {selectedElement && (
             <div className="appearance-element-controls">
               <h2>Propiedades del elemento</h2>
-              <Range
-                label="Desplazamiento horizontal"
-                max={50}
-                min={-50}
-                onChange={(offsetX) => updateElement(selectedElement.id, { offsetX })}
-                value={selectedElement.offsetX}
-              />
-              <Range
-                label="Desplazamiento vertical"
-                max={50}
-                min={-50}
-                onChange={(offsetY) => updateElement(selectedElement.id, { offsetY })}
-                value={selectedElement.offsetY}
-              />
-              <Range
-                label="Ancho"
-                max={120}
-                min={40}
-                onChange={(width) => updateElement(selectedElement.id, { width })}
-                value={selectedElement.width}
-              />
-              <Range
-                label="Orden del elemento"
-                max={30}
-                onChange={(zIndex) => updateElement(selectedElement.id, { zIndex })}
-                value={selectedElement.zIndex}
-              />
-              <label className="appearance-checkbox">
-                <input
-                  checked={selectedElement.hiddenOnMobile}
-                  onChange={(event) =>
-                    updateElement(selectedElement.id, { hiddenOnMobile: event.target.checked })
-                  }
-                  type="checkbox"
-                />
-                Ocultar en teléfonos
-              </label>
+              {selectedLinkedElement ? (
+                <div className="appearance-linked-summary">
+                  <strong>{selectedLinkedElement.label}</strong>
+                  <span>{selectedLinkedElement.route}</span>
+                  <small>Vínculo protegido: la galería solo reemplaza su imagen.</small>
+                  {selectedElement.assetId && (
+                    <img alt="" src={appearanceAssets[selectedElement.assetId]} />
+                  )}
+                  <button
+                    className="secondary"
+                    onClick={() => setToolPanel('LIBRARY')}
+                    type="button"
+                  >
+                    Elegir otra imagen
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Range
+                    label="Desplazamiento horizontal"
+                    max={50}
+                    min={-50}
+                    onChange={(offsetX) => updateElement(selectedElement.id, { offsetX })}
+                    value={selectedElement.offsetX}
+                  />
+                  <Range
+                    label="Desplazamiento vertical"
+                    max={50}
+                    min={-50}
+                    onChange={(offsetY) => updateElement(selectedElement.id, { offsetY })}
+                    value={selectedElement.offsetY}
+                  />
+                  <Range
+                    label="Ancho"
+                    max={120}
+                    min={40}
+                    onChange={(width) => updateElement(selectedElement.id, { width })}
+                    value={selectedElement.width}
+                  />
+                  <Range
+                    label="Orden del elemento"
+                    max={30}
+                    onChange={(zIndex) => updateElement(selectedElement.id, { zIndex })}
+                    value={selectedElement.zIndex}
+                  />
+                  <label className="appearance-checkbox">
+                    <input
+                      checked={selectedElement.hiddenOnMobile}
+                      onChange={(event) =>
+                        updateElement(selectedElement.id, { hiddenOnMobile: event.target.checked })
+                      }
+                      type="checkbox"
+                    />
+                    Ocultar en teléfonos
+                  </label>
+                </>
+              )}
               <button
                 className="secondary"
                 onClick={() => {

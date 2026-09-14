@@ -24,6 +24,11 @@ export const siteAppearanceElementIds = [
   'home-lead',
   'home-service',
   'home-sections-heading',
+  'home-link-shop',
+  'home-link-tournaments',
+  'home-link-news',
+  'home-link-community',
+  'home-link-comics',
   'shop-heading-copy',
   'shop-heading-stats',
   'tournaments-heading-copy',
@@ -39,6 +44,7 @@ export type SiteAppearanceElementId = z.infer<typeof siteAppearanceElementIdSche
 
 export const siteAppearanceElementSchema = z
   .object({
+    assetId: siteAppearanceAssetIdSchema.optional(),
     hiddenOnMobile: z.boolean(),
     id: siteAppearanceElementIdSchema,
     offsetX: z.number().min(-50).max(50),
@@ -75,7 +81,7 @@ export const siteAppearanceLayerSchema = z
 
 const siteAppearancePageSchema = z
   .object({
-    elements: z.array(siteAppearanceElementSchema).max(8).optional(),
+    elements: z.array(siteAppearanceElementSchema).max(12).optional(),
     layers: z.array(siteAppearanceLayerSchema).max(24),
   })
   .strict();

@@ -70,6 +70,11 @@ export const appearanceElementLabels: Readonly<Record<SiteAppearanceElementId, s
   'community-heading-copy': 'Texto de portada de Comunidad',
   'home-eyebrow': 'Categorías de la portada',
   'home-lead': 'Descripción de la portada',
+  'home-link-comics': 'Acceso vinculado · Cómics',
+  'home-link-community': 'Acceso vinculado · Comunidad',
+  'home-link-news': 'Acceso vinculado · Noticias',
+  'home-link-shop': 'Acceso vinculado · Tienda',
+  'home-link-tournaments': 'Acceso vinculado · Torneos',
   'home-sections-heading': 'Cabecera Explora Sergod',
   'home-service': 'Tarjeta Compra con claridad',
   'home-title': 'Título principal',
@@ -79,6 +84,16 @@ export const appearanceElementLabels: Readonly<Record<SiteAppearanceElementId, s
   'shop-heading-stats': 'Indicadores de Tienda',
   'tournaments-heading-copy': 'Texto de portada de Torneos',
   'tournaments-heading-stats': 'Indicadores de Torneos',
+};
+
+export const linkedAppearanceElements: Readonly<
+  Partial<Record<SiteAppearanceElementId, { readonly label: string; readonly route: string }>>
+> = {
+  'home-link-comics': { label: 'Cómics', route: '/comics' },
+  'home-link-community': { label: 'Comunidad', route: '/community' },
+  'home-link-news': { label: 'Noticias', route: '/news' },
+  'home-link-shop': { label: 'Tienda', route: '/shop' },
+  'home-link-tournaments': { label: 'Torneos', route: '/tournaments' },
 };
 
 export const defaultAppearanceElements: Readonly<
@@ -92,7 +107,13 @@ export const defaultAppearanceElements: Readonly<
     'home-lead',
     'home-service',
     'home-sections-heading',
-  ),
+  ).concat([
+    linkedDefault('home-link-shop', 'sheet-02-ornament-01'),
+    linkedDefault('home-link-tournaments', 'sheet-02-ornament-02'),
+    linkedDefault('home-link-news', 'sheet-02-ornament-04'),
+    linkedDefault('home-link-community', 'sheet-02-ornament-03'),
+    linkedDefault('home-link-comics', 'sheet-02-ornament-07'),
+  ]),
   news: defaults('news-heading-copy', 'news-heading-stats'),
   shop: defaults('shop-heading-copy', 'shop-heading-stats'),
   tournaments: defaults('tournaments-heading-copy', 'tournaments-heading-stats'),
@@ -156,6 +177,21 @@ function defaults(...ids: readonly SiteAppearanceElementId[]): readonly SiteAppe
     width: 100,
     zIndex: 5,
   }));
+}
+
+function linkedDefault(
+  id: SiteAppearanceElementId,
+  assetId: SiteAppearanceAssetId,
+): SiteAppearanceElement {
+  return {
+    assetId,
+    hiddenOnMobile: false,
+    id,
+    offsetX: 0,
+    offsetY: 0,
+    width: 100,
+    zIndex: 5,
+  };
 }
 
 function generatedAssetPath(id: SiteAppearanceAssetId): string {
