@@ -47,9 +47,17 @@ describe('IdentityAccess presentation', () => {
 
   it('presents the public commerce home while preserving account access', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /tu próxima jugada/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Explorar tienda' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /elige tu próxima ruta/i })).toBeInTheDocument();
+    expect(document.querySelector('.launcher-logo')).toHaveAttribute(
+      'src',
+      '/assets/sergod/logo_sergod_store_oficial_transparente.webp',
+    );
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Registro' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Carrito' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('navigation', { name: 'Navegación principal' }),
+    ).not.toBeInTheDocument();
     const launcher = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
     for (const label of [
       'Tienda',
@@ -63,6 +71,17 @@ describe('IdentityAccess presentation', () => {
     ]) {
       expect(launcher.getByRole('button', { name: new RegExp(label, 'i') })).toBeInTheDocument();
     }
+  });
+
+  it('uses the launcher as the home navigation and restores the regular header inside sections', () => {
+    render(<App />);
+    const launcher = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
+
+    fireEvent.click(launcher.getByRole('button', { name: /Noticias/i }));
+
+    expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Inicio Sergod Store' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Noticias' })).toBeInTheDocument();
   });
 
   it('preserves draft appearance mode when navigating inside the real preview', () => {
@@ -141,9 +160,11 @@ describe('IdentityAccess presentation', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /tu próxima jugada/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /elige tu próxima ruta/i }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Volver al inicio' }));
-    expect(screen.getByRole('heading', { name: /tu próxima jugada/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /elige tu próxima ruta/i })).toBeInTheDocument();
   });
 
   it('does not mount account tools for an anonymous direct visit', () => {

@@ -121,7 +121,7 @@ export function App() {
   return (
     <SiteAppearancePreviewProvider>
       <div className="app-shell">
-        <SiteChrome navigate={navigate} route={route} />
+        {route !== '/' && <SiteChrome navigate={navigate} route={route} />}
         <RouteErrorBoundary key={route}>
           <Suspense fallback={<RouteLoading />}>
             <div id="main-content" tabIndex={-1}>
@@ -383,6 +383,7 @@ function AccessGate({
 
 function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   const appearance = useSiteAppearance();
+  const authenticated = currentSession() !== null;
   const launcherEntries = [
     {
       appearanceId: 'home-link-shop',
@@ -443,16 +444,52 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   ] as const;
   return (
     <AppearancePageElements page="home">
-      <main className="home-page visual-public">
+      <main className="home-page launcher-home visual-public">
         <section aria-label="Inicio Sergod Store" className="launcher-shell">
-          <header className="launcher-topbar">
-            <span>Inicio Sergod</span>
-            <strong>Elige tu próxima ruta</strong>
-            <span className="launcher-status">Sergod Store</span>
-          </header>
+          <AppearanceLayers layers={appearance.home.layers} />
+          <div className="launcher-center">
+            <AppearanceElement id="home-eyebrow">
+              <p className="eyebrow">TCG · Comunidad · Competencia</p>
+            </AppearanceElement>
+            <img
+              alt="Sergod Store"
+              className="launcher-logo"
+              src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
+            />
+            <AppearanceElement id="home-title">
+              <h1>Elige tu próxima ruta</h1>
+            </AppearanceElement>
+            <AppearanceElement id="home-lead">
+              <p className="launcher-lead">Todo Sergod Store comienza aquí.</p>
+            </AppearanceElement>
+            <div aria-label="Cuenta y compra" className="launcher-utility" role="navigation">
+              {authenticated ? (
+                <button onClick={() => navigate('/account/overview')} type="button">
+                  Mi cuenta
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => navigate('/login')} type="button">
+                    Ingresar
+                  </button>
+                  <button className="secondary" onClick={() => navigate('/register')} type="button">
+                    Registro
+                  </button>
+                </>
+              )}
+              <button onClick={() => navigate('/cart')} type="button">
+                Carrito
+              </button>
+            </div>
+          </div>
           <nav aria-label="Accesos principales" className="launcher-menu">
             {launcherEntries.map((entry, index) => (
-              <button key={entry.appearanceId} onClick={() => navigate(entry.route)} type="button">
+              <button
+                className={`launcher-entry launcher-entry-${index + 1}`}
+                key={entry.appearanceId}
+                onClick={() => navigate(entry.route)}
+                type="button"
+              >
                 <AppearanceLinkedAsset fallbackAssetId={entry.icon} id={entry.appearanceId} />
                 <span className="launcher-copy">
                   <small>{entry.eyebrow}</small>
@@ -462,49 +499,6 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
               </button>
             ))}
           </nav>
-          <section className="commerce-hero launcher-stage">
-            <AppearanceLayers layers={appearance.home.layers} />
-            <div className="hero-copy">
-              <AppearanceElement id="home-eyebrow">
-                <p className="eyebrow">TCG · Comunidad · Competencia</p>
-              </AppearanceElement>
-              <span aria-hidden="true" className="hero-rule" />
-              <AppearanceElement id="home-title">
-                <h1>Tu próxima jugada comienza aquí.</h1>
-              </AppearanceElement>
-              <AppearanceElement id="home-lead">
-                <p className="hero-lead">
-                  Compra productos TCG, asegura preventas y mantente al día con la comunidad Sergod.
-                </p>
-              </AppearanceElement>
-              <div className="actions">
-                <button onClick={() => navigate('/shop')} type="button">
-                  Explorar tienda
-                </button>
-                <button
-                  className="secondary"
-                  onClick={() => navigate('/tournaments')}
-                  type="button"
-                >
-                  Ver torneos
-                </button>
-              </div>
-            </div>
-            <AppearanceElement id="home-service">
-              <aside className="hero-service cut-panel">
-                <div className="service-heading">
-                  <span aria-hidden="true">!</span>
-                  <p className="card-kicker">Compra con claridad</p>
-                </div>
-                <ul>
-                  <li>Disponibilidad y precios actualizados</li>
-                  <li>Retiro en tienda</li>
-                  <li>Despacho por pagar a agencia</li>
-                  <li>Pago online con Flow</li>
-                </ul>
-              </aside>
-            </AppearanceElement>
-          </section>
         </section>
         <section aria-labelledby="home-sections-title" className="home-sections">
           <AppearanceElement id="home-sections-heading">
@@ -515,6 +509,9 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
               </div>
               <p>Tienda, comunidad y contenido editorial conectados en una misma experiencia.</p>
             </header>
+          </AppearanceElement>
+          <AppearanceElement id="home-service">
+            <p className="home-service-note">Compra online con Flow · Retiro en tienda</p>
           </AppearanceElement>
           <HomeHighlights navigate={navigate} />
         </section>
