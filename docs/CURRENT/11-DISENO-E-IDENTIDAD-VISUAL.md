@@ -51,6 +51,18 @@ Los rótulos aprobados para el lanzador se registran de forma independiente en
 `design/manifest/APPROVED-HOME-LAUNCHER-ASSETS.json`; esta excepción no aprueba otros assets con
 texto horneado.
 
+### Portada tipo lanzador
+
+La primera pantalla de `/` es un lanzador visual de altura completa, no una portada convencional
+precedida por el encabezado general. El logo oficial ocupa el centro y los ocho accesos aprobados se
+distribuyen a su alrededor en escritorio. El encabezado y la navegación general aparecen después de
+entrar a una sección, evitando duplicar arriba los mismos destinos del lanzador.
+
+En teléfonos, la composición conserva primero el logo y presenta los ocho accesos en dos columnas,
+sin recortar el arte ni provocar desplazamiento horizontal. `Ingresar` o `Mi cuenta`, `Registro` y
+`Carrito` siguen disponibles como utilidades compactas. La imagen de cada acceso es personalizable,
+pero su nombre accesible y su ruta fija permanecen definidos fuera del asset.
+
 ### Logo
 
 `design/approved/branding/logo_sergod_store_oficial.png` es inmutable:

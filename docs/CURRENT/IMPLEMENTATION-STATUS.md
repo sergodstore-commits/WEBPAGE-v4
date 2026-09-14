@@ -561,6 +561,19 @@
   por el propietario sobre el contrato ya habilitado. La portada final mostró los ocho accesos, navegación,
   CTA, estados vacíos y contacto sin recursos rotos en la inspección posterior al despliegue.
 
+## Portada lanzador sin navegación duplicada — 2026-09-14
+
+- Por instrucción expresa del propietario, `/` pasa a ser la primera pantalla tipo lanzador: logo oficial
+  centrado y los ocho accesos visuales aprobados distribuidos a su alrededor. La cabecera convencional se
+  omite únicamente en la portada y reaparece al entrar a cualquier sección, eliminando la repetición visual
+  entre banners y accesos.
+- La composición conserva los vínculos funcionales independientes del arte, permite entrar o registrarse,
+  abrir la cuenta y acceder al carrito. En móvil prioriza logo y utilidades y convierte los accesos en una
+  cuadrícula de dos columnas.
+- La revisión local a 390 y 1.280 px confirmó cero imágenes rotas, cero desbordamiento horizontal y cero
+  acciones menores de 44 px. Aprobaron 14 pruebas de aplicación y las 99 pruebas web; formato, lint, tipos y
+  compilación web también finalizaron correctamente. La promoción remota queda pendiente de la Preview.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación
