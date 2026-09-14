@@ -103,7 +103,10 @@ export function AppearanceLinkedAsset({
   const element = elements.find((candidate) => candidate.id === id);
   const assetId = element?.assetId ?? fallbackAssetId;
   return (
-    <span aria-hidden="true" className="launcher-icon">
+    <span
+      aria-hidden="true"
+      className={`launcher-icon${assetId.startsWith('home-launcher-') ? ' launcher-icon-labeled' : ''}`}
+    >
       <img alt="" src={appearanceAssets[assetId]} />
     </span>
   );

@@ -29,6 +29,9 @@ export const siteAppearanceElementIds = [
   'home-link-news',
   'home-link-community',
   'home-link-comics',
+  'home-link-preorders',
+  'home-link-loyalty',
+  'home-link-quests',
   'shop-heading-copy',
   'shop-heading-stats',
   'tournaments-heading-copy',
@@ -81,7 +84,7 @@ export const siteAppearanceLayerSchema = z
 
 const siteAppearancePageSchema = z
   .object({
-    elements: z.array(siteAppearanceElementSchema).max(12).optional(),
+    elements: z.array(siteAppearanceElementSchema).max(16).optional(),
     layers: z.array(siteAppearanceLayerSchema).max(24),
   })
   .strict();

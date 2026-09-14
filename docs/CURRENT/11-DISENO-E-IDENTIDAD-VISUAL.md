@@ -34,12 +34,22 @@ Sergod Store usa una estética TCG moderna, dinámica y de alto contraste inspir
 - UI SaaS corporativa genérica;
 - texto horneado dentro de assets cuando debe ser contenido web dinámico.
 
+Excepción aprobada por el propietario: los ocho rótulos ilustrados del lanzador de portada
+(`Tienda`, `Preventas`, `Torneos`, `Noticias`, `Comunidad`, `Loyalty`, `Quests` y
+`Cómics e historias`) pueden conservar su texto como parte del arte. El nombre accesible y el
+destino siguen definidos en HTML y permanecen separados de la imagen, de modo que personalizar el
+arte nunca altere ni elimine el vínculo.
+
 ## Assets
 
 - `design/source-existing/`: fuentes visuales de trabajo; no son aprobación de producción.
 - `design/references/`: referencias/mockups para dirección/composición.
 - `design/approved/`: única biblioteca visual aprobada para uso productivo.
 - `design/manifest/`: hashes, procedencia y reglas.
+
+Los rótulos aprobados para el lanzador se registran de forma independiente en
+`design/manifest/APPROVED-HOME-LAUNCHER-ASSETS.json`; esta excepción no aprueba otros assets con
+texto horneado.
 
 ### Logo
 

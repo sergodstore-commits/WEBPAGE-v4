@@ -387,35 +387,56 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
     {
       appearanceId: 'home-link-shop',
       eyebrow: 'Catálogo',
-      icon: 'sheet-02-ornament-01',
+      icon: 'home-launcher-shop',
       label: 'Tienda',
+      route: '/shop',
+    },
+    {
+      appearanceId: 'home-link-preorders',
+      eyebrow: 'Lanzamientos',
+      icon: 'home-launcher-preorders',
+      label: 'Preventas',
       route: '/shop',
     },
     {
       appearanceId: 'home-link-tournaments',
       eyebrow: 'Competencia',
-      icon: 'sheet-02-ornament-02',
+      icon: 'home-launcher-tournaments',
       label: 'Torneos',
       route: '/tournaments',
     },
     {
       appearanceId: 'home-link-news',
       eyebrow: 'Actualidad',
-      icon: 'sheet-02-ornament-04',
+      icon: 'home-launcher-news',
       label: 'Noticias',
       route: '/news',
     },
     {
       appearanceId: 'home-link-community',
       eyebrow: 'Encuentros',
-      icon: 'sheet-02-ornament-03',
+      icon: 'home-launcher-community',
       label: 'Comunidad',
       route: '/community',
     },
     {
+      appearanceId: 'home-link-loyalty',
+      eyebrow: 'Puntos',
+      icon: 'home-launcher-loyalty',
+      label: 'Loyalty',
+      route: '/account',
+    },
+    {
+      appearanceId: 'home-link-quests',
+      eyebrow: 'Desafíos',
+      icon: 'home-launcher-quests',
+      label: 'Quests',
+      route: '/tournaments',
+    },
+    {
       appearanceId: 'home-link-comics',
       eyebrow: 'Historias',
-      icon: 'sheet-02-ornament-07',
+      icon: 'home-launcher-comics',
       label: 'Cómics',
       route: '/comics',
     },
@@ -431,9 +452,9 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
           </header>
           <nav aria-label="Accesos principales" className="launcher-menu">
             {launcherEntries.map((entry, index) => (
-              <button key={entry.route} onClick={() => navigate(entry.route)} type="button">
+              <button key={entry.appearanceId} onClick={() => navigate(entry.route)} type="button">
                 <AppearanceLinkedAsset fallbackAssetId={entry.icon} id={entry.appearanceId} />
-                <span>
+                <span className="launcher-copy">
                   <small>{entry.eyebrow}</small>
                   <strong>{entry.label}</strong>
                 </span>

@@ -12,10 +12,12 @@ const emptyLayout = Object.fromEntries(
 
 describe('site appearance contract', () => {
   it('keeps legacy aliases and every approved visual resource in a closed catalog', () => {
-    expect(siteAppearanceAssetIds).toHaveLength(112);
-    expect(new Set(siteAppearanceAssetIds).size).toBe(112);
+    expect(siteAppearanceAssetIds).toHaveLength(120);
+    expect(new Set(siteAppearanceAssetIds).size).toBe(120);
     expect(siteAppearanceAssetIds).toContain('burst-red');
     expect(siteAppearanceAssetIds).toContain('sheet-03-banner-03');
+    expect(siteAppearanceAssetIds).toContain('home-launcher-shop');
+    expect(siteAppearanceAssetIds).toContain('home-launcher-quests');
   });
 
   it('accepts one independently editable layer collection per public section', () => {

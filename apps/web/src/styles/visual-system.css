@@ -320,6 +320,38 @@ textarea:hover {
   object-fit: contain;
 }
 
+.launcher-menu button:has(.launcher-icon-labeled) {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  padding: 0.2rem;
+  border: 0 !important;
+  background: transparent;
+  box-shadow: none;
+  clip-path: none !important;
+}
+
+.launcher-menu button:has(.launcher-icon-labeled):hover,
+.launcher-menu button:has(.launcher-icon-labeled):focus-visible {
+  background: rgb(255 255 255 / 5%);
+  filter: drop-shadow(0 0 0.45rem rgb(0 229 231 / 55%));
+}
+
+.launcher-menu button:has(.launcher-icon-labeled) .launcher-copy,
+.launcher-menu button:has(.launcher-icon-labeled) > b {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.launcher-icon.launcher-icon-labeled {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 1;
+  filter: drop-shadow(0.18rem 0.18rem 0 #000);
+}
+
 .launcher-stage {
   margin: 0;
   min-width: 0;

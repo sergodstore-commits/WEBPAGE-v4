@@ -113,4 +113,12 @@ export const siteAppearanceAssetIds = [
   'sheet-03-pattern-01',
   'sheet-03-pattern-02',
   'sheet-03-pattern-03',
+  'home-launcher-comics',
+  'home-launcher-community',
+  'home-launcher-loyalty',
+  'home-launcher-news',
+  'home-launcher-preorders',
+  'home-launcher-quests',
+  'home-launcher-shop',
+  'home-launcher-tournaments',
 ] as const;

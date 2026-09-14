@@ -17,6 +17,14 @@ const legacyAppearanceAssets: Readonly<Partial<Record<SiteAppearanceAssetId, str
   'brush-white': '/assets/sergod/ui/sheet_01/textures_06.webp',
   'fragments-red': '/assets/sergod/ui/sheet_01/bottom_fx_06.webp',
   'halftone-red': '/assets/sergod/ui/sheet_03/pattern_03.webp',
+  'home-launcher-comics': '/assets/sergod/home-launcher/comics.webp',
+  'home-launcher-community': '/assets/sergod/home-launcher/community.webp',
+  'home-launcher-loyalty': '/assets/sergod/home-launcher/loyalty.webp',
+  'home-launcher-news': '/assets/sergod/home-launcher/news.webp',
+  'home-launcher-preorders': '/assets/sergod/home-launcher/preorders.webp',
+  'home-launcher-quests': '/assets/sergod/home-launcher/quests.webp',
+  'home-launcher-shop': '/assets/sergod/home-launcher/shop.webp',
+  'home-launcher-tournaments': '/assets/sergod/home-launcher/tournaments.webp',
 };
 
 export const appearanceAssetIds = [...siteAppearanceAssetIds];
@@ -48,9 +56,18 @@ const legacyAssetLabels: Readonly<Partial<Record<SiteAppearanceAssetId, string>>
   'brush-white': 'Pincelada blanca',
   'fragments-red': 'Fragmentos rojos',
   'halftone-red': 'Trama halftone',
+  'home-launcher-comics': 'Acceso Cómics e historias',
+  'home-launcher-community': 'Acceso Comunidad',
+  'home-launcher-loyalty': 'Acceso Loyalty',
+  'home-launcher-news': 'Acceso Noticias',
+  'home-launcher-preorders': 'Acceso Preventas',
+  'home-launcher-quests': 'Acceso Quests',
+  'home-launcher-shop': 'Acceso Tienda',
+  'home-launcher-tournaments': 'Acceso Torneos',
 };
 
 export function appearanceAssetCategory(id: SiteAppearanceAssetId): string {
+  if (id.startsWith('home-launcher-')) return 'Accesos principales';
   if (!id.startsWith('sheet-')) return 'Destacados';
   return categoryLabels[id.split('-')[2] ?? ''] ?? 'Otros';
 }
@@ -72,7 +89,10 @@ export const appearanceElementLabels: Readonly<Record<SiteAppearanceElementId, s
   'home-lead': 'Descripción de la portada',
   'home-link-comics': 'Acceso vinculado · Cómics',
   'home-link-community': 'Acceso vinculado · Comunidad',
+  'home-link-loyalty': 'Acceso vinculado · Loyalty',
   'home-link-news': 'Acceso vinculado · Noticias',
+  'home-link-preorders': 'Acceso vinculado · Preventas',
+  'home-link-quests': 'Acceso vinculado · Quests',
   'home-link-shop': 'Acceso vinculado · Tienda',
   'home-link-tournaments': 'Acceso vinculado · Torneos',
   'home-sections-heading': 'Cabecera Explora Sergod',
@@ -91,7 +111,10 @@ export const linkedAppearanceElements: Readonly<
 > = {
   'home-link-comics': { label: 'Cómics', route: '/comics' },
   'home-link-community': { label: 'Comunidad', route: '/community' },
+  'home-link-loyalty': { label: 'Loyalty', route: '/account' },
   'home-link-news': { label: 'Noticias', route: '/news' },
+  'home-link-preorders': { label: 'Preventas', route: '/shop' },
+  'home-link-quests': { label: 'Quests', route: '/tournaments' },
   'home-link-shop': { label: 'Tienda', route: '/shop' },
   'home-link-tournaments': { label: 'Torneos', route: '/tournaments' },
 };
@@ -108,11 +131,14 @@ export const defaultAppearanceElements: Readonly<
     'home-service',
     'home-sections-heading',
   ).concat([
-    linkedDefault('home-link-shop', 'sheet-02-ornament-01'),
-    linkedDefault('home-link-tournaments', 'sheet-02-ornament-02'),
-    linkedDefault('home-link-news', 'sheet-02-ornament-04'),
-    linkedDefault('home-link-community', 'sheet-02-ornament-03'),
-    linkedDefault('home-link-comics', 'sheet-02-ornament-07'),
+    linkedDefault('home-link-shop', 'home-launcher-shop'),
+    linkedDefault('home-link-preorders', 'home-launcher-preorders'),
+    linkedDefault('home-link-tournaments', 'home-launcher-tournaments'),
+    linkedDefault('home-link-news', 'home-launcher-news'),
+    linkedDefault('home-link-community', 'home-launcher-community'),
+    linkedDefault('home-link-loyalty', 'home-launcher-loyalty'),
+    linkedDefault('home-link-quests', 'home-launcher-quests'),
+    linkedDefault('home-link-comics', 'home-launcher-comics'),
   ]),
   news: defaults('news-heading-copy', 'news-heading-stats'),
   shop: defaults('shop-heading-copy', 'shop-heading-stats'),

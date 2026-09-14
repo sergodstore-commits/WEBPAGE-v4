@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -50,6 +50,19 @@ describe('IdentityAccess presentation', () => {
     expect(screen.getByRole('heading', { name: /tu próxima jugada/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Explorar tienda' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument();
+    const launcher = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
+    for (const label of [
+      'Tienda',
+      'Preventas',
+      'Torneos',
+      'Noticias',
+      'Comunidad',
+      'Loyalty',
+      'Quests',
+      'Cómics',
+    ]) {
+      expect(launcher.getByRole('button', { name: new RegExp(label, 'i') })).toBeInTheDocument();
+    }
   });
 
   it('preserves draft appearance mode when navigating inside the real preview', () => {

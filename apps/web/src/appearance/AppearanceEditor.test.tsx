@@ -63,6 +63,21 @@ describe('editor de apariencia web', () => {
     );
   });
 
+  it('ofrece todos los accesos ilustrados con destinos protegidos', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+
+    expect(
+      screen.getByRole('button', { name: /Preventas.*\/shop.*vínculo fijo/u }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Loyalty.*\/account.*vínculo fijo/u }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Quests.*\/tournaments.*vínculo fijo/u }),
+    ).toBeInTheDocument();
+  });
+
   it('añade títulos visuales como capas editables en vez de texto horneado', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');

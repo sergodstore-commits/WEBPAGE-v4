@@ -10,7 +10,11 @@ La biblioteca aprobada se controla mediante:
 
 - `manifest/APPROVED-ASSETS.json`: logo oficial y manifiestos incluidos.
 - `manifest/APPROVED-UI-ASSETS.json`: 106 recursos UI sin texto aprobados por el propietario el 2026-08-25.
+- `manifest/APPROVED-HOME-LAUNCHER-ASSETS.json`: ocho rótulos ilustrados aprobados expresamente
+  para los accesos vinculados de portada el 2026-09-14.
 
-El texto visible, los estados, la navegación y los números de página se construyen como contenido web dinámico; las variantes con texto horneado no están aprobadas.
+El texto visible, los estados, la navegación y los números de página se construyen como contenido
+web dinámico. La única excepción son los ocho rótulos del lanzador documentados en su manifiesto:
+su nombre accesible y su destino continúan siendo HTML independiente y protegido.
 
 Las reglas visuales normativas viven en `docs/CURRENT/11-DISENO-E-IDENTIDAD-VISUAL.md`.
