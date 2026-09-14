@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-13. Release productivo en `c1ccd5a`; el registro CLIENTE vuelve a
+> Estado auditado hasta el 2026-09-14. Release productivo en `c197044`; el registro CLIENTE vuelve a
 > estar habilitado con aceptación obligatoria y versionada de los Términos y condiciones 1.0. Por
 > decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -23,7 +23,7 @@
 | Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual final, editor por capas y responsive verificados                    | Carga visual del propietario         |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
-| Despliegue web                                                                       | Producción PASS          | Vercel `c1ccd5a`, dominio canónico, sesión persistente y configuración alineada    | Ninguno                              |
+| Despliegue web                                                                       | Producción PASS          | Vercel `c197044`, dominio canónico, sesión persistente y Apariencia habilitada     | Ninguno                              |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
 ## Gates locales reproducidos
@@ -32,13 +32,15 @@
 - `npm ci`: PASS.
 - Runner oficial `scripts/codex/verify-local.ps1 -RunLocalIntegration`: `LOCAL_VERIFICATION=PASS` y salida natural `0` el 2026-08-23.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit, Application, Contract y Web: 116 archivos / 478 pruebas PASS y 1 SKIP documentado.
+- Unit, Application, Contract y Web: 116 archivos / 485 pruebas PASS y 1 SKIP documentado.
   Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro
   idempotente, estado 404 explícito, editor visual por bloques y lectura editorial pública.
-- Integration local: 14 archivos / 169 pruebas PASS sobre PostgreSQL 18.4. La migración de apariencia
-  pasó tanto upgrade del baseline como instalación limpia `001`–`023` el 2026-09-12.
+- Integration local: el gate histórico aprobó 14 archivos / 169 pruebas sobre PostgreSQL 18.4. Para el
+  cierre 024, Configuración aprobó 8/8 e Inventario 7/7 de forma aislada; la corrida conjunta excedió
+  timeouts locales de 10 segundos sin exponer fallos de reglas de negocio.
 - `codex:prepare`: 135 checks PASS; 8 Skills locales válidas.
-- Migraciones protegidas: 31 intactas; `016`–`023` y mirrors Supabase son prospectivas.
+- Migraciones protegidas: 31 intactas; `016`–`024` y mirrors Supabase son prospectivas. Producción está
+  aplicada hasta 024.
 - `npm audit`: 0 vulnerabilidades.
 - Auditoría de entrega: sin archivos/directorios vacíos, `.env` reales ni placeholders bloqueantes.
 - QA manual local: Inicio, Tienda, Editorial, Carrito, Checkout, Cuenta y accesos Admin revisados en escritorio/móvil; sin overflow horizontal y con acciones móviles de al menos 44 px.
@@ -525,13 +527,39 @@
   en vez del contrato JSON. No se publicó una configuración de prueba en Producción ni se aplicó la migración.
   Para cerrar la aceptación remota se requiere una excepción temporal limitada a esa Preview o una promoción
   coordinada posterior a aplicar la migración 024.
-- La migración 024 y el rediseño permanecen en `codex/appearance-gallery-repair`; no están promovidos al dominio
-  canónico. Los dos valores públicos añadidos solo para la rama y cualquier excepción temporal deben retirarse
-  una vez completada la aceptación.
-  Además, 8 pruebas PostgreSQL focales de configuración y persistencia aprobaron.
-  Dos intentos de la integración completa quedaron bloqueados sin resultado después de una interrupción;
-  no se cuentan como PASS. El cambio permanece aislado en su rama y requiere aplicación de la migración 024
-  en la base productiva y aceptación remota del ciclo publicar → recargar antes de promoción.
+- Esta condición pendiente quedó superada por la habilitación productiva del 2026-09-14 documentada a
+  continuación. Las excepciones y variables limitadas a la antigua Preview siguen siendo limpieza operativa
+  pendiente y no forman parte del dominio canónico.
+
+## Habilitación productiva final de Apariencia — 2026-09-14
+
+- La inspección de Producción confirmó que solo estaban aplicadas las migraciones 001–022, por lo que se
+  trataron 023 y 024 como una unidad indivisible. El respaldo inmediato
+  `sergod-production-public-20260914-105137.dump.aes` quedó cifrado y autenticado fuera de Git; su
+  restauración desechable reprodujo 82 tablas y 7.542 filas sin diferencias, con SHA-256
+  `E5674B1DFE484C3DCEDB312E1AFB19A4E9924FEA28D7BACFB9E3DCC117FF4A2A`.
+- La actualización 022→024 se ensayó primero sobre esa restauración: ambas migraciones se aplicaron en una
+  transacción, `WEB_APPEARANCE_LAYOUT` aceptó un valor TEXT válido, una clave no registrada conservó el
+  rechazo y todo el dato de prueba se revirtió. Después se aplicó la misma secuencia en Supabase PROD
+  `kbhbaackrgwgvxxqdlwx`; terminó con 24 migraciones, cero cambios en filas de configuración existentes y
+  cero configuraciones de apariencia creadas artificialmente.
+- El gate final aprobó formato, lint y tipos antes de la promoción; la repetición íntegra de las suites
+  unitarias, de aplicación, contrato y web aprobó 116 archivos, 485 pruebas y una omisión documentada. La
+  compilación posterior de packages, API y web también terminó sin errores. Las pruebas focales añadieron
+  5 comprobaciones contractuales y 8 comprobaciones PostgreSQL de configuración, todas PASS. La integración
+  completa había mostrado timeouts de 10 segundos bajo carga local; los archivos afectados no presentaron
+  fallos de negocio al ejecutarse aislados, incluido Inventario 7/7 y Configuración 8/8.
+- `main` avanzó por fast-forward desde `6ab582c` hasta `c197044`, sin reescribir historia. Render dejó ese
+  commit `Live` en el despliegue `dep-dak3tih42hec73fssr70`; Vercel lo dejó `Ready` en Producción mediante
+  `C2wpN2iPzXeN6hgeoLFC4aUFW1fT`, y el dominio canónico sirve el paquete `index-CPR0-ap8.js`.
+- API directa, `/health` a través del dominio, lectura pública de apariencia y los ocho WebP aprobados
+  respondieron HTTP 200. El paquete público contiene el editor, las rutas fijas del launcher y el manejo
+  reforzado de persistencia de sesión. La aceptación real cerró login, persistencia, renovación e
+  invalidación de sesión; ambos dominios canónicos apuntan únicamente a Supabase PROD.
+- Producción mantiene deliberadamente `layout: null`: el diseño base aprobado es el fallback visible y no
+  se publicó contenido ficticio. El primer guardado y activación desde Admin creará la versión real elegida
+  por el propietario sobre el contrato ya habilitado. La portada final mostró los ocho accesos, navegación,
+  CTA, estados vacíos y contacto sin recursos rotos en la inspección posterior al despliegue.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
