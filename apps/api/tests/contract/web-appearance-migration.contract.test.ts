@@ -29,4 +29,21 @@ describe('Web appearance configuration migration contract', () => {
     expect(sql).not.toMatch(/INSERT INTO public\.system_configurations/iu);
     expect(sql).not.toMatch(/GRANT .* (anon|authenticated)/iu);
   });
+
+  it('keeps the prospective production repair equivalent in both migration chains', async () => {
+    const application = require('../../migrations/024_web_appearance_constraint_repair.cjs') as {
+      upSql: string;
+    };
+    expect(application.upSql).toBe(
+      await readFile(
+        resolve('supabase/migrations/20260913230000_web_appearance_constraint_repair.sql'),
+        'utf8',
+      ),
+    );
+    expect(application.upSql).toContain('DROP CONSTRAINT IF EXISTS');
+    expect(application.upSql).toContain("configuration_key = 'WEB_APPEARANCE_LAYOUT'");
+    expect(application.upSql).toContain('char_length(text_value) BETWEEN 1 AND 65536');
+    expect(application.upSql).not.toMatch(/INSERT INTO public\.system_configurations/iu);
+    expect(application.upSql).not.toMatch(/GRANT .* (anon|authenticated)/iu);
+  });
 });
