@@ -1,0 +1,474 @@
+{
+  "source": "elementos pagina1.png",
+  "source_sha256": "5fabe35fb60c1518653d2deeca430904bc59d1043d342751f10f91c72d1db0fc",
+  "asset_count": 58,
+  "scale": 4,
+  "method": "RealESRGAN x4plus anime 6B, official NCNN Vulkan release v0.2.5.0",
+  "verification": "All original crop hashes and all enhanced PNG hashes match previous delivery.",
+  "assets": [
+    {
+      "name": "rotulos/label_textures_01.png",
+      "source_size": [300, 55],
+      "output_size": [1200, 220],
+      "source_sha256": "da53518dabe4f485e880fe551a2804cdbb993d170d3a55b3534b63782fe9ba88",
+      "output_sha256": "5372ed473687a7fa0c4fcd4c8d1c8fb5c6c2bac56e4a6a9e1e80012b0385c036",
+      "source_box": [0, 0, 300, 55]
+    },
+    {
+      "name": "elementos/texture_01.png",
+      "source_size": [166, 145],
+      "output_size": [664, 580],
+      "source_sha256": "2862a3919f7b95651f349017097d284243631c232f269865332f3276d91174ed",
+      "output_sha256": "0e4b2849fc791b2fcb5605c82b416bae66c74dd1dc709170aae6fa288e0fbe2f",
+      "source_box": [9, 55, 175, 200]
+    },
+    {
+      "name": "elementos/texture_02.png",
+      "source_size": [155, 145],
+      "output_size": [620, 580],
+      "source_sha256": "62c0da21364e5cfc57546eae1afb11b3315688d2da862f0cd679c276b7e6e034",
+      "output_sha256": "ed3f7752121ae0bc9a36f52957fa741e99583b0adbadab556590f4c341ac162f",
+      "source_box": [175, 55, 330, 200]
+    },
+    {
+      "name": "elementos/texture_03.png",
+      "source_size": [135, 145],
+      "output_size": [540, 580],
+      "source_sha256": "4e9ca5efb167e7e816bc0e6a198d31afb148a631c2abbddf977dab4a482b7c90",
+      "output_sha256": "5fe42298d9690b8273b282f135a7afac9ae84da13255d57368fed743e971938c",
+      "source_box": [330, 55, 465, 200]
+    },
+    {
+      "name": "elementos/fx_01.png",
+      "source_size": [205, 150],
+      "output_size": [820, 600],
+      "source_sha256": "aac8b0142c582270b00f96aa52e697286c743834113aa809f088daa69cdf1535",
+      "output_sha256": "a8a44516d1b93fabf6261871d82ee84cc6e1a630913c6e49146a8fed7f7e95df",
+      "source_box": [0, 200, 205, 350]
+    },
+    {
+      "name": "elementos/fx_02.png",
+      "source_size": [150, 150],
+      "output_size": [600, 600],
+      "source_sha256": "a58bfe0f4616a8d807f99a8831a85755f9b7fbd08a1b7eb52aa6e1a46f12d0c7",
+      "output_sha256": "8edc856721e8b1f7cd669a6d93fe76278abba1b66eb57edf8a9c7a960ce87a41",
+      "source_box": [205, 200, 355, 350]
+    },
+    {
+      "name": "elementos/fx_03.png",
+      "source_size": [110, 150],
+      "output_size": [440, 600],
+      "source_sha256": "3c04ff80049dfd626132beae557a366a7f23ab75ce31d17389eb42c27a5b0a63",
+      "output_sha256": "4abb338677d1261f190414fd8a8dceb72570f1236ce500cc26b8951f842b08cc",
+      "source_box": [355, 200, 465, 350]
+    },
+    {
+      "name": "elementos/fx_04.png",
+      "source_size": [175, 168],
+      "output_size": [700, 672],
+      "source_sha256": "d07055c45886485fa702e4303f7e278303de7110f3f2415de395dd9502cb94d6",
+      "output_sha256": "ec67ee15e18233663f73c7a7d4d4a7f109ead811283cd78891985b8c910714d7",
+      "source_box": [0, 350, 175, 518]
+    },
+    {
+      "name": "elementos/fx_05.png",
+      "source_size": [155, 169],
+      "output_size": [620, 676],
+      "source_sha256": "af6cff86b084bcc667cfed3ec16f64f8fb0a4aa42806d414176f47ddc6ae9723",
+      "output_sha256": "a6636b06fcf2a35a8a1fe01b5e6d4e358ab22811084a42db55b82c9c38ae51c1",
+      "source_box": [175, 350, 330, 519]
+    },
+    {
+      "name": "elementos/fx_06.png",
+      "source_size": [135, 175],
+      "output_size": [540, 700],
+      "source_sha256": "f3ff4db4fc265f6439235845da61ac91424b6516a55ccf00dd4e00ab0d567630",
+      "output_sha256": "7222203d1d1c79b47d109a61e0137f801a54f31290a686ee52db6e2b15773f6b",
+      "source_box": [330, 350, 465, 525]
+    },
+    {
+      "name": "rotulos/label_frames_01.png",
+      "source_size": [283, 55],
+      "output_size": [1132, 220],
+      "source_sha256": "039588442d667b5b6d50bae01d402feaec3cb27f6a80929f7df983e7b9d4825e",
+      "output_sha256": "c695538af373d8c11532256a030a39da62803c560da203660570b5d05b833bc0",
+      "source_box": [487, 0, 770, 55]
+    },
+    {
+      "name": "elementos/frame_01.png",
+      "source_size": [300, 180],
+      "output_size": [1200, 720],
+      "source_sha256": "2e3d9af7deba03451b591a71a338c4fe2ae2f941d80b190495c072a5cdb6af1e",
+      "output_sha256": "637dc8b09c2fedba14268cb87e14b20475b20aad818b5a28e8233b364dcee0e5",
+      "source_box": [465, 55, 765, 235]
+    },
+    {
+      "name": "elementos/frame_02.png",
+      "source_size": [195, 170],
+      "output_size": [780, 680],
+      "source_sha256": "8bb36c6775f447d5d28bcd2a062d5934f5be7bb32e433a17b58b49dc30d23b01",
+      "output_sha256": "e59a2224cbe75de4d70d91dc911b7b18bc7161add8b6012b1fa567c81aa8781d",
+      "source_box": [765, 55, 960, 225]
+    },
+    {
+      "name": "elementos/frame_03.png",
+      "source_size": [260, 220],
+      "output_size": [1040, 880],
+      "source_sha256": "fac4998d20465504c0a7098ff0c8189aa467c0f38f48c80354a921e0d0d14483",
+      "output_sha256": "aecc7e2802f60ccee50ba5cedc2585b61e1d5b6a2b3c7528fabc6dc722dcc0f5",
+      "source_box": [465, 235, 725, 455]
+    },
+    {
+      "name": "elementos/frame_04.png",
+      "source_size": [210, 140],
+      "output_size": [840, 560],
+      "source_sha256": "7b8d8b941cc2dc373d4e91035e8416d92c047a59ef7b4b4152f749f6ebe2f75d",
+      "output_sha256": "b8656a3319b905b95f6bd9f8dd401f5353b6440a404f5251b6901c144a5de787",
+      "source_box": [750, 225, 960, 365]
+    },
+    {
+      "name": "elementos/frame_05.png",
+      "source_size": [240, 110],
+      "output_size": [960, 440],
+      "source_sha256": "41084c5f6d32a85be1a0869650ca11cd45bab77817e4cd9722b5c3d26eb51378",
+      "output_sha256": "15acd6f6ff2e116189fa444c72b8f701755f1aafc262b591c7eed52322966199",
+      "source_box": [720, 365, 960, 475]
+    },
+    {
+      "name": "rotulos/label_dividers_01.png",
+      "source_size": [310, 55],
+      "output_size": [1240, 220],
+      "source_sha256": "ac0508dd7d58e421713b25b909b27d3844fbdc26ec38e6a35bb90eeb2321ee4d",
+      "output_sha256": "61b0c87cf65eefc1b913b86b01f65fbdda2d321d2df43d8dfa1a2d9607994f46",
+      "source_box": [955, 0, 1265, 55]
+    },
+    {
+      "name": "elementos/divider_01.png",
+      "source_size": [299, 63],
+      "output_size": [1196, 252],
+      "source_sha256": "891ecd3116de28ce20cf12630fca7184e474fed4b8b9a03b37655646a2858acb",
+      "output_sha256": "22bdbaeb45ea5e95c71116304d3b8e9214e1b728bf8703085cbc4928c15ab370",
+      "source_box": [955, 55, 1254, 118]
+    },
+    {
+      "name": "elementos/divider_02.png",
+      "source_size": [301, 60],
+      "output_size": [1204, 240],
+      "source_sha256": "c9a0777ef243d8393dd14fe63422de41e94c00ed1b24261cf596f85f3e7cc403",
+      "output_sha256": "95a9c386737a574a163a1bb5668145a9cf241cd5835c314621e17d5cc1e4292d",
+      "source_box": [955, 118, 1256, 178]
+    },
+    {
+      "name": "elementos/divider_03.png",
+      "source_size": [299, 52],
+      "output_size": [1196, 208],
+      "source_sha256": "ddd315eb23d7f247d2f157051ebf675ab6396d8935930426822e9a7201bf4639",
+      "output_sha256": "30155265519faa0f3fccb24b525833bd17dcbc8deb9cae186e42fdedfcac978a",
+      "source_box": [955, 178, 1254, 230]
+    },
+    {
+      "name": "elementos/divider_04.png",
+      "source_size": [285, 55],
+      "output_size": [1140, 220],
+      "source_sha256": "cdea27f058bcc29e8aaa44d5c7241e3da4c251941cdd61c0dd21feefe6435559",
+      "output_sha256": "bd5548a72c62171edaf7666f1e463167df6c3df51a646ddf2878fc98736269f3",
+      "source_box": [971, 240, 1256, 295]
+    },
+    {
+      "name": "elementos/divider_05.png",
+      "source_size": [300, 65],
+      "output_size": [1200, 260],
+      "source_sha256": "b32a464a91a9c607ac9000688227b8f36de043afe1666796973de805cb971ac9",
+      "output_sha256": "7c463ae13c822dfd87166a6023806d033d2a9a365c339c2e4006912ef355d885",
+      "source_box": [955, 300, 1255, 365]
+    },
+    {
+      "name": "elementos/divider_06.png",
+      "source_size": [296, 73],
+      "output_size": [1184, 292],
+      "source_sha256": "252358b3db58bf34be72a25ebc0a9122d8a96a2380f2ad6e12167a10ca920384",
+      "output_sha256": "90a00f1550dda7e697192009066e67e53e1eea4869a6675ce182dafa9d92bbac",
+      "source_box": [969, 365, 1265, 438]
+    },
+    {
+      "name": "rotulos/label_ui_01.png",
+      "source_size": [261, 50],
+      "output_size": [1044, 200],
+      "source_sha256": "712e478a2181b3d93fb413bfc6c43e66cb2a0809bfc2e72a57e7e67c09657801",
+      "output_sha256": "5a0932de6ee4bd0b7d3a2e4445c01ba6a03d269643ef3b7e91f507821d45820d",
+      "source_box": [1260, 5, 1521, 55]
+    },
+    {
+      "name": "elementos/ui_badge_01.png",
+      "source_size": [99, 75],
+      "output_size": [396, 300],
+      "source_sha256": "ffd682d6ff069d41ca7fa5d8fa93b5d0d08bbf477b7923cf1042bfd30839b162",
+      "output_sha256": "a6c1804c283ace7b9b3326dde2586aa596c16f251e693267b43dcf82e7005f02",
+      "source_box": [1261, 55, 1360, 130]
+    },
+    {
+      "name": "elementos/ui_badge_02.png",
+      "source_size": [148, 75],
+      "output_size": [592, 300],
+      "source_sha256": "24bd12d94858325b069b5622d334c562d8631894f523c54e2402d877c3086a0d",
+      "output_sha256": "81ee0a4233c7e37f08e40829a2c9bda87b4fefb6472893914de55cf121b69d5f",
+      "source_box": [1360, 55, 1508, 130]
+    },
+    {
+      "name": "elementos/ui_badge_03.png",
+      "source_size": [80, 75],
+      "output_size": [320, 300],
+      "source_sha256": "d41c1aa7d7e5d9e1fae5eacb58391362534e826da1ab94c0d145b657582a1499",
+      "output_sha256": "b8b555b45489c4aac64e213ba7e016ebe1a20cfacfa99841ef974d8198df64ac",
+      "source_box": [1280, 130, 1360, 205]
+    },
+    {
+      "name": "elementos/ui_badge_04.png",
+      "source_size": [87, 75],
+      "output_size": [348, 300],
+      "source_sha256": "3e334333cbe623dbaf4c8ff4c82a645291186380a99c0ac8cf2819c553056ba6",
+      "output_sha256": "cdb45704fa25f66f11e5d02cad30cba9cfe0164f44dd7adf47aec2ba2f967880",
+      "source_box": [1363, 130, 1450, 205]
+    },
+    {
+      "name": "elementos/ui_badge_05.png",
+      "source_size": [74, 75],
+      "output_size": [296, 300],
+      "source_sha256": "b6b1a817871b13804c142dd287e272fc0dddbf9903f83c8d1a393b4d1ed060c0",
+      "output_sha256": "5787ee652035a369537cba4a9834a22f31d491ac22ea3dbf4bc4666a46048c8a",
+      "source_box": [1450, 130, 1524, 205]
+    },
+    {
+      "name": "elementos/ui_badge_06.png",
+      "source_size": [85, 85],
+      "output_size": [340, 340],
+      "source_sha256": "6b435f59703b7a42fab2563cad6aee47b189f50c6d4666d5add8d046458e5248",
+      "output_sha256": "06b76ed2dea669dc8837d20eb3dc4e4be84dc483a7421ba28a738ba5cc16e056",
+      "source_box": [1275, 205, 1360, 290]
+    },
+    {
+      "name": "elementos/ui_badge_07.png",
+      "source_size": [90, 85],
+      "output_size": [360, 340],
+      "source_sha256": "bd67bcac5a6d117879399f83dde1e19773bcb2eeac4be2ff94869b1b10c64571",
+      "output_sha256": "2478fc67ebd6f65725e7f356cfb83ee795b16bfd320c136c4c00a1b6812b1c16",
+      "source_box": [1360, 205, 1450, 290]
+    },
+    {
+      "name": "elementos/ui_badge_08.png",
+      "source_size": [75, 85],
+      "output_size": [300, 340],
+      "source_sha256": "daaa5802cbeb11b1f78f5a19e93a9ba3442289d2948478ee6cc3e143d7d6359b",
+      "output_sha256": "128ae896d1cf4c0355878f9931c5f0596237b402029832f622de98bdd279e922",
+      "source_box": [1450, 205, 1525, 290]
+    },
+    {
+      "name": "elementos/ui_badge_09.png",
+      "source_size": [82, 85],
+      "output_size": [328, 340],
+      "source_sha256": "a5ccef5f10d5fce1c2cad92459baed31f564a56eecb474c296d4674091beeacb",
+      "output_sha256": "3dc8360aa060adfae677b7c769b6f56e2f3f9562cd531daccb2884987ba57eac",
+      "source_box": [1277, 290, 1359, 375]
+    },
+    {
+      "name": "elementos/ui_badge_10.png",
+      "source_size": [85, 84],
+      "output_size": [340, 336],
+      "source_sha256": "776139f33d8820dc33c3709cdcd7e02c8df6ff12d7fe01c247898b2aad24c10c",
+      "output_sha256": "29fce6252f385e6c9243017c593030041a41ca8a8f46421837c6140fba8754c0",
+      "source_box": [1365, 290, 1450, 374]
+    },
+    {
+      "name": "elementos/ui_badge_11.png",
+      "source_size": [61, 80],
+      "output_size": [244, 320],
+      "source_sha256": "d5853352705b6f20856bfe9c2e63fd321174a9e88ff0c8dfffef36516587b684",
+      "output_sha256": "60860a22452b92f9d94127e209d987d9055af53de6d2ef67f13e1c4aad887f60",
+      "source_box": [1450, 290, 1511, 370]
+    },
+    {
+      "name": "elementos/ui_badge_12.png",
+      "source_size": [106, 95],
+      "output_size": [424, 380],
+      "source_sha256": "c791499ad3852e6c02220d221c60058ebe937b2bf79a14318a49a213fa01b047",
+      "output_sha256": "6a36a0ddbb1ab64eda028a70d06266560215997a73523e39e307cb165d4a3ae2",
+      "source_box": [1260, 375, 1366, 470]
+    },
+    {
+      "name": "rotulos/label_banners_01.png",
+      "source_size": [362, 60],
+      "output_size": [1448, 240],
+      "source_sha256": "50c0593c74965b817f5fce27f2d3be89ce514355bb1594c6a2cedcfcb35ca230",
+      "output_sha256": "bd09ca3e48fe05c29fd1f7169b3796cbfea7f3f377e9dac98446e5f7d2a2564a",
+      "source_box": [0, 515, 362, 575]
+    },
+    {
+      "name": "elementos/banner_01.png",
+      "source_size": [442, 150],
+      "output_size": [1768, 600],
+      "source_sha256": "d692818e141ce5ee52eaefe8fc7953edd8d31bb4fddd558a8776bb5141541860",
+      "output_sha256": "2e01339c9a2424ebd7130b12c73aa34f01441e4067aa256302c5ce99f9a61052",
+      "source_box": [8, 575, 450, 725]
+    },
+    {
+      "name": "elementos/banner_02.png",
+      "source_size": [439, 130],
+      "output_size": [1756, 520],
+      "source_sha256": "1c54e0ef30b1f37ff79109ea75c96bcbc5fd6fd0b03fa9c2f1bf778c8ade760e",
+      "output_sha256": "9367d719ce5dcb88b59f4f1d789a7e2acd75eba2bd56704079aece1be137e139",
+      "source_box": [11, 725, 450, 855]
+    },
+    {
+      "name": "elementos/banner_03.png",
+      "source_size": [450, 151],
+      "output_size": [1800, 604],
+      "source_sha256": "9c8b84bb754d127ad745f5b762e458b1182f19edf6c26799f1932363416f1e05",
+      "output_sha256": "20ed7c2ff789cb9e19173f25b3c08f8e171c5b20c2380e6e63c3f1dd8ee23f39",
+      "source_box": [0, 855, 450, 1006]
+    },
+    {
+      "name": "rotulos/label_ornaments_01.png",
+      "source_size": [392, 50],
+      "output_size": [1568, 200],
+      "source_sha256": "ca342cea16fae19248d08c20148c89b8b34aa06289547d87eaf811d5476e5dfd",
+      "output_sha256": "c1a46dde81134ce70e5dca98140f93bb5f0f00da6d025dbb4b99d1563d09c1d5",
+      "source_box": [430, 465, 822, 515]
+    },
+    {
+      "name": "elementos/ornament_01.png",
+      "source_size": [403, 95],
+      "output_size": [1612, 380],
+      "source_sha256": "ac44f11b88b1458ff74dcc5383ddd45e1d1dd432d343c3a8d580c0adfc4698d8",
+      "output_sha256": "4119f2bf78b974efa4bd94ffd2cf37030b01a664477ac021ff5940d8cb243f44",
+      "source_box": [430, 515, 833, 610]
+    },
+    {
+      "name": "elementos/ornament_02.png",
+      "source_size": [392, 65],
+      "output_size": [1568, 260],
+      "source_sha256": "3911832f2bbe6c455d4c0384f0ed201b0f892d9c74c5ff1ec692880e4bf9017c",
+      "output_sha256": "9b961fff8eb45a84fd3501bbcb73a4bf258ddbfa3659ef37c63622aa7f654f54",
+      "source_box": [430, 610, 822, 675]
+    },
+    {
+      "name": "elementos/ornament_03.png",
+      "source_size": [381, 75],
+      "output_size": [1524, 300],
+      "source_sha256": "72296c4cd293dee8e36fb4bc7eb686abf148d0293a524a6c546cd6d2cd88e6be",
+      "output_sha256": "4102355e4e5856c9468c81925d1eb2825c509bd6a54bfd0e34660e73dee57798",
+      "source_box": [445, 675, 826, 750]
+    },
+    {
+      "name": "elementos/ornament_04.png",
+      "source_size": [393, 80],
+      "output_size": [1572, 320],
+      "source_sha256": "7197c3a7a0f38e7da15ba6cd853843d523eafc1e9b97bb16240fe18079041d7c",
+      "output_sha256": "a8c7ae7e128dc256e1a36903bbc6f1b771e815f467473abc1f57b1f94e618f6f",
+      "source_box": [430, 750, 823, 830]
+    },
+    {
+      "name": "elementos/ornament_05.png",
+      "source_size": [389, 80],
+      "output_size": [1556, 320],
+      "source_sha256": "299effff1891a07e51b36212c2ea1a077a8707725c9b0a5ee44f40e61b2ad536",
+      "output_sha256": "43d9f378728912250c81eb066974496f8c146acf9dbff4f1eb02ffffc105a967",
+      "source_box": [437, 830, 826, 910]
+    },
+    {
+      "name": "elementos/ornament_06.png",
+      "source_size": [375, 90],
+      "output_size": [1500, 360],
+      "source_sha256": "1477f4537657da8d3629ae64d31891bcc29044887c9e144927db9c50ecb685a8",
+      "output_sha256": "230a41c61a2af646e178f0796f2a66659008713964b75a81cd0cfbfbc2eb55b6",
+      "source_box": [445, 910, 820, 1000]
+    },
+    {
+      "name": "rotulos/label_states_01.png",
+      "source_size": [305, 50],
+      "output_size": [1220, 200],
+      "source_sha256": "9bb588d34779cc3413f5be40bb7080857fc98602fdc3d06ed7cdb7b1166de879",
+      "output_sha256": "af6065194eb180a63c7fd56d8327b0144d3508b3118b94883f840f24f68a245c",
+      "source_box": [838, 465, 1143, 515]
+    },
+    {
+      "name": "elementos/empty_state_01.png",
+      "source_size": [316, 165],
+      "output_size": [1264, 660],
+      "source_sha256": "9731bff4a873a8ec31591c9ddab52ed47b5c39efba7ae3ba831995ef72769e6e",
+      "output_sha256": "67f210a85945d5837393bd5a4fa8b9604b52c3f6375a0a407d68f2d8a36af363",
+      "source_box": [845, 515, 1161, 680]
+    },
+    {
+      "name": "elementos/error_state_01.png",
+      "source_size": [305, 155],
+      "output_size": [1220, 620],
+      "source_sha256": "d85c2dda89e15ba54a1e3daf08354e208d80f77cacd5a148c5d325740d8dc031",
+      "output_sha256": "7ec4283e69566ef2eec715a2138ee5aafd000f4b6ecf3e5a25d0c04efa859fe2",
+      "source_box": [857, 680, 1162, 835]
+    },
+    {
+      "name": "elementos/success_state_01.png",
+      "source_size": [308, 171],
+      "output_size": [1232, 684],
+      "source_sha256": "8dcbf072cb022c28ac1427768dd94e50142d8e556cb3e79f162ca79dae43cffe",
+      "output_sha256": "aab38bacb26f3906842ec4e19ac5d091a5764d14b02da8fb574ff075389926ff",
+      "source_box": [857, 835, 1165, 1006]
+    },
+    {
+      "name": "rotulos/label_comics_01.png",
+      "source_size": [337, 50],
+      "output_size": [1348, 200],
+      "source_sha256": "13bd431c522637415cc7018fc0a04c316db0e9a1d239707653debceed37dcd38",
+      "output_sha256": "0688bb9f4e9a26447803d473ee56d0d3baa4ae6560d8e4488f633fb4233c16b4",
+      "source_box": [1170, 465, 1507, 515]
+    },
+    {
+      "name": "elementos/comics_title_01.png",
+      "source_size": [355, 100],
+      "output_size": [1420, 400],
+      "source_sha256": "b91f020db3b950bf9ac5eaac6681d17d66b16bcdd405bee4a14831e45799bef3",
+      "output_sha256": "028a6aec6c46d537174b77f5de9ba13afe286d4ff72933000299003af81a822b",
+      "source_box": [1171, 515, 1526, 615]
+    },
+    {
+      "name": "elementos/comic_reader_01.png",
+      "source_size": [351, 235],
+      "output_size": [1404, 940],
+      "source_sha256": "209842d2dead9163686d7f6df179cc3ebd0fb8a246649ff211eba1574737ae03",
+      "output_sha256": "97d63e1a41eefe614a4ed24d9ed135d31c28c121085407382edcfa4e9f863eff",
+      "source_box": [1175, 615, 1526, 850]
+    },
+    {
+      "name": "rotulos/label_patterns_01.png",
+      "source_size": [277, 60],
+      "output_size": [1108, 240],
+      "source_sha256": "3b1561104638300cb54e55cc9e2b8ac9fcffbbe33769028092751c5362a3a701",
+      "output_sha256": "0d5c760e48b49faad9952af45c52cdb088efc95fe6092f652abd4551080b1b1a",
+      "source_box": [1160, 850, 1437, 910]
+    },
+    {
+      "name": "elementos/pattern_01.png",
+      "source_size": [145, 89],
+      "output_size": [580, 356],
+      "source_sha256": "c25405c676ae8e0664d2199802a55e84905ab2a79556cb13beb7edb87ab9c91e",
+      "output_sha256": "1b71911f3445e0c0b428a85c83d2f9a31d014c2955981c2741f867d6c8b56966",
+      "source_box": [1160, 910, 1305, 999]
+    },
+    {
+      "name": "elementos/pattern_02.png",
+      "source_size": [130, 88],
+      "output_size": [520, 352],
+      "source_sha256": "d8e76382571ce4a4e367922a4c6be9a286c8d41f4d2a9767fba3853b60950478",
+      "output_sha256": "6f2a9e2715097630540e968a07271a6889ac9933ab29e7e0c262af975fa710c5",
+      "source_box": [1305, 910, 1435, 998]
+    },
+    {
+      "name": "elementos/pattern_03.png",
+      "source_size": [92, 87],
+      "output_size": [368, 348],
+      "source_sha256": "17059efe20fe4eca404586ab64115d08e00a08954d9305d2359b01cec400beff",
+      "output_sha256": "483cf5fffc84bedc1385fd91dc7f59f1d4c6612464af776275c325de9b2d731e",
+      "source_box": [1435, 910, 1527, 997]
+    }
+  ]
+}

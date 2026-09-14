@@ -1,0 +1,7 @@
+Elementos pagina1 — PNG individuales con transparencia y superresolución neuronal 4x.
+
+Esta lámina coincide con sheet_03 de la entrega anterior: se verificaron los hashes de cada recorte del archivo adjunto y se reutilizaron exactamente sus versiones mejoradas.
+
+Los recursos están en elementos/ y los encabezados de sección en rotulos/. Los índices JPG solo sirven para localizar archivos.
+
+La superresolución estima detalles: no equivale a disponer de los dibujos originales en alta resolución. Se conserva la misma separación de la entrega anterior; las zonas superpuestas o cortadas en esos recortes no se reconstruyen con este empaquetado.

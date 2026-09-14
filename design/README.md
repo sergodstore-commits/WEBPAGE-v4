@@ -3,6 +3,7 @@
 - `approved/`: única fuente de assets visuales aprobados para producción.
 - `source-existing/`: assets heredados del proyecto anterior; útiles como materia prima, pero **no aprobados automáticamente**.
 - `references/`: composiciones/mockups de referencia; no deben publicarse como assets finales por defecto.
+- `elementos-pagina1-hq-4x/`: respaldo técnico 4× de la lámina `sheet_03`, con manifiesto e índices de localización. Se conserva como fuente; no se copia completo al sitio ni convierte sus rótulos horneados en contenido público.
 - `manifest/`: procedencia y SHA-256.
 
 La biblioteca aprobada se controla mediante:

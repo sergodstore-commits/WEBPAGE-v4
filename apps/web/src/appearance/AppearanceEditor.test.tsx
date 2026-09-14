@@ -25,6 +25,35 @@ beforeEach(() => {
 });
 
 describe('editor de apariencia web', () => {
+  it('muestra la galería antes de crear capas y añade el recurso elegido', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+
+    const gallery = within(screen.getByLabelText('Elementos visuales disponibles'));
+    expect(gallery.getByRole('button', { name: 'Añadir Impacto rojo' })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar por nombre o tipo' }), {
+      target: { value: 'banner' },
+    });
+    fireEvent.click(gallery.getByRole('button', { name: 'Añadir Banners 01 · lámina 03' }));
+
+    expect(
+      screen.getByRole('button', { name: 'Seleccionar capa Banners 01 · lámina 03' }),
+    ).toBeInTheDocument();
+  });
+
+  it('añade títulos visuales como capas editables en vez de texto horneado', async () => {
+    render(<AppearanceEditor />);
+    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
+
+    const presets = within(screen.getByRole('group', { name: 'Plantillas visuales editables' }));
+    fireEvent.click(presets.getByRole('button', { name: /Título Torneos/u }));
+
+    expect(
+      within(screen.getByRole('list', { name: 'Lista de capas' })).getAllByRole('button'),
+    ).toHaveLength(3);
+    expect(screen.getByRole('textbox', { name: 'Texto' })).toHaveValue('TORNEOS');
+  });
+
   it('ignora una respuesta pública incompleta y conserva un diseño seguro', async () => {
     vi.mocked(publicRequest).mockResolvedValue({ items: [] });
     function Consumer() {
