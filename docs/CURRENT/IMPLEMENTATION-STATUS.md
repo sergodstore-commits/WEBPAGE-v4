@@ -501,17 +501,36 @@
   continuaba con `layout: null`. La migración prospectiva `024_web_appearance_constraint_repair`
   vuelve a declarar el registro completo sin alterar versiones ni historial existentes. La cadena de
   migraciones de aplicación y Supabase comparte el mismo SQL y tiene prueba contractual.
-- La galería de Apariencia ahora está visible sin crear primero una capa, permite buscar y recorrer los
-  112 identificadores cerrados disponibles y añade directamente el recurso seleccionado. Ocho plantillas
-  de títulos —Tienda, Preventas, Torneos, Noticias, Comunidad, Loyalty, Quests y Cómics— agregan icono,
-  marco y texto como capas independientes; el texto sigue siendo contenido editable y accesible.
+- Apariencia ahora abre con la vista previa real como área principal, mantiene biblioteca, capas e inspector
+  disponibles sin recorridos verticales largos y permite buscar y añadir directamente los 120 recursos
+  cerrados. Los accesos principales conservan nombre y ruta como propiedades funcionales protegidas: cambiar
+  su arte no puede cambiar el destino ni eliminar su nombre accesible.
+- Los ocho accesos —Tienda, Preventas, Torneos, Noticias, Comunidad, Loyalty, Quests y Cómics— usan las
+  ilustraciones rotuladas aprobadas expresamente por el propietario. Sus fuentes canónicas, derivados WebP,
+  manifiesto y script reproducible quedaron bajo `design/source-existing/home-launcher/`,
+  `design/approved/home-launcher/`, `design/manifest/` y `scripts/codex/`; la web sirve solo los derivados
+  optimizados. Las rutas fijas son `/shop`, `/shop`, `/tournaments`, `/news`, `/community`, `/account`,
+  `/tournaments` y `/comics`, respectivamente.
 - El respaldo 4× de `sheet_03` se conserva en `design/elementos-pagina1-hq-4x/` con 58 hashes
   verificados. Es material fuente: no se publica completo ni se usan sus rótulos horneados, evitando
   aproximadamente 15 MB innecesarios en el sitio y respetando la biblioteca aprobada.
-- El gate local aprobó formato, lint, tipos, compilación, 116 archivos de prueba con 481 casos aprobados
-  y una omisión documentada, además de 8 pruebas PostgreSQL focales de configuración y persistencia.
+- El gate local final de `0d6b159` aprobó formato, lint, tipos, compilación API/web y 116 archivos de prueba:
+  484 casos aprobados y una omisión documentada; el gate web focal aprobó 97 casos. La Preview remota
+  `sergod-store-v4-ecsb4vrkw-sergod-store.vercel.app` mostró los accesos ilustrados sin imágenes rotas ni
+  recorte móvil, y la prueba navegó los ocho botones hasta sus ocho rutas fijas esperadas.
+- Una reconstrucción posterior de ese mismo commit, `sergod-store-v4-lxj04rci7-sergod-store.vercel.app`,
+  quedó `Ready` con las variables públicas de Supabase limitadas a `codex/appearance-gallery-repair`. La API
+  oficial validó la identidad Admin, pero la comprobación del editor autenticado por esa URL quedó bloqueada
+  por la protección de despliegues de Vercel: el acceso `/api/*` de la Preview devuelve la página de protección
+  en vez del contrato JSON. No se publicó una configuración de prueba en Producción ni se aplicó la migración.
+  Para cerrar la aceptación remota se requiere una excepción temporal limitada a esa Preview o una promoción
+  coordinada posterior a aplicar la migración 024.
+- La migración 024 y el rediseño permanecen en `codex/appearance-gallery-repair`; no están promovidos al dominio
+  canónico. Los dos valores públicos añadidos solo para la rama y cualquier excepción temporal deben retirarse
+  una vez completada la aceptación.
+  Además, 8 pruebas PostgreSQL focales de configuración y persistencia aprobaron.
   Dos intentos de la integración completa quedaron bloqueados sin resultado después de una interrupción;
-  no se cuentan como PASS. El cambio permanece local y requiere Preview, aplicación de la migración 024
+  no se cuentan como PASS. El cambio permanece aislado en su rama y requiere aplicación de la migración 024
   en la base productiva y aceptación remota del ciclo publicar → recargar antes de promoción.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
