@@ -493,6 +493,27 @@
   Permanecen exclusivamente `main`, Supabase PROD `kbhbaackrgwgvxxqdlwx`, Render PROD
   `srv-da3ij5flk1mc7380htcg`, Vercel `sergod-store-v4` y el dominio canónico.
 
+## Reparación local de Apariencia — 2026-09-14
+
+- La inspección posterior a la promoción detectó un `FAIL` real: Producción conservaba una versión
+  anterior de `system_configurations_registered_value_ck` que rechazaba
+  `WEB_APPEARANCE_LAYOUT`. Por eso el editor podía informar un fallo de validación y la lectura pública
+  continuaba con `layout: null`. La migración prospectiva `024_web_appearance_constraint_repair`
+  vuelve a declarar el registro completo sin alterar versiones ni historial existentes. La cadena de
+  migraciones de aplicación y Supabase comparte el mismo SQL y tiene prueba contractual.
+- La galería de Apariencia ahora está visible sin crear primero una capa, permite buscar y recorrer los
+  112 identificadores cerrados disponibles y añade directamente el recurso seleccionado. Ocho plantillas
+  de títulos —Tienda, Preventas, Torneos, Noticias, Comunidad, Loyalty, Quests y Cómics— agregan icono,
+  marco y texto como capas independientes; el texto sigue siendo contenido editable y accesible.
+- El respaldo 4× de `sheet_03` se conserva en `design/elementos-pagina1-hq-4x/` con 58 hashes
+  verificados. Es material fuente: no se publica completo ni se usan sus rótulos horneados, evitando
+  aproximadamente 15 MB innecesarios en el sitio y respetando la biblioteca aprobada.
+- El gate local aprobó formato, lint, tipos, compilación, 116 archivos de prueba con 481 casos aprobados
+  y una omisión documentada, además de 8 pruebas PostgreSQL focales de configuración y persistencia.
+  Dos intentos de la integración completa quedaron bloqueados sin resultado después de una interrupción;
+  no se cuentan como PASS. El cambio permanece local y requiere Preview, aplicación de la migración 024
+  en la base productiva y aceptación remota del ciclo publicar → recargar antes de promoción.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación
