@@ -84,6 +84,18 @@ beforeEach(() => {
 });
 
 describe('AccountHub', () => {
+  it('loads Loyalty as an independent destination without hidden account requests', async () => {
+    render(<AccountHub view="loyalty" />);
+
+    expect(screen.getByRole('heading', { name: 'Loyalty' })).toBeInTheDocument();
+    expect(await screen.findByText('120')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Mis pedidos' })).not.toBeInTheDocument();
+    expect(ownAccount).not.toHaveBeenCalled();
+
+    const paths = vi.mocked(authorizedRequest).mock.calls.map(([path]) => path);
+    expect(paths).toEqual(['/api/v1/loyalty/account', '/api/v1/loyalty/movements?limit=25']);
+  });
+
   it('shows the complete customer account from the real account APIs', async () => {
     render(<AccountHub />);
 

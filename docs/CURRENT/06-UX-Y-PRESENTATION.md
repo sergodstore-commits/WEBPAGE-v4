@@ -9,7 +9,18 @@
 
 ## Navegación pública
 
-Header principal: Inicio, Tienda, Torneos, Noticias, Comunidad; búsqueda, cuenta y carrito. Cómics/Historias puede vivir como entrada editorial adicional sin saturar navegación primaria.
+`/` es un lanzador visual de altura completa, sin encabezado general ni bloques promocionales debajo.
+Presenta el logo oficial y ocho destinos independientes: Tienda, Preventas, Torneos, Noticias,
+Comunidad, Loyalty, Quests y Cómics/Historias. Cambiar el arte de un acceso no puede cambiar su ruta
+ni su nombre accesible.
+
+El encabezado principal aparece al entrar a una sección: Inicio, Tienda, Torneos, Noticias, Comunidad
+y Cómics/Historias; cuenta y carrito permanecen disponibles. Preventas, Loyalty y Quests conservan
+páginas propias aunque no saturen la navegación primaria.
+
+El lanzador puede usar movimiento expresivo para presentar y seleccionar destinos. Las páginas de
+compra, cuenta y operación usan transiciones más breves: la animación nunca retrasa una acción ni
+reemplaza el estado real del servidor.
 
 ## Catálogo
 

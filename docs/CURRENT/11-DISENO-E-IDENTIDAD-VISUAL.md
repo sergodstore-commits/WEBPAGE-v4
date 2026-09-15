@@ -63,6 +63,20 @@ sin recortar el arte ni provocar desplazamiento horizontal. `Ingresar` o `Mi cue
 `Carrito` siguen disponibles como utilidades compactas. La imagen de cada acceso es personalizable,
 pero su nombre accesible y su ruta fija permanecen definidos fuera del asset.
 
+### Movimiento del lanzador
+
+El movimiento expresa jerarquía y continuidad, no decoración constante:
+
+- el logo y los ocho accesos entran por capas en menos de aproximadamente 1,3 segundos;
+- al enfocar o apuntar un destino, este gana contraste y los demás reducen su intensidad;
+- al seleccionar, las alas izquierda y derecha salen en direcciones opuestas y la sección aparece
+  mediante un barrido angular;
+- el movimiento fuerte queda concentrado en Inicio; catálogo, checkout, cuenta, Admin y POS priorizan
+  respuesta inmediata y legibilidad;
+- `prefers-reduced-motion` elimina la transición expresiva sin perder ninguna acción o contenido;
+- las animaciones se construyen con recursos Sergod y no reproducen personajes, sonidos,
+  composiciones ni recursos protegidos de videojuegos de referencia.
+
 ### Logo
 
 `design/approved/branding/logo_sergod_store_oficial.png` es inmutable:

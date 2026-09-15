@@ -427,19 +427,6 @@ describe('public editorial sections', () => {
       .mockResolvedValueOnce({
         items: [
           {
-            body: 'Detalles de la Quest.',
-            editorialEntryId: '0198a8be-6677-7000-8000-000000000104',
-            excerpt: 'Quest destacada.',
-            metadata: {},
-            slug: 'quest-sergod',
-            title: 'Quest Sergod',
-            type: 'QUEST',
-          },
-        ],
-      } as never)
-      .mockResolvedValueOnce({
-        items: [
-          {
             body: 'Reconocimiento de la comunidad.',
             editorialEntryId: '0198a8be-6677-7000-8000-000000000105',
             excerpt: 'Jugador destacado.',
@@ -457,12 +444,12 @@ describe('public editorial sections', () => {
     expect(await screen.findByRole('heading', { name: 'Próximos torneos' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Torneos realizados' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Información de torneos' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Eventos y Quests' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Eventos y Quests' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeInTheDocument();
     expect(screen.getByText('Copa Sergod')).toBeInTheDocument();
     expect(screen.getByText('Liga de agosto')).toBeInTheDocument();
     expect(screen.getByText('Torneo histórico')).toBeInTheDocument();
-    expect(screen.getByText('Quest Sergod')).toBeInTheDocument();
+    expect(screen.queryByText('Quest Sergod')).not.toBeInTheDocument();
     expect(screen.getByText('Campeón Sergod')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
 
@@ -482,9 +469,34 @@ describe('public editorial sections', () => {
     expect(screen.getByText(/no administra rondas ni emparejamientos/iu)).toBeInTheDocument();
     expect(await screen.findByText('Aún no hay próximos torneos publicados.')).toBeInTheDocument();
     expect(screen.getByText('Aún no hay torneos realizados publicados.')).toBeInTheDocument();
-    expect(screen.getByText('Aún no hay Eventos o Quests publicados.')).toBeInTheDocument();
+    expect(screen.queryByText('Aún no hay Eventos o Quests publicados.')).not.toBeInTheDocument();
     expect(screen.getByText('Aún no hay reconocimientos publicados.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
+  });
+
+  it('presents Quests as its own destination without tournament content', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({
+      items: [
+        {
+          body: 'Detalles de la Quest.',
+          editorialEntryId: '0198a8be-6677-7000-8000-000000000104',
+          excerpt: 'Quest destacada.',
+          metadata: {},
+          slug: 'quest-sergod',
+          title: 'Quest Sergod',
+          type: 'QUEST',
+        },
+      ],
+    } as never);
+
+    render(<TournamentPage view="quests" />);
+
+    expect(await screen.findByRole('heading', { name: 'Quests' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Eventos y Quests' })).toBeInTheDocument();
+    expect(screen.getByText('Quest Sergod')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Próximos torneos' })).not.toBeInTheDocument();
+    expect(publicRequest).toHaveBeenCalledTimes(1);
+    expect(publicRequest).toHaveBeenCalledWith('/api/v1/content?limit=24&type=QUEST');
   });
 
   it('opens the complete publication and renders its safe image layout', async () => {

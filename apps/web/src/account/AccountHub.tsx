@@ -50,7 +50,7 @@ interface LoyaltyMovement {
 }
 type LoadState = 'error' | 'loading' | 'ready';
 
-export function AccountHub() {
+export function AccountHub({ view = 'overview' }: { readonly view?: 'loyalty' | 'overview' }) {
   const [account, setAccount] = useState<AccountView | null>(null);
   const [profileState, setProfileState] = useState<LoadState>('loading');
   const [profileMessage, setProfileMessage] = useState('Cargando tus datos…');
@@ -93,18 +93,32 @@ export function AccountHub() {
   };
 
   useEffect(() => {
-    void ownAccount()
-      .then((profile) => {
-        setAccount(profile);
-        setProfileState('ready');
-        setProfileMessage('');
-      })
-      .catch((error: unknown) => {
-        setProfileState('error');
-        setProfileMessage(messageOf(error, 'No fue posible cargar tus datos.'));
-      });
-    void loadOrders('REGULAR').then(applyOrders).catch(failOrders);
-    void loadOrders('PREORDER').then(applyPreorders).catch(failPreorders);
+    if (view === 'overview') {
+      void ownAccount()
+        .then((profile) => {
+          setAccount(profile);
+          setProfileState('ready');
+          setProfileMessage('');
+        })
+        .catch((error: unknown) => {
+          setProfileState('error');
+          setProfileMessage(messageOf(error, 'No fue posible cargar tus datos.'));
+        });
+      void loadOrders('REGULAR').then(applyOrders).catch(failOrders);
+      void loadOrders('PREORDER').then(applyPreorders).catch(failPreorders);
+      void authorizedRequest<{ item: DeliveryPreferences | null }>(
+        '/api/v1/account/delivery-preferences',
+      )
+        .then((delivery) => {
+          setPreferences(delivery.item);
+          setPreferencesState('ready');
+          setPreferencesMessage('');
+        })
+        .catch((error: unknown) => {
+          setPreferencesState('error');
+          setPreferencesMessage(messageOf(error, 'No fue posible cargar tus preferencias.'));
+        });
+    }
     void Promise.all([
       authorizedRequest<LoyaltyAccountResponse>('/api/v1/loyalty/account'),
       authorizedRequest<Page<LoyaltyMovement>>('/api/v1/loyalty/movements?limit=25'),
@@ -120,19 +134,7 @@ export function AccountHub() {
         setLoyaltyState('error');
         setLoyaltyMessage(loyaltyErrorMessage(error));
       });
-    void authorizedRequest<{ item: DeliveryPreferences | null }>(
-      '/api/v1/account/delivery-preferences',
-    )
-      .then((delivery) => {
-        setPreferences(delivery.item);
-        setPreferencesState('ready');
-        setPreferencesMessage('');
-      })
-      .catch((error: unknown) => {
-        setPreferencesState('error');
-        setPreferencesMessage(messageOf(error, 'No fue posible cargar tus preferencias.'));
-      });
-  }, []);
+  }, [view]);
 
   const loadMoreOrders = async (type: 'PREORDER' | 'REGULAR', cursor: string) => {
     if (type === 'REGULAR') {
@@ -190,67 +192,85 @@ export function AccountHub() {
   };
 
   return (
-    <main className="page-frame account-layout visual-public">
-      <aside className="account-nav cut-panel" aria-label="Secciones de cuenta">
-        <p className="eyebrow">Mi cuenta</p>
-        <h1>Resumen</h1>
-        <p className="account-nav-copy">Pedidos, beneficios y preferencias en un solo lugar.</p>
-        <nav>
-          <a href="#orders">Pedidos</a>
-          <a href="#preorders">Preventas</a>
-          <a href="#loyalty">Puntos</a>
-          <a href="#profile">Datos personales</a>
-          <a href="#delivery">Preferencias</a>
-          <a href="/account">Seguridad</a>
-        </nav>
-      </aside>
-      <section className="account-content">
-        <section className="account-panel cut-panel" id="profile">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Datos personales</p>
-              <h2>Tu perfil</h2>
-            </div>
-            <a className="button-link" href="/account">
-              Editar perfil y seguridad
-            </a>
+    <main
+      className={`page-frame account-layout ${view === 'loyalty' ? 'loyalty-layout' : ''} visual-public`}
+    >
+      {view === 'overview' ? (
+        <aside className="account-nav cut-panel" aria-label="Secciones de cuenta">
+          <p className="eyebrow">Mi cuenta</p>
+          <h1>Resumen</h1>
+          <p className="account-nav-copy">Pedidos, beneficios y preferencias en un solo lugar.</p>
+          <nav>
+            <a href="#orders">Pedidos</a>
+            <a href="#preorders">Preventas</a>
+            <a href="/loyalty">Puntos</a>
+            <a href="#profile">Datos personales</a>
+            <a href="#delivery">Preferencias</a>
+            <a href="/account">Seguridad</a>
+          </nav>
+        </aside>
+      ) : (
+        <header className="section-heading loyalty-heading cut-panel">
+          <div>
+            <p className="eyebrow">Programa de beneficios</p>
+            <h1>Loyalty</h1>
+            <p>Consulta tus puntos disponibles, reservas y movimientos en un solo lugar.</p>
           </div>
-          <p className="status" role={profileState === 'error' ? 'alert' : 'status'}>
-            {profileMessage}
-          </p>
-          {account && (
-            <div className="metric-grid account-metrics">
-              <Metric label="Correo" value={account.currentEmail} />
-              <Metric label="Teléfono" value={account.currentPhone ?? 'No registrado'} />
-              <Metric
-                label="Verificación"
-                value={account.emailVerificationStatus === 'VERIFIED' ? 'Verificado' : 'Pendiente'}
-              />
-              <Metric
-                label="Estado"
-                value={account.status === 'ACTIVE' ? 'Activa' : 'Desactivada'}
-              />
-            </div>
-          )}
-        </section>
-        <OrderHistory
-          cursor={ordersCursor}
-          id="orders"
-          items={orders}
-          message={ordersMessage}
-          onLoadMore={() => ordersCursor && void loadMoreOrders('REGULAR', ordersCursor)}
-          state={ordersState}
-          title="Mis pedidos"
-        />
-        <OrderHistory
-          cursor={preordersCursor}
-          id="preorders"
-          items={preorders}
-          message={preordersMessage}
-          onLoadMore={() => preordersCursor && void loadMoreOrders('PREORDER', preordersCursor)}
-          state={preordersState}
-          title="Mis preventas"
-        />
+        </header>
+      )}
+      <section className="account-content">
+        {view === 'overview' && (
+          <>
+            <section className="account-panel cut-panel" id="profile">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Datos personales</p>
+                  <h2>Tu perfil</h2>
+                </div>
+                <a className="button-link" href="/account">
+                  Editar perfil y seguridad
+                </a>
+              </div>
+              <p className="status" role={profileState === 'error' ? 'alert' : 'status'}>
+                {profileMessage}
+              </p>
+              {account && (
+                <div className="metric-grid account-metrics">
+                  <Metric label="Correo" value={account.currentEmail} />
+                  <Metric label="Teléfono" value={account.currentPhone ?? 'No registrado'} />
+                  <Metric
+                    label="Verificación"
+                    value={
+                      account.emailVerificationStatus === 'VERIFIED' ? 'Verificado' : 'Pendiente'
+                    }
+                  />
+                  <Metric
+                    label="Estado"
+                    value={account.status === 'ACTIVE' ? 'Activa' : 'Desactivada'}
+                  />
+                </div>
+              )}
+            </section>
+            <OrderHistory
+              cursor={ordersCursor}
+              id="orders"
+              items={orders}
+              message={ordersMessage}
+              onLoadMore={() => ordersCursor && void loadMoreOrders('REGULAR', ordersCursor)}
+              state={ordersState}
+              title="Mis pedidos"
+            />
+            <OrderHistory
+              cursor={preordersCursor}
+              id="preorders"
+              items={preorders}
+              message={preordersMessage}
+              onLoadMore={() => preordersCursor && void loadMoreOrders('PREORDER', preordersCursor)}
+              state={preordersState}
+              title="Mis preventas"
+            />
+          </>
+        )}
         <section className="account-panel cut-panel" id="loyalty">
           <p className="eyebrow">Fidelización</p>
           <h2>Mis puntos</h2>
@@ -312,57 +332,61 @@ export function AccountHub() {
             </>
           )}
         </section>
-        <section className="account-panel cut-panel" id="delivery">
-          <p className="eyebrow">Despacho</p>
-          <h2>Preferencias de entrega</h2>
-          <p>Despacho por pagar a agencia Chilexpress o Starken; el domicilio no es obligatorio.</p>
-          <p className="status" role={preferencesState === 'error' ? 'alert' : 'status'}>
-            {preferencesMessage}
-          </p>
-          {preferencesState === 'ready' && (
-            <form
-              className="account-delivery-form"
-              key={preferences === null ? 'empty' : JSON.stringify(preferences)}
-              onSubmit={(event) => void savePreferences(event)}
-            >
-              <label>
-                Destinatario
-                <input defaultValue={preferences?.recipientName ?? ''} name="recipientName" />
-              </label>
-              <label>
-                Teléfono de contacto
-                <input
-                  defaultValue={preferences?.recipientPhone ?? ''}
-                  name="recipientPhone"
-                  placeholder="+569…"
-                />
-              </label>
-              <label>
-                Transportista
-                <select defaultValue={preferences?.carrier ?? ''} name="carrier">
-                  <option value="">Sin preferencia</option>
-                  <option value="CHILEXPRESS">Chilexpress</option>
-                  <option value="STARKEN">Starken</option>
-                </select>
-              </label>
-              <label>
-                Comuna de destino
-                <input
-                  defaultValue={preferences?.destinationCommune ?? ''}
-                  name="destinationCommune"
-                />
-              </label>
-              <label>
-                Agencia de destino
-                <input
-                  defaultValue={preferences?.agencyDestination ?? ''}
-                  name="agencyDestination"
-                />
-              </label>
-              <button type="submit">Guardar preferencias</button>
-            </form>
-          )}
-        </section>
+        {view === 'overview' && (
+          <section className="account-panel cut-panel" id="delivery">
+            <p className="eyebrow">Despacho</p>
+            <h2>Preferencias de entrega</h2>
+            <p>
+              Despacho por pagar a agencia Chilexpress o Starken; el domicilio no es obligatorio.
+            </p>
+            <p className="status" role={preferencesState === 'error' ? 'alert' : 'status'}>
+              {preferencesMessage}
+            </p>
+            {preferencesState === 'ready' && (
+              <form
+                className="account-delivery-form"
+                key={preferences === null ? 'empty' : JSON.stringify(preferences)}
+                onSubmit={(event) => void savePreferences(event)}
+              >
+                <label>
+                  Destinatario
+                  <input defaultValue={preferences?.recipientName ?? ''} name="recipientName" />
+                </label>
+                <label>
+                  Teléfono de contacto
+                  <input
+                    defaultValue={preferences?.recipientPhone ?? ''}
+                    name="recipientPhone"
+                    placeholder="+569…"
+                  />
+                </label>
+                <label>
+                  Transportista
+                  <select defaultValue={preferences?.carrier ?? ''} name="carrier">
+                    <option value="">Sin preferencia</option>
+                    <option value="CHILEXPRESS">Chilexpress</option>
+                    <option value="STARKEN">Starken</option>
+                  </select>
+                </label>
+                <label>
+                  Comuna de destino
+                  <input
+                    defaultValue={preferences?.destinationCommune ?? ''}
+                    name="destinationCommune"
+                  />
+                </label>
+                <label>
+                  Agencia de destino
+                  <input
+                    defaultValue={preferences?.agencyDestination ?? ''}
+                    name="agencyDestination"
+                  />
+                </label>
+                <button type="submit">Guardar preferencias</button>
+              </form>
+            )}
+          </section>
+        )}
       </section>
     </main>
   );

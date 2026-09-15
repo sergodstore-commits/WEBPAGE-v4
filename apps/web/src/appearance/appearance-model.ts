@@ -111,10 +111,10 @@ export const linkedAppearanceElements: Readonly<
 > = {
   'home-link-comics': { label: 'Cómics', route: '/comics' },
   'home-link-community': { label: 'Comunidad', route: '/community' },
-  'home-link-loyalty': { label: 'Loyalty', route: '/account' },
+  'home-link-loyalty': { label: 'Loyalty', route: '/loyalty' },
   'home-link-news': { label: 'Noticias', route: '/news' },
-  'home-link-preorders': { label: 'Preventas', route: '/shop' },
-  'home-link-quests': { label: 'Quests', route: '/tournaments' },
+  'home-link-preorders': { label: 'Preventas', route: '/preorders' },
+  'home-link-quests': { label: 'Quests', route: '/quests' },
   'home-link-shop': { label: 'Tienda', route: '/shop' },
   'home-link-tournaments': { label: 'Torneos', route: '/tournaments' },
 };

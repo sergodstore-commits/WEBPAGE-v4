@@ -511,8 +511,8 @@
   ilustraciones rotuladas aprobadas expresamente por el propietario. Sus fuentes canónicas, derivados WebP,
   manifiesto y script reproducible quedaron bajo `design/source-existing/home-launcher/`,
   `design/approved/home-launcher/`, `design/manifest/` y `scripts/codex/`; la web sirve solo los derivados
-  optimizados. Las rutas fijas son `/shop`, `/shop`, `/tournaments`, `/news`, `/community`, `/account`,
-  `/tournaments` y `/comics`, respectivamente.
+  optimizados. Las rutas fijas son `/shop`, `/preorders`, `/tournaments`, `/news`, `/community`, `/loyalty`,
+  `/quests` y `/comics`, respectivamente.
 - El respaldo 4× de `sheet_03` se conserva en `design/elementos-pagina1-hq-4x/` con 58 hashes
   verificados. Es material fuente: no se publica completo ni se usan sus rótulos horneados, evitando
   aproximadamente 15 MB innecesarios en el sitio y respetando la biblioteca aprobada.
@@ -573,6 +573,24 @@
 - La revisión local a 390 y 1.280 px confirmó cero imágenes rotas, cero desbordamiento horizontal y cero
   acciones menores de 44 px. Aprobaron 14 pruebas de aplicación y las 99 pruebas web; formato, lint, tipos y
   compilación web también finalizaron correctamente. La promoción remota queda pendiente de la Preview.
+
+## Reestructuración final del lanzador y destinos — 2026-09-14
+
+- La portada local quedó limitada al lanzador de altura completa: logo oficial central, ocho rótulos
+  aprobados en alas izquierda/derecha y utilidades compactas de sesión, registro y carrito. La revisión
+  visual encontró y corrigió una colisión de especificidad que superponía ambas alas, además del contraste
+  insuficiente de `Registro`.
+- Tienda/Preventas, Torneos/Quests y Cuenta/Loyalty tienen rutas y presentaciones independientes. Cada
+  vista consulta solo su tipo de contenido; cambiar el arte del acceso conserva el vínculo fijo.
+- La navegación compatible incorpora transiciones de vista: salida direccional de ambas alas, énfasis del
+  logo y barrido angular de entrada. Navegadores sin soporte y usuarios con movimiento reducido conservan
+  navegación inmediata sin animación.
+- La compilación web productiva aprobó; las pruebas focales aprobaron 15 casos de App, 15 de comercio
+  público, 3 de Cuenta y 17 del editor de Apariencia. La suite web completa aprobó 13 archivos y 102 pruebas.
+  La revisión local confirmó los ocho accesos visibles y operativos tanto a 1.280 px como a 390 px, sin
+  solapamientos, recortes ni errores de consola. El gate transversal posterior aprobó formato, lint sin
+  advertencias, tipos, compilación completa y 116 archivos con 489 pruebas aprobadas y una omisión
+  documentada. Solo falta la Preview remota antes de promover.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

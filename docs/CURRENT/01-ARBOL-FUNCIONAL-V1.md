@@ -7,12 +7,16 @@ SERGOD STORE WEB V1
 │
 ├── 1. EXPERIENCIA PÚBLICA
 │   ├── Inicio
-│   │   ├── Hero principal
-│   │   ├── Productos destacados
-│   │   ├── Preventas destacadas
-│   │   ├── Próximos torneos
-│   │   ├── Últimas noticias
-│   │   └── Acceso a Comunidad
+│   │   └── Lanzador visual de altura completa
+│   │       ├── Logo oficial central
+│   │       ├── Tienda
+│   │       ├── Preventas
+│   │       ├── Torneos
+│   │       ├── Noticias
+│   │       ├── Comunidad
+│   │       ├── Loyalty
+│   │       ├── Quests
+│   │       └── Cómics / Historias
 │   ├── Tienda
 │   │   ├── Catálogo
 │   │   │   ├── Búsqueda
@@ -35,19 +39,24 @@ SERGOD STORE WEB V1
 │   │   │   │   └── Agotado
 │   │   │   ├── Idioma / edición / condición / SKU
 │   │   │   └── Agregar al carrito
-│   │   └── Preventa
-│   │       ├── Información y condiciones
-│   │       ├── Fecha/ventana estimada
-│   │       ├── Cupos / disponibilidad
-│   │       ├── Precio
-│   │       └── Agregar al carrito
+│   ├── Preventas
+│   │   ├── Información y condiciones
+│   │   ├── Fecha/ventana estimada
+│   │   ├── Cupos / disponibilidad
+│   │   ├── Precio
+│   │   └── Agregar al carrito
 │   ├── Torneos (editorial/informativo)
 │   │   ├── Próximos torneos
 │   │   ├── Detalle
 │   │   ├── Torneos realizados
 │   │   ├── Resultados / podio / fotos / resumen
-│   │   ├── Eventos y Quests destacados
 │   │   └── Hall of Fame
+│   ├── Quests (editorial/informativo)
+│   │   ├── Portada
+│   │   └── Detalle
+│   ├── Loyalty
+│   │   ├── Puntos disponibles y reservados
+│   │   └── Movimientos
 │   ├── Noticias
 │   │   ├── Portada
 │   │   ├── Categorías

@@ -47,7 +47,7 @@ describe('IdentityAccess presentation', () => {
 
   it('presents the public commerce home while preserving account access', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /elige tu próxima ruta/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /elige tu destino/i })).toBeInTheDocument();
     expect(document.querySelector('.launcher-logo')).toHaveAttribute(
       'src',
       '/assets/sergod/logo_sergod_store_oficial_transparente.webp',
@@ -142,6 +142,17 @@ describe('IdentityAccess presentation', () => {
     expect(screen.getByRole('heading', { name: 'Carrito' })).toBeInTheDocument();
   });
 
+  it('preserves the Loyalty destination while requesting authentication', () => {
+    window.history.replaceState({}, '', '/loyalty');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Ingresa para continuar' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ingresar' })).toHaveAttribute(
+      'href',
+      '/login?returnTo=%2Floyalty',
+    );
+  });
+
   it('keeps the public terms route available from a direct link', () => {
     window.history.replaceState({}, '', '/legal/terms');
     render(<App />);
@@ -160,11 +171,9 @@ describe('IdentityAccess presentation', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: /elige tu próxima ruta/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /elige tu destino/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Volver al inicio' }));
-    expect(screen.getByRole('heading', { name: /elige tu próxima ruta/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /elige tu destino/i })).toBeInTheDocument();
   });
 
   it('does not mount account tools for an anonymous direct visit', () => {

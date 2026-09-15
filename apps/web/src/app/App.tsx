@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 import {
   accounts,
@@ -43,7 +44,6 @@ import { CartPage } from '../cart/CartPage.js';
 import {
   ComicsPage,
   CommunityPage,
-  HomeHighlights,
   NewsPage,
   StorePage,
   TournamentPage,
@@ -96,6 +96,9 @@ export type Route =
   | '/news'
   | '/community'
   | '/comics'
+  | '/loyalty'
+  | '/preorders'
+  | '/quests'
   | '/auth/callback/confirm'
   | '/auth/callback/email-change'
   | '/auth/callback/recovery'
@@ -114,8 +117,28 @@ export function App() {
     return () => window.removeEventListener('popstate', listener);
   }, []);
   const navigate = (next: Route) => {
-    window.history.pushState({}, '', routeWithAppearancePreview(next, window.location.search));
-    setRoute(next);
+    const commitNavigation = () => {
+      window.history.pushState({}, '', routeWithAppearancePreview(next, window.location.search));
+      flushSync(() => setRoute(next));
+    };
+    const documentWithTransitions = document as Document & {
+      startViewTransition?: (update: () => void) => { finished: Promise<void> };
+    };
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    if (reduceMotion || documentWithTransitions.startViewTransition === undefined) {
+      commitNavigation();
+      return;
+    }
+
+    const transitionKind =
+      route === '/' ? 'from-launcher' : next === '/' ? 'to-launcher' : 'section';
+    document.documentElement.dataset.routeTransition = transitionKind;
+    const transition = documentWithTransitions.startViewTransition(commitNavigation);
+    void transition.finished.finally(() => {
+      if (document.documentElement.dataset.routeTransition === transitionKind) {
+        delete document.documentElement.dataset.routeTransition;
+      }
+    });
   };
 
   return (
@@ -124,7 +147,7 @@ export function App() {
         {route !== '/' && <SiteChrome navigate={navigate} route={route} />}
         <RouteErrorBoundary key={route}>
           <Suspense fallback={<RouteLoading />}>
-            <div id="main-content" tabIndex={-1}>
+            <div className="route-stage" id="main-content" key={route} tabIndex={-1}>
               {route === '/' && <Home navigate={navigate} />}
               {route === '/register' && <Registration navigate={navigate} />}
               {route === '/login' && <Login navigate={navigate} />}
@@ -146,15 +169,30 @@ export function App() {
                   <AccountHub />
                 </AccessGate>
               )}
+              {route === '/loyalty' && (
+                <AccessGate>
+                  <AccountHub view="loyalty" />
+                </AccessGate>
+              )}
               {route === '/shop' && (
                 <AppearanceRegion page="shop">
                   <StorePage />
+                </AppearanceRegion>
+              )}
+              {route === '/preorders' && (
+                <AppearanceRegion page="shop">
+                  <StorePage view="preorders" />
                 </AppearanceRegion>
               )}
               {route === '/cart' && <CartPage />}
               {route === '/tournaments' && (
                 <AppearanceRegion page="tournaments">
                   <TournamentPage />
+                </AppearanceRegion>
+              )}
+              {route === '/quests' && (
+                <AppearanceRegion page="tournaments">
+                  <TournamentPage view="quests" />
                 </AppearanceRegion>
               )}
               {route === '/news' && (
@@ -230,7 +268,7 @@ export function App() {
             </div>
           </Suspense>
         </RouteErrorBoundary>
-        <SiteFooter navigate={navigate} />
+        {route !== '/' && <SiteFooter navigate={navigate} />}
       </div>
     </SiteAppearancePreviewProvider>
   );
@@ -368,7 +406,10 @@ function AccessGate({
         <h1>{copy.title}</h1>
         <p>{copy.description}</p>
         {visibleState === 'signed-out' ? (
-          <a className="button-link" href="/login">
+          <a
+            className="button-link"
+            href={`/login?returnTo=${encodeURIComponent(window.location.pathname)}`}
+          >
             Ingresar
           </a>
         ) : visibleState !== 'loading' ? (
@@ -397,7 +438,7 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
       eyebrow: 'Lanzamientos',
       icon: 'home-launcher-preorders',
       label: 'Preventas',
-      route: '/shop',
+      route: '/preorders',
     },
     {
       appearanceId: 'home-link-tournaments',
@@ -425,14 +466,14 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
       eyebrow: 'Puntos',
       icon: 'home-launcher-loyalty',
       label: 'Loyalty',
-      route: '/account',
+      route: '/loyalty',
     },
     {
       appearanceId: 'home-link-quests',
       eyebrow: 'Desafíos',
       icon: 'home-launcher-quests',
       label: 'Quests',
-      route: '/tournaments',
+      route: '/quests',
     },
     {
       appearanceId: 'home-link-comics',
@@ -447,40 +488,35 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
       <main className="home-page launcher-home visual-public">
         <section aria-label="Inicio Sergod Store" className="launcher-shell">
           <AppearanceLayers layers={appearance.home.layers} />
+          <div aria-label="Cuenta y compra" className="launcher-utility" role="navigation">
+            {authenticated ? (
+              <button onClick={() => navigate('/account/overview')} type="button">
+                Mi cuenta
+              </button>
+            ) : (
+              <>
+                <button onClick={() => navigate('/login')} type="button">
+                  Ingresar
+                </button>
+                <button className="secondary" onClick={() => navigate('/register')} type="button">
+                  Registro
+                </button>
+              </>
+            )}
+            <button className="launcher-cart" onClick={() => navigate('/cart')} type="button">
+              <img alt="" aria-hidden="true" src="/assets/sergod/ui/sheet_03/ui_badge_06.webp" />
+              <span>Carrito</span>
+            </button>
+          </div>
           <div className="launcher-center">
-            <AppearanceElement id="home-eyebrow">
-              <p className="eyebrow">TCG · Comunidad · Competencia</p>
-            </AppearanceElement>
             <img
               alt="Sergod Store"
               className="launcher-logo"
               src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
             />
             <AppearanceElement id="home-title">
-              <h1>Elige tu próxima ruta</h1>
+              <h1>Elige tu destino</h1>
             </AppearanceElement>
-            <AppearanceElement id="home-lead">
-              <p className="launcher-lead">Todo Sergod Store comienza aquí.</p>
-            </AppearanceElement>
-            <div aria-label="Cuenta y compra" className="launcher-utility" role="navigation">
-              {authenticated ? (
-                <button onClick={() => navigate('/account/overview')} type="button">
-                  Mi cuenta
-                </button>
-              ) : (
-                <>
-                  <button onClick={() => navigate('/login')} type="button">
-                    Ingresar
-                  </button>
-                  <button className="secondary" onClick={() => navigate('/register')} type="button">
-                    Registro
-                  </button>
-                </>
-              )}
-              <button onClick={() => navigate('/cart')} type="button">
-                Carrito
-              </button>
-            </div>
           </div>
           <nav aria-label="Accesos principales" className="launcher-menu">
             {launcherEntries.map((entry, index) => (
@@ -499,21 +535,6 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
               </button>
             ))}
           </nav>
-        </section>
-        <section aria-labelledby="home-sections-title" className="home-sections">
-          <AppearanceElement id="home-sections-heading">
-            <header className="section-banner">
-              <div>
-                <p className="eyebrow">Elige tu próxima ruta</p>
-                <h2 id="home-sections-title">Explora Sergod</h2>
-              </div>
-              <p>Tienda, comunidad y contenido editorial conectados en una misma experiencia.</p>
-            </header>
-          </AppearanceElement>
-          <AppearanceElement id="home-service">
-            <p className="home-service-note">Compra online con Flow · Retiro en tienda</p>
-          </AppearanceElement>
-          <HomeHighlights navigate={navigate} />
         </section>
       </main>
     </AppearancePageElements>
@@ -601,7 +622,7 @@ function Login({ navigate }: { readonly navigate: (route: Route) => void }) {
     const data = new FormData(event.currentTarget);
     try {
       await login({ email: String(data.get('email')), password: String(data.get('password')) });
-      navigate('/account');
+      navigate(loginReturnRoute());
     } catch (error) {
       setMessage(messageOf(error));
     }
@@ -976,6 +997,10 @@ function Status({ message }: { readonly message: string }) {
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : 'No fue posible completar la solicitud.';
 }
+function loginReturnRoute(): Route {
+  const requested = new URLSearchParams(window.location.search).get('returnTo');
+  return requested === '/loyalty' ? '/loyalty' : '/account/overview';
+}
 function routeFromLocation(): Route {
   const path = window.location.pathname;
   const routes: readonly Route[] = [
@@ -1003,6 +1028,9 @@ function routeFromLocation(): Route {
     '/news',
     '/community',
     '/comics',
+    '/loyalty',
+    '/preorders',
+    '/quests',
     '/auth/callback/confirm',
     '/auth/callback/email-change',
     '/auth/callback/recovery',

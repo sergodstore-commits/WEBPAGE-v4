@@ -68,13 +68,13 @@ describe('editor de apariencia web', () => {
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
 
     expect(
-      screen.getByRole('button', { name: /Preventas.*\/shop.*vínculo fijo/u }),
+      screen.getByRole('button', { name: /Preventas.*\/preorders.*vínculo fijo/u }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Loyalty.*\/account.*vínculo fijo/u }),
+      screen.getByRole('button', { name: /Loyalty.*\/loyalty.*vínculo fijo/u }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Quests.*\/tournaments.*vínculo fijo/u }),
+      screen.getByRole('button', { name: /Quests.*\/quests.*vínculo fijo/u }),
     ).toBeInTheDocument();
   });
 

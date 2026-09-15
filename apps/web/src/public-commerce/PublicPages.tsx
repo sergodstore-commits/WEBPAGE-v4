@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { ApiError, authorizedRequest, currentSession, publicRequest } from '../identity/api.js';
 import { EditorialDocumentView } from '../editorial/EditorialDocument.js';
@@ -381,9 +381,16 @@ function HomeHighlightStatus({
   );
 }
 
-export function StorePage() {
+export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'preorders' }) {
+  const defaultFilters = useMemo<CatalogFilters>(
+    () =>
+      view === 'preorders'
+        ? { ...initialFilters, saleType: 'PREORDER' }
+        : { ...initialFilters, saleType: 'REGULAR' },
+    [view],
+  );
   const [items, setItems] = useState<readonly ProductCard[]>([]);
-  const [filters, setFilters] = useState<CatalogFilters>(initialFilters);
+  const [filters, setFilters] = useState<CatalogFilters>(defaultFilters);
   const [games, setGames] = useState<readonly NamedReference[]>([]);
   const [categories, setCategories] = useState<readonly NamedReference[]>([]);
   const [collections, setCollections] = useState<readonly NamedReference[]>([]);
@@ -428,7 +435,7 @@ export function StorePage() {
       .finally(() => setLoading(false));
   };
   useEffect(() => {
-    void requestProductPage(initialFilters)
+    void requestProductPage(defaultFilters)
       .then((result) => {
         setItems(result.items);
         setNextCursor(result.nextCursor);
@@ -446,7 +453,7 @@ export function StorePage() {
         setConditions(options.conditions);
       })
       .catch((error: unknown) => setMessage(messageOf(error)));
-  }, []);
+  }, [defaultFilters]);
   const search = (event: FormEvent) => {
     event.preventDefault();
     setDetail(null);
@@ -460,7 +467,7 @@ export function StorePage() {
     }));
   };
   const removeFilter = (key: keyof CatalogFilters) => {
-    const next = { ...filters, [key]: initialFilters[key] } as CatalogFilters;
+    const next = { ...filters, [key]: defaultFilters[key] } as CatalogFilters;
     if (key === 'gameId') Object.assign(next, { collectionId: '' });
     setFilters(next);
     setDetail(null);
@@ -494,10 +501,14 @@ export function StorePage() {
       <header className="section-heading catalog-heading cut-panel">
         <AppearanceElement id="shop-heading-copy">
           <div>
-            <p className="eyebrow">Tienda TCG</p>
-            <h1>Catálogo</h1>
+            <p className="eyebrow">
+              {view === 'preorders' ? 'Próximos lanzamientos' : 'Tienda TCG'}
+            </p>
+            <h1>{view === 'preorders' ? 'Preventas' : 'Catálogo'}</h1>
             <p>
-              Productos regulares y preventas. Precio, stock y descuentos se confirman en servidor.
+              {view === 'preorders'
+                ? 'Reserva productos antes de su lanzamiento y revisa sus fechas, cupos y condiciones.'
+                : 'Productos regulares disponibles con precio y stock confirmados por el servidor.'}
             </p>
           </div>
         </AppearanceElement>
@@ -608,15 +619,6 @@ export function StorePage() {
                   { label: 'Agotado', value: 'OUT_OF_STOCK' },
                 ]}
                 value={filters.availabilityStatus}
-              />
-              <SelectFilter
-                label="Tipo"
-                onChange={(value) => update('saleType', value as CatalogFilters['saleType'])}
-                options={[
-                  { label: 'Producto regular', value: 'REGULAR' },
-                  { label: 'Preventa', value: 'PREORDER' },
-                ]}
-                value={filters.saleType}
               />
               <SelectFilter
                 label="Ordenar"
@@ -1048,7 +1050,11 @@ async function addProductToCart(
   }
 }
 
-export function TournamentPage() {
+export function TournamentPage({
+  view = 'tournaments',
+}: {
+  readonly view?: 'quests' | 'tournaments';
+}) {
   const [content, setContent] = useState<TournamentContentState>({
     errors: [],
     failedTypes: [],
@@ -1061,7 +1067,8 @@ export function TournamentPage() {
 
   useEffect(() => {
     let active = true;
-    const types = ['TOURNAMENT', 'QUEST', 'HALL_OF_FAME'] as const;
+    const types =
+      view === 'quests' ? (['QUEST'] as const) : (['TOURNAMENT', 'HALL_OF_FAME'] as const);
     void Promise.allSettled(
       types.map((type) =>
         publicRequest<{ items: EditorialEntry[] }>(
@@ -1084,16 +1091,16 @@ export function TournamentPage() {
         failedTypes: results.flatMap((result, index) =>
           result.status === 'rejected' ? [types[index] ?? 'TOURNAMENT'] : [],
         ),
-        hall: items(2),
+        hall: view === 'tournaments' ? items(1) : [],
         loading: false,
-        quests: items(1),
-        tournaments: items(0),
+        quests: view === 'quests' ? items(0) : [],
+        tournaments: view === 'tournaments' ? items(0) : [],
       });
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [view]);
 
   const upcoming = sortByEventDate(
     content.tournaments.filter((item) => eventFromEditorial(item)?.status === 'UPCOMING'),
@@ -1111,7 +1118,7 @@ export function TournamentPage() {
       <main className="page-frame editorial-page visual-public">
         <article className="editorial-reader cut-panel">
           <button className="button-secondary" onClick={() => setSelected(null)} type="button">
-            Volver a torneos y eventos
+            {view === 'quests' ? 'Volver a Quests' : 'Volver a torneos'}
           </button>
           <p className="card-kicker">{tournamentTypeLabel(selected.type)}</p>
           <h1>{selected.title}</h1>
@@ -1130,15 +1137,18 @@ export function TournamentPage() {
   }
 
   return (
-    <main className="page-frame editorial-page tournament-page visual-public">
+    <main className={`page-frame editorial-page tournament-page ${view}-page visual-public`}>
       <header className="section-heading editorial-heading cut-panel">
         <AppearanceElement id="tournaments-heading-copy">
           <div>
-            <p className="eyebrow">Juego organizado Sergod</p>
-            <h1>Torneos y comunidad</h1>
+            <p className="eyebrow">
+              {view === 'quests' ? 'Desafíos Sergod' : 'Juego organizado Sergod'}
+            </p>
+            <h1>{view === 'quests' ? 'Quests' : 'Torneos'}</h1>
             <p>
-              Próximos encuentros, resultados, podios, Quests y reconocimientos publicados por la
-              tienda. Esta sección es informativa y no administra rondas ni emparejamientos.
+              {view === 'quests'
+                ? 'Eventos, misiones y desafíos publicados por Sergod Store.'
+                : 'Próximos encuentros, resultados, podios y reconocimientos publicados por la tienda. Esta sección es informativa y no administra rondas ni emparejamientos.'}
             </p>
           </div>
         </AppearanceElement>
@@ -1154,7 +1164,7 @@ export function TournamentPage() {
       </p>
       {!content.loading && (
         <div className="tournament-sections">
-          {!content.failedTypes.includes('TOURNAMENT') && (
+          {view === 'tournaments' && !content.failedTypes.includes('TOURNAMENT') && (
             <>
               <TournamentEditorialSection
                 empty="Aún no hay próximos torneos publicados."
@@ -1181,7 +1191,7 @@ export function TournamentPage() {
               )}
             </>
           )}
-          {!content.failedTypes.includes('QUEST') && (
+          {view === 'quests' && !content.failedTypes.includes('QUEST') && (
             <TournamentEditorialSection
               empty="Aún no hay Eventos o Quests publicados."
               items={content.quests}
@@ -1190,7 +1200,7 @@ export function TournamentPage() {
               title="Eventos y Quests"
             />
           )}
-          {!content.failedTypes.includes('HALL_OF_FAME') && (
+          {view === 'tournaments' && !content.failedTypes.includes('HALL_OF_FAME') && (
             <TournamentEditorialSection
               empty="Aún no hay reconocimientos publicados."
               items={content.hall}
