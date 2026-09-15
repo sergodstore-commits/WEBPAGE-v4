@@ -698,6 +698,12 @@
 - El acceso de puntos usa un marco aprobado con el texto HTML `Puntos Sergod`, evitando conservar la
   palabra horneada `LOYALTY`. El único logo visible continúa siendo el archivo oficial inmutable; las
   coronas y los logos alternativos quedan prohibidos por CURRENT.
+- El gate local aprobó formato, lint, tipos, compilación y los 13 archivos/103 pruebas web. Vercel dejó
+  el commit `597fa69` en estado `Ready` mediante la Preview
+  `sergod-store-v4-jxd7n7fej-sergod-store.vercel.app`.
+- La inspección remota confirmó los cinco accesos, las cuatro pestañas de Comunidad, la información de
+  la única sucursal y las rutas directas. En escritorio y a 390×844 px hubo cero imágenes rotas, cero
+  desbordamiento horizontal, cero errores de consola y cero botones visibles menores de 44 px.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
