@@ -12,6 +12,7 @@ import { z } from 'zod';
 
 import type { IdentityAccessService } from '../../identity-access/application/identity-access-service.js';
 import { IdentityAccessError } from '../../identity-access/application/identity-access-service.js';
+import { CatalogError } from '../../catalog/domain/catalog.js';
 import type { HttpRouteHandler } from '../../../presentation/http/create-server.js';
 import {
   HttpRequestError,
@@ -227,5 +228,19 @@ function mapError(error: unknown) {
     };
   if (error instanceof EditorialError)
     return { code: error.code, message: error.message, status: error.status };
+  if (error instanceof CatalogError) {
+    if (error.category === 'VALIDATION')
+      return { code: 'VALIDATION_FAILED', message: error.message, status: 422 };
+    if (error.category === 'CONFLICT')
+      return { code: 'STATE_CONFLICT', message: error.message, status: 409 };
+    if (error.category === 'NOT_FOUND')
+      return { code: 'EDITORIAL_RESOURCE_NOT_FOUND', message: error.message, status: 404 };
+    if (error.category === 'INFRASTRUCTURE')
+      return {
+        code: 'DEPENDENCY_UNAVAILABLE',
+        message: 'Image storage is unavailable.',
+        status: 503,
+      };
+  }
   return { code: 'INTERNAL_ERROR', message: 'Request could not be completed.', status: 500 };
 }

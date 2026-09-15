@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IdentityAccessService } from '../../identity-access/application/identity-access-service.js';
+import { CatalogError } from '../../catalog/domain/catalog.js';
 import { createServer } from '../../../presentation/http/create-server.js';
 import type { EditorialService } from '../application/editorial-service.js';
 import type { EditorialMediaService } from '../application/editorial-media-service.js';
@@ -85,5 +86,29 @@ describe('Editorial HTTP API', () => {
         width: 'MEDIUM',
       }),
     );
+  });
+
+  it('returns a validation response when an editorial image violates the media contract', async () => {
+    vi.mocked(media.upload).mockRejectedValueOnce(
+      new CatalogError(
+        'CATALOG_RESOURCE_DIMENSIONS_OUT_OF_RANGE',
+        'VALIDATION',
+        'Catalog image failed the current catalog image contract.',
+      ),
+    );
+    const form = new FormData();
+    form.set('file', new Blob(['image'], { type: 'image/png' }), 'too-small.png');
+    form.set('altText', 'Imagen demasiado pequeña');
+    form.set('placement', 'CENTER');
+    form.set('width', 'MEDIUM');
+
+    const response = await fetch(`${origin}/api/v1/admin/content/${entryId}/resources`, {
+      body: form,
+      headers: { authorization: 'Bearer admin-token', 'idempotency-key': 'invalid-image-1' },
+      method: 'POST',
+    });
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: 'VALIDATION_FAILED' } });
   });
 });

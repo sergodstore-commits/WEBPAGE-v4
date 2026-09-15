@@ -127,69 +127,139 @@ type SectionPreviewKind =
   'comics' | 'community' | 'news' | 'preorders' | 'quests' | 'shop' | 'tournaments';
 
 const sectionPreviewCopy: Readonly<
-  Record<SectionPreviewKind, readonly { readonly detail: string; readonly title: string }[]>
+  Record<
+    SectionPreviewKind,
+    readonly { readonly detail: string; readonly kicker: string; readonly title: string }[]
+  >
 > = {
   comics: [
-    { detail: 'Portada, descripción y cantidad de capítulos.', title: 'Serie publicada' },
-    { detail: 'Número, portada y acceso al lector.', title: 'Capítulo ordenado' },
-    { detail: 'Páginas e imágenes en secuencia de lectura.', title: 'Lector visual' },
+    {
+      detail: 'Portada, descripción y cantidad de capítulos.',
+      kicker: 'Serie · Muestra visual',
+      title: 'Crónicas Sergod',
+    },
+    {
+      detail: 'Número, portada y acceso al lector.',
+      kicker: 'Capítulo 01 · Muestra visual',
+      title: 'La primera partida',
+    },
+    {
+      detail: 'Páginas e imágenes en secuencia de lectura.',
+      kicker: 'Lector · Muestra visual',
+      title: 'Historia en imágenes',
+    },
   ],
   community: [
-    { detail: 'Imagen, resumen y acceso al detalle.', title: 'Actividad de comunidad' },
-    { detail: 'Torneos y Quests conectados con su propia sección.', title: 'Agenda Sergod' },
+    {
+      detail: 'Imagen, resumen y acceso al detalle.',
+      kicker: 'Actividad · Muestra visual',
+      title: 'Tarde de comunidad',
+    },
+    {
+      detail: 'Torneos y Quests conectados con su propia sección.',
+      kicker: 'Agenda · Muestra visual',
+      title: 'Próximos encuentros',
+    },
     {
       detail: 'Dirección, horario, contacto y mapa de la única tienda.',
-      title: 'Información local',
+      kicker: 'Copiapó · Información real',
+      title: 'Visita Sergod Store',
     },
   ],
   news: [
-    { detail: 'Imagen principal, categoría y resumen editorial.', title: 'Noticia destacada' },
-    { detail: 'Tarjetas ordenadas con portada y acceso al artículo.', title: 'Últimas noticias' },
+    {
+      detail: 'Imagen principal, categoría y resumen editorial.',
+      kicker: 'Destacada · Muestra visual',
+      title: 'Novedades en Sergod Store',
+    },
+    {
+      detail: 'Tarjetas ordenadas con portada y acceso al artículo.',
+      kicker: 'Comunidad · Muestra visual',
+      title: 'Lo que está pasando',
+    },
     {
       detail: 'Texto e imágenes por bloques dentro de la publicación.',
-      title: 'Artículo completo',
+      kicker: 'Artículo · Muestra visual',
+      title: 'Información completa',
     },
   ],
   preorders: [
     {
       detail: 'Imagen, nombre y precio confirmado por el servidor.',
+      kicker: 'Próximo lanzamiento · Muestra',
       title: 'Producto en preventa',
     },
     {
       detail: 'Ventana, fecha estimada y condiciones publicadas.',
-      title: 'Información de llegada',
+      kicker: 'Llegada estimada · Muestra',
+      title: 'Información de reserva',
     },
-    { detail: 'Capacidad disponible sin exponer datos internos.', title: 'Cupos de reserva' },
+    {
+      detail: 'Capacidad disponible sin exponer datos internos.',
+      kicker: 'Cupos · Muestra visual',
+      title: 'Disponibilidad confirmada',
+    },
   ],
   quests: [
-    { detail: 'Imagen editorial, resumen y acceso al detalle.', title: 'Quest publicada' },
-    { detail: 'Información oficial preparada por Sergod Store.', title: 'Objetivo y contexto' },
+    {
+      detail: 'Imagen editorial, resumen y acceso al detalle.',
+      kicker: 'Quest activa · Muestra visual',
+      title: 'Desafío de la comunidad',
+    },
+    {
+      detail: 'Información oficial preparada por Sergod Store.',
+      kicker: 'Información · Muestra visual',
+      title: 'Objetivo y contexto',
+    },
     {
       detail: 'Archivo de desafíos anteriores cuando exista contenido.',
-      title: 'Historial de Quests',
+      kicker: 'Archivo · Muestra visual',
+      title: 'Quests anteriores',
     },
   ],
   shop: [
-    { detail: 'Imagen principal, nombre, precio y disponibilidad.', title: 'Producto publicado' },
+    {
+      detail: 'Imagen principal, nombre, precio y disponibilidad.',
+      kicker: 'Disponible · Muestra visual',
+      title: 'Producto TCG de ejemplo',
+    },
     {
       detail: 'Galería, descripción, idioma, edición, condición y SKU.',
-      title: 'Detalle del producto',
+      kicker: 'Detalle · Muestra visual',
+      title: 'Galería del producto',
     },
     {
       detail: 'Búsqueda, filtros y ordenamiento sobre datos reales.',
-      title: 'Catálogo organizado',
+      kicker: 'Catálogo · Muestra visual',
+      title: 'Explora por juego',
     },
   ],
   tournaments: [
-    { detail: 'Fecha, portada, resumen y acceso al detalle.', title: 'Próximo torneo' },
-    { detail: 'Resultados, podio, fotografías y resumen.', title: 'Torneo realizado' },
-    { detail: 'Reconocimientos publicados por la tienda.', title: 'Hall of Fame' },
+    {
+      detail: 'Fecha, portada, resumen y acceso al detalle.',
+      kicker: 'Próximo · Muestra visual',
+      title: 'Encuentro Sergod',
+    },
+    {
+      detail: 'Resultados, podio, fotografías y resumen.',
+      kicker: 'Finalizado · Muestra visual',
+      title: 'Resultados del torneo',
+    },
+    {
+      detail: 'Reconocimientos publicados por la tienda.',
+      kicker: 'Reconocimiento · Muestra visual',
+      title: 'Hall of Fame',
+    },
   ],
 };
 
 function SectionPreview({ kind }: { readonly kind: SectionPreviewKind }) {
   return (
-    <section aria-label="Ejemplo de la estructura de esta sección" className="section-preview">
+    <section
+      aria-label="Ejemplo de la estructura de esta sección"
+      className="section-preview"
+      data-section={kind}
+    >
       <div className="section-preview-heading">
         <span>Vista de ejemplo</span>
         <strong>El contenido real aparecerá aquí al publicarlo desde Admin</strong>
@@ -200,6 +270,7 @@ function SectionPreview({ kind }: { readonly kind: SectionPreviewKind }) {
             <div aria-hidden="true" className="section-preview-art">
               <span>{String(index + 1).padStart(2, '0')}</span>
             </div>
+            <span className="section-preview-kicker">{item.kicker}</span>
             <h3>{item.title}</h3>
             <p>{item.detail}</p>
           </article>
