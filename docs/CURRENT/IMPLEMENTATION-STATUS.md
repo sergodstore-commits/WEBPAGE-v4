@@ -641,6 +641,24 @@
 - El gate completo posterior aprobó formato, lint, tipos, compilación total y 116 archivos de prueba con
   489 casos aprobados y una omisión documentada. La aceptación PostgreSQL focal permanece en 49/49.
 
+## Ejemplos estructurales de destinos vacíos — 2026-09-15
+
+- Tienda, Preventas, Torneos, Quests, Noticias, Comunidad y Cómics muestran ahora, únicamente cuando
+  todavía no existe contenido publicado, una maqueta declarada explícitamente como `Vista de ejemplo`.
+  Estas tarjetas explican la estructura que ocuparán los registros reales sin simular productos, precios,
+  fechas, puntos ni publicaciones. El dato real sigue proveniendo exclusivamente de Admin y reemplaza la
+  maqueta al publicarse.
+- Loyalty conserva los saldos reales del cliente y, cuando no existen movimientos, explica mediante tres
+  tarjetas cómo aparecerán acumulaciones, reservas/canjes y correcciones trazables. No se creó ni alteró
+  ningún movimiento remoto.
+- Los encabezados interiores reciben una identidad más distinguible mediante rótulos ambientales propios
+  de cada destino, conservando negro, rojo y blanco como base y cian como acento. Se reutilizaron únicamente
+  patrones aprobados; el logo y los ocho artes del lanzador permanecen intactos.
+- La revisión local de Noticias confirmó la composición completa en navegador, recursos sin romper y la
+  diferenciación visible del estado vacío. Las pruebas focales de comercio público y Cuenta aprobaron 18
+  casos; formato, tipos y compilación web también aprobaron. Falta publicar una Preview remota y después
+  realizar los recorridos persistentes con contenido real o fixtures remotos trazables.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación

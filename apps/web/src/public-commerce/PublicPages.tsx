@@ -123,6 +123,92 @@ interface HighlightState<T> {
 
 const loadingHighlights = { items: [], status: 'loading' } as const;
 
+type SectionPreviewKind =
+  'comics' | 'community' | 'news' | 'preorders' | 'quests' | 'shop' | 'tournaments';
+
+const sectionPreviewCopy: Readonly<
+  Record<SectionPreviewKind, readonly { readonly detail: string; readonly title: string }[]>
+> = {
+  comics: [
+    { detail: 'Portada, descripción y cantidad de capítulos.', title: 'Serie publicada' },
+    { detail: 'Número, portada y acceso al lector.', title: 'Capítulo ordenado' },
+    { detail: 'Páginas e imágenes en secuencia de lectura.', title: 'Lector visual' },
+  ],
+  community: [
+    { detail: 'Imagen, resumen y acceso al detalle.', title: 'Actividad de comunidad' },
+    { detail: 'Torneos y Quests conectados con su propia sección.', title: 'Agenda Sergod' },
+    {
+      detail: 'Dirección, horario, contacto y mapa de la única tienda.',
+      title: 'Información local',
+    },
+  ],
+  news: [
+    { detail: 'Imagen principal, categoría y resumen editorial.', title: 'Noticia destacada' },
+    { detail: 'Tarjetas ordenadas con portada y acceso al artículo.', title: 'Últimas noticias' },
+    {
+      detail: 'Texto e imágenes por bloques dentro de la publicación.',
+      title: 'Artículo completo',
+    },
+  ],
+  preorders: [
+    {
+      detail: 'Imagen, nombre y precio confirmado por el servidor.',
+      title: 'Producto en preventa',
+    },
+    {
+      detail: 'Ventana, fecha estimada y condiciones publicadas.',
+      title: 'Información de llegada',
+    },
+    { detail: 'Capacidad disponible sin exponer datos internos.', title: 'Cupos de reserva' },
+  ],
+  quests: [
+    { detail: 'Imagen editorial, resumen y acceso al detalle.', title: 'Quest publicada' },
+    { detail: 'Información oficial preparada por Sergod Store.', title: 'Objetivo y contexto' },
+    {
+      detail: 'Archivo de desafíos anteriores cuando exista contenido.',
+      title: 'Historial de Quests',
+    },
+  ],
+  shop: [
+    { detail: 'Imagen principal, nombre, precio y disponibilidad.', title: 'Producto publicado' },
+    {
+      detail: 'Galería, descripción, idioma, edición, condición y SKU.',
+      title: 'Detalle del producto',
+    },
+    {
+      detail: 'Búsqueda, filtros y ordenamiento sobre datos reales.',
+      title: 'Catálogo organizado',
+    },
+  ],
+  tournaments: [
+    { detail: 'Fecha, portada, resumen y acceso al detalle.', title: 'Próximo torneo' },
+    { detail: 'Resultados, podio, fotografías y resumen.', title: 'Torneo realizado' },
+    { detail: 'Reconocimientos publicados por la tienda.', title: 'Hall of Fame' },
+  ],
+};
+
+function SectionPreview({ kind }: { readonly kind: SectionPreviewKind }) {
+  return (
+    <section aria-label="Ejemplo de la estructura de esta sección" className="section-preview">
+      <div className="section-preview-heading">
+        <span>Vista de ejemplo</span>
+        <strong>El contenido real aparecerá aquí al publicarlo desde Admin</strong>
+      </div>
+      <div className="section-preview-grid">
+        {sectionPreviewCopy[kind].map((item, index) => (
+          <article className="section-preview-card" key={item.title}>
+            <div aria-hidden="true" className="section-preview-art">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+            </div>
+            <h3>{item.title}</h3>
+            <p>{item.detail}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function HomeHighlights({ navigate }: { readonly navigate: (route: HomeRoute) => void }) {
   const [regularProducts, setRegularProducts] =
     useState<HighlightState<ProductCard>>(loadingHighlights);
@@ -670,6 +756,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
                   ? 'Las nuevas reservas aparecerán aquí cuando sus campañas estén publicadas.'
                   : 'Revisa los filtros o intenta nuevamente cuando el catálogo esté disponible.'}
               </p>
+              <SectionPreview kind={view === 'preorders' ? 'preorders' : 'shop'} />
               <a className="button-link secondary-link" href="/">
                 Volver al lanzador
               </a>
@@ -1175,6 +1262,11 @@ export function TournamentPage({
       <p aria-live="polite" className="status">
         {content.loading ? 'Cargando torneos y eventos…' : content.errors.join(' ')}
       </p>
+      {!content.loading &&
+        content.errors.length > 0 &&
+        content.tournaments.length === 0 &&
+        content.quests.length === 0 &&
+        content.hall.length === 0 && <SectionPreview kind={view} />}
       {!content.loading && (
         <div className="tournament-sections">
           {view === 'tournaments' && !content.failedTypes.includes('TOURNAMENT') && (
@@ -1271,7 +1363,12 @@ function TournamentEditorialSection({
           })}
         </div>
       ) : (
-        <p className="tournament-section-empty">{empty}</p>
+        <>
+          <p className="tournament-section-empty">{empty}</p>
+          {(section === 'upcoming' || section === 'quests') && (
+            <SectionPreview kind={section === 'quests' ? 'quests' : 'tournaments'} />
+          )}
+        </>
       )}
     </section>
   );
@@ -1428,6 +1525,7 @@ export function NewsPage() {
           <p className="eyebrow">Portada editorial</p>
           <h2>Aún no hay noticias para mostrar</h2>
           <p>Las publicaciones oficiales aparecerán aquí cuando la tienda las publique.</p>
+          <SectionPreview kind="news" />
         </section>
       )}
     </main>
@@ -1527,9 +1625,12 @@ export function CommunityPage({ navigate }: { readonly navigate: (route: HomeRou
             ))}
           </div>
         ) : (
-          <p className="tournament-section-empty">
-            Las actividades aparecerán aquí cuando sean publicadas por la tienda.
-          </p>
+          <>
+            <p className="tournament-section-empty">
+              Las actividades aparecerán aquí cuando sean publicadas por la tienda.
+            </p>
+            <SectionPreview kind="community" />
+          </>
         )}
       </section>
       <CommunityStoreCard store={store} />
@@ -1788,6 +1889,7 @@ export function ComicsPage() {
           <p className="eyebrow">Portada de cómics</p>
           <h2>Aún no hay series para mostrar</h2>
           <p>Las series aparecerán aquí cuando la tienda las publique.</p>
+          <SectionPreview kind="comics" />
         </section>
       ) : null}
       {unlinkedChapters.length > 0 && (

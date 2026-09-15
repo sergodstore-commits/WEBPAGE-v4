@@ -1054,35 +1054,235 @@ html[data-route-transition='from-launcher']::view-transition-old(launcher-logo) 
 
 .store-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_01.webp');
+  --section-code: 'TIENDA';
 }
 
 .preorders-store-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_08.webp');
+  --section-code: 'PREVENTA';
 }
 
 .tournament-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_02.webp');
+  --section-code: 'TORNEOS';
 }
 
 .quests-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_06.webp');
+  --section-code: 'QUESTS';
 }
 
 .loyalty-layout {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_05.webp');
+  --section-code: 'LOYALTY';
 }
 
 .news-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_04.webp');
+  --section-code: 'NOTICIAS';
 }
 
 .community-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_03.webp');
+  --section-code: 'COMUNIDAD';
 }
 
 .comics-page,
 .comic-reader-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_07.webp');
+  --section-code: 'COMICS';
+}
+
+.visual-public > .section-heading::after {
+  content: var(--section-code, 'SERGOD');
+  right: clamp(0.75rem, 4vw, 3.5rem);
+  bottom: -0.08em;
+  width: auto;
+  max-width: 58%;
+  color: rgb(255 255 255 / 8%);
+  background: none;
+  font-family: var(--display-font);
+  font-size: clamp(4rem, 10vw, 8.5rem);
+  font-style: italic;
+  font-weight: 950;
+  line-height: 0.82;
+  letter-spacing: -0.06em;
+  opacity: 1;
+  overflow: hidden;
+  pointer-events: none;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.preorders-store-page > .section-heading,
+.quests-page > .section-heading,
+.community-page > .section-heading {
+  border-top-color: var(--cyan);
+  box-shadow:
+    0.55rem 0.55rem 0 #050607,
+    0.75rem 0.75rem 0 rgb(0 191 224 / 34%);
+}
+
+.section-preview {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.35rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgb(255 255 255 / 20%);
+  text-align: left;
+}
+
+.section-preview-heading {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.section-preview-heading span {
+  color: var(--cyan);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.section-preview-heading strong {
+  color: var(--sergod-text-muted);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.section-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.section-preview-card {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-top: 3px solid var(--red);
+  background: linear-gradient(145deg, rgb(255 255 255 / 6%), transparent 48%), #111318;
+  box-shadow: 0.28rem 0.28rem 0 #050607;
+  clip-path: polygon(0 0, calc(100% - 0.75rem) 0, 100% 0.75rem, 100% 100%, 0 100%);
+}
+
+.section-preview-card:nth-child(2) {
+  border-top-color: var(--cyan);
+}
+
+.section-preview-art {
+  position: relative;
+  display: grid;
+  min-height: 5.5rem;
+  margin: -0.75rem -0.75rem 0.75rem;
+  place-items: end start;
+  padding: 0.55rem;
+  background:
+    linear-gradient(135deg, rgb(226 29 47 / 72%), transparent 58%),
+    url('/assets/sergod/ui/sheet_03/pattern_02.webp') center / cover,
+    #20232a;
+}
+
+.section-preview-card:nth-child(2) .section-preview-art {
+  background:
+    linear-gradient(135deg, rgb(0 191 224 / 48%), transparent 58%),
+    url('/assets/sergod/ui/sheet_03/pattern_03.webp') center / cover,
+    #20232a;
+}
+
+.section-preview-card:nth-child(3) .section-preview-art {
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 20%), transparent 58%),
+    url('/assets/sergod/ui/sheet_03/pattern_01.webp') center / cover,
+    #20232a;
+}
+
+.section-preview-art span {
+  font-family: var(--display-font);
+  font-size: 1.5rem;
+  font-style: italic;
+  font-weight: 950;
+  text-shadow: 0.12em 0.12em 0 #000;
+}
+
+.section-preview-card h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.section-preview-card p {
+  margin: 0.4rem 0 0;
+  color: var(--sergod-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.loyalty-preview {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding: 1rem;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-left: 4px solid var(--cyan);
+  background: linear-gradient(110deg, rgb(0 191 224 / 10%), transparent 42%), #0c0e12;
+}
+
+.loyalty-preview > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.loyalty-preview > div span {
+  color: var(--cyan);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.loyalty-preview ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: loyalty-step;
+}
+
+.loyalty-preview li {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.8rem 0.8rem 0.8rem 2.7rem;
+  border-top: 3px solid var(--red);
+  background: rgb(255 255 255 / 5%);
+  counter-increment: loyalty-step;
+}
+
+.loyalty-preview li::before {
+  content: counter(loyalty-step, decimal-leading-zero);
+  position: absolute;
+  left: 0.7rem;
+  top: 0.7rem;
+  color: var(--red-light);
+  font-family: var(--display-font);
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 950;
+}
+
+.loyalty-preview small {
+  color: var(--sergod-text-muted);
+  line-height: 1.4;
 }
 
 .cart-page,
@@ -2152,6 +2352,27 @@ html[data-route-transition='from-launcher']::view-transition-old(launcher-logo) 
       transform 150ms ease,
       border-color 150ms ease,
       background-color 150ms ease;
+  }
+}
+
+@media (max-width: 720px) {
+  .visual-public > .section-heading::after {
+    right: 0.75rem;
+    bottom: 0.15rem;
+    max-width: 88%;
+    font-size: clamp(2.75rem, 16vw, 4.25rem);
+  }
+
+  .section-preview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .loyalty-preview ol {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .section-preview-art {
+    min-height: 4.25rem;
   }
 }
 

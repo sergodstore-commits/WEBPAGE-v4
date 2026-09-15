@@ -324,6 +324,28 @@ export function AccountHub({ view = 'overview' }: { readonly view?: 'loyalty' | 
                   </table>
                 </div>
               )}
+              {movements.length === 0 && loyaltyState === 'ready' && (
+                <section aria-label="Ejemplo del historial de puntos" className="loyalty-preview">
+                  <div>
+                    <span>Vista de ejemplo</span>
+                    <strong>Tu historial aparecerá aquí cuando tengas movimientos</strong>
+                  </div>
+                  <ol>
+                    <li>
+                      <b>Compra confirmada</b>
+                      <small>La acumulación mostrará fecha, puntos y saldo resultante.</small>
+                    </li>
+                    <li>
+                      <b>Canje o reserva</b>
+                      <small>Los puntos comprometidos quedarán separados de los disponibles.</small>
+                    </li>
+                    <li>
+                      <b>Corrección administrativa</b>
+                      <small>Todo ajuste conservará su motivo y trazabilidad.</small>
+                    </li>
+                  </ol>
+                </section>
+              )}
               {movementsCursor && (
                 <button
                   disabled={loyaltyState === 'loading'}
