@@ -12,9 +12,6 @@ const publicRoutes: readonly { readonly label: string; readonly route: Route }[]
   { label: 'Inicio', route: '/' },
   { label: 'Tienda', route: '/shop' },
   { label: 'Preventas', route: '/preorders' },
-  { label: 'Torneos', route: '/tournaments' },
-  { label: 'Quests', route: '/quests' },
-  { label: 'Noticias', route: '/news' },
   { label: 'Comunidad', route: '/community' },
   { label: 'Cómics', route: '/comics' },
 ];
@@ -74,7 +71,13 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
           <nav aria-label="Navegación principal" className="primary-navigation">
             {publicRoutes.map((item) => (
               <button
-                aria-current={route === item.route ? 'page' : undefined}
+                aria-current={
+                  route === item.route ||
+                  (item.route === '/community' &&
+                    ['/community/visit', '/news', '/quests', '/tournaments'].includes(route))
+                    ? 'page'
+                    : undefined
+                }
                 key={item.route}
                 onClick={() => go(item.route)}
                 type="button"
@@ -89,7 +92,7 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
               onClick={() => go('/loyalty')}
               type="button"
             >
-              Loyalty
+              Puntos Sergod
             </button>
             <button
               aria-current={route === '/cart' ? 'page' : undefined}
@@ -147,17 +150,17 @@ export function SiteFooter({ navigate }: Pick<SiteChromeProps, 'navigate'>) {
         <button onClick={() => navigate('/shop')} type="button">
           Comprar
         </button>
-        <button onClick={() => navigate('/tournaments')} type="button">
-          Torneos
-        </button>
         <button onClick={() => navigate('/preorders')} type="button">
           Preventas
         </button>
-        <button onClick={() => navigate('/quests')} type="button">
-          Quests
+        <button onClick={() => navigate('/community')} type="button">
+          Comunidad
         </button>
         <button onClick={() => navigate('/loyalty')} type="button">
-          Loyalty
+          Puntos Sergod
+        </button>
+        <button onClick={() => navigate('/comics')} type="button">
+          Cómics
         </button>
         <button onClick={() => navigate('/account/overview')} type="button">
           Mi cuenta

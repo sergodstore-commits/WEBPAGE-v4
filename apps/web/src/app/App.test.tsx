@@ -59,38 +59,39 @@ describe('IdentityAccess presentation', () => {
       screen.queryByRole('navigation', { name: 'Navegación principal' }),
     ).not.toBeInTheDocument();
     const launcher = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
-    for (const label of [
-      'Tienda',
-      'Preventas',
-      'Torneos',
-      'Noticias',
-      'Comunidad',
-      'Loyalty',
-      'Quests',
-      'Cómics',
-    ]) {
+    for (const label of ['Tienda', 'Preventas', 'Comunidad', 'Puntos Sergod', 'Cómics']) {
       expect(launcher.getByRole('button', { name: new RegExp(label, 'i') })).toBeInTheDocument();
     }
+    expect(launcher.queryByRole('button', { name: /^Noticias$/i })).not.toBeInTheDocument();
+    expect(launcher.queryByRole('button', { name: /^Torneos$/i })).not.toBeInTheDocument();
   });
 
   it('uses the launcher as the home navigation and restores the regular header inside sections', () => {
     render(<App />);
     const launcher = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
 
-    fireEvent.click(launcher.getByRole('button', { name: /Noticias/i }));
+    fireEvent.click(launcher.getByRole('button', { name: /Comunidad/i }));
 
     const sectionNavigation = within(
       screen.getByRole('navigation', { name: 'Navegación principal' }),
     );
     expect(sectionNavigation.getByRole('button', { name: 'Preventas' })).toBeInTheDocument();
-    expect(sectionNavigation.getByRole('button', { name: 'Quests' })).toBeInTheDocument();
+    expect(sectionNavigation.getByRole('button', { name: 'Comunidad' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     expect(
       within(screen.getByRole('navigation', { name: 'Cuenta y compra' })).getByRole('button', {
-        name: 'Loyalty',
+        name: 'Puntos Sergod',
       }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Inicio Sergod Store' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Noticias' })).toBeInTheDocument();
+    const communityNavigation = within(
+      screen.getByRole('navigation', { name: 'Secciones de Comunidad' }),
+    );
+    for (const label of ['Noticias', 'Torneos', 'Quests', 'Visítanos']) {
+      expect(communityNavigation.getByRole('button', { name: label })).toBeInTheDocument();
+    }
   });
 
   it('preserves draft appearance mode when navigating inside the real preview', () => {

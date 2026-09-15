@@ -114,6 +114,7 @@ interface TournamentContentState {
 }
 
 type HomeRoute = '/community' | '/comics' | '/news' | '/shop' | '/tournaments';
+type CommunityRoute = '/community' | '/community/visit' | '/news' | '/quests' | '/tournaments';
 type HighlightStatus = 'error' | 'loading' | 'ready';
 
 interface HighlightState<T> {
@@ -1489,7 +1490,9 @@ function sortByEventDate(
   });
 }
 
-export function NewsPage() {
+export function NewsPage({
+  includeCommunity = false,
+}: { readonly includeCommunity?: boolean } = {}) {
   const [items, setItems] = useState<readonly EditorialEntry[]>([]);
   const [category, setCategory] = useState('Todas');
   const [selected, setSelected] = useState<EditorialEntry | null>(null);
@@ -1497,19 +1500,30 @@ export function NewsPage() {
 
   useEffect(() => {
     let active = true;
-    void publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=NEWS')
-      .then((result) => {
-        if (!active) return;
-        setItems(result.items);
-        setMessage(result.items.length === 0 ? 'Todavía no hay noticias publicadas.' : '');
-      })
-      .catch((error: unknown) => {
-        if (active) setMessage(messageOf(error));
-      });
+    void Promise.allSettled([
+      publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=NEWS'),
+      includeCommunity
+        ? publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=COMMUNITY')
+        : Promise.resolve({ items: [] as EditorialEntry[] }),
+    ]).then(([newsResult, communityResult]) => {
+      if (!active) return;
+      const news = newsResult.status === 'fulfilled' ? newsResult.value.items : [];
+      const community = communityResult.status === 'fulfilled' ? communityResult.value.items : [];
+      const combined = [...news, ...community];
+      setItems(combined);
+      setMessage(
+        newsResult.status === 'rejected' &&
+          (!includeCommunity || communityResult.status === 'rejected')
+          ? 'No fue posible cargar las noticias.'
+          : combined.length === 0
+            ? 'Todavía no hay noticias publicadas.'
+            : '',
+      );
+    });
     return () => {
       active = false;
     };
-  }, []);
+  }, [includeCommunity]);
 
   const categories = [...new Set(items.map(newsCategory))].sort((left, right) =>
     left.localeCompare(right, 'es'),
@@ -1611,132 +1625,91 @@ export function NewsPage() {
   );
 }
 
-export function CommunityPage({ navigate }: { readonly navigate: (route: HomeRoute) => void }) {
-  const [items, setItems] = useState<readonly EditorialEntry[]>([]);
+export function CommunityHub({
+  navigate,
+  route,
+}: {
+  readonly navigate: (route: CommunityRoute) => void;
+  readonly route: CommunityRoute;
+}) {
+  const activeRoute = route === '/community' ? '/news' : route;
+  const sections = [
+    { label: 'Noticias', route: '/news' },
+    { label: 'Torneos', route: '/tournaments' },
+    { label: 'Quests', route: '/quests' },
+    { label: 'Visítanos', route: '/community/visit' },
+  ] as const;
+
+  return (
+    <div className="community-hub visual-public">
+      <header className="community-hub-header">
+        <div>
+          <p className="eyebrow">Todo Sergod en un solo lugar</p>
+          <h1>Comunidad</h1>
+        </div>
+        <nav aria-label="Secciones de Comunidad" className="community-hub-tabs">
+          {sections.map((section) => (
+            <button
+              aria-current={activeRoute === section.route ? 'page' : undefined}
+              key={section.route}
+              onClick={() => navigate(section.route)}
+              type="button"
+            >
+              {section.label}
+            </button>
+          ))}
+        </nav>
+      </header>
+      {activeRoute === '/news' && <NewsPage includeCommunity />}
+      {activeRoute === '/tournaments' && <TournamentPage />}
+      {activeRoute === '/quests' && <TournamentPage view="quests" />}
+      {activeRoute === '/community/visit' && <CommunityPage />}
+    </div>
+  );
+}
+
+export function CommunityPage() {
   const [store, setStore] = useState<StoreSummary | null>(null);
-  const [selected, setSelected] = useState<EditorialEntry | null>(null);
-  const [message, setMessage] = useState('Cargando comunidad e información local…');
+  const [message, setMessage] = useState('Cargando información de la tienda…');
 
   useEffect(() => {
     let active = true;
-    void Promise.allSettled([
-      publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=COMMUNITY'),
-      publicRequest<{ item: unknown }>('/api/v1/service-coverage/store'),
-    ]).then(([editorialResult, storeResult]) => {
-      if (!active) return;
-      const editorialItems =
-        editorialResult.status === 'fulfilled' ? editorialResult.value.items : [];
-      if (editorialResult.status === 'fulfilled') setItems(editorialItems);
-      if (storeResult.status === 'fulfilled') setStore(firstStore(storeResult.value.item));
-      const failures = [
-        editorialResult.status === 'rejected' ? 'las actividades de comunidad' : '',
-        storeResult.status === 'rejected' ? 'la información local' : '',
-      ].filter(Boolean);
-      setMessage(
-        failures.length > 0
-          ? `No fue posible cargar ${failures.join(' ni ')}.`
-          : editorialItems.length === 0
-            ? 'Todavía no hay actividades publicadas.'
-            : '',
-      );
-    });
+    void publicRequest<{ item: unknown }>('/api/v1/service-coverage/store')
+      .then((result) => {
+        if (!active) return;
+        setStore(firstStore(result.item));
+        setMessage('');
+      })
+      .catch((error: unknown) => {
+        if (active) setMessage(messageOf(error));
+      });
     return () => {
       active = false;
     };
   }, []);
-
-  if (selected !== null) {
-    return (
-      <main className="page-frame editorial-page visual-public">
-        <article className="editorial-reader cut-panel">
-          <button className="button-secondary" onClick={() => setSelected(null)} type="button">
-            Volver a comunidad
-          </button>
-          <p className="card-kicker">Comunidad Sergod</p>
-          <h1>{selected.title}</h1>
-          <p className="editorial-reader-excerpt">{selected.excerpt}</p>
-          <EditorialDocumentView
-            document={documentFromMetadata(
-              selected.metadata,
-              selected.body,
-              selected.editorialEntryId,
-            )}
-          />
-        </article>
-      </main>
-    );
-  }
 
   return (
     <main className="page-frame editorial-page community-page visual-public">
       <header className="section-heading editorial-heading cut-panel">
         <AppearanceElement id="community-heading-copy">
           <div>
-            <p className="eyebrow">La comunidad Sergod</p>
-            <h1>Juega, comparte y participa</h1>
+            <p className="eyebrow">Nuestra tienda en Copiapó</p>
+            <h1>Visítanos</h1>
             <p>
-              Actividades, juegos y encuentros publicados por Sergod Store, junto con la información
-              real para visitarnos o contactarnos.
+              Consulta la dirección, el horario y los medios de contacto oficiales de Sergod Store.
             </p>
           </div>
         </AppearanceElement>
-        <div aria-label="Accesos de comunidad" className="heading-stats">
-          <button onClick={() => navigate('/tournaments')} type="button">
-            Torneos y Quests
-          </button>
-          <button onClick={() => navigate('/comics')} type="button">
-            Cómics e historias
-          </button>
+        <div aria-label="Características de la sección" className="heading-stats">
+          <span>Una sola sucursal</span>
+          <span>Información oficial</span>
         </div>
       </header>
       <p aria-live="polite" className="status">
         {message}
       </p>
-      <section aria-labelledby="community-activities" className="community-activities cut-panel">
-        <div className="tournament-section-heading">
-          <p className="eyebrow">Juegos y actividades</p>
-          <h2 id="community-activities">Lo que está pasando en Sergod</h2>
-        </div>
-        {items.length > 0 ? (
-          <div className="editorial-grid">
-            {items.map((item) => (
-              <CommunityCard item={item} key={item.editorialEntryId} onSelect={setSelected} />
-            ))}
-          </div>
-        ) : (
-          <>
-            <p className="tournament-section-empty">
-              Las actividades aparecerán aquí cuando sean publicadas por la tienda.
-            </p>
-            <SectionPreview kind="community" />
-          </>
-        )}
-      </section>
       <CommunityStoreCard store={store} />
     </main>
-  );
-}
-
-function CommunityCard({
-  item,
-  onSelect,
-}: {
-  readonly item: EditorialEntry;
-  readonly onSelect: (item: EditorialEntry) => void;
-}) {
-  const cover = firstEditorialImage(item);
-  return (
-    <article className="editorial-card news-card">
-      {cover && (
-        <img alt={cover.altText} className="news-card-cover" src={resourceUrl(cover.resourceId)} />
-      )}
-      <p className="card-kicker">Comunidad</p>
-      <h3>{item.title}</h3>
-      <p>{item.excerpt}</p>
-      <button onClick={() => onSelect(item)} type="button">
-        Ver actividad
-      </button>
-    </article>
   );
 }
 

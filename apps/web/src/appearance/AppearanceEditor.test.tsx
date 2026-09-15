@@ -63,7 +63,7 @@ describe('editor de apariencia web', () => {
     );
   });
 
-  it('ofrece todos los accesos ilustrados con destinos protegidos', async () => {
+  it('ofrece los cinco accesos activos con destinos protegidos', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
 
@@ -71,11 +71,14 @@ describe('editor de apariencia web', () => {
       screen.getByRole('button', { name: /Preventas.*\/preorders.*vínculo fijo/u }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Loyalty.*\/loyalty.*vínculo fijo/u }),
+      screen.getByRole('button', { name: /Puntos Sergod.*\/loyalty.*vínculo fijo/u }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Quests.*\/quests.*vínculo fijo/u }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /Quests.*\/quests.*vínculo fijo/u }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Noticias.*\/news.*vínculo fijo/u }),
+    ).not.toBeInTheDocument();
   });
 
   it('añade títulos visuales como capas editables en vez de texto horneado', async () => {

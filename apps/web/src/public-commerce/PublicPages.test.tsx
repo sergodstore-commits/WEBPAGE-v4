@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, publicRequest } from '../identity/api.js';
 import {
   ComicsPage,
+  CommunityHub,
   CommunityPage,
   EditorialPage,
   HomeHighlights,
@@ -619,7 +620,7 @@ describe('public editorial sections', () => {
     expect(screen.getByText('Bases y detalles del evento.')).toBeInTheDocument();
   });
 
-  it('joins community activities with the configured single-store contact information', async () => {
+  it('shows former community activities inside the Noticias tab without losing content', async () => {
     vi.mocked(publicRequest).mockImplementation(async (path) => {
       if (path.includes('type=COMMUNITY'))
         return {
@@ -635,24 +636,33 @@ describe('public editorial sections', () => {
             },
           ],
         } as never;
-      if (path === '/api/v1/service-coverage/store')
-        return {
-          item: {
-            branchId: '0198a8be-6677-7000-8000-000000000121',
-            name: 'Sergod Store',
-            openingHours: '10:00 a 22:00',
-            publicAddress: 'Los Carrera 5142, Copiapó',
-            publicContacts: '+56934423169 · sergodstore@gmail.com',
-          },
-        } as never;
       throw new Error(`Unexpected path ${path}`);
     });
     const navigate = vi.fn();
 
-    render(<CommunityPage navigate={navigate} />);
+    render(<CommunityHub navigate={navigate} route="/community" />);
 
     expect(await screen.findByText('Tarde de juego')).toBeInTheDocument();
-    expect(screen.getByText('Los Carrera 5142, Copiapó')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Torneos' }));
+    expect(navigate).toHaveBeenCalledWith('/tournaments');
+    fireEvent.click(screen.getByRole('button', { name: 'Leer artículo' }));
+    expect(screen.getByText('Todos los detalles de la actividad.')).toBeInTheDocument();
+  });
+
+  it('shows the configured single-store information in Visítanos', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({
+      item: {
+        branchId: '0198a8be-6677-7000-8000-000000000121',
+        name: 'Sergod Store',
+        openingHours: '10:00 a 22:00',
+        publicAddress: 'Los Carrera 5142, Copiapó',
+        publicContacts: '+56934423169 · sergodstore@gmail.com',
+      },
+    } as never);
+
+    render(<CommunityPage />);
+
+    expect(await screen.findByText('Los Carrera 5142, Copiapó')).toBeInTheDocument();
     expect(screen.getByText('10:00 a 22:00')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute(
       'href',
@@ -662,10 +672,6 @@ describe('public editorial sections', () => {
       'href',
       'mailto:sergodstore@gmail.com',
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Torneos y Quests' }));
-    expect(navigate).toHaveBeenCalledWith('/tournaments');
-    fireEvent.click(screen.getByRole('button', { name: 'Ver actividad' }));
-    expect(screen.getByText('Todos los detalles de la actividad.')).toBeInTheDocument();
   });
 
   it('navigates from comic series to ordered chapters and the image reader', async () => {

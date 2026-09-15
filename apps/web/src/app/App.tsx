@@ -41,13 +41,7 @@ import { ServiceCoveragePanel } from '../service-coverage/ServiceCoveragePanel.j
 import { AccountHub } from '../account/AccountHub.js';
 import type { AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
-import {
-  ComicsPage,
-  CommunityPage,
-  NewsPage,
-  StorePage,
-  TournamentPage,
-} from '../public-commerce/PublicPages.js';
+import { ComicsPage, CommunityHub, StorePage } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
 import { TermsPage } from '../legal/TermsPage.js';
 import {
@@ -95,6 +89,7 @@ export type Route =
   | '/tournaments'
   | '/news'
   | '/community'
+  | '/community/visit'
   | '/comics'
   | '/loyalty'
   | '/preorders'
@@ -185,24 +180,13 @@ export function App() {
                 </AppearanceRegion>
               )}
               {route === '/cart' && <CartPage />}
-              {route === '/tournaments' && (
-                <AppearanceRegion page="tournaments">
-                  <TournamentPage />
-                </AppearanceRegion>
-              )}
-              {route === '/quests' && (
-                <AppearanceRegion page="tournaments">
-                  <TournamentPage view="quests" />
-                </AppearanceRegion>
-              )}
-              {route === '/news' && (
-                <AppearanceRegion page="news">
-                  <NewsPage />
-                </AppearanceRegion>
-              )}
-              {route === '/community' && (
+              {(route === '/community' ||
+                route === '/community/visit' ||
+                route === '/news' ||
+                route === '/tournaments' ||
+                route === '/quests') && (
                 <AppearanceRegion page="community">
-                  <CommunityPage navigate={navigate} />
+                  <CommunityHub navigate={navigate} route={route} />
                 </AppearanceRegion>
               )}
               {route === '/comics' && (
@@ -441,39 +425,19 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
       route: '/preorders',
     },
     {
-      appearanceId: 'home-link-tournaments',
-      eyebrow: 'Competencia',
-      icon: 'home-launcher-tournaments',
-      label: 'Torneos',
-      route: '/tournaments',
-    },
-    {
-      appearanceId: 'home-link-news',
-      eyebrow: 'Actualidad',
-      icon: 'home-launcher-news',
-      label: 'Noticias',
-      route: '/news',
-    },
-    {
       appearanceId: 'home-link-community',
-      eyebrow: 'Encuentros',
+      eyebrow: 'Noticias · Torneos · Quests',
       icon: 'home-launcher-community',
       label: 'Comunidad',
       route: '/community',
     },
     {
       appearanceId: 'home-link-loyalty',
-      eyebrow: 'Puntos',
-      icon: 'home-launcher-loyalty',
-      label: 'Loyalty',
+      eyebrow: 'Beneficios',
+      icon: 'sheet-03-banner-03',
+      label: 'Puntos Sergod',
       route: '/loyalty',
-    },
-    {
-      appearanceId: 'home-link-quests',
-      eyebrow: 'Desafíos',
-      icon: 'home-launcher-quests',
-      label: 'Quests',
-      route: '/quests',
+      textual: true,
     },
     {
       appearanceId: 'home-link-comics',
@@ -521,7 +485,7 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
           <nav aria-label="Accesos principales" className="launcher-menu">
             {launcherEntries.map((entry, index) => (
               <button
-                className={`launcher-entry launcher-entry-${index + 1}`}
+                className={`launcher-entry launcher-entry-${index + 1}${'textual' in entry ? ' launcher-entry-textual' : ''}`}
                 key={entry.appearanceId}
                 onClick={() => navigate(entry.route)}
                 type="button"
@@ -1027,6 +991,7 @@ function routeFromLocation(): Route {
     '/tournaments',
     '/news',
     '/community',
+    '/community/visit',
     '/comics',
     '/loyalty',
     '/preorders',

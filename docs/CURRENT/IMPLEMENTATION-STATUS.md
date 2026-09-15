@@ -685,6 +685,20 @@
   cero desbordamiento, cero imágenes rotas y cero controles visibles menores de 44 px; en escritorio no
   hubo errores de consola. Producción permanece sin promover.
 
+## Consolidación del lanzador y Comunidad — 2026-09-15
+
+- Por instrucción expresa del propietario, la portada queda reducida a cinco destinos: Tienda,
+  Preventas, Comunidad, Puntos Sergod y Cómics. Noticias, Torneos y Quests dejan de duplicarse en el
+  lanzador y pasan a ser pestañas del área Comunidad junto con Visítanos.
+- Las rutas históricas `/news`, `/tournaments` y `/quests` se conservan como enlaces directos a sus
+  pestañas para no romper marcadores ni vínculos existentes. Las publicaciones `COMMUNITY` anteriores
+  se integran en Noticias en lugar de quedar ocultas.
+- El encabezado y el pie siguen la misma jerarquía reducida. Visítanos presenta la única sucursal y su
+  información oficial; no introduce un modelo visual de múltiples sucursales.
+- El acceso de puntos usa un marco aprobado con el texto HTML `Puntos Sergod`, evitando conservar la
+  palabra horneada `LOYALTY`. El único logo visible continúa siendo el archivo oficial inmutable; las
+  coronas y los logos alternativos quedan prohibidos por CURRENT.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación
