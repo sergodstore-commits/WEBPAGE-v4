@@ -604,6 +604,24 @@
   La verificación visual local confirmó la cabecera compacta y todos los destinos; falta generar la nueva
   Preview con este refinamiento y probarla antes de cualquier promoción.
 
+## Movimiento ambiental y pasada funcional aislada — 2026-09-15
+
+- El lanzador incorpora movimiento suave durante el reposo sin alterar el logo ni los vínculos: deriva de
+  líneas de fondo, respiración contenida del aura central, pulso de luz del logo y flotación escalonada de
+  los ocho accesos. El foco detiene el movimiento del acceso seleccionado y `prefers-reduced-motion`
+  desactiva todas estas animaciones sin ocultar contenido ni acciones.
+- La inspección en navegador local confirmó los ocho destinos exactos (`/shop`, `/preorders`,
+  `/tournaments`, `/news`, `/community`, `/loyalty`, `/quests` y `/comics`), cero desbordamiento horizontal
+  y cero errores de consola. Las cuatro animaciones ambientales estaban aplicadas por el navegador.
+- La pasada funcional web aprobó 13 archivos y 102 pruebas. Una selección de 81 pruebas cubrió además
+  sesión persistente, Cuenta/Loyalty, Admin, carga múltiple de imágenes de producto, reintentos parciales sin
+  duplicación, reemplazo, eliminación, contenido editorial con imágenes, publicaciones, torneos, Quests,
+  cómics y Apariencia.
+- La aceptación PostgreSQL aislada aprobó 49 pruebas en 6 archivos para catálogo público/administrativo,
+  recursos persistentes, medios editoriales, preventas, Loyalty y configuración. No se publicaron fixtures
+  en producción: la Preview vigente reenvía `/api` al servicio productivo y el contenido comercial real
+  continúa siendo carga operativa del propietario.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación
