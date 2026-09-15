@@ -638,6 +638,8 @@
   verificada, preferencias legibles, 0 pedidos regulares, 0 preventas y 0 movimientos Loyalty. El runner
   acepta ahora una ruta explícita al archivo de entorno para usar `.runtime/codex/sergod-production.env`
   sin copiar secretos a `.env` ni exponerlos en la salida.
+- El gate completo posterior aprobó formato, lint, tipos, compilación total y 116 archivos de prueba con
+  489 casos aprobados y una omisión documentada. La aceptación PostgreSQL focal permanece en 49/49.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
