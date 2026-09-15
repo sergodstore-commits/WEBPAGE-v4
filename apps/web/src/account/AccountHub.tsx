@@ -216,6 +216,10 @@ export function AccountHub({ view = 'overview' }: { readonly view?: 'loyalty' | 
             <h1>Loyalty</h1>
             <p>Consulta tus puntos disponibles, reservas y movimientos en un solo lugar.</p>
           </div>
+          <div aria-label="Características de Loyalty" className="heading-stats">
+            <span>Saldo actualizado</span>
+            <span>Movimientos trazables</span>
+          </div>
         </header>
       )}
       <section className="account-content">

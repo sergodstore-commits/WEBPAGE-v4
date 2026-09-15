@@ -592,6 +592,18 @@
   advertencias, tipos, compilación completa y 116 archivos con 489 pruebas aprobadas y una omisión
   documentada. Solo falta la Preview remota antes de promover.
 
+## Coherencia visual de destinos interiores — 2026-09-14
+
+- La navegación interior expone Tienda, Preventas, Torneos, Quests, Noticias, Comunidad, Cómics y Loyalty;
+  a 1.280 px cambia antes a un menú compacto para evitar segundas líneas o controles comprimidos.
+- Preventas, Quests y Loyalty reciben microcopy, indicadores y ornamentos propios sin inventar mecánicas:
+  Quests continúa siendo contenido editorial y Preventas conserva precio/cupos confirmados por servidor.
+- Los estados vacíos de Preventas guían de vuelta al lanzador, acceso/registro adoptan la misma jerarquía
+  angular y las secciones interiores incorporan una entrada breve compatible con movimiento reducido.
+- Formato, lint, tipos, compilación web y 33 pruebas focales de App, comercio público y Cuenta aprobaron.
+  La verificación visual local confirmó la cabecera compacta y todos los destinos; falta generar la nueva
+  Preview con este refinamiento y probarla antes de cualquier promoción.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación

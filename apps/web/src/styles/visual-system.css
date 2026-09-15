@@ -86,9 +86,19 @@ body::before {
 .site-header nav button {
   border: 1px solid transparent;
   font-family: var(--display-font);
+  font-size: clamp(0.68rem, 0.72vw, 0.86rem);
   font-style: italic;
   letter-spacing: 0.025em;
   text-transform: uppercase;
+}
+
+.site-header .header-navigation {
+  gap: clamp(0.35rem, 1vw, 0.8rem);
+}
+
+.site-header .primary-navigation,
+.site-header .utility-navigation {
+  gap: clamp(0.12rem, 0.45vw, 0.45rem);
 }
 
 .site-header nav button:hover,
@@ -966,8 +976,20 @@ html[data-route-transition='from-launcher']::view-transition-old(launcher-logo) 
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_01.webp');
 }
 
+.preorders-store-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_08.webp');
+}
+
 .tournament-page {
   --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_02.webp');
+}
+
+.quests-page {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_06.webp');
+}
+
+.loyalty-layout {
+  --page-ornament: url('/assets/sergod/ui/sheet_02/ornament_05.webp');
 }
 
 .news-page {
@@ -1098,6 +1120,89 @@ html[data-route-transition='from-launcher']::view-transition-old(launcher-logo) 
   background: url('/assets/sergod/ui/sheet_03/ui_badge_04.webp') center / contain no-repeat;
   opacity: 0.36;
   pointer-events: none;
+}
+
+.catalog-empty .button-link {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.75rem;
+}
+
+.auth-panel {
+  width: min(calc(100% - 2rem), 45rem);
+  margin: clamp(2rem, 6vw, 5rem) auto;
+  padding: clamp(1.4rem, 4vw, 3rem);
+  overflow: hidden;
+  background:
+    linear-gradient(125deg, rgb(9 10 13 / 98%) 0 62%, rgb(72 8 17 / 84%)),
+    url('/assets/sergod/ui/sheet_02/pattern_03.webp') right center / 30rem auto no-repeat;
+}
+
+.auth-panel::before {
+  content: '';
+  position: absolute;
+  right: clamp(-1rem, 2vw, 1.5rem);
+  top: 1.2rem;
+  width: clamp(5rem, 15vw, 9rem);
+  aspect-ratio: 1;
+  background: url('/assets/sergod/ui/sheet_02/ornament_05.webp') center / contain no-repeat;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.auth-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-panel h1 {
+  max-width: 12ch;
+  margin-bottom: 1.5rem;
+  font-family: var(--display-font);
+  font-size: clamp(2.2rem, 7vw, 4rem);
+  font-style: italic;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.auth-panel form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth-panel form + h2 {
+  margin-top: 2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgb(255 255 255 / 16%);
+}
+
+.route-stage > .page-frame > .section-heading,
+.route-stage > .page-frame > .status,
+.route-stage > .page-frame > .catalog-layout,
+.route-stage > .page-frame > .tournament-sections,
+.route-stage > .page-frame > .account-content,
+.route-stage > .page-frame > .empty-state {
+  animation: section-arrival 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.route-stage > .page-frame > .status {
+  animation-delay: 70ms;
+}
+
+.route-stage > .page-frame > :nth-child(n + 3) {
+  animation-delay: 120ms;
+}
+
+@keyframes section-arrival {
+  from {
+    opacity: 0;
+    transform: translateY(0.85rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .account-nav {
@@ -2012,6 +2117,41 @@ html[data-route-transition='from-launcher']::view-transition-old(launcher-logo) 
   }
 }
 
+@media (max-width: 1320px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .menu-toggle {
+    display: grid;
+    place-items: center;
+  }
+
+  .header-navigation {
+    display: none;
+    grid-column: 1 / -1;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .header-navigation.is-open {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(13rem, 0.75fr);
+    gap: 0.75rem;
+  }
+
+  .primary-navigation,
+  .utility-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .site-header nav button {
+    min-height: 3rem;
+    text-align: left;
+  }
+}
+
 @media (max-width: 980px) {
   .site-header {
     min-height: 5rem;
@@ -2079,6 +2219,10 @@ html[data-route-transition='from-launcher']::view-transition-old(launcher-logo) 
 
   .primary-navigation,
   .utility-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .header-navigation.is-open {
     grid-template-columns: 1fr;
   }
 

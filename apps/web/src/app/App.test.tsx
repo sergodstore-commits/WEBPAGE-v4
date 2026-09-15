@@ -79,7 +79,16 @@ describe('IdentityAccess presentation', () => {
 
     fireEvent.click(launcher.getByRole('button', { name: /Noticias/i }));
 
-    expect(screen.getByRole('navigation', { name: 'Navegación principal' })).toBeInTheDocument();
+    const sectionNavigation = within(
+      screen.getByRole('navigation', { name: 'Navegación principal' }),
+    );
+    expect(sectionNavigation.getByRole('button', { name: 'Preventas' })).toBeInTheDocument();
+    expect(sectionNavigation.getByRole('button', { name: 'Quests' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('navigation', { name: 'Cuenta y compra' })).getByRole('button', {
+        name: 'Loyalty',
+      }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Inicio Sergod Store' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Noticias' })).toBeInTheDocument();
   });

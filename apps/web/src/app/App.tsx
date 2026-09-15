@@ -579,7 +579,7 @@ function Registration({ navigate }: { readonly navigate: (route: Route) => void 
     }
   };
   return (
-    <main className="panel">
+    <main className="panel auth-panel visual-public">
       <p className="eyebrow">Cuenta Cliente</p>
       <h1>Crear cuenta</h1>
       <form onSubmit={(event) => void submit(event)}>
@@ -637,7 +637,7 @@ function Login({ navigate }: { readonly navigate: (route: Route) => void }) {
     }
   };
   return (
-    <main className="panel">
+    <main className="panel auth-panel visual-public">
       <p className="eyebrow">Acceso</p>
       <h1>Iniciar sesión</h1>
       <form onSubmit={(event) => void submit(event)}>
@@ -689,7 +689,7 @@ function EmailCallback({ kind }: { readonly kind: 'cambio' | 'confirmación' }) 
     })();
   }, [kind]);
   return (
-    <main className="panel">
+    <main className="panel auth-panel visual-public">
       <p className="eyebrow">Correo verificado</p>
       <h1>{kind === 'confirmación' ? 'Confirmar registro' : 'Confirmar cambio de correo'}</h1>
       <Status message={message} />
@@ -709,7 +709,7 @@ function Recovery({ navigate }: { readonly navigate: (route: Route) => void }) {
     }
   };
   return (
-    <main className="panel">
+    <main className="panel auth-panel visual-public">
       <p className="eyebrow">Seguridad</p>
       <h1>Recuperar acceso</h1>
       <form onSubmit={(event) => void submit(event)}>
@@ -754,7 +754,7 @@ function RecoveryCallback({ navigate }: { readonly navigate: (route: Route) => v
     }
   };
   return (
-    <main className="panel">
+    <main className="panel auth-panel visual-public">
       <p className="eyebrow">Seguridad</p>
       <h1>Definir contraseña nueva</h1>
       <form onSubmit={(event) => void submit(event)}>

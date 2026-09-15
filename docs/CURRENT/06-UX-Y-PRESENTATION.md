@@ -16,7 +16,8 @@ ni su nombre accesible.
 
 El encabezado principal aparece al entrar a una sección: Inicio, Tienda, Torneos, Noticias, Comunidad
 y Cómics/Historias; cuenta y carrito permanecen disponibles. Preventas, Loyalty y Quests conservan
-páginas propias aunque no saturen la navegación primaria.
+páginas propias y acceso directo. La cabecera adapta todos los destinos a un menú compacto antes de que
+puedan envolverse, comprimirse o interferir con el contenido.
 
 El lanzador puede usar movimiento expresivo para presentar y seleccionar destinos. Las páginas de
 compra, cuenta y operación usan transiciones más breves: la animación nunca retrasa una acción ni

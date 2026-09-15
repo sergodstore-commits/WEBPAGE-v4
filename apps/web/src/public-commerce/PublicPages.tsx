@@ -497,7 +497,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
     }
   };
   return (
-    <main className="page-frame store-page visual-public">
+    <main className={`page-frame store-page ${view}-store-page visual-public`}>
       <header className="section-heading catalog-heading cut-panel">
         <AppearanceElement id="shop-heading-copy">
           <div>
@@ -514,8 +514,8 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
         </AppearanceElement>
         <AppearanceElement id="shop-heading-stats">
           <div aria-label="Garantías del catálogo" className="heading-stats">
-            <span>Stock confirmado</span>
-            <span>Precio de servidor</span>
+            <span>{view === 'preorders' ? 'Cupos confirmados' : 'Stock confirmado'}</span>
+            <span>{view === 'preorders' ? 'Precio de reserva' : 'Precio de servidor'}</span>
           </div>
         </AppearanceElement>
       </header>
@@ -657,9 +657,22 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
           )}
           {!loading && items.length === 0 && (
             <section className="catalog-empty cut-panel" role="status">
-              <p className="eyebrow">Catálogo sin resultados</p>
-              <h2>No hay productos para mostrar</h2>
-              <p>Revisa los filtros o intenta nuevamente cuando el catálogo esté disponible.</p>
+              <p className="eyebrow">
+                {view === 'preorders' ? 'Próximos lanzamientos' : 'Catálogo sin resultados'}
+              </p>
+              <h2>
+                {view === 'preorders'
+                  ? 'No hay preventas para mostrar'
+                  : 'No hay productos para mostrar'}
+              </h2>
+              <p>
+                {view === 'preorders'
+                  ? 'Las nuevas reservas aparecerán aquí cuando sus campañas estén publicadas.'
+                  : 'Revisa los filtros o intenta nuevamente cuando el catálogo esté disponible.'}
+              </p>
+              <a className="button-link secondary-link" href="/">
+                Volver al lanzador
+              </a>
             </section>
           )}
           <section className="card-grid" aria-label="Productos">
@@ -1154,8 +1167,8 @@ export function TournamentPage({
         </AppearanceElement>
         <AppearanceElement id="tournaments-heading-stats">
           <div aria-label="Características de la sección" className="heading-stats">
-            <span>Información oficial</span>
-            <span>Resultados y fotos</span>
+            <span>{view === 'quests' ? 'Desafíos oficiales' : 'Información oficial'}</span>
+            <span>{view === 'quests' ? 'Eventos y misiones' : 'Resultados y fotos'}</span>
           </div>
         </AppearanceElement>
       </header>
@@ -1193,7 +1206,8 @@ export function TournamentPage({
           )}
           {view === 'quests' && !content.failedTypes.includes('QUEST') && (
             <TournamentEditorialSection
-              empty="Aún no hay Eventos o Quests publicados."
+              empty="Todavía no hay desafíos publicados."
+              eyebrow="Tablero de desafíos"
               items={content.quests}
               onSelect={setSelected}
               section="quests"
@@ -1217,12 +1231,14 @@ export function TournamentPage({
 
 function TournamentEditorialSection({
   empty,
+  eyebrow = 'Archivo oficial',
   items,
   onSelect,
   section,
   title,
 }: {
   readonly empty: string;
+  readonly eyebrow?: string;
   readonly items: readonly EditorialEntry[];
   readonly onSelect: (item: EditorialEntry) => void;
   readonly section: TournamentSection;
@@ -1231,7 +1247,7 @@ function TournamentEditorialSection({
   return (
     <section aria-labelledby={`tournament-${section}`} className="tournament-section cut-panel">
       <div className="tournament-section-heading">
-        <p className="eyebrow">Archivo oficial</p>
+        <p className="eyebrow">{eyebrow}</p>
         <h2 id={`tournament-${section}`}>{title}</h2>
       </div>
       {items.length > 0 ? (

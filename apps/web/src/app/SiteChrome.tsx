@@ -11,7 +11,9 @@ interface SiteChromeProps {
 const publicRoutes: readonly { readonly label: string; readonly route: Route }[] = [
   { label: 'Inicio', route: '/' },
   { label: 'Tienda', route: '/shop' },
+  { label: 'Preventas', route: '/preorders' },
   { label: 'Torneos', route: '/tournaments' },
+  { label: 'Quests', route: '/quests' },
   { label: 'Noticias', route: '/news' },
   { label: 'Comunidad', route: '/community' },
   { label: 'Cómics', route: '/comics' },
@@ -83,6 +85,13 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
           </nav>
           <nav aria-label="Cuenta y compra" className="utility-navigation">
             <button
+              aria-current={route === '/loyalty' ? 'page' : undefined}
+              onClick={() => go('/loyalty')}
+              type="button"
+            >
+              Loyalty
+            </button>
+            <button
               aria-current={route === '/cart' ? 'page' : undefined}
               className="cart-link"
               onClick={() => go('/cart')}
@@ -140,6 +149,15 @@ export function SiteFooter({ navigate }: Pick<SiteChromeProps, 'navigate'>) {
         </button>
         <button onClick={() => navigate('/tournaments')} type="button">
           Torneos
+        </button>
+        <button onClick={() => navigate('/preorders')} type="button">
+          Preventas
+        </button>
+        <button onClick={() => navigate('/quests')} type="button">
+          Quests
+        </button>
+        <button onClick={() => navigate('/loyalty')} type="button">
+          Loyalty
         </button>
         <button onClick={() => navigate('/account/overview')} type="button">
           Mi cuenta
