@@ -2296,57 +2296,165 @@ textarea {
   gap: 1.5rem;
 }
 .community-hub {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  gap: 1rem;
-  width: min(calc(100% - 2rem), var(--content));
-  margin: 1.5rem auto 0;
+  gap: 1.15rem;
+  width: min(calc(100% - 2rem), 94rem);
+  min-height: calc(100svh - 7rem);
+  margin: clamp(4.6rem, 8vw, 7rem) auto 2rem;
+  padding: clamp(1rem, 2vw, 1.8rem);
+  border: 2px solid rgb(205 248 255 / 90%);
+  border-radius: 0.8rem;
+  background:
+    linear-gradient(108deg, rgb(0 229 231 / 13%), transparent 24% 76%, rgb(0 229 231 / 8%)),
+    repeating-linear-gradient(125deg, transparent 0 5rem, rgb(255 255 255 / 3%) 5rem 5.1rem),
+    linear-gradient(rgb(2 9 13 / 90%), rgb(1 5 8 / 97%)),
+    url('/assets/sergod/ui/sheet_03/pattern_03.webp') center / 44rem auto;
+  box-shadow:
+    inset 0 0 7rem #000,
+    inset 0 0 0 2px rgb(0 229 231 / 13%),
+    0 0 1.2rem rgb(0 229 231 / 22%);
+  overflow: visible;
+}
+.community-hub::before {
+  content: 'COMUNIDAD';
+  position: absolute;
+  z-index: 3;
+  bottom: calc(100% + 0.15rem);
+  left: clamp(1rem, 6vw, 6rem);
+  color: var(--paper);
+  font-family: var(--display-font);
+  font-size: clamp(2.4rem, 6vw, 6rem);
+  font-style: italic;
+  font-weight: 1000;
+  letter-spacing: -0.05em;
+  line-height: 0.75;
+  text-shadow:
+    0.08em 0.07em 0 #00151d,
+    0.14em 0.12em 0 #008fa6;
+  transform: rotate(-3deg) skew(-8deg);
+}
+.community-hub::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -3rem -1rem auto 32%;
+  height: 8rem;
+  background:
+    repeating-radial-gradient(circle, rgb(0 229 231 / 25%) 0 2px, transparent 2px 9px),
+    linear-gradient(
+      168deg,
+      transparent 0 34%,
+      var(--cyan) 35% 40%,
+      #00151d 41% 61%,
+      transparent 62%
+    );
+  clip-path: polygon(4% 38%, 100% 0, 88% 50%, 100% 77%, 29% 100%, 35% 69%, 0 83%);
+  opacity: 0.75;
 }
 .community-hub > .page-frame {
   width: 100%;
   margin: 0;
+  padding: clamp(0.8rem, 1.5vw, 1.35rem);
+  border: 1px solid rgb(0 229 231 / 34%);
+  background: rgb(1 5 8 / 73%);
+  box-shadow: inset 0 0 2.5rem rgb(0 0 0 / 72%);
 }
 .community-hub-header {
-  position: sticky;
-  z-index: 12;
-  top: 0.5rem;
+  position: relative;
+  z-index: 2;
   display: grid;
-  grid-template-columns: minmax(12rem, 0.45fr) minmax(26rem, 1.55fr);
-  gap: 1rem;
+  gap: 0.55rem;
   align-items: center;
-  padding: 0.8rem 1rem;
-  border: 2px solid var(--sergod-edge);
-  border-left: 0.35rem solid var(--red);
-  background: linear-gradient(105deg, rgb(226 29 47 / 18%), transparent 36%), rgb(8 9 11 / 96%);
-  box-shadow: 0.45rem 0.45rem 0 #050607;
-  backdrop-filter: blur(10px);
-  clip-path: polygon(0 0, calc(100% - 1.25rem) 0, 100% 1.25rem, 100% 100%, 0 100%);
+  padding: 0.4rem clamp(0.35rem, 2vw, 1.5rem) 0;
+  background:
+    radial-gradient(circle at 50% 40%, rgb(0 229 231 / 18%), transparent 37%),
+    linear-gradient(
+      118deg,
+      transparent 0 15%,
+      rgb(0 229 231 / 8%) 15% 18%,
+      transparent 18% 82%,
+      rgb(0 229 231 / 8%) 82% 85%,
+      transparent 85%
+    );
 }
-.community-hub-header h1,
-.community-hub-header p {
+.community-hub-title {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  min-height: clamp(8rem, 19vw, 15rem);
+  align-content: center;
+}
+.community-hub-title::before,
+.community-hub-title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 28%;
+  height: 65%;
+  background: repeating-linear-gradient(
+    145deg,
+    transparent 0 1.2rem,
+    rgb(0 229 231 / 15%) 1.2rem 1.4rem
+  );
+  transform: translateY(-50%);
+}
+.community-hub-title::before {
+  left: 0;
+  clip-path: polygon(0 0, 100% 30%, 57% 51%, 100% 79%, 0 100%);
+}
+.community-hub-title::after {
+  right: 0;
+  clip-path: polygon(100% 0, 0 30%, 43% 51%, 0 79%, 100% 100%);
+}
+.community-hub-title img {
+  position: relative;
+  z-index: 1;
+  width: min(74%, 58rem);
+  max-height: 11rem;
+  object-fit: contain;
+  filter: brightness(1.08) drop-shadow(0 0.7rem 0.35rem #000)
+    drop-shadow(0 0 1rem rgb(0 229 231 / 25%));
+}
+.community-hub-title p {
+  position: relative;
+  z-index: 2;
   margin: 0;
-}
-.community-hub-header h1 {
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  margin-top: clamp(-1.5rem, -2vw, -0.65rem);
+  color: var(--cyan);
+  font-family: var(--display-font);
+  font-size: clamp(0.8rem, 2vw, 1.5rem);
+  font-style: italic;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-shadow: 0.1em 0.1em 0 #000;
+  text-transform: uppercase;
+  transform: skew(-8deg);
 }
 .community-hub-tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: clamp(0.3rem, 0.8vw, 0.7rem);
 }
 .community-hub-tabs button {
-  min-height: 2.75rem;
-  background: #121418;
+  min-height: 3.4rem;
+  border: 2px solid #49535c;
+  background: linear-gradient(105deg, #1b2127, #070a0d 72%);
   font-family: var(--display-font);
-  font-size: 0.78rem;
+  font-size: clamp(0.72rem, 1.35vw, 1rem);
   font-style: italic;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 88%);
 }
 .community-hub-tabs button[aria-current='page'] {
   border-color: var(--paper);
-  background: linear-gradient(105deg, var(--red) 0 74%, var(--red-dark) 74%);
+  background: linear-gradient(105deg, #063a46 0 70%, #00151d 70%);
+  color: var(--paper);
   box-shadow:
     inset 0 -0.2rem 0 var(--cyan),
+    0 0 0.9rem rgb(0 229 231 / 62%),
     0.2rem 0.2rem 0 #000;
 }
 .community-page > .status {
@@ -2355,12 +2463,24 @@ textarea {
 @media (max-width: 760px) {
   .community-hub {
     width: min(calc(100% - 1.25rem), var(--content));
-    margin-top: 0.8rem;
+    min-height: 0;
+    margin-top: 4.2rem;
+    padding: 0.65rem;
+  }
+  .community-hub::before {
+    left: 0.6rem;
+    font-size: clamp(2rem, 13vw, 3.4rem);
   }
   .community-hub-header {
     position: relative;
     top: auto;
     grid-template-columns: 1fr;
+  }
+  .community-hub-title {
+    min-height: 7.5rem;
+  }
+  .community-hub-title img {
+    width: min(100%, 32rem);
   }
   .community-hub-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));

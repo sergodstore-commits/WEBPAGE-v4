@@ -1643,9 +1643,10 @@ export function CommunityHub({
   return (
     <div className="community-hub visual-public">
       <header className="community-hub-header">
-        <div>
-          <p className="eyebrow">Todo Sergod en un solo lugar</p>
-          <h1>Comunidad</h1>
+        <div className="community-hub-title">
+          <img alt="" aria-hidden="true" src="/assets/sergod/home-launcher/community.webp" />
+          <h1 className="visually-hidden">Comunidad</h1>
+          <p>Juega, comparte y participa</p>
         </div>
         <nav aria-label="Secciones de Comunidad" className="community-hub-tabs">
           {sections.map((section) => (
