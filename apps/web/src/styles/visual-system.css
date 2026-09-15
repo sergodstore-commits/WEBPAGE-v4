@@ -2677,6 +2677,380 @@ html[data-route-transition='from-launcher']::view-transition-old(launcher-logo) 
   }
 }
 
+/* Portada final: escenario enmarcado y composición de lanzador aprobada por el propietario. */
+.launcher-shell {
+  min-height: 100svh;
+  padding: clamp(4.8rem, 8vh, 6.5rem) clamp(1rem, 2.3vw, 2.5rem) clamp(1rem, 2.3vw, 2.25rem);
+  background:
+    linear-gradient(
+      128deg,
+      rgb(226 29 47 / 34%) 0 10%,
+      transparent 10% 72%,
+      rgb(0 229 231 / 18%) 72%
+    ),
+    repeating-radial-gradient(circle at 14% 19%, rgb(255 255 255 / 12%) 0 1px, transparent 1px 8px),
+    linear-gradient(108deg, #300006 0 24%, #05070a 46% 63%, #001a22 100%);
+  box-shadow: inset 0 0 11rem #000;
+}
+
+.launcher-shell::before {
+  inset: 0;
+  background:
+    linear-gradient(
+      150deg,
+      transparent 0 13%,
+      rgb(226 29 47 / 74%) 13% 14%,
+      transparent 14% 79%,
+      rgb(0 229 231 / 48%) 79% 80%,
+      transparent 80%
+    ),
+    linear-gradient(
+      28deg,
+      transparent 0 34%,
+      rgb(255 255 255 / 7%) 34% 35%,
+      transparent 35% 72%,
+      rgb(226 29 47 / 18%) 72% 75%,
+      transparent 75%
+    ),
+    repeating-linear-gradient(118deg, transparent 0 5.5rem, rgb(255 255 255 / 3%) 5.5rem 5.65rem);
+  opacity: 0.92;
+}
+
+.launcher-shell::after {
+  inset: 0;
+  border: 0;
+  background:
+    linear-gradient(122deg, var(--red) 0 21%, transparent 21%) top left / 48% 0.45rem no-repeat,
+    linear-gradient(238deg, var(--cyan) 0 21%, transparent 21%) top right / 48% 0.45rem no-repeat,
+    linear-gradient(90deg, var(--red), transparent 42% 58%, var(--cyan)) bottom / 100% 0.28rem
+      no-repeat;
+}
+
+.launcher-frame {
+  position: absolute;
+  z-index: 2;
+  inset: clamp(4.55rem, 7.5vh, 6rem) clamp(0.8rem, 1.8vw, 2rem) clamp(0.8rem, 1.8vw, 1.8rem);
+  border: 2px solid rgb(207 248 255 / 88%);
+  border-radius: 0.8rem;
+  background:
+    linear-gradient(112deg, rgb(226 29 47 / 23%), transparent 28% 67%, rgb(0 229 231 / 12%)),
+    linear-gradient(rgb(1 3 6 / 28%), rgb(1 3 6 / 58%));
+  box-shadow:
+    inset 0 0 0 2px rgb(0 229 231 / 18%),
+    inset 0 0 6rem rgb(0 0 0 / 82%),
+    0 0 1.2rem rgb(0 229 231 / 22%);
+  pointer-events: none;
+}
+
+.launcher-frame::before,
+.launcher-frame::after {
+  content: '';
+  position: absolute;
+  inset-block: 10% 5%;
+  width: 28%;
+  opacity: 0.68;
+}
+
+.launcher-frame::before {
+  left: 0;
+  background: repeating-linear-gradient(
+    145deg,
+    transparent 0 1.25rem,
+    rgb(226 29 47 / 12%) 1.25rem 1.5rem
+  );
+  clip-path: polygon(0 0, 100% 19%, 54% 51%, 100% 86%, 0 100%);
+}
+
+.launcher-frame::after {
+  right: 0;
+  background: repeating-linear-gradient(
+    35deg,
+    transparent 0 1.25rem,
+    rgb(0 229 231 / 10%) 1.25rem 1.5rem
+  );
+  clip-path: polygon(100% 0, 0 19%, 46% 51%, 0 86%, 100% 100%);
+}
+
+.launcher-commandbar {
+  position: absolute;
+  z-index: 7;
+  top: clamp(4.8rem, 8vh, 6.3rem);
+  right: clamp(1.1rem, 2.4vw, 2.8rem);
+  left: clamp(1.1rem, 2.4vw, 2.8rem);
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: clamp(0.7rem, 1.4vw, 1.5rem);
+  min-height: 4.1rem;
+  padding: 0.35rem 0.65rem;
+  align-items: center;
+  border-bottom: 1px solid rgb(255 255 255 / 18%);
+  background: linear-gradient(90deg, rgb(1 3 5 / 96%), rgb(7 9 12 / 88%) 65%, rgb(1 3 5 / 96%));
+  box-shadow: 0 0.75rem 1.4rem rgb(0 0 0 / 46%);
+}
+
+.launcher-commandbar::before {
+  content: 'PORTADA';
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 0.5rem;
+  color: var(--paper);
+  font-family: var(--display-font);
+  font-size: clamp(1.7rem, 4vw, 4rem);
+  font-style: italic;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+  line-height: 0.72;
+  text-shadow:
+    0.1em 0.08em 0 #000,
+    0.16em 0.14em 0 var(--red-dark);
+  transform: rotate(-4deg) skew(-8deg);
+}
+
+.launcher-commandbar > img {
+  width: clamp(4.4rem, 7vw, 7.2rem);
+  max-height: 3.3rem;
+  object-fit: contain;
+}
+
+.launcher-current {
+  position: relative;
+  padding: 0.85rem 1.15rem 0.65rem;
+  color: var(--paper);
+  font-family: var(--display-font);
+  font-size: 0.78rem;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.launcher-current::after {
+  content: '';
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.25rem;
+  left: 0.7rem;
+  height: 0.22rem;
+  background: var(--red);
+  transform: skew(-18deg);
+}
+
+.launcher-commandbar > p {
+  margin: 0;
+  color: #aeb5c0;
+  font-size: clamp(0.62rem, 1vw, 0.78rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.launcher-utility {
+  position: static;
+  animation: launcher-utility-in 420ms 520ms ease-out both;
+}
+
+.launcher-menu {
+  inset: clamp(9.5rem, 17vh, 12rem) clamp(1.8rem, 3.5vw, 4rem) clamp(1.8rem, 4vh, 3.5rem);
+}
+
+.launcher-menu button {
+  width: clamp(15rem, 29vw, 31rem);
+  filter: drop-shadow(0 0.8rem 0.55rem rgb(0 0 0 / 78%));
+}
+
+.launcher-menu .launcher-entry-1 {
+  top: 43%;
+}
+
+.launcher-menu .launcher-entry-2 {
+  top: 67%;
+  width: clamp(14rem, 27vw, 29rem);
+}
+
+.launcher-menu .launcher-entry-3 {
+  top: 42%;
+}
+
+.launcher-menu .launcher-entry-4 {
+  top: 65%;
+  width: clamp(14rem, 27vw, 29rem);
+}
+
+.launcher-menu .launcher-entry-5 {
+  top: 82%;
+  width: clamp(13rem, 24vw, 26rem);
+}
+
+.launcher-center {
+  top: 47%;
+  width: min(37vw, 37rem);
+}
+
+.launcher-center::before {
+  inset: -20% -22%;
+  border: 0;
+  background:
+    radial-gradient(circle, rgb(226 29 47 / 33%), transparent 57%),
+    repeating-conic-gradient(from 7deg, rgb(0 229 231 / 11%) 0 2deg, transparent 2deg 12deg);
+  clip-path: polygon(
+    50% 0,
+    58% 29%,
+    91% 6%,
+    73% 38%,
+    100% 50%,
+    69% 60%,
+    91% 94%,
+    58% 72%,
+    50% 100%,
+    41% 72%,
+    8% 94%,
+    31% 60%,
+    0 50%,
+    29% 38%,
+    9% 6%,
+    42% 29%
+  );
+  opacity: 0.72;
+}
+
+.launcher-logo {
+  width: min(100%, 34rem);
+  margin: 0;
+  filter: drop-shadow(0 0.9rem 0.35rem #000) drop-shadow(0 0 1.9rem rgb(0 229 231 / 31%));
+}
+
+.launcher-center h1 {
+  margin-top: -0.2rem;
+  padding: 0.4rem 1.5rem;
+  background: rgb(2 4 7 / 82%);
+  clip-path: polygon(5% 0, 100% 0, 94% 100%, 0 82%);
+}
+
+.launcher-side-copy {
+  position: absolute;
+  z-index: 3;
+  top: 27%;
+  margin: 0;
+  color: rgb(255 255 255 / 38%);
+  font-family: var(--display-font);
+  font-size: clamp(0.75rem, 1.45vw, 1.35rem);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1.05;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+}
+
+.launcher-side-copy-left {
+  left: clamp(2.5rem, 5vw, 5.5rem);
+}
+
+.launcher-side-copy-right {
+  right: clamp(2.5rem, 5vw, 5.5rem);
+  text-align: right;
+  transform: rotate(7deg);
+}
+
+@media (max-width: 900px) and (min-width: 641px) {
+  .launcher-commandbar > p {
+    display: none;
+  }
+
+  .launcher-commandbar {
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .launcher-utility {
+    justify-self: end;
+  }
+
+  .launcher-center {
+    width: min(31vw, 20rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .launcher-shell {
+    gap: 1rem;
+    align-content: start;
+    padding: 7.4rem 0.75rem 1.1rem;
+  }
+
+  .launcher-frame {
+    inset: 5.7rem 0.45rem 0.45rem;
+    border-radius: 0.55rem;
+  }
+
+  .launcher-commandbar {
+    top: 5.95rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    grid-template-columns: auto 1fr;
+    min-height: 3.35rem;
+    padding: 0.25rem 0.4rem;
+  }
+
+  .launcher-commandbar::before {
+    bottom: calc(100% + 0.55rem);
+    font-size: 2rem;
+  }
+
+  .launcher-commandbar > img {
+    width: 4.4rem;
+    max-height: 2.7rem;
+  }
+
+  .launcher-current,
+  .launcher-commandbar > p,
+  .launcher-side-copy {
+    display: none;
+  }
+
+  .launcher-utility {
+    position: static;
+    gap: 0.25rem;
+    justify-self: end;
+  }
+
+  .launcher-utility button {
+    min-height: 2.75rem;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.6rem;
+  }
+
+  .launcher-cart img {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  .launcher-center {
+    order: 1;
+    width: min(90%, 22rem);
+    margin-top: 1.8rem;
+  }
+
+  .launcher-logo {
+    width: min(100%, 15rem);
+  }
+
+  .launcher-menu {
+    order: 2;
+    gap: 0.35rem;
+    padding-bottom: 0.7rem;
+  }
+
+  .launcher-menu .launcher-entry,
+  .launcher-menu .launcher-entry-5 {
+    width: 100%;
+    min-height: 3.75rem;
+  }
+
+  .launcher-menu .launcher-entry-5 {
+    width: calc(62% - 0.2rem);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .launcher-shell::before,
   .launcher-shell::after,

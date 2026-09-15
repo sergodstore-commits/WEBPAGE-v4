@@ -452,26 +452,48 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
       <main className="home-page launcher-home visual-public">
         <section aria-label="Inicio Sergod Store" className="launcher-shell">
           <AppearanceLayers layers={appearance.home.layers} />
-          <div aria-label="Cuenta y compra" className="launcher-utility" role="navigation">
-            {authenticated ? (
-              <button onClick={() => navigate('/account/overview')} type="button">
-                Mi cuenta
+          <div className="launcher-frame" aria-hidden="true" />
+          <div className="launcher-commandbar">
+            <img
+              alt=""
+              aria-hidden="true"
+              src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
+            />
+            <span className="launcher-current">Inicio</span>
+            <p>Juega · colecciona · conéctate</p>
+            <div aria-label="Cuenta y compra" className="launcher-utility" role="navigation">
+              {authenticated ? (
+                <button onClick={() => navigate('/account/overview')} type="button">
+                  Mi cuenta
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => navigate('/login')} type="button">
+                    Ingresar
+                  </button>
+                  <button className="secondary" onClick={() => navigate('/register')} type="button">
+                    Registro
+                  </button>
+                </>
+              )}
+              <button className="launcher-cart" onClick={() => navigate('/cart')} type="button">
+                <img alt="" aria-hidden="true" src="/assets/sergod/ui/sheet_03/ui_badge_06.webp" />
+                <span>Carrito</span>
               </button>
-            ) : (
-              <>
-                <button onClick={() => navigate('/login')} type="button">
-                  Ingresar
-                </button>
-                <button className="secondary" onClick={() => navigate('/register')} type="button">
-                  Registro
-                </button>
-              </>
-            )}
-            <button className="launcher-cart" onClick={() => navigate('/cart')} type="button">
-              <img alt="" aria-hidden="true" src="/assets/sergod/ui/sheet_03/ui_badge_06.webp" />
-              <span>Carrito</span>
-            </button>
+            </div>
           </div>
+          <p aria-hidden="true" className="launcher-side-copy launcher-side-copy-left">
+            Juega
+            <br />
+            Colecciona
+            <br />
+            Conéctate
+          </p>
+          <p aria-hidden="true" className="launcher-side-copy launcher-side-copy-right">
+            Más que
+            <br />
+            una tienda
+          </p>
           <div className="launcher-center">
             <img
               alt="Sergod Store"
