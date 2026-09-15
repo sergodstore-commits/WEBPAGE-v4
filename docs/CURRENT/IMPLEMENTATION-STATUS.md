@@ -621,6 +621,13 @@
   recursos persistentes, medios editoriales, preventas, Loyalty y configuración. No se publicaron fixtures
   en producción: la Preview vigente reenvía `/api` al servicio productivo y el contenido comercial real
   continúa siendo carga operativa del propietario.
+- Vercel dejó el commit `797fef3` en estado `Ready` mediante la Preview
+  `sergod-store-v4-lcx3qc3le-sergod-store.vercel.app`. El smoke remoto repitió los ocho destinos y confirmó
+  las cuatro animaciones, cero imágenes rotas, cero desbordamiento horizontal y cero errores de consola.
+  Producción permanece sin promover.
+- La revisión responsive remota a 390×844 px mostró los ocho accesos completos, sin desbordamiento ni
+  imágenes rotas. Detectó que el chip para retirar el filtro fijo de Tienda/Preventas medía 36 px de alto;
+  se elevó a 44 px y la repetición local confirmó cero acciones visibles por debajo del mínimo táctil.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 
