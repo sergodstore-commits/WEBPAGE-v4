@@ -396,6 +396,19 @@ describe('public editorial sections', () => {
             editorialEntryId: '0198a8be-6677-7000-8000-000000000101',
             excerpt: 'Próxima fecha.',
             metadata: {
+              document: {
+                blocks: [
+                  {
+                    altText: 'Portada de Copa Sergod',
+                    id: '0198a8be-6677-7000-8000-000000000106',
+                    placement: 'CENTER',
+                    resourceId: '0198a8be-6677-7000-8000-000000000106',
+                    type: 'IMAGE',
+                    width: 'LARGE',
+                  },
+                ],
+                version: 1,
+              },
               event: { startsAt: '2026-10-10T18:00:00-03:00', status: 'UPCOMING' },
             },
             slug: 'copa-sergod',
@@ -447,6 +460,10 @@ describe('public editorial sections', () => {
     expect(screen.queryByRole('heading', { name: 'Eventos y Quests' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeInTheDocument();
     expect(screen.getByText('Copa Sergod')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Portada de Copa Sergod' })).toHaveAttribute(
+      'src',
+      '/api/v1/catalog/resources/0198a8be-6677-7000-8000-000000000106/content',
+    );
     expect(screen.getByText('Liga de agosto')).toBeInTheDocument();
     expect(screen.getByText('Torneo histórico')).toBeInTheDocument();
     expect(screen.queryByText('Quest Sergod')).not.toBeInTheDocument();

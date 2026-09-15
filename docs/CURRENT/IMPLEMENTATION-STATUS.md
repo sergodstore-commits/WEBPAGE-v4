@@ -674,6 +674,10 @@
 - La prueba expuso dos defectos y los corrigió: la limpieza ahora también archiva borradores interrumpidos,
   y una imagen editorial que no cumple el contrato deja de presentarse localmente como error interno 500
   para responder como validación 422. El primer borrador incompleto también quedó archivado.
+- Una segunda aceptación trazable (`ACCEPT-VISUAL-20260915131231`) confirmó que Noticias, Comunidad y
+  Cómics mostraban las imágenes persistidas, pero detectó que las tarjetas de Torneos y Quests las omitían.
+  Ambas tarjetas renderizan ahora su portada y la prueba focal protege el vínculo al recurso; la segunda
+  tanda también quedó archivada en su totalidad.
 - Tipos, lint, compilación completa, 19 pruebas focales y las 102 pruebas web aprobaron. Vercel dejó el
   commit `6632c52` en estado `Ready` mediante
   `sergod-store-v4-he7t1dmwo-sergod-store.vercel.app`; Noticias mostró allí su identidad y una publicación

@@ -1417,8 +1417,16 @@ function TournamentEditorialSection({
         <div className="editorial-grid">
           {items.map((item, index) => {
             const event = eventFromEditorial(item);
+            const cover = firstEditorialImage(item);
             return (
-              <article className="editorial-card" key={item.editorialEntryId}>
+              <article className="editorial-card tournament-card" key={item.editorialEntryId}>
+                {cover && (
+                  <img
+                    alt={cover.altText}
+                    className="tournament-card-cover"
+                    src={resourceUrl(cover.resourceId)}
+                  />
+                )}
                 <span aria-hidden="true" className="editorial-index">
                   {String(index + 1).padStart(2, '0')}
                 </span>
