@@ -659,6 +659,28 @@
   casos; formato, tipos y compilación web también aprobaron. Falta publicar una Preview remota y después
   realizar los recorridos persistentes con contenido real o fixtures remotos trazables.
 
+## Identidad individual y contenido visual persistente — 2026-09-15
+
+- Tienda, Preventas, Torneos, Quests, Noticias, Comunidad y Cómics reciben composiciones propias:
+  fondos, siluetas, cortes, acentos, rótulos y ritmos de tarjeta diferentes. El movimiento ambiental
+  continúa durante el reposo y se desactiva íntegramente con `prefers-reduced-motion`.
+- Los estados vacíos muestran ejemplos claramente rotulados con nombres y jerarquías representativas,
+  sin inventar precios, fechas, cupos, puntos ni publicaciones reales. Al existir registros publicados,
+  el contenido servido por el API reemplaza automáticamente esas maquetas.
+- La aceptación remota trazable `ACCEPT-VISUAL-20260915125306` creó y publicó temporalmente 2 torneos,
+  1 reconocimiento, 1 Quest, 1 noticia, 1 actividad de comunidad, 1 serie y 1 capítulo de cómic. Cada
+  registro recibió una imagen aprobada, sobrevivió una segunda lectura pública y luego fue archivado;
+  las ocho rutas de detalle devolvieron 404 después de la limpieza.
+- La prueba expuso dos defectos y los corrigió: la limpieza ahora también archiva borradores interrumpidos,
+  y una imagen editorial que no cumple el contrato deja de presentarse localmente como error interno 500
+  para responder como validación 422. El primer borrador incompleto también quedó archivado.
+- Tipos, lint, compilación completa, 19 pruebas focales y las 102 pruebas web aprobaron. Vercel dejó el
+  commit `6632c52` en estado `Ready` mediante
+  `sergod-store-v4-he7t1dmwo-sergod-store.vercel.app`; Noticias mostró allí su identidad y una publicación
+  con portada real antes de la limpieza. La revisión remota de los siete destinos a 390×844 px confirmó
+  cero desbordamiento, cero imágenes rotas y cero controles visibles menores de 44 px; en escritorio no
+  hubo errores de consola. Producción permanece sin promover.
+
 ## `DEFERRED_EXTERNAL` — no son PASS
 
 No quedan comprobaciones externas diferidas por falta de credenciales. La creación y aceptación
