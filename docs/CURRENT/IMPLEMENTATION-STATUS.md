@@ -628,6 +628,16 @@
 - La revisión responsive remota a 390×844 px mostró los ocho accesos completos, sin desbordamiento ni
   imágenes rotas. Detectó que el chip para retirar el filtro fijo de Tienda/Preventas medía 36 px de alto;
   se elevó a 44 px y la repetición local confirmó cero acciones visibles por debajo del mínimo táctil.
+- Vercel dejó la corrección `abdcccf` en estado `Ready` en
+  `sergod-store-v4-ku1atq0gx-sergod-store.vercel.app`; Tienda a 390×844 px confirmó cero acciones menores
+  de 44 px, cero imágenes rotas y cero desbordamiento. Producción continúa sin promover.
+- La sesión Admin productiva permaneció activa y permitió recorrer en modo lectura los 14 módulos del menú
+  administrativo. Todos mostraron su encabezado y espacio de trabajo, sin desbordamiento ni errores de
+  consola; el panel lateral quedó visible con 14 enlaces a 1440 px.
+- `remote-client-account-acceptance.ps1` volvió a aprobar contra la API oficial: cuenta CLIENTE activa y
+  verificada, preferencias legibles, 0 pedidos regulares, 0 preventas y 0 movimientos Loyalty. El runner
+  acepta ahora una ruta explícita al archivo de entorno para usar `.runtime/codex/sergod-production.env`
+  sin copiar secretos a `.env` ni exponerlos en la salida.
 
 ## `DEFERRED_EXTERNAL` — no son PASS
 

@@ -1,5 +1,6 @@
 param(
   [string]$ApiBaseUrl = '',
+  [string]$EnvironmentPath = '',
   [string]$ExpectedHost = 'sergod-store-api-v4.onrender.com'
 )
 
@@ -9,7 +10,11 @@ $ErrorActionPreference = 'Stop'
 $OutputEncoding = [Console]::OutputEncoding
 
 $repositoryRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$environmentPath = Join-Path $repositoryRoot '.env'
+if ([string]::IsNullOrWhiteSpace($EnvironmentPath)) {
+  $EnvironmentPath = Join-Path $repositoryRoot '.env'
+} elseif (-not [System.IO.Path]::IsPathRooted($EnvironmentPath)) {
+  $EnvironmentPath = Join-Path $repositoryRoot $EnvironmentPath
+}
 
 function Read-DotEnv {
   param([string]$Path)
@@ -75,7 +80,7 @@ function Assert-Page {
   if ($null -eq $Page.PSObject.Properties['nextCursor']) { throw "$Kind did not return nextCursor." }
 }
 
-$configuration = Read-DotEnv -Path $environmentPath
+$configuration = Read-DotEnv -Path $EnvironmentPath
 if ([string]::IsNullOrWhiteSpace($ApiBaseUrl)) { $ApiBaseUrl = [string]$configuration.API_PUBLIC_URL }
 $apiUri = [Uri]$ApiBaseUrl
 if ($apiUri.Scheme -ne 'https' -or $apiUri.Host -ne $ExpectedHost) {
