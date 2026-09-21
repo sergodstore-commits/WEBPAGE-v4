@@ -662,7 +662,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
             <p className="eyebrow">
               {view === 'preorders' ? 'Próximos lanzamientos' : 'Tienda TCG'}
             </p>
-            <h1>{view === 'preorders' ? 'Preventas' : 'Catálogo'}</h1>
+            <h1>{view === 'preorders' ? 'Preventas' : 'Tienda'}</h1>
             <p>
               {view === 'preorders'
                 ? 'Reserva productos antes de su lanzamiento y revisa sus fechas, cupos y condiciones.'
@@ -1646,7 +1646,6 @@ export function CommunityHub({
         <div className="community-hub-title">
           <img alt="" aria-hidden="true" src="/assets/sergod/home-launcher/community.webp" />
           <h1 className="visually-hidden">Comunidad</h1>
-          <p>Juega, comparte y participa</p>
         </div>
         <nav aria-label="Secciones de Comunidad" className="community-hub-tabs">
           {sections.map((section) => (

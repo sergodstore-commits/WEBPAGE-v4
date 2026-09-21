@@ -3,6 +3,11 @@
 - `approved/`: única fuente de assets visuales aprobados para producción.
 - `source-existing/`: assets heredados del proyecto anterior; útiles como materia prima, pero **no aprobados automáticamente**.
 - `references/`: composiciones/mockups de referencia; no deben publicarse como assets finales por defecto.
+- `references/visual-v2/`: dirección visual nueva solicitada por el propietario. Las 22 maquetas
+  están en `deliverables/SERGOD-STORE-REFERENCIAS-VISUALES-V1/`; la portada empieza a reconstruirse
+  en HTML/CSS con capas independientes. Tienda y Preventas se están adaptando con datos reales,
+  controles y tarjetas independientes; las maquetas no se usan como fondos ni publicaciones.
+  Esta propuesta aún no reemplaza `approved/`.
 - `elementos-pagina1-hq-4x/`: respaldo técnico 4× de la lámina `sheet_03`, con manifiesto e índices de localización. Se conserva como fuente; no se copia completo al sitio ni convierte sus rótulos horneados en contenido público.
 - `manifest/`: procedencia y SHA-256.
 

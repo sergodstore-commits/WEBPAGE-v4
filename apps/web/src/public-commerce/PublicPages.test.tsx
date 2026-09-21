@@ -113,6 +113,21 @@ function homeEditorial(title: string, type: 'NEWS' | 'TOURNAMENT') {
 }
 
 describe('public Store cart action', () => {
+  it('keeps distinct shop and preorder titles while showing only server products', async () => {
+    vi.mocked(publicRequest).mockResolvedValue({ items: [], nextCursor: null } as never);
+
+    const shop = render(<StorePage />);
+    expect(screen.getByRole('heading', { name: 'Tienda', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('search')).toBeInTheDocument();
+    expect(await screen.findByText('No hay productos para mostrar')).toBeInTheDocument();
+    shop.unmount();
+
+    render(<StorePage view="preorders" />);
+    expect(screen.getByRole('heading', { name: 'Preventas', level: 1 })).toBeInTheDocument();
+    expect(await screen.findByText('No hay preventas para mostrar')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Agregar al carrito' })).not.toBeInTheDocument();
+  });
+
   it('keeps the long filter form collapsed initially on mobile', async () => {
     vi.stubGlobal(
       'matchMedia',

@@ -47,30 +47,32 @@ describe('IdentityAccess presentation', () => {
 
   it('presents the public commerce home while preserving account access', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /elige tu destino/i })).toBeInTheDocument();
-    expect(document.querySelector('.launcher-logo')).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: 'Sergod Store' })).toBeInTheDocument();
+    expect(document.querySelector('.launch-v2__hero-logo')).toHaveAttribute(
       'src',
       '/assets/sergod/logo_sergod_store_oficial_transparente.webp',
     );
-    expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Registro' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cuenta' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Carrito' })).toBeInTheDocument();
     expect(
       screen.queryByRole('navigation', { name: 'Navegación principal' }),
     ).not.toBeInTheDocument();
     const launcher = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
-    for (const label of ['Tienda', 'Preventas', 'Comunidad', 'Puntos Sergod', 'Cómics']) {
-      expect(launcher.getByRole('button', { name: new RegExp(label, 'i') })).toBeInTheDocument();
+    for (const label of ['Tienda', 'Preventas', 'Noticias', 'Torneos', 'Comunidad']) {
+      expect(launcher.getByRole('button', { name: label })).toBeInTheDocument();
     }
-    expect(launcher.queryByRole('button', { name: /^Noticias$/i })).not.toBeInTheDocument();
-    expect(launcher.queryByRole('button', { name: /^Torneos$/i })).not.toBeInTheDocument();
+    expect(
+      launcher.queryByRole('button', { name: /puntos sergod|cómics/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/juega|colecciona|conéctate|más que un juego/i),
+    ).not.toBeInTheDocument();
   });
 
   it('uses the launcher as the home navigation and restores the regular header inside sections', () => {
     render(<App />);
-    const launcher = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
-
-    fireEvent.click(launcher.getByRole('button', { name: /Comunidad/i }));
+    const topNavigation = within(screen.getByRole('navigation', { name: 'Navegación de portada' }));
+    fireEvent.click(topNavigation.getByRole('button', { name: 'Comunidad' }));
 
     const sectionNavigation = within(
       screen.getByRole('navigation', { name: 'Navegación principal' }),
@@ -80,11 +82,8 @@ describe('IdentityAccess presentation', () => {
       'aria-current',
       'page',
     );
-    expect(
-      within(screen.getByRole('navigation', { name: 'Cuenta y compra' })).getByRole('button', {
-        name: 'Puntos Sergod',
-      }),
-    ).toBeInTheDocument();
+    expect(sectionNavigation.getByRole('button', { name: 'Noticias' })).toBeInTheDocument();
+    expect(sectionNavigation.getByRole('button', { name: 'Torneos' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Inicio Sergod Store' })).not.toBeInTheDocument();
     const communityNavigation = within(
       screen.getByRole('navigation', { name: 'Secciones de Comunidad' }),
@@ -103,15 +102,15 @@ describe('IdentityAccess presentation', () => {
 
   it('offers only verified email login and exposes no phone authentication controls', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cuenta' }));
     expect(screen.getByLabelText('Correo verificado')).toBeInTheDocument();
     expect(screen.queryByText(/teléfono verificado/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/código SMS/i)).not.toBeInTheDocument();
   });
 
   it('keeps phone optional during registration', () => {
+    window.history.replaceState({}, '', '/register');
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Registro' }));
     expect(screen.getByLabelText('Teléfono opcional (E.164)')).not.toBeRequired();
   });
 
@@ -181,9 +180,9 @@ describe('IdentityAccess presentation', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /elige tu destino/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Sergod Store' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Volver al inicio' }));
-    expect(screen.getByRole('heading', { name: /elige tu destino/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sergod Store' })).toBeInTheDocument();
   });
 
   it('does not mount account tools for an anonymous direct visit', () => {

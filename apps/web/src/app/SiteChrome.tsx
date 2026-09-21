@@ -13,7 +13,8 @@ const publicRoutes: readonly { readonly label: string; readonly route: Route }[]
   { label: 'Tienda', route: '/shop' },
   { label: 'Preventas', route: '/preorders' },
   { label: 'Comunidad', route: '/community' },
-  { label: 'Cómics', route: '/comics' },
+  { label: 'Torneos', route: '/tournaments' },
+  { label: 'Noticias', route: '/news' },
 ];
 
 export function SiteChrome({ navigate, route }: SiteChromeProps) {
@@ -73,8 +74,7 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
               <button
                 aria-current={
                   route === item.route ||
-                  (item.route === '/community' &&
-                    ['/community/visit', '/news', '/quests', '/tournaments'].includes(route))
+                  (item.route === '/community' && ['/community/visit', '/quests'].includes(route))
                     ? 'page'
                     : undefined
                 }
@@ -87,13 +87,6 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
             ))}
           </nav>
           <nav aria-label="Cuenta y compra" className="utility-navigation">
-            <button
-              aria-current={route === '/loyalty' ? 'page' : undefined}
-              onClick={() => go('/loyalty')}
-              type="button"
-            >
-              Puntos Sergod
-            </button>
             <button
               aria-current={route === '/cart' ? 'page' : undefined}
               className="cart-link"
@@ -156,11 +149,11 @@ export function SiteFooter({ navigate }: Pick<SiteChromeProps, 'navigate'>) {
         <button onClick={() => navigate('/community')} type="button">
           Comunidad
         </button>
-        <button onClick={() => navigate('/loyalty')} type="button">
-          Puntos Sergod
+        <button onClick={() => navigate('/tournaments')} type="button">
+          Torneos
         </button>
-        <button onClick={() => navigate('/comics')} type="button">
-          Cómics
+        <button onClick={() => navigate('/news')} type="button">
+          Noticias
         </button>
         <button onClick={() => navigate('/account/overview')} type="button">
           Mi cuenta

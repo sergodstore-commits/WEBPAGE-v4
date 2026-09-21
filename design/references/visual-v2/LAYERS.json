@@ -1,0 +1,103 @@
+{
+  "status": "proposal",
+  "screens": [
+    {
+      "id": "portada",
+      "layers": [
+        "fondo-abstracto",
+        "rayos",
+        "trama",
+        "marco",
+        "barra-superior",
+        "logo-oficial",
+        "boton-tienda",
+        "boton-preventas",
+        "boton-noticias",
+        "boton-torneos",
+        "boton-comunidad",
+        "cuenta",
+        "carrito"
+      ]
+    },
+    {
+      "id": "tienda",
+      "layers": ["barra-superior", "titulo", "busqueda", "filtros", "tarjetas-producto", "carrito"]
+    },
+    {
+      "id": "producto",
+      "layers": [
+        "barra-superior",
+        "galeria",
+        "miniaturas",
+        "titulo",
+        "precio",
+        "disponibilidad",
+        "cantidad",
+        "boton-carrito",
+        "descripcion"
+      ]
+    },
+    {
+      "id": "preventas",
+      "layers": ["barra-superior", "titulo", "filtros", "tarjetas-preventa", "acciones"]
+    },
+    {
+      "id": "noticias",
+      "layers": ["barra-superior", "titulo", "noticia-destacada", "categorias", "tarjetas-noticia"]
+    },
+    {
+      "id": "torneos",
+      "layers": ["barra-superior", "titulo", "filtros", "torneo-destacado", "tarjetas-torneo"]
+    },
+    {
+      "id": "comunidad",
+      "layers": [
+        "barra-superior",
+        "titulo",
+        "pestanas-actividades-quests-visitanos",
+        "actividad-destacada",
+        "listado",
+        "visitanos"
+      ]
+    },
+    {
+      "id": "acceso-registro",
+      "layers": ["barra-superior", "marco-formulario", "pestanas", "campos", "acciones"]
+    },
+    {
+      "id": "cuenta",
+      "layers": ["barra-superior", "titulo", "navegacion-cuenta", "resumen", "pedidos"]
+    },
+    {
+      "id": "carrito",
+      "layers": [
+        "barra-superior",
+        "titulo",
+        "lineas-producto",
+        "cantidades",
+        "resumen",
+        "boton-checkout"
+      ]
+    },
+    {
+      "id": "checkout",
+      "layers": [
+        "barra-superior",
+        "pasos",
+        "datos",
+        "entrega",
+        "pago",
+        "resumen",
+        "accion-continuar"
+      ]
+    }
+  ],
+  "rules": [
+    "textos-en-html",
+    "botones-reales",
+    "logo-oficial-intacto",
+    "datos-desde-servidor",
+    "sin-esloganes-decorativos",
+    "sin-fondo-futurista"
+  ]
+}
