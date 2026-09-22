@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
 
-import { siteAppearanceAssetIds } from '@sergod/contracts';
 import type {
   SiteAppearanceAssetId,
   SiteAppearanceElement,
@@ -10,82 +9,22 @@ import type {
   SiteAppearancePageId,
 } from '@sergod/contracts';
 
-const legacyAppearanceAssets: Readonly<Partial<Record<SiteAppearanceAssetId, string>>> = {
-  'burst-red': '/assets/sergod/ui/sheet_01/fx_01.webp',
-  'brush-cyan': '/assets/sergod/ui/sheet_01/textures_08.webp',
-  'brush-red': '/assets/sergod/ui/sheet_01/textures_02.webp',
-  'brush-white': '/assets/sergod/ui/sheet_01/textures_06.webp',
-  'fragments-red': '/assets/sergod/ui/sheet_01/bottom_fx_06.webp',
-  'halftone-red': '/assets/sergod/ui/sheet_03/pattern_03.webp',
-  'home-launcher-comics': '/assets/sergod/home-launcher/comics.webp',
-  'home-launcher-community': '/assets/sergod/home-launcher/community.webp',
-  'home-launcher-loyalty': '/assets/sergod/home-launcher/loyalty.webp',
-  'home-launcher-news': '/assets/sergod/home-launcher/news.webp',
-  'home-launcher-preorders': '/assets/sergod/home-launcher/preorders.webp',
-  'home-launcher-quests': '/assets/sergod/home-launcher/quests.webp',
-  'home-launcher-shop': '/assets/sergod/home-launcher/shop.webp',
-  'home-launcher-tournaments': '/assets/sergod/home-launcher/tournaments.webp',
-};
-
-export const appearanceAssetIds = [...siteAppearanceAssetIds];
-export const appearanceAssets: Readonly<Record<SiteAppearanceAssetId, string>> = Object.fromEntries(
-  appearanceAssetIds.map((id) => [id, legacyAppearanceAssets[id] ?? generatedAssetPath(id)]),
-) as Record<SiteAppearanceAssetId, string>;
-
-const categoryLabels: Readonly<Record<string, string>> = {
-  alert: 'Barras de alerta',
-  banner: 'Banners',
-  bottom: 'Efectos inferiores',
-  divider: 'Divisores',
-  dividers: 'Divisores',
-  frame: 'Marcos',
-  frames: 'Marcos',
-  fx: 'Efectos',
-  ornament: 'Adornos',
-  pattern: 'Patrones',
-  small: 'Marcos pequeños',
-  texture: 'Texturas',
-  textures: 'Texturas',
-  ui: 'Insignias y flechas',
-};
-
-const legacyAssetLabels: Readonly<Partial<Record<SiteAppearanceAssetId, string>>> = {
-  'burst-red': 'Impacto rojo',
-  'brush-cyan': 'Pincelada cian',
-  'brush-red': 'Pincelada roja',
-  'brush-white': 'Pincelada blanca',
-  'fragments-red': 'Fragmentos rojos',
-  'halftone-red': 'Trama halftone',
-  'home-launcher-comics': 'Acceso Cómics e historias',
-  'home-launcher-community': 'Acceso Comunidad',
-  'home-launcher-loyalty': 'Acceso Loyalty',
-  'home-launcher-news': 'Acceso Noticias',
-  'home-launcher-preorders': 'Acceso Preventas',
-  'home-launcher-quests': 'Acceso Quests',
-  'home-launcher-shop': 'Acceso Tienda',
-  'home-launcher-tournaments': 'Acceso Torneos',
-};
+export const appearanceAssetIds: readonly SiteAppearanceAssetId[] = [];
+export const appearanceAssets = {} as Readonly<Record<SiteAppearanceAssetId, string>>;
 
 export function appearanceAssetCategory(id: SiteAppearanceAssetId): string {
-  if (id.startsWith('home-launcher-')) return 'Accesos principales';
-  if (!id.startsWith('sheet-')) return 'Destacados';
-  return categoryLabels[id.split('-')[2] ?? ''] ?? 'Otros';
+  return id ? 'Sin biblioteca inicial' : 'Sin biblioteca inicial';
 }
 
 export function appearanceAssetLabel(id: SiteAppearanceAssetId): string {
-  if (!id.startsWith('sheet-')) {
-    return legacyAssetLabels[id] ?? id;
-  }
-  const parts = id.split('-');
-  const number = parts.at(-1) ?? '';
-  return `${appearanceAssetCategory(id)} ${number} · lámina ${parts[1]}`;
+  return id;
 }
 
 export const appearanceElementLabels: Readonly<Record<SiteAppearanceElementId, string>> = {
   'comics-heading-copy': 'Texto de portada de Cómics',
   'comics-heading-stats': 'Indicadores de Cómics',
   'community-heading-copy': 'Texto de portada de Comunidad',
-  'home-eyebrow': 'Categorías de la portada',
+  'home-eyebrow': 'Texto auxiliar de portada',
   'home-lead': 'Descripción de la portada',
   'home-link-comics': 'Acceso vinculado · Cómics',
   'home-link-community': 'Acceso vinculado · Comunidad',
@@ -95,8 +34,8 @@ export const appearanceElementLabels: Readonly<Record<SiteAppearanceElementId, s
   'home-link-quests': 'Acceso vinculado · Quests',
   'home-link-shop': 'Acceso vinculado · Tienda',
   'home-link-tournaments': 'Acceso vinculado · Torneos',
-  'home-sections-heading': 'Cabecera Explora Sergod',
-  'home-service': 'Tarjeta Compra con claridad',
+  'home-sections-heading': 'Encabezado de navegación',
+  'home-service': 'Bloque informativo de portada',
   'home-title': 'Título principal',
   'news-heading-copy': 'Texto de portada de Noticias',
   'news-heading-stats': 'Indicadores de Noticias',
@@ -130,13 +69,7 @@ export const defaultAppearanceElements: Readonly<
     'home-lead',
     'home-service',
     'home-sections-heading',
-  ).concat([
-    linkedDefault('home-link-shop', 'home-launcher-shop'),
-    linkedDefault('home-link-preorders', 'home-launcher-preorders'),
-    linkedDefault('home-link-community', 'home-launcher-community'),
-    linkedDefault('home-link-loyalty', 'sheet-03-banner-03'),
-    linkedDefault('home-link-comics', 'home-launcher-comics'),
-  ]),
+  ),
   news: defaults('news-heading-copy', 'news-heading-stats'),
   shop: defaults('shop-heading-copy', 'shop-heading-stats'),
   tournaments: defaults('tournaments-heading-copy', 'tournaments-heading-stats'),
@@ -200,25 +133,4 @@ function defaults(...ids: readonly SiteAppearanceElementId[]): readonly SiteAppe
     width: 100,
     zIndex: 5,
   }));
-}
-
-function linkedDefault(
-  id: SiteAppearanceElementId,
-  assetId: SiteAppearanceAssetId,
-): SiteAppearanceElement {
-  return {
-    assetId,
-    hiddenOnMobile: false,
-    id,
-    offsetX: 0,
-    offsetY: 0,
-    width: 100,
-    zIndex: 5,
-  };
-}
-
-function generatedAssetPath(id: SiteAppearanceAssetId): string {
-  const match = /^sheet-(\d{2})-(.+)$/u.exec(id);
-  if (!match) throw new Error(`Unknown approved appearance asset: ${id}`);
-  return `/assets/sergod/approved-ui/sheet_${match[1]}/${match[2]?.replaceAll('-', '_')}.png`;
 }

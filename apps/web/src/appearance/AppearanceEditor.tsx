@@ -61,73 +61,6 @@ const previewPaths: Readonly<Record<SiteAppearancePageId, string>> = {
   tournaments: '/tournaments',
 };
 
-interface AppearancePreset {
-  readonly description: string;
-  readonly icon: SiteAppearanceAssetId;
-  readonly id: string;
-  readonly label: string;
-  readonly text: string;
-}
-
-const appearancePresets: readonly AppearancePreset[] = [
-  {
-    description: 'Carrito, marco y título editable.',
-    icon: 'sheet-02-ornament-01',
-    id: 'shop',
-    label: 'Título Tienda',
-    text: 'TIENDA',
-  },
-  {
-    description: 'Regalo, marco y título editable.',
-    icon: 'sheet-02-ornament-08',
-    id: 'preorders',
-    label: 'Título Preventas',
-    text: 'PREVENTAS',
-  },
-  {
-    description: 'Trofeo, marco y título editable.',
-    icon: 'sheet-02-ornament-02',
-    id: 'tournaments',
-    label: 'Título Torneos',
-    text: 'TORNEOS',
-  },
-  {
-    description: 'Periódico, marco y título editable.',
-    icon: 'sheet-02-ornament-04',
-    id: 'news',
-    label: 'Título Noticias',
-    text: 'NOTICIAS',
-  },
-  {
-    description: 'Conversación, marco y título editable.',
-    icon: 'sheet-02-ornament-03',
-    id: 'community',
-    label: 'Título Comunidad',
-    text: 'COMUNIDAD',
-  },
-  {
-    description: 'Estrella, marco y título editable.',
-    icon: 'sheet-02-ornament-05',
-    id: 'loyalty',
-    label: 'Título Loyalty',
-    text: 'LOYALTY',
-  },
-  {
-    description: 'Lista, marco y título editable.',
-    icon: 'sheet-02-ornament-06',
-    id: 'quests',
-    label: 'Título Quests',
-    text: 'QUESTS',
-  },
-  {
-    description: 'Libro, marco y título editable.',
-    icon: 'sheet-02-ornament-07',
-    id: 'comics',
-    label: 'Título Cómics',
-    text: 'CÓMICS E HISTORIAS',
-  },
-];
-
 const groupedAppearanceAssets = appearanceAssetIds.reduce<Record<string, SiteAppearanceAssetId[]>>(
   (groups, assetId) => {
     const category = appearanceAssetCategory(assetId);
@@ -318,9 +251,10 @@ export function AppearanceEditor() {
 
   const addLayer = (
     kind: SiteAppearanceLayer['kind'],
-    requestedAssetId: SiteAppearanceAssetId = 'burst-red',
+    requestedAssetId?: SiteAppearanceAssetId,
   ) => {
     if (!loaded || busy.current || layers.length >= 24) return;
+    if (kind === 'ASSET' && !requestedAssetId) return;
     const id = `${kind.toLowerCase()}-${crypto.randomUUID().slice(0, 8)}`;
     const layer: SiteAppearanceLayer =
       kind === 'ASSET'
@@ -350,7 +284,9 @@ export function AppearanceEditor() {
     }));
     setSelectedId(id);
     setSelectedElementId(null);
-    if (kind === 'ASSET') setAssetCategory(appearanceAssetCategory(requestedAssetId));
+    if (kind === 'ASSET' && requestedAssetId) {
+      setAssetCategory(appearanceAssetCategory(requestedAssetId));
+    }
   };
 
   const duplicateLayer = (layer: SiteAppearanceLayer) => {
@@ -366,50 +302,6 @@ export function AppearanceEditor() {
       [page]: { ...current[page], layers: [...current[page].layers, duplicate] },
     }));
     selectLayer(duplicate);
-  };
-
-  const addPreset = (preset: AppearancePreset) => {
-    if (!loaded || busy.current || layers.length > 21) return;
-    const y = Math.min(78, 12 + layers.length * 2);
-    const presetLayers: SiteAppearanceLayer[] = [
-      {
-        assetId: 'sheet-03-banner-01',
-        hiddenOnMobile: false,
-        id: `asset-${crypto.randomUUID().slice(0, 8)}`,
-        kind: 'ASSET',
-        width: 48,
-        x: 8,
-        y,
-        zIndex: 2,
-      },
-      {
-        assetId: preset.icon,
-        hiddenOnMobile: false,
-        id: `asset-${crypto.randomUUID().slice(0, 8)}`,
-        kind: 'ASSET',
-        width: 11,
-        x: 7,
-        y,
-        zIndex: 4,
-      },
-      {
-        content: preset.text,
-        hiddenOnMobile: false,
-        id: `text-${crypto.randomUUID().slice(0, 8)}`,
-        kind: 'TEXT',
-        width: 31,
-        x: 20,
-        y,
-        zIndex: 5,
-      },
-    ];
-    setLayout((current) => ({
-      ...current,
-      [page]: { ...current[page], layers: [...current[page].layers, ...presetLayers] },
-    }));
-    setSelectedId(presetLayers[2]?.id ?? null);
-    setSelectedElementId(null);
-    setToolPanel('PROPERTIES');
   };
 
   const publish = async () => {
@@ -481,8 +373,8 @@ export function AppearanceEditor() {
         </div>
         <div className="actions">
           <button
-            disabled={!loaded || saving || layers.length >= 24}
-            onClick={() => addLayer('ASSET')}
+            disabled
+            title="La biblioteca visual está vacía hasta que se defina la nueva identidad."
             type="button"
           >
             Añadir imagen
@@ -583,31 +475,6 @@ export function AppearanceEditor() {
             </div>
           </div>
         )}
-        <div className="appearance-presets">
-          <div>
-            <h3>Plantillas editables</h3>
-            <p>Se añaden por capas: icono, marco y texto siguen siendo independientes.</p>
-          </div>
-          <div
-            aria-label="Plantillas visuales editables"
-            className="appearance-preset-grid"
-            role="group"
-          >
-            {appearancePresets.map((preset) => (
-              <button
-                className="secondary"
-                disabled={!loaded || saving || layers.length > 21}
-                key={preset.id}
-                onClick={() => addPreset(preset)}
-                type="button"
-              >
-                <img alt="" loading="lazy" src={appearanceAssets[preset.icon]} />
-                <span>{preset.label}</span>
-                <small>{preset.description}</small>
-              </button>
-            ))}
-          </div>
-        </div>
         <label className="appearance-library-search">
           Buscar por nombre o tipo
           <input
@@ -683,7 +550,7 @@ export function AppearanceEditor() {
           </div>
           {layers.map((layer) => (
             <button
-              aria-label={`Seleccionar capa ${layer.kind === 'TEXT' ? layer.content : appearanceAssetLabel(layer.assetId ?? 'burst-red')}`}
+              aria-label={`Seleccionar capa ${layer.kind === 'TEXT' ? layer.content : layer.assetId ? appearanceAssetLabel(layer.assetId) : 'Imagen sin asignar'}`}
               aria-pressed={selectedId === layer.id}
               className={`appearance-editor-layer is-${layer.kind.toLowerCase()}`}
               key={layer.id}
@@ -819,7 +686,9 @@ export function AppearanceEditor() {
                     <span>
                       {layer.kind === 'TEXT'
                         ? layer.content || 'Texto vacío'
-                        : appearanceAssetLabel(layer.assetId ?? 'burst-red')}
+                        : layer.assetId
+                          ? appearanceAssetLabel(layer.assetId)
+                          : 'Imagen sin asignar'}
                     </span>
                     <small>
                       Orden {layer.zIndex}

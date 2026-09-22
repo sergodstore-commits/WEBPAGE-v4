@@ -25,73 +25,15 @@ beforeEach(() => {
 });
 
 describe('editor de apariencia web', () => {
-  it('muestra la galería antes de crear capas y añade el recurso elegido', async () => {
+  it('inicia con una biblioteca neutral y sin recursos visuales heredados', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
 
     const gallery = within(screen.getByLabelText('Elementos visuales disponibles'));
-    expect(gallery.getByRole('button', { name: 'Añadir Impacto rojo' })).toBeInTheDocument();
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar por nombre o tipo' }), {
-      target: { value: 'banner' },
-    });
-    fireEvent.click(gallery.getByRole('button', { name: 'Añadir Banners 01 · lámina 03' }));
-
-    expect(
-      screen.getByRole('button', { name: 'Seleccionar capa Banners 01 · lámina 03' }),
-    ).toBeInTheDocument();
-  });
-
-  it('cambia la imagen de un acceso sin convertir su ruta en una capa libre', async () => {
-    render(<AppearanceEditor />);
-    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
-
-    fireEvent.click(screen.getByRole('button', { name: /Tienda.*vínculo fijo/u }));
-    fireEvent.click(screen.getByRole('button', { name: 'Usar Impacto rojo en Tienda' }));
-
-    expect(screen.getByText('/shop')).toBeInTheDocument();
-    expect(screen.getByText(/Vínculo protegido/u)).toBeInTheDocument();
-    expect(screen.getByRole('list', { name: 'Lista de capas' })).toBeEmptyDOMElement();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar y publicar' }));
-    await waitFor(() => expect(authorizedRequest).toHaveBeenCalledTimes(2));
-    const request = JSON.parse(String(vi.mocked(authorizedRequest).mock.calls[0]?.[1]?.body)) as {
-      value: string;
-    };
-    const saved = siteAppearanceLayoutSchema.parse(JSON.parse(request.value));
-    expect(saved.home.elements?.find(({ id }) => id === 'home-link-shop')?.assetId).toBe(
-      'burst-red',
-    );
-  });
-
-  it('ofrece los cinco accesos activos con destinos protegidos', async () => {
-    render(<AppearanceEditor />);
-    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
-
-    expect(
-      screen.getByRole('button', { name: /Preventas.*\/preorders.*vínculo fijo/u }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /Puntos Sergod.*\/loyalty.*vínculo fijo/u }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /Quests.*\/quests.*vínculo fijo/u }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: /Noticias.*\/news.*vínculo fijo/u }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('añade títulos visuales como capas editables en vez de texto horneado', async () => {
-    render(<AppearanceEditor />);
-    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
-
-    const presets = within(screen.getByRole('group', { name: 'Plantillas visuales editables' }));
-    fireEvent.click(presets.getByRole('button', { name: /Título Torneos/u }));
-
-    expect(
-      within(screen.getByRole('list', { name: 'Lista de capas' })).getAllByRole('button'),
-    ).toHaveLength(3);
-    expect(screen.getByRole('textbox', { name: 'Texto' })).toHaveValue('TORNEOS');
+    expect(gallery.getByText('No hay elementos que coincidan.')).toBeInTheDocument();
+    expect(screen.getByText('0 elementos disponibles')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Añadir imagen' })).toBeDisabled();
+    expect(screen.queryByRole('group', { name: 'Plantillas visuales editables' })).toBeNull();
   });
 
   it('ignora una respuesta pública incompleta y conserva un diseño seguro', async () => {
@@ -118,34 +60,6 @@ describe('editor de apariencia web', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Teléfono' }));
     expect(screen.getByTitle('Vista real de Noticias').parentElement).toHaveClass('is-mobile');
-  });
-
-  it('permite recuperar una capa tapada desde la lista ordenada', async () => {
-    render(<AppearanceEditor />);
-    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir imagen' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir texto' }));
-    const list = within(screen.getByRole('list', { name: 'Lista de capas' }));
-    expect(list.getAllByRole('button')[0]).toHaveTextContent('Nuevo texto');
-    fireEvent.click(list.getByRole('button', { name: /Impacto rojo/u }));
-    expect(screen.getByRole('combobox', { name: 'Imagen aprobada' })).toHaveValue('burst-red');
-    fireEvent.click(screen.getByRole('button', { name: 'Quitar capa' }));
-    expect(list.queryByRole('button', { name: /Impacto rojo/u })).toBeNull();
-    expect(list.getByRole('button', { name: /Nuevo texto/u })).toBeInTheDocument();
-  });
-
-  it('agrupa los recursos aprobados y permite elegirlos mediante miniaturas', async () => {
-    render(<AppearanceEditor />);
-    await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir imagen' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Categoría visual' }), {
-      target: { value: 'Marcos' },
-    });
-    const thumbnails = within(screen.getByLabelText('Miniaturas de Marcos'));
-    fireEvent.click(thumbnails.getByRole('button', { name: 'Marcos 01 · lámina 02' }));
-    expect(screen.getByRole('combobox', { name: 'Imagen aprobada' })).toHaveValue(
-      'sheet-02-frame-01',
-    );
   });
 
   it('ofrece alineación, valores exactos y duplicado para operar una capa con rapidez', async () => {
@@ -250,13 +164,13 @@ describe('editor de apariencia web', () => {
     ).toBeInTheDocument();
   });
 
-  it('publica una versión persistente después de añadir una capa aprobada', async () => {
+  it('publica una versión persistente después de añadir una capa de texto', async () => {
     render(<AppearanceEditor />);
     await screen.findByText('Aún no hay una versión publicada. Puedes crear la primera.');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir imagen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir texto' }));
     expect(
-      screen.getByRole('button', { name: /Seleccionar capa Impacto rojo/u }),
+      screen.getByRole('button', { name: /Seleccionar capa Nuevo texto/u }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Guardar y publicar' }));
 
@@ -291,7 +205,7 @@ describe('editor de apariencia web', () => {
     ).toBeInTheDocument();
   });
 
-  it('renderiza texto e imágenes como capas independientes', () => {
+  it('renderiza una capa de texto independiente', () => {
     const { container } = render(
       <AppearanceLayers
         layers={[
@@ -305,24 +219,11 @@ describe('editor de apariencia web', () => {
             y: 20,
             zIndex: 8,
           },
-          {
-            assetId: 'burst-red',
-            hiddenOnMobile: true,
-            id: 'burst',
-            kind: 'ASSET',
-            width: 20,
-            x: 70,
-            y: 60,
-            zIndex: 2,
-          },
         ]}
       />,
     );
     expect(container.querySelector('.appearance-layer-text')?.textContent).toBe('Evento destacado');
-    expect(container.querySelector('.appearance-layer-asset img')).toHaveAttribute(
-      'src',
-      expect.stringContaining('fx_01.webp'),
-    );
+    expect(container.querySelector('.appearance-layer-asset')).toBeNull();
   });
 
   it('aplica la posición guardada al elemento existente correspondiente', () => {

@@ -124,27 +124,61 @@ describe('public Store cart action', () => {
 
     render(<StorePage view="preorders" />);
     expect(screen.getByRole('heading', { name: 'Preventas', level: 1 })).toBeInTheDocument();
-    expect(await screen.findByText('No hay preventas para mostrar')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getAllByRole('button', { name: /Ver preventa/i })).toHaveLength(5),
+    );
+    const previewButtons = screen.getAllByRole('button', { name: /Ver preventa/i });
+    expect(previewButtons).toHaveLength(5);
+    previewButtons.forEach((button) => expect(button).toBeDisabled());
     expect(screen.queryByRole('button', { name: 'Agregar al carrito' })).not.toBeInTheDocument();
   });
 
-  it('keeps the long filter form collapsed initially on mobile', async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({
-        addEventListener: vi.fn(),
-        matches: true,
-        removeEventListener: vi.fn(),
-      })),
-    );
+  it('keeps search visible while advanced filters start collapsed', async () => {
     vi.mocked(publicRequest).mockResolvedValue({ items: [], nextCursor: null } as never);
 
     render(<StorePage />);
 
-    expect(screen.queryByRole('search')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Mostrar filtros' }));
     expect(screen.getByRole('search')).toBeInTheDocument();
     expect(screen.getByLabelText('Buscar productos')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Disponibilidad')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Más filtros' }));
+    expect(screen.getByLabelText('Disponibilidad')).toBeInTheDocument();
+  });
+
+  it('opens the real preorder detail from the featured card', async () => {
+    const productId = '0198a8be-6677-7000-8000-000000000012';
+    vi.mocked(publicRequest).mockImplementation(async (path) => {
+      if (path.startsWith('/api/v1/catalog/products?')) {
+        return {
+          items: [
+            {
+              availableForPurchase: true,
+              availabilityStatus: 'AVAILABLE',
+              game: { gameId: crypto.randomUUID(), name: 'TCG', slug: 'tcg' },
+              name: 'Preventa publicada',
+              priceAmountClp: 10000,
+              preorderCampaignId: crypto.randomUUID(),
+              primaryResource: {
+                altText: 'Preventa publicada',
+                heightPx: 800,
+                resourceId: crypto.randomUUID(),
+                widthPx: 600,
+              },
+              productId,
+              saleType: 'PREORDER',
+            },
+          ],
+          nextCursor: null,
+        } as never;
+      }
+      return { items: [], nextCursor: null } as never;
+    });
+
+    render(<StorePage view="preorders" />);
+    fireEvent.click(await screen.findByRole('button', { name: /Ver preventa/i }));
+    await waitFor(() =>
+      expect(publicRequest).toHaveBeenCalledWith(`/api/v1/catalog/products/${productId}`),
+    );
   });
 
   it('shows an explicit empty state when the catalog cannot return products', async () => {
@@ -156,6 +190,11 @@ describe('public Store cart action', () => {
       await screen.findByRole('heading', { name: 'No hay productos para mostrar' }),
     ).toBeInTheDocument();
     expect(await screen.findByText('Catálogo temporalmente no disponible.')).toBeInTheDocument();
+    const preview = screen.getByRole('region', { name: 'Vista de ejemplo del catálogo' });
+    expect(within(preview).getAllByRole('article')).toHaveLength(8);
+    for (const button of within(preview).getAllByRole('button', { name: 'Agregar' })) {
+      expect(button).toBeDisabled();
+    }
   });
 
   it('creates an anonymous cart when required and retries the line command', async () => {
@@ -370,12 +409,13 @@ describe('public Store cart action', () => {
 
     render(<StorePage />);
     await screen.findByText('Colección especial');
+    fireEvent.click(screen.getByRole('button', { name: 'Más filtros' }));
     fireEvent.change(screen.getByLabelText('Disponibilidad'), {
       target: { value: 'LAST_UNITS' },
     });
     fireEvent.change(screen.getByLabelText('Precio mínimo'), { target: { value: '10000' } });
     fireEvent.change(screen.getByLabelText('Ordenar'), { target: { value: 'PRICE_ASC' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Aplicar filtros' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Buscar' }));
 
     await waitFor(() => {
       const productPaths = vi
@@ -469,10 +509,8 @@ describe('public editorial sections', () => {
 
     render(<TournamentPage />);
 
-    expect(screen.getByText(/no administra rondas ni emparejamientos/iu)).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Próximos torneos' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Torneos realizados' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Información de torneos' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Próximo torneo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'En curso' })).toBeDisabled();
     expect(screen.queryByRole('heading', { name: 'Eventos y Quests' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Hall of Fame' })).toBeInTheDocument();
     expect(screen.getByText('Copa Sergod')).toBeInTheDocument();
@@ -486,10 +524,10 @@ describe('public editorial sections', () => {
     expect(screen.getByText('Campeón Sergod')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
 
-    const completed = screen
-      .getByRole('heading', { name: 'Torneos realizados' })
-      .closest('section');
-    if (!completed) throw new Error('Completed tournament section was not rendered.');
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizados' }));
+    expect(screen.queryByText('Copa Sergod')).not.toBeInTheDocument();
+    const completed = screen.getByText('Liga de agosto').closest('article');
+    if (!completed) throw new Error('Completed tournament card was not rendered.');
     fireEvent.click(within(completed).getByRole('button', { name: 'Ver detalle' }));
     expect(screen.getByText('Podio y resumen del torneo.')).toBeInTheDocument();
   });
@@ -499,11 +537,12 @@ describe('public editorial sections', () => {
 
     render(<TournamentPage />);
 
-    expect(screen.getByText(/no administra rondas ni emparejamientos/iu)).toBeInTheDocument();
     expect(await screen.findByText('Aún no hay próximos torneos publicados.')).toBeInTheDocument();
-    expect(screen.getByText('Aún no hay torneos realizados publicados.')).toBeInTheDocument();
+    expect(screen.getByText('Aún no hay torneos publicados.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizados' }));
+    expect(screen.getByText('Aún no hay torneos finalizados publicados.')).toBeInTheDocument();
     expect(screen.queryByText('Aún no hay Eventos o Quests publicados.')).not.toBeInTheDocument();
-    expect(screen.getByText('Aún no hay reconocimientos publicados.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Hall of Fame' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /inscribir/iu })).not.toBeInTheDocument();
   });
 
@@ -658,9 +697,13 @@ describe('public editorial sections', () => {
     render(<CommunityHub navigate={navigate} route="/community" />);
 
     expect(await screen.findByText('Tarde de juego')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Torneos' }));
-    expect(navigate).toHaveBeenCalledWith('/tournaments');
-    fireEvent.click(screen.getByRole('button', { name: 'Leer artículo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Noticias' }));
+    expect(navigate).toHaveBeenCalledWith('/news');
+    fireEvent.click(screen.getByRole('button', { name: 'Quests' }));
+    expect(navigate).toHaveBeenCalledWith('/quests');
+    fireEvent.click(screen.getByRole('button', { name: 'Visítanos' }));
+    expect(navigate).toHaveBeenCalledWith('/community/visit');
+    fireEvent.click(screen.getByRole('button', { name: 'Ver detalle' }));
     expect(screen.getByText('Todos los detalles de la actividad.')).toBeInTheDocument();
   });
 

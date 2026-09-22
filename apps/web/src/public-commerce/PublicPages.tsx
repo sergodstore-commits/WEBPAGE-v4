@@ -559,18 +559,9 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
   const [detail, setDetail] = useState<ProductDetail | null>(null);
   const [message, setMessage] = useState('Cargando catálogo…');
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
+  const [cartRevision, setCartRevision] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filtersVisible, setFiltersVisible] = useState(
-    () =>
-      typeof window.matchMedia !== 'function' || !window.matchMedia('(max-width: 640px)').matches,
-  );
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return undefined;
-    const media = window.matchMedia('(max-width: 640px)');
-    const followViewport = () => setFiltersVisible(!media.matches);
-    media.addEventListener('change', followViewport);
-    return () => media.removeEventListener('change', followViewport);
-  }, []);
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const load = (nextFilters: CatalogFilters, cursor?: string) => {
     setLoading(true);
     setMessage(cursor === undefined ? 'Cargando catálogo…' : 'Cargando más productos…');
@@ -601,6 +592,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
       })
       .catch((error: unknown) => setMessage(messageOf(error)))
       .finally(() => setLoading(false));
+    if (view === 'preorders') return;
     void loadFilterOptions()
       .then((options) => {
         setGames(options.games);
@@ -611,7 +603,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
         setConditions(options.conditions);
       })
       .catch((error: unknown) => setMessage(messageOf(error)));
-  }, [defaultFilters]);
+  }, [defaultFilters, view]);
   const search = (event: FormEvent) => {
     event.preventDefault();
     setDetail(null);
@@ -647,6 +639,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
     setAddingProductId(product.productId);
     try {
       await addProductToCart(product.productId, product.preorderCampaignId);
+      setCartRevision((revision) => revision + 1);
       setMessage(`${product.name} fue agregado al carrito.`);
     } catch (error) {
       setMessage(messageOf(error));
@@ -654,26 +647,77 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
       setAddingProductId(null);
     }
   };
+  if (view === 'preorders') {
+    const featured = items[0];
+    return (
+      <main className="page-frame store-page preorders-store-page visual-public preorder-reference-page">
+        <header className="section-heading catalog-heading preorder-reference-heading">
+          <h1>Preventas</h1>
+        </header>
+        {message && (
+          <p aria-live="polite" className="status preorder-reference-status">
+            {message}
+          </p>
+        )}
+        <div aria-busy={loading} className="preorder-reference-content">
+          <PreorderReferenceCard
+            featured
+            onDetail={featured ? () => void showDetail(featured.productId) : undefined}
+            product={featured}
+          />
+          {detail && (
+            <ProductDetailPanel
+              detail={detail}
+              key={detail.productId}
+              onAdd={() => void addToCart(detail)}
+              onClose={() => setDetail(null)}
+              pending={addingProductId === detail.productId}
+            />
+          )}
+          <section aria-label="Preventas" className="preorder-reference-grid">
+            {items.slice(1).map((product) => (
+              <PreorderReferenceCard
+                key={product.productId}
+                onDetail={() => void showDetail(product.productId)}
+                product={product}
+              />
+            ))}
+            {!loading &&
+              items.length === 0 &&
+              Array.from({ length: 4 }, (_, index) => (
+                <PreorderReferenceCard key={`sample-${index}`} />
+              ))}
+          </section>
+          {nextCursor && (
+            <button
+              className="load-more"
+              disabled={loading}
+              onClick={() => load(filters, nextCursor)}
+              type="button"
+            >
+              Cargar más preventas
+            </button>
+          )}
+        </div>
+      </main>
+    );
+  }
   return (
     <main className={`page-frame store-page ${view}-store-page visual-public`}>
       <header className="section-heading catalog-heading cut-panel">
         <AppearanceElement id="shop-heading-copy">
           <div>
-            <p className="eyebrow">
-              {view === 'preorders' ? 'Próximos lanzamientos' : 'Tienda TCG'}
-            </p>
-            <h1>{view === 'preorders' ? 'Preventas' : 'Tienda'}</h1>
-            <p>
-              {view === 'preorders'
-                ? 'Reserva productos antes de su lanzamiento y revisa sus fechas, cupos y condiciones.'
-                : 'Productos regulares disponibles con precio y stock confirmados por el servidor.'}
+            <p className="eyebrow">Tienda TCG</p>
+            <h1>Tienda</h1>
+            <p className="catalog-heading-description">
+              Productos regulares disponibles con precio y stock confirmados por el servidor.
             </p>
           </div>
         </AppearanceElement>
         <AppearanceElement id="shop-heading-stats">
           <div aria-label="Garantías del catálogo" className="heading-stats">
-            <span>{view === 'preorders' ? 'Cupos confirmados' : 'Stock confirmado'}</span>
-            <span>{view === 'preorders' ? 'Precio de reserva' : 'Precio de servidor'}</span>
+            <span>Stock confirmado</span>
+            <span>Precio de servidor</span>
           </div>
         </AppearanceElement>
       </header>
@@ -683,7 +727,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
       <div className="catalog-layout">
         <aside className="catalog-filters cut-panel" aria-label="Filtros del catálogo">
           <div className="catalog-filter-heading">
-            <h2>Buscar y filtrar</h2>
+            <h2>Buscar productos</h2>
             <button
               aria-controls="catalog-filter-form"
               aria-expanded={filtersVisible}
@@ -691,110 +735,144 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
               onClick={() => setFiltersVisible((visible) => !visible)}
               type="button"
             >
-              {filtersVisible ? 'Ocultar filtros' : 'Mostrar filtros'}
+              {filtersVisible ? 'Ocultar filtros' : 'Más filtros'}
             </button>
           </div>
-          {filtersVisible && (
-            <form id="catalog-filter-form" onSubmit={search} role="search">
-              <label>
-                Buscar productos
-                <input
-                  minLength={2}
-                  onChange={(event) => update('q', event.target.value)}
-                  placeholder="Juego, producto o colección"
-                  value={filters.q}
+          <form id="catalog-filter-form" onSubmit={search} role="search">
+            <label className="catalog-search-field">
+              Buscar productos
+              <input
+                minLength={2}
+                onChange={(event) => update('q', event.target.value)}
+                placeholder="Juego, producto o colección"
+                value={filters.q}
+              />
+            </label>
+            {filtersVisible && (
+              <div className="catalog-advanced-filters">
+                <SelectFilter
+                  label="Juego"
+                  onChange={(value) => update('gameId', value)}
+                  options={games.map((item) => ({ label: item.name, value: item.gameId ?? '' }))}
+                  value={filters.gameId}
                 />
-              </label>
-              <SelectFilter
-                label="Juego"
-                onChange={(value) => update('gameId', value)}
-                options={games.map((item) => ({ label: item.name, value: item.gameId ?? '' }))}
-                value={filters.gameId}
-              />
-              <SelectFilter
-                label="Categoría"
-                onChange={(value) => update('categoryId', value)}
-                options={categories.map((item) => ({
-                  label: item.name,
-                  value: item.categoryId ?? '',
-                }))}
-                value={filters.categoryId}
-              />
-              <SelectFilter
-                label="Colección"
-                onChange={(value) => update('collectionId', value)}
-                options={collections
-                  .filter((item) => filters.gameId === '' || item.game?.gameId === filters.gameId)
-                  .map((item) => ({ label: item.name, value: item.collectionId ?? '' }))}
-                value={filters.collectionId}
-              />
-              <div className="filter-pair">
-                <label>
-                  Precio mínimo
-                  <input
-                    min="0"
-                    onChange={(event) => update('minimumPriceClp', event.target.value)}
-                    type="number"
-                    value={filters.minimumPriceClp}
-                  />
-                </label>
-                <label>
-                  Precio máximo
-                  <input
-                    min="0"
-                    onChange={(event) => update('maximumPriceClp', event.target.value)}
-                    type="number"
-                    value={filters.maximumPriceClp}
-                  />
-                </label>
+                <SelectFilter
+                  label="Categoría"
+                  onChange={(value) => update('categoryId', value)}
+                  options={categories.map((item) => ({
+                    label: item.name,
+                    value: item.categoryId ?? '',
+                  }))}
+                  value={filters.categoryId}
+                />
+                <SelectFilter
+                  label="Colección"
+                  onChange={(value) => update('collectionId', value)}
+                  options={collections
+                    .filter((item) => filters.gameId === '' || item.game?.gameId === filters.gameId)
+                    .map((item) => ({ label: item.name, value: item.collectionId ?? '' }))}
+                  value={filters.collectionId}
+                />
+                <div className="filter-pair">
+                  <label>
+                    Precio mínimo
+                    <input
+                      min="0"
+                      onChange={(event) => update('minimumPriceClp', event.target.value)}
+                      type="number"
+                      value={filters.minimumPriceClp}
+                    />
+                  </label>
+                  <label>
+                    Precio máximo
+                    <input
+                      min="0"
+                      onChange={(event) => update('maximumPriceClp', event.target.value)}
+                      type="number"
+                      value={filters.maximumPriceClp}
+                    />
+                  </label>
+                </div>
+                <SelectFilter
+                  label="Idioma"
+                  onChange={(value) => update('language', value)}
+                  options={languages.map((value) => ({ label: value, value }))}
+                  value={filters.language}
+                />
+                <SelectFilter
+                  label="Edición"
+                  onChange={(value) => update('edition', value)}
+                  options={editions.map((value) => ({ label: value, value }))}
+                  value={filters.edition}
+                />
+                <SelectFilter
+                  label="Condición"
+                  onChange={(value) => update('condition', value)}
+                  options={conditions.map((value) => ({ label: value, value }))}
+                  value={filters.condition}
+                />
+                <SelectFilter
+                  label="Disponibilidad"
+                  onChange={(value) =>
+                    update('availabilityStatus', value as CatalogFilters['availabilityStatus'])
+                  }
+                  options={[
+                    { label: 'Disponible', value: 'AVAILABLE' },
+                    { label: 'Últimas unidades', value: 'LAST_UNITS' },
+                    { label: 'Agotado', value: 'OUT_OF_STOCK' },
+                  ]}
+                  value={filters.availabilityStatus}
+                />
+                <SelectFilter
+                  label="Ordenar"
+                  onChange={(value) => update('sort', value as ProductSort)}
+                  options={[
+                    { label: 'Más nuevos', value: 'NEWEST' },
+                    { label: 'Nombre A–Z', value: 'NAME_ASC' },
+                    { label: 'Precio menor a mayor', value: 'PRICE_ASC' },
+                    { label: 'Precio mayor a menor', value: 'PRICE_DESC' },
+                  ]}
+                  value={filters.sort}
+                  withEmpty={false}
+                />
               </div>
-              <SelectFilter
-                label="Idioma"
-                onChange={(value) => update('language', value)}
-                options={languages.map((value) => ({ label: value, value }))}
-                value={filters.language}
-              />
-              <SelectFilter
-                label="Edición"
-                onChange={(value) => update('edition', value)}
-                options={editions.map((value) => ({ label: value, value }))}
-                value={filters.edition}
-              />
-              <SelectFilter
-                label="Condición"
-                onChange={(value) => update('condition', value)}
-                options={conditions.map((value) => ({ label: value, value }))}
-                value={filters.condition}
-              />
-              <SelectFilter
-                label="Disponibilidad"
-                onChange={(value) =>
-                  update('availabilityStatus', value as CatalogFilters['availabilityStatus'])
-                }
-                options={[
-                  { label: 'Disponible', value: 'AVAILABLE' },
-                  { label: 'Últimas unidades', value: 'LAST_UNITS' },
-                  { label: 'Agotado', value: 'OUT_OF_STOCK' },
-                ]}
-                value={filters.availabilityStatus}
-              />
-              <SelectFilter
-                label="Ordenar"
-                onChange={(value) => update('sort', value as ProductSort)}
-                options={[
-                  { label: 'Más nuevos', value: 'NEWEST' },
-                  { label: 'Nombre A–Z', value: 'NAME_ASC' },
-                  { label: 'Precio menor a mayor', value: 'PRICE_ASC' },
-                  { label: 'Precio mayor a menor', value: 'PRICE_DESC' },
-                ]}
-                value={filters.sort}
-                withEmpty={false}
-              />
-              <button disabled={loading} type="submit">
-                Aplicar filtros
+            )}
+            <button aria-label="Buscar" disabled={loading} type="submit">
+              <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+                <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2.5" />
+                <path d="m15 15 6 6" stroke="currentColor" strokeWidth="2.5" />
+              </svg>
+              <span className="visually-hidden">Buscar</span>
+            </button>
+          </form>
+          <div aria-label="Categorías" className="catalog-category-bar">
+            <span>Categorías</span>
+            <button
+              aria-pressed={filters.categoryId === ''}
+              onClick={() => {
+                const next = { ...filters, categoryId: '' };
+                setFilters(next);
+                load(next);
+              }}
+              type="button"
+            >
+              Todas
+            </button>
+            {categories.map((category) => (
+              <button
+                aria-pressed={filters.categoryId === category.categoryId}
+                key={category.categoryId}
+                onClick={() => {
+                  const next = { ...filters, categoryId: category.categoryId ?? '' };
+                  setFilters(next);
+                  load(next);
+                }}
+                type="button"
+              >
+                {category.name}
               </button>
-            </form>
-          )}
+            ))}
+          </div>
         </aside>
         <div aria-busy={loading} className="catalog-results">
           <ActiveFilters
@@ -814,21 +892,54 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
             />
           )}
           {!loading && items.length === 0 && (
+            <section
+              aria-label="Vista de ejemplo del catálogo"
+              className="catalog-reference-preview"
+            >
+              <p>Vista de ejemplo · los productos reales aparecerán al publicarlos desde Admin</p>
+              <div className="card-grid catalog-reference-preview__grid">
+                {Array.from({ length: 8 }, (_, index) => (
+                  <article
+                    aria-label={`Tarjeta de muestra ${index + 1}`}
+                    className="catalog-reference-card"
+                    key={index}
+                  >
+                    <div aria-hidden="true" className="catalog-reference-card__media">
+                      <svg fill="none" viewBox="0 0 96 72">
+                        <rect
+                          height="62"
+                          rx="3"
+                          stroke="currentColor"
+                          strokeWidth="5"
+                          width="88"
+                          x="4"
+                          y="5"
+                        />
+                        <circle cx="27" cy="25" fill="currentColor" r="7" />
+                        <path d="m12 58 21-20 15 13 15-21 21 28" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <div className="catalog-reference-card__body">
+                      <span>Nombre del producto</span>
+                      <span className="catalog-reference-card__sample-tag">Ejemplo</span>
+                      <span aria-hidden="true" className="catalog-reference-card__lines" />
+                      <div className="catalog-reference-card__bottom">
+                        <strong>$ --.--</strong>
+                        <button disabled type="button">
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+          {!loading && items.length === 0 && (
             <section className="catalog-empty cut-panel" role="status">
-              <p className="eyebrow">
-                {view === 'preorders' ? 'Próximos lanzamientos' : 'Catálogo sin resultados'}
-              </p>
-              <h2>
-                {view === 'preorders'
-                  ? 'No hay preventas para mostrar'
-                  : 'No hay productos para mostrar'}
-              </h2>
-              <p>
-                {view === 'preorders'
-                  ? 'Las nuevas reservas aparecerán aquí cuando sus campañas estén publicadas.'
-                  : 'Revisa los filtros o intenta nuevamente cuando el catálogo esté disponible.'}
-              </p>
-              <SectionPreview kind={view === 'preorders' ? 'preorders' : 'shop'} />
+              <p className="eyebrow">Catálogo sin resultados</p>
+              <h2>No hay productos para mostrar</h2>
+              <p>Revisa los filtros o intenta nuevamente cuando el catálogo esté disponible.</p>
               <a className="button-link secondary-link" href="/">
                 Volver al lanzador
               </a>
@@ -856,8 +967,67 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
             </button>
           )}
         </div>
+        <CatalogCartRail revision={cartRevision} />
       </div>
     </main>
+  );
+}
+
+function PreorderReferenceCard({
+  featured = false,
+  onDetail,
+  product,
+}: {
+  readonly featured?: boolean;
+  readonly onDetail?: (() => void) | undefined;
+  readonly product?: ProductCard | undefined;
+}) {
+  return (
+    <article
+      aria-label={
+        product ? undefined : featured ? 'Preventa destacada de muestra' : 'Preventa de muestra'
+      }
+      className={`preorder-reference-card${featured ? ' is-featured' : ''}${product ? '' : ' is-sample'}`}
+    >
+      {featured && <span className="preorder-reference-card__featured">Destacada</span>}
+      <div className="preorder-reference-card__media">
+        {product ? (
+          <img
+            alt={product.primaryResource.altText}
+            height={product.primaryResource.heightPx}
+            loading="lazy"
+            src={resourceUrl(product.primaryResource.resourceId)}
+            width={product.primaryResource.widthPx}
+          />
+        ) : (
+          <svg aria-hidden="true" fill="none" viewBox="0 0 96 72">
+            <rect height="62" rx="3" stroke="currentColor" strokeWidth="5" width="88" x="4" y="5" />
+            <circle cx="27" cy="25" fill="currentColor" r="7" />
+            <path d="m12 58 21-20 15 13 15-21 21 28" fill="currentColor" />
+          </svg>
+        )}
+      </div>
+      <div className="preorder-reference-card__info">
+        {product ? (
+          <h2>{product.name}</h2>
+        ) : (
+          <p className="preorder-reference-card__sample-label">Vista de ejemplo</p>
+        )}
+        <div className="preorder-reference-card__facts">
+          <p>
+            <span>Disponible</span>
+            <strong>{product ? availabilityLabel(product.availabilityStatus) : '—'}</strong>
+          </p>
+          <p>
+            <span>Fecha</span>
+            <strong>{product ? 'Ver detalle' : '—'}</strong>
+          </p>
+        </div>
+        <button disabled={!onDetail} onClick={onDetail} type="button">
+          Ver preventa <span aria-hidden="true">❯</span>
+        </button>
+      </div>
+    </article>
   );
 }
 
@@ -899,7 +1069,7 @@ function ActiveFilters({
   readonly onRemove: (key: keyof CatalogFilters) => void;
 }) {
   const active = (Object.entries(filters) as [keyof CatalogFilters, string][]).filter(
-    ([key, value]) => value !== '' && !(key === 'sort' && value === 'NEWEST'),
+    ([key, value]) => key !== 'saleType' && value !== '' && !(key === 'sort' && value === 'NEWEST'),
   );
   if (active.length === 0) return null;
   return (
@@ -912,6 +1082,121 @@ function ActiveFilters({
         </button>
       ))}
     </section>
+  );
+}
+
+interface CatalogCartSnapshot {
+  readonly groups: readonly {
+    readonly state: 'ACTIVE' | 'CONFLICT' | 'REMOVED';
+    readonly lines: readonly {
+      readonly cartLineId: string;
+      readonly estimatedLineTotalClp: number;
+      readonly productName: string;
+      readonly quantity: number;
+    }[];
+  }[];
+}
+
+function CatalogCartRail({ revision }: { readonly revision: number }) {
+  const [cart, setCart] = useState<CatalogCartSnapshot | null>(null);
+  const [state, setState] = useState<'loading' | 'ready' | 'unavailable'>('loading');
+  useEffect(() => {
+    let active = true;
+    const request = currentSession() === null ? publicRequest : authorizedRequest;
+    void request<{ item: CatalogCartSnapshot | null }>('/api/v1/cart')
+      .then((result) => {
+        if (!active) return;
+        setCart(result.item);
+        setState('ready');
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        if (error instanceof ApiError && error.code === 'CART_SESSION_REQUIRED') {
+          setCart(null);
+          setState('ready');
+          return;
+        }
+        setState('unavailable');
+      });
+    return () => {
+      active = false;
+    };
+  }, [revision]);
+  const lines =
+    cart?.groups.filter((group) => group.state !== 'REMOVED').flatMap((group) => group.lines) ?? [];
+  const count = lines.reduce((sum, line) => sum + line.quantity, 0);
+  const subtotal = lines.reduce((sum, line) => sum + line.estimatedLineTotalClp, 0);
+  return (
+    <aside aria-label="Resumen del carrito" className="catalog-cart-rail">
+      <h2>
+        <svg
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path d="M2 3h3l2.3 12h12.4L22 6H6" />
+          <circle cx="9" cy="20" r="1" fill="currentColor" />
+          <circle cx="19" cy="20" r="1" fill="currentColor" />
+        </svg>
+        Carrito
+      </h2>
+      {state === 'loading' ? (
+        <p className="catalog-cart-rail__notice">Cargando carrito…</p>
+      ) : state === 'unavailable' ? (
+        <div className="catalog-cart-rail__empty">
+          <svg
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 96 96"
+          >
+            <path d="M8 14h13l11 51h49l9-39H26" />
+            <circle cx="40" cy="79" r="4" fill="currentColor" />
+            <circle cx="74" cy="79" r="4" fill="currentColor" />
+          </svg>
+          <p>Carrito no disponible</p>
+          <small>Ábrelo para volver a intentar la consulta.</small>
+        </div>
+      ) : lines.length === 0 ? (
+        <div className="catalog-cart-rail__empty">
+          <svg
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 96 96"
+          >
+            <path d="M8 14h13l11 51h49l9-39H26" />
+            <circle cx="40" cy="79" r="4" fill="currentColor" />
+            <circle cx="74" cy="79" r="4" fill="currentColor" />
+          </svg>
+          <p>Tu carrito está vacío</p>
+        </div>
+      ) : (
+        <>
+          <ul className="catalog-cart-rail__lines">
+            {lines.map((line) => (
+              <li key={line.cartLineId}>
+                <span>
+                  {line.quantity} × {line.productName}
+                </span>
+                <strong>${line.estimatedLineTotalClp.toLocaleString('es-CL')}</strong>
+              </li>
+            ))}
+          </ul>
+          <p className="catalog-cart-rail__total">
+            {count} {count === 1 ? 'producto' : 'productos'}{' '}
+            <strong>${subtotal.toLocaleString('es-CL')}</strong>
+          </p>
+        </>
+      )}
+      <a className="catalog-cart-rail__link" href="/cart">
+        Ver carrito
+      </a>
+    </aside>
   );
 }
 
@@ -1236,6 +1521,7 @@ export function TournamentPage({
     tournaments: [],
   });
   const [selected, setSelected] = useState<EditorialEntry | null>(null);
+  const [tournamentFilter, setTournamentFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
 
   useEffect(() => {
     let active = true;
@@ -1308,6 +1594,169 @@ export function TournamentPage({
     );
   }
 
+  if (view === 'tournaments') {
+    const featured = upcoming[0];
+    const cards =
+      tournamentFilter === 'upcoming'
+        ? upcoming
+        : tournamentFilter === 'completed'
+          ? completed
+          : [...upcoming, ...completed, ...legacy];
+    return (
+      <main className="page-frame tournament-page tournament-reference-page visual-public">
+        <header className="tournament-reference-heading">
+          <h1>Torneos</h1>
+        </header>
+        <p aria-live="polite" className="status tournament-reference-status">
+          {content.loading ? 'Cargando torneos…' : content.errors.join(' ')}
+        </p>
+        <section
+          aria-labelledby="tournament-feature-heading"
+          className="tournament-reference-feature"
+        >
+          <h2 id="tournament-feature-heading">Próximo torneo</h2>
+          <div className="tournament-reference-feature-content">
+            <div className="tournament-reference-feature-art">
+              {featured && firstEditorialImage(featured) ? (
+                <img
+                  alt={firstEditorialImage(featured)?.altText ?? ''}
+                  src={resourceUrl(firstEditorialImage(featured)?.resourceId ?? '')}
+                />
+              ) : (
+                <span aria-hidden="true" className="tournament-reference-image-placeholder" />
+              )}
+            </div>
+            <dl className="tournament-reference-facts">
+              <TournamentFact
+                label="Fecha"
+                value={
+                  featured
+                    ? publicDateTime(eventFromEditorial(featured)?.startsAt ?? '')
+                    : 'No informada'
+                }
+              />
+              <TournamentFact label="Ubicación" value="No informada" />
+              <TournamentFact label="Cupos" value="No informados" />
+              <TournamentFact
+                label="Estado"
+                value={featured ? 'Próximo' : 'Sin torneo publicado'}
+              />
+            </dl>
+            {featured ? (
+              <button
+                className="tournament-reference-detail"
+                onClick={() => setSelected(featured)}
+                type="button"
+              >
+                Ver detalle <span aria-hidden="true">›</span>
+              </button>
+            ) : (
+              <p className="tournament-reference-no-feature">
+                {content.loading ? 'Cargando…' : 'Aún no hay próximos torneos publicados.'}
+              </p>
+            )}
+          </div>
+        </section>
+        <nav aria-label="Filtrar torneos" className="tournament-reference-filters">
+          <button
+            aria-pressed={tournamentFilter === 'all'}
+            onClick={() => setTournamentFilter('all')}
+            type="button"
+          >
+            Todos
+          </button>
+          <button
+            aria-pressed={tournamentFilter === 'upcoming'}
+            onClick={() => setTournamentFilter('upcoming')}
+            type="button"
+          >
+            <span aria-hidden="true" /> Próximos
+          </button>
+          <button
+            disabled
+            title="El estado en curso aún no existe en las publicaciones"
+            type="button"
+          >
+            <span aria-hidden="true" /> En curso
+          </button>
+          <button
+            aria-pressed={tournamentFilter === 'completed'}
+            onClick={() => setTournamentFilter('completed')}
+            type="button"
+          >
+            <span aria-hidden="true" /> Finalizados
+          </button>
+        </nav>
+        <section aria-label="Listado de torneos" className="tournament-reference-grid">
+          {cards.map((item, index) => {
+            const cover = firstEditorialImage(item);
+            const event = eventFromEditorial(item);
+            return (
+              <article className="tournament-reference-card" key={item.editorialEntryId}>
+                <div className="tournament-reference-card-art">
+                  {cover ? (
+                    <img alt="" src={resourceUrl(cover.resourceId)} />
+                  ) : (
+                    <span aria-hidden="true" className="tournament-reference-image-placeholder" />
+                  )}
+                </div>
+                <h3>{item.title}</h3>
+                <dl>
+                  <div>
+                    <dt>Fecha</dt>
+                    <dd>{event ? publicDateTime(event.startsAt) : 'No informada'}</dd>
+                  </div>
+                  <div>
+                    <dt>Ubicación</dt>
+                    <dd>No informada</dd>
+                  </div>
+                  <div>
+                    <dt>Cupos</dt>
+                    <dd>No informados</dd>
+                  </div>
+                  <div>
+                    <dt>Estado</dt>
+                    <dd>
+                      {event?.status === 'COMPLETED'
+                        ? 'Finalizado'
+                        : event?.status === 'UPCOMING'
+                          ? 'Próximo'
+                          : 'Informativo'}
+                    </dd>
+                  </div>
+                </dl>
+                <button onClick={() => setSelected(item)} type="button">
+                  Ver detalle
+                </button>
+                <span aria-hidden="true" className="editorial-index">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+              </article>
+            );
+          })}
+          {!content.loading && cards.length === 0 && (
+            <p className="tournament-reference-empty" role="status">
+              {tournamentFilter === 'completed'
+                ? 'Aún no hay torneos finalizados publicados.'
+                : tournamentFilter === 'upcoming'
+                  ? 'Aún no hay próximos torneos publicados.'
+                  : 'Aún no hay torneos publicados.'}
+            </p>
+          )}
+        </section>
+        {content.hall.length > 0 && (
+          <TournamentEditorialSection
+            empty=""
+            items={content.hall}
+            onSelect={setSelected}
+            section="hall"
+            title="Hall of Fame"
+          />
+        )}
+      </main>
+    );
+  }
+
   return (
     <main className={`page-frame editorial-page tournament-page ${view}-page visual-public`}>
       <header className="section-heading editorial-heading cut-panel">
@@ -1341,33 +1790,6 @@ export function TournamentPage({
         content.hall.length === 0 && <SectionPreview kind={view} />}
       {!content.loading && (
         <div className="tournament-sections">
-          {view === 'tournaments' && !content.failedTypes.includes('TOURNAMENT') && (
-            <>
-              <TournamentEditorialSection
-                empty="Aún no hay próximos torneos publicados."
-                items={upcoming}
-                onSelect={setSelected}
-                section="upcoming"
-                title="Próximos torneos"
-              />
-              <TournamentEditorialSection
-                empty="Aún no hay torneos realizados publicados."
-                items={completed}
-                onSelect={setSelected}
-                section="completed"
-                title="Torneos realizados"
-              />
-              {legacy.length > 0 && (
-                <TournamentEditorialSection
-                  empty=""
-                  items={legacy}
-                  onSelect={setSelected}
-                  section="legacy"
-                  title="Información de torneos"
-                />
-              )}
-            </>
-          )}
           {view === 'quests' && !content.failedTypes.includes('QUEST') && (
             <TournamentEditorialSection
               empty="Todavía no hay desafíos publicados."
@@ -1378,18 +1800,18 @@ export function TournamentPage({
               title="Eventos y Quests"
             />
           )}
-          {view === 'tournaments' && !content.failedTypes.includes('HALL_OF_FAME') && (
-            <TournamentEditorialSection
-              empty="Aún no hay reconocimientos publicados."
-              items={content.hall}
-              onSelect={setSelected}
-              section="hall"
-              title="Hall of Fame"
-            />
-          )}
         </div>
       )}
     </main>
+  );
+}
+
+function TournamentFact({ label, value }: { readonly label: string; readonly value: string }) {
+  return (
+    <div className="tournament-reference-fact">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }
 
@@ -1632,39 +2054,203 @@ export function CommunityHub({
   readonly navigate: (route: CommunityRoute) => void;
   readonly route: CommunityRoute;
 }) {
-  const activeRoute = route === '/community' ? '/news' : route;
-  const sections = [
-    { label: 'Noticias', route: '/news' },
-    { label: 'Torneos', route: '/tournaments' },
-    { label: 'Quests', route: '/quests' },
-    { label: 'Visítanos', route: '/community/visit' },
-  ] as const;
+  if (route === '/news') return <NewsPage includeCommunity />;
+  if (route === '/tournaments') return <TournamentPage />;
+  if (route === '/quests') return <TournamentPage view="quests" />;
+  if (route === '/community/visit') return <CommunityPage />;
+
+  return <CommunityLanding navigate={navigate} />;
+}
+
+function CommunityLanding({ navigate }: { readonly navigate: (route: CommunityRoute) => void }) {
+  const [items, setItems] = useState<readonly EditorialEntry[]>([]);
+  const [store, setStore] = useState<StoreSummary | null>(null);
+  const [selected, setSelected] = useState<EditorialEntry | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [contentError, setContentError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.allSettled([
+      publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=NEWS'),
+      publicRequest<{ items: EditorialEntry[] }>('/api/v1/content?limit=24&type=COMMUNITY'),
+      publicRequest<{ item: unknown }>('/api/v1/service-coverage/store'),
+    ]).then(([newsResult, communityResult, storeResult]) => {
+      if (!active) return;
+      const news = newsResult.status === 'fulfilled' ? newsResult.value.items : [];
+      const community = communityResult.status === 'fulfilled' ? communityResult.value.items : [];
+      setItems(
+        [...news, ...community].sort(
+          (left, right) =>
+            new Date(right.publishedAt ?? 0).getTime() - new Date(left.publishedAt ?? 0).getTime(),
+        ),
+      );
+      setStore(storeResult.status === 'fulfilled' ? firstStore(storeResult.value.item) : null);
+      setContentError(newsResult.status === 'rejected' && communityResult.status === 'rejected');
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (selected) {
+    return (
+      <main className="page-frame editorial-page visual-public">
+        <article className="editorial-reader cut-panel">
+          <button className="button-secondary" onClick={() => setSelected(null)} type="button">
+            Volver a actividades
+          </button>
+          <p className="card-kicker">{newsCategory(selected)}</p>
+          <h1>{selected.title}</h1>
+          {validEditorialDate(selected.publishedAt) && (
+            <p className="news-date">Publicada el {publicDateTime(selected.publishedAt ?? '')}</p>
+          )}
+          <p className="editorial-reader-excerpt">{selected.excerpt}</p>
+          <EditorialDocumentView
+            document={documentFromMetadata(
+              selected.metadata,
+              selected.body,
+              selected.editorialEntryId,
+            )}
+          />
+        </article>
+      </main>
+    );
+  }
+
+  const featured = items[0];
+  const cover = featured ? firstEditorialImage(featured) : undefined;
 
   return (
-    <div className="community-hub visual-public">
+    <main className="community-hub community-reference-page visual-public">
       <header className="community-hub-header">
         <div className="community-hub-title">
-          <img alt="" aria-hidden="true" src="/assets/sergod/home-launcher/community.webp" />
-          <h1 className="visually-hidden">Comunidad</h1>
+          <h1>Comunidad</h1>
         </div>
         <nav aria-label="Secciones de Comunidad" className="community-hub-tabs">
-          {sections.map((section) => (
-            <button
-              aria-current={activeRoute === section.route ? 'page' : undefined}
-              key={section.route}
-              onClick={() => navigate(section.route)}
-              type="button"
-            >
-              {section.label}
-            </button>
-          ))}
+          <button aria-current="page" onClick={() => navigate('/news')} type="button">
+            <span aria-hidden="true">✦</span> Noticias
+          </button>
+          <button onClick={() => navigate('/tournaments')} type="button">
+            <span aria-hidden="true">◆</span> Torneos
+          </button>
+          <button onClick={() => navigate('/quests')} type="button">
+            <span aria-hidden="true">▣</span> Quests
+          </button>
+          <button onClick={() => navigate('/community/visit')} type="button">
+            <span aria-hidden="true">◆</span> Visítanos
+          </button>
         </nav>
       </header>
-      {activeRoute === '/news' && <NewsPage includeCommunity />}
-      {activeRoute === '/tournaments' && <TournamentPage />}
-      {activeRoute === '/quests' && <TournamentPage view="quests" />}
-      {activeRoute === '/community/visit' && <CommunityPage />}
-    </div>
+      <div className="community-reference-grid">
+        <section
+          aria-labelledby="community-feature-heading"
+          className="community-reference-panel community-reference-panel--cyan"
+        >
+          <h2 id="community-feature-heading">
+            ★ <span>Actividad destacada</span>
+          </h2>
+          <div className="community-reference-feature-media">
+            {cover ? (
+              <img alt={cover.altText} src={resourceUrl(cover.resourceId)} />
+            ) : (
+              <span aria-hidden="true" className="community-reference-placeholder" />
+            )}
+          </div>
+          {featured ? (
+            <div className="community-reference-feature-copy">
+              <h3>{featured.title}</h3>
+              <p>{featured.excerpt}</p>
+              <button onClick={() => setSelected(featured)} type="button">
+                Ver detalle <span aria-hidden="true">›</span>
+              </button>
+            </div>
+          ) : (
+            <div className="community-reference-feature-copy">
+              <h3>{loading ? 'Cargando actividades…' : 'Aún no hay actividades publicadas'}</h3>
+              <p>
+                {contentError
+                  ? 'No fue posible cargar las publicaciones.'
+                  : 'Cuando publiquemos una actividad, aparecerá aquí.'}
+              </p>
+            </div>
+          )}
+        </section>
+        <section
+          aria-labelledby="community-list-heading"
+          className="community-reference-panel community-reference-panel--red"
+        >
+          <h2 id="community-list-heading">
+            ▣ <span>Más actividades</span>
+          </h2>
+          <div className="community-reference-list">
+            {items.slice(1, 4).map((item) => {
+              const image = firstEditorialImage(item);
+              return (
+                <button
+                  className="community-reference-list-item"
+                  key={item.editorialEntryId}
+                  onClick={() => setSelected(item)}
+                  type="button"
+                >
+                  <span className="community-reference-list-thumb">
+                    {image && <img alt="" src={resourceUrl(image.resourceId)} />}
+                  </span>
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>
+                      {validEditorialDate(item.publishedAt)
+                        ? publicDateTime(item.publishedAt ?? '')
+                        : newsCategory(item)}
+                    </small>
+                  </span>
+                  <span aria-hidden="true">›</span>
+                </button>
+              );
+            })}
+            {items.length < 2 && (
+              <p className="community-reference-list-empty">
+                {loading ? 'Cargando publicaciones…' : 'No hay más actividades publicadas.'}
+              </p>
+            )}
+          </div>
+          <button
+            className="community-reference-all"
+            onClick={() => navigate('/news')}
+            type="button"
+          >
+            Ver todas las actividades <span aria-hidden="true">›</span>
+          </button>
+        </section>
+        <section
+          aria-labelledby="community-visit-heading"
+          className="community-reference-panel community-reference-panel--cyan"
+        >
+          <h2 id="community-visit-heading">
+            ◆ <span>Visítanos en tienda</span>
+          </h2>
+          <div aria-hidden="true" className="community-reference-store-media">
+            ⌖
+          </div>
+          <h3>{store?.name ?? 'Sergod Store'}</h3>
+          <p>Información de nuestra tienda física.</p>
+          <dl>
+            <div>
+              <dt>Dirección</dt>
+              <dd>{store?.publicAddress ?? 'No disponible'}</dd>
+            </div>
+            <div>
+              <dt>Horario</dt>
+              <dd>{store?.openingHours ?? 'No disponible'}</dd>
+            </div>
+          </dl>
+          <button onClick={() => navigate('/community/visit')} type="button">
+            Ver información <span aria-hidden="true">›</span>
+          </button>
+        </section>
+      </div>
+    </main>
   );
 }
 

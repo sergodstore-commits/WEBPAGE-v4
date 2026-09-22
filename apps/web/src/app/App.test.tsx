@@ -47,8 +47,8 @@ describe('IdentityAccess presentation', () => {
 
   it('presents the public commerce home while preserving account access', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'Sergod Store' })).toBeInTheDocument();
-    expect(document.querySelector('.launch-v2__hero-logo')).toHaveAttribute(
+    expect(screen.getByRole('img', { name: 'Sergod Store' })).toBeInTheDocument();
+    expect(document.querySelector('.home-logo')).toHaveAttribute(
       'src',
       '/assets/sergod/logo_sergod_store_oficial_transparente.webp',
     );
@@ -71,8 +71,8 @@ describe('IdentityAccess presentation', () => {
 
   it('uses the launcher as the home navigation and restores the regular header inside sections', () => {
     render(<App />);
-    const topNavigation = within(screen.getByRole('navigation', { name: 'Navegación de portada' }));
-    fireEvent.click(topNavigation.getByRole('button', { name: 'Comunidad' }));
+    const homeNavigation = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
+    fireEvent.click(homeNavigation.getByRole('button', { name: 'Comunidad' }));
 
     const sectionNavigation = within(
       screen.getByRole('navigation', { name: 'Navegación principal' }),
@@ -180,9 +180,11 @@ describe('IdentityAccess presentation', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Sergod Store' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('navigation', { name: 'Accesos principales' }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Volver al inicio' }));
-    expect(screen.getByRole('heading', { name: 'Sergod Store' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Accesos principales' })).toBeInTheDocument();
   });
 
   it('does not mount account tools for an anonymous direct visit', () => {

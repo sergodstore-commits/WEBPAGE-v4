@@ -18,6 +18,11 @@ const publicRoutes: readonly { readonly label: string; readonly route: Route }[]
 ];
 
 export function SiteChrome({ navigate, route }: SiteChromeProps) {
+  const shopHeader =
+    route === '/shop' ||
+    route === '/preorders' ||
+    route === '/community' ||
+    route === '/tournaments';
   const [menuOpen, setMenuOpen] = useState(false);
   const [role, setRole] = useState<'ADMIN' | 'CLIENTE' | null>(null);
   const [authenticated, setAuthenticated] = useState(() => currentSession() !== null);
@@ -52,7 +57,13 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
       <a className="skip-link" href="#main-content">
         Saltar al contenido
       </a>
-      <header className="site-header">
+      <header
+        className={
+          shopHeader
+            ? `site-header shop-site-header${route === '/community' ? ' community-site-header' : ''}${route === '/tournaments' ? ' tournament-site-header' : ''}`
+            : 'site-header'
+        }
+      >
         <button aria-label="Ir al inicio" className="brand" onClick={() => go('/')} type="button">
           <img
             alt="Sergod Store"
@@ -87,15 +98,46 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
             ))}
           </nav>
           <nav aria-label="Cuenta y compra" className="utility-navigation">
+            {shopHeader && (
+              <button
+                aria-current={route.startsWith('/account') ? 'page' : undefined}
+                className="shop-site-header__account"
+                onClick={() => go(authenticated ? '/account/overview' : '/login')}
+                type="button"
+              >
+                <svg aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="7" r="4" />
+                  <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+                </svg>
+                Cuenta
+              </button>
+            )}
             <button
               aria-current={route === '/cart' ? 'page' : undefined}
               className="cart-link"
               onClick={() => go('/cart')}
               type="button"
             >
-              Carrito
+              {shopHeader && (
+                <svg
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M2 3h3l2.3 12h12.4L22 6H6" />
+                  <circle cx="9" cy="20" r="1" fill="currentColor" />
+                  <circle cx="19" cy="20" r="1" fill="currentColor" />
+                </svg>
+              )}
+              <span
+                className={shopHeader && route !== '/community' ? 'visually-hidden' : undefined}
+              >
+                Carrito
+              </span>
             </button>
-            {authenticated ? (
+            {!shopHeader && authenticated ? (
               <>
                 <button
                   aria-current={route.startsWith('/account') ? 'page' : undefined}
@@ -115,7 +157,7 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
                   </button>
                 ) : null}
               </>
-            ) : (
+            ) : !shopHeader ? (
               <>
                 <button onClick={() => go('/register')} type="button">
                   Registro
@@ -124,7 +166,11 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
                   Ingresar
                 </button>
               </>
-            )}
+            ) : role === 'ADMIN' ? (
+              <button className="admin-link" onClick={() => go('/admin')} type="button">
+                Operación
+              </button>
+            ) : null}
           </nav>
         </div>
       </header>

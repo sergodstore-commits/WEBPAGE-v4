@@ -1,0 +1,510 @@
+/*
+ * Base neutral de estructura y accesibilidad.
+ * No define identidad visual: el próximo sistema de diseño debe construirse sobre esta capa.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:root {
+  color: #202124;
+  background: #f5f5f5;
+  font-family: Arial, Helvetica, sans-serif;
+  font-synthesis: none;
+  line-height: 1.5;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+.button-link {
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid #777;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #202124;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+a {
+  color: #0758b5;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+svg {
+  width: 1.25rem;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem;
+  border: 1px solid #aaa;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #202124;
+}
+
+textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+form {
+  display: grid;
+  gap: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.65rem;
+  border: 1px solid #ddd;
+  text-align: left;
+  vertical-align: top;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.75rem 1rem;
+  transform: translateY(-160%);
+  background: #fff;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell > #main-content {
+  flex: 1;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem max(1rem, calc((100vw - 80rem) / 2));
+  border-bottom: 1px solid #ccc;
+  background: #fff;
+}
+
+.brand {
+  padding: 0;
+  border: 0;
+}
+
+.brand img {
+  display: block;
+  width: auto;
+  height: 3.5rem;
+}
+
+.header-navigation,
+.primary-navigation,
+.utility-navigation,
+.actions,
+.segmented,
+.home-navigation,
+.home-utilities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-navigation {
+  grid-column: 2 / 4;
+  justify-content: space-between;
+}
+
+.menu-toggle,
+.admin-sidebar-toggle {
+  display: none;
+}
+
+.site-footer {
+  display: grid;
+  gap: 1rem;
+  padding: 2rem max(1rem, calc((100vw - 80rem) / 2));
+  border-top: 1px solid #ccc;
+  background: #fff;
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footer-brand img {
+  width: auto;
+  height: 3.5rem;
+}
+
+.page-frame,
+.home-content,
+.panel,
+.wide-panel,
+.community-hub {
+  width: min(calc(100% - 2rem), 80rem);
+  margin-inline: auto;
+}
+
+.page-frame,
+.community-hub {
+  padding-block: 2rem;
+}
+
+.panel,
+.wide-panel {
+  margin-block: 2rem;
+  padding: 1.5rem;
+}
+
+.panel {
+  max-width: 42rem;
+}
+
+.home-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 1rem;
+}
+
+.home-content {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+.home-logo {
+  width: min(25rem, 70vw);
+  height: auto;
+}
+
+.home-navigation,
+.home-utilities {
+  justify-content: center;
+}
+
+.cut-panel,
+.commerce-card,
+.editorial-card,
+.account-panel,
+.cart-group,
+.checkout-summary,
+.checkout-option,
+.admin-module,
+.pos-card,
+.service-coverage-panel {
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+.section-heading,
+.commerce-hero,
+.community-hub-header,
+.tournament-reference-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-bottom: 1px solid #ccc;
+}
+
+.section-heading h1,
+.community-hub-header h1,
+.tournament-reference-heading h1 {
+  margin: 0;
+}
+
+.eyebrow,
+.card-kicker,
+.status-chip {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status,
+.freight-notice {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #777;
+  background: #eee;
+}
+
+.card-grid,
+.commerce-grid,
+.editorial-grid,
+.home-highlight-grid,
+.metric-grid,
+.admin-action-grid,
+.admin-form-grid,
+.pos-grid,
+.preorder-reference-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+}
+
+.product-media,
+.product-gallery,
+.community-reference-feature-media,
+.tournament-reference-feature-art {
+  min-height: 10rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #eee;
+}
+
+.product-media img,
+.product-gallery img,
+.news-card-cover,
+.editorial-cover,
+.community-reference-feature-media img,
+.tournament-reference-feature-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.product-detail,
+.product-detail-layout,
+.catalog-layout,
+.checkout-layout,
+.account-layout,
+.community-reference-grid,
+.tournament-reference-feature-content,
+.pos-register-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.catalog-filters,
+.account-nav,
+.admin-sidebar,
+.pos-ticket-pane {
+  align-self: start;
+}
+
+.catalog-category-bar,
+.news-categories,
+.community-hub-tabs,
+.admin-task-tabs,
+.catalog-admin-tabs,
+.pos-category-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cart-line,
+.order-summary,
+.pos-ticket-line,
+.community-reference-list-item {
+  display: grid;
+  gap: 0.75rem;
+  padding-block: 0.75rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.quantity-control,
+.pos-quantity-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.admin-workspace {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+.admin-area-navigation,
+.admin-nav-group,
+.stacked-actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pos-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.pos-product-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.appearance-region {
+  position: relative;
+}
+
+.appearance-region-content {
+  position: relative;
+  z-index: 1;
+}
+
+.appearance-layers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .menu-toggle,
+  .admin-sidebar-toggle {
+    display: inline-flex;
+  }
+
+  .header-navigation {
+    display: none;
+    grid-column: 1 / -1;
+  }
+
+  .header-navigation.is-open {
+    display: grid;
+  }
+
+  .primary-navigation,
+  .utility-navigation {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .product-detail,
+  .product-detail-layout,
+  .catalog-layout,
+  .checkout-layout,
+  .account-layout,
+  .community-reference-grid,
+  .tournament-reference-feature-content,
+  .pos-register-layout,
+  .admin-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-frame,
+  .community-hub {
+    width: min(calc(100% - 1rem), 80rem);
+  }
+
+  .home-content {
+    padding: 1rem;
+  }
+
+  .home-navigation,
+  .home-utilities {
+    align-items: stretch;
+    display: grid;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

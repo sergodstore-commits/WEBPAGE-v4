@@ -82,7 +82,9 @@ Durante la misión se permiten local, mocks/fixtures, sandbox, staging y preview
 
 ## 9. Diseño
 
-La autoridad visual es `docs/CURRENT/11-DISENO-E-IDENTIDAD-VISUAL.md` y `design/approved/`. `design/source-existing/` contiene fuentes visuales de trabajo y no implica aprobación de producción. El logo oficial es inmutable.
+La autoridad visual es `docs/CURRENT/11-DISENO-E-IDENTIDAD-VISUAL.md`. El único recurso de marca
+vigente está en `design/brand/`; el logo oficial es inmutable. No existe actualmente una biblioteca
+visual aprobada: cualquier nueva dirección requiere aprobación expresa del propietario.
 
 ## 10. Finalización
 

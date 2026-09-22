@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-14. Release productivo en `c197044`; el registro CLIENTE vuelve a
+> Estado local auditado hasta el 2026-09-22. Release productivo en `c197044`; el registro CLIENTE vuelve a
 > estar habilitado con aceptación obligatoria y versionada de los Términos y condiciones 1.0. Por
 > decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -20,11 +20,28 @@
 | Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                | Carga operativa del propietario      |
 | Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                      | Catálogo/contenido del propietario   |
 | Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados         | Contenido del propietario            |
-| Diseño y accesibilidad                                                               | Producción PASS          | Sistema visual final, editor por capas y responsive verificados                    | Carga visual del propietario         |
+| Diseño y accesibilidad                                                               | Base neutral local PASS  | Identidad anterior retirada; logo oficial, estructura y accesibilidad preservados  | Nueva identidad visual               |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
-| Despliegue web                                                                       | Producción PASS          | Vercel `c197044`, dominio canónico, sesión persistente y Apariencia habilitada     | Ninguno                              |
+| Despliegue web                                                                       | Producción PASS          | Vercel `c197044`, dominio canónico y sesión persistente                            | Publicar la futura identidad visual  |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
+
+## Punto de partida visual neutral — 2026-09-22
+
+- Por instrucción expresa del propietario se retiró del repositorio activo toda la identidad visual
+  anterior: hojas de estilo temáticas, fondos, marcos, texturas, botones, referencias, propuestas y
+  bibliotecas derivadas. Esta decisión no altera contratos, rutas, datos ni reglas funcionales.
+- `design/brand/` y `apps/web/public/assets/sergod/` conservan únicamente las variantes PNG y WebP
+  transparente del logo oficial. La web importa solamente `styles/base.css`, una capa neutral de
+  estructura, accesibilidad y adaptación mínima que no prescribe la futura identidad.
+- El editor de apariencia conserva su mecánica de persistencia y capas de texto, pero comienza sin
+  galería, plantillas ni imágenes heredadas; la carga de imagen permanece inactiva hasta definir la
+  nueva biblioteca visual.
+- El gate completo aprobó formato, lint, tipado, 116 archivos de prueba, 489 pruebas aprobadas, una
+  omisión documentada y el build de producción. La revisión local de Portada, Tienda, Preventas,
+  Noticias, Torneos, Comunidad, Carrito, Login y Registro no encontró imágenes rotas ni overflow.
+- Producción no fue modificada por esta limpieza. El commit de esta base neutral será el punto de
+  partida recuperable para el próximo trabajo visual.
 
 ## Gates locales reproducidos
 
@@ -32,7 +49,7 @@
 - `npm ci`: PASS.
 - Runner oficial `scripts/codex/verify-local.ps1 -RunLocalIntegration`: `LOCAL_VERIFICATION=PASS` y salida natural `0` el 2026-08-23.
 - `format:check`, `lint`, `typecheck`, `build`: PASS.
-- Unit, Application, Contract y Web: 116 archivos / 485 pruebas PASS y 1 SKIP documentado.
+- Unit, Application, Contract y Web: 116 archivos / 489 pruebas PASS y 1 SKIP documentado.
   Incluye rutas protegidas, restauración, persistencia, renovación/reintento acotado, registro
   idempotente, estado 404 explícito, editor visual por bloques y lectura editorial pública.
 - Integration local: el gate histórico aprobó 14 archivos / 169 pruebas sobre PostgreSQL 18.4. Para el

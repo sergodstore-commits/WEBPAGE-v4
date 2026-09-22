@@ -44,7 +44,6 @@ import { CartPage } from '../cart/CartPage.js';
 import { ComicsPage, CommunityHub, StorePage } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
 import { TermsPage } from '../legal/TermsPage.js';
-import { AppearancePageElements, AppearanceRegion } from '../appearance/SiteAppearance.js';
 import { SiteAppearancePreviewProvider } from '../appearance/SiteAppearancePreview.js';
 import { routeWithAppearancePreview } from './appearance-preview-route.js';
 
@@ -162,31 +161,15 @@ export function App() {
                   <AccountHub view="loyalty" />
                 </AccessGate>
               )}
-              {route === '/shop' && (
-                <AppearanceRegion page="shop">
-                  <StorePage />
-                </AppearanceRegion>
-              )}
-              {route === '/preorders' && (
-                <AppearanceRegion page="shop">
-                  <StorePage view="preorders" />
-                </AppearanceRegion>
-              )}
+              {route === '/shop' && <StorePage />}
+              {route === '/preorders' && <StorePage view="preorders" />}
               {route === '/cart' && <CartPage />}
               {(route === '/community' ||
                 route === '/community/visit' ||
                 route === '/news' ||
                 route === '/tournaments' ||
-                route === '/quests') && (
-                <AppearanceRegion page="community">
-                  <CommunityHub navigate={navigate} route={route} />
-                </AppearanceRegion>
-              )}
-              {route === '/comics' && (
-                <AppearanceRegion page="comics">
-                  <ComicsPage />
-                </AppearanceRegion>
-              )}
+                route === '/quests') && <CommunityHub navigate={navigate} route={route} />}
+              {route === '/comics' && <ComicsPage />}
               {adminArea && (
                 <AccessGate requiredRole="ADMIN">
                   <AdminHub area={adminArea} navigate={navigate} />
@@ -402,133 +385,40 @@ function AccessGate({
 function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   const authenticated = currentSession() !== null;
   const launcherEntries = [
-    { label: 'Tienda', route: '/shop', glyph: 'cart' },
-    { label: 'Preventas', route: '/preorders', glyph: 'box' },
-    { label: 'Noticias', route: '/news', glyph: 'news' },
-    { label: 'Torneos', route: '/tournaments', glyph: 'trophy' },
-    { label: 'Comunidad', route: '/community', glyph: 'community' },
+    { label: 'Tienda', route: '/shop' },
+    { label: 'Preventas', route: '/preorders' },
+    { label: 'Noticias', route: '/news' },
+    { label: 'Torneos', route: '/tournaments' },
+    { label: 'Comunidad', route: '/community' },
   ] as const;
   return (
-    <AppearancePageElements page="home">
-      <main className="home-page launch-v2 visual-public">
-        <section aria-label="Inicio Sergod Store" className="launch-v2__stage">
-          <h1 className="visually-hidden">Sergod Store</h1>
-          <div aria-hidden="true" className="launch-v2__rays" />
-          <div aria-hidden="true" className="launch-v2__halftone" />
-          <div className="launch-v2__frame">
-            <header className="launch-v2__header">
-              <img
-                alt=""
-                aria-hidden="true"
-                className="launch-v2__header-logo"
-                src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
-              />
-              <nav aria-label="Navegación de portada" className="launch-v2__topnav">
-                <button aria-current="page" onClick={() => navigate('/')} type="button">
-                  Inicio
-                </button>
-                <button onClick={() => navigate('/shop')} type="button">
-                  Tienda
-                </button>
-                <button onClick={() => navigate('/community')} type="button">
-                  Comunidad
-                </button>
-                <button onClick={() => navigate('/tournaments')} type="button">
-                  Torneos
-                </button>
-                <button onClick={() => navigate('/news')} type="button">
-                  Noticias
-                </button>
-              </nav>
-              <nav aria-label="Cuenta y compra" className="launch-v2__utilities">
-                <button
-                  onClick={() => navigate(authenticated ? '/account/overview' : '/login')}
-                  type="button"
-                >
-                  Cuenta
-                </button>
-                <button onClick={() => navigate('/cart')} type="button">
-                  Carrito
-                </button>
-              </nav>
-            </header>
-            <img
-              alt=""
-              aria-hidden="true"
-              className="launch-v2__hero-logo"
-              src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
-            />
-            <nav aria-label="Accesos principales" className="launch-v2__destinations">
-              {launcherEntries.map((entry, index) => (
-                <button
-                  className={`launch-v2__destination launch-v2__destination--${index + 1}`}
-                  key={entry.route}
-                  onClick={() => navigate(entry.route)}
-                  type="button"
-                >
-                  <LauncherGlyph kind={entry.glyph} />
-                  <span>{entry.label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </section>
-      </main>
-    </AppearancePageElements>
-  );
-}
-
-function LauncherGlyph({
-  kind,
-}: {
-  readonly kind: 'box' | 'cart' | 'community' | 'news' | 'trophy';
-}) {
-  const paths = {
-    box: (
-      <>
-        <path d="M3 7 12 3l9 4v10l-9 4-9-4Z" />
-        <path d="m3 7 9 4 9-4M12 11v10" />
-      </>
-    ),
-    cart: (
-      <>
-        <path d="M2 4h3l2.3 11H19l2-8H6" />
-        <circle cx="9" cy="20" r="1" />
-        <circle cx="18" cy="20" r="1" />
-      </>
-    ),
-    community: (
-      <>
-        <circle cx="9" cy="8" r="3" />
-        <circle cx="17" cy="9" r="2.5" />
-        <path d="M2 20v-2a7 7 0 0 1 14 0v2ZM17 14a5 5 0 0 1 5 5v1h-4" />
-      </>
-    ),
-    news: (
-      <>
-        <path d="M4 4h12v16H4zM16 8h4v11a1 1 0 0 1-1 1h-3" />
-        <path d="M7 8h6M7 11h6M7 14h6M7 17h4" />
-      </>
-    ),
-    trophy: (
-      <>
-        <path d="M7 3h10v6a5 5 0 0 1-10 0ZM7 5H3v2a4 4 0 0 0 4 4M17 5h4v2a4 4 0 0 1-4 4M12 14v5M8 21h8M9 19h6" />
-      </>
-    ),
-  };
-  return (
-    <svg
-      aria-hidden="true"
-      className="launch-v2__glyph"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.8"
-      viewBox="0 0 24 24"
-    >
-      {paths[kind]}
-    </svg>
+    <main className="home-page visual-public">
+      <section aria-label="Inicio Sergod Store" className="home-content">
+        <img
+          alt="Sergod Store"
+          className="home-logo"
+          src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
+        />
+        <nav aria-label="Accesos principales" className="home-navigation">
+          {launcherEntries.map((entry) => (
+            <button key={entry.route} onClick={() => navigate(entry.route)} type="button">
+              {entry.label}
+            </button>
+          ))}
+        </nav>
+        <nav aria-label="Cuenta y compra" className="home-utilities">
+          <button
+            onClick={() => navigate(authenticated ? '/account/overview' : '/login')}
+            type="button"
+          >
+            Cuenta
+          </button>
+          <button onClick={() => navigate('/cart')} type="button">
+            Carrito
+          </button>
+        </nav>
+      </section>
+    </main>
   );
 }
 

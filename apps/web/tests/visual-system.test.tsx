@@ -7,11 +7,9 @@ import { describe, expect, it } from 'vitest';
 const testsDirectory = dirname(fileURLToPath(import.meta.url));
 const webDirectory = join(testsDirectory, '..');
 const publicDirectory = join(webDirectory, 'public');
-const assetDirectory = join(publicDirectory, 'assets', 'sergod', 'ui');
+const assetDirectory = join(publicDirectory, 'assets', 'sergod');
 const stylesDirectory = join(webDirectory, 'src', 'styles');
-const stylesheet = ['tokens.css', 'global.css', 'visual-system.css']
-  .map((file) => readFileSync(join(stylesDirectory, file), 'utf8'))
-  .join('\n');
+const baseStyles = readFileSync(join(stylesDirectory, 'base.css'), 'utf8');
 const siteChrome = readFileSync(join(webDirectory, 'src', 'app', 'SiteChrome.tsx'), 'utf8');
 
 function filesBelow(directory: string): string[] {
@@ -21,38 +19,32 @@ function filesBelow(directory: string): string[] {
   });
 }
 
-describe('biblioteca visual pública', () => {
-  it('publica cada recurso referenciado y no conserva derivados sin uso', () => {
-    const references = [...new Set(stylesheet.match(/\/assets\/sergod\/ui\/[^')]+/g) ?? [])].sort();
+describe('línea visual neutral', () => {
+  it('conserva una sola hoja estructural sin referencias al diseño retirado', () => {
+    expect(readdirSync(stylesDirectory).sort()).toEqual(['base.css']);
+    expect(baseStyles).not.toMatch(/\/assets\/sergod\//u);
+    expect(baseStyles).not.toMatch(/halftone|launcher|clip-path|drop-shadow|keyframes/iu);
+  });
+
+  it('publica únicamente las dos variantes inmutables del logo oficial', () => {
     const published = filesBelow(assetDirectory)
       .map((file) => `/${relative(publicDirectory, file).replaceAll('\\', '/')}`)
       .sort();
 
-    expect(references.length).toBeGreaterThan(0);
-    expect(references.every((reference) => existsSync(join(publicDirectory, reference)))).toBe(
-      true,
-    );
-    expect(published).toEqual(references);
+    expect(published).toEqual([
+      '/assets/sergod/logo_sergod_store_oficial.png',
+      '/assets/sergod/logo_sergod_store_oficial_transparente.webp',
+    ]);
+    expect(published.every((file) => existsSync(join(publicDirectory, file)))).toBe(true);
   });
 
-  it('usa solo derivados web sin etiquetas de texto horneado', () => {
-    const published = filesBelow(assetDirectory).map((file) => file.toLowerCase());
-    const textAssets =
-      /navigation_|label_|comics_title|comic_reader|empty_state|error_state|success_state/;
-
-    expect(published.every((file) => file.endsWith('.webp'))).toBe(true);
-    expect(published.some((file) => textAssets.test(file))).toBe(false);
-  });
-
-  it('usa el derivado transparente del logo sin alterar el original aprobado', () => {
-    const derivative = join(
-      publicDirectory,
-      'assets',
-      'sergod',
-      'logo_sergod_store_oficial_transparente.webp',
-    );
-    expect(existsSync(derivative)).toBe(true);
+  it('usa el derivado transparente del logo en la navegación pública', () => {
     expect(siteChrome).toContain('/assets/sergod/logo_sergod_store_oficial_transparente.webp');
     expect(siteChrome).not.toContain('src="/assets/sergod/logo_sergod_store_oficial.png"');
+  });
+
+  it('mantiene foco visible y una adaptación móvil mínima', () => {
+    expect(baseStyles).toContain(':focus-visible');
+    expect(baseStyles).toContain('@media (max-width: 900px)');
   });
 });
