@@ -118,6 +118,7 @@ export const catalogPublicProductDetailSchema = catalogPublicProductCardSchema
         capacity: z.number().int().positive(),
         closesAt: z.iso.datetime({ offset: true }),
         estimatedArrivalText: z.string().trim().min(1).max(500),
+        maxPerCustomer: z.number().int().positive().safe().nullable().optional(),
         opensAt: z.iso.datetime({ offset: true }),
         preorderCampaignId: normalizedUuidSchema,
       })

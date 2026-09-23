@@ -67,6 +67,7 @@ export type Route =
   | '/admin/appearance'
   | '/admin/audit'
   | '/admin/catalog'
+  | '/admin/carousel'
   | '/admin/configuration'
   | '/admin/content'
   | '/admin/inventory'
@@ -159,7 +160,7 @@ export function App() {
               )}
               {route === '/loyalty' && (
                 <AccessGate>
-                  <AccountHub view="loyalty" />
+                  <AccountHub />
                 </AccessGate>
               )}
               {route === '/shop' && <StorePage />}
@@ -896,6 +897,7 @@ function routeFromLocation(): Route {
     '/admin/appearance',
     '/admin/audit',
     '/admin/catalog',
+    '/admin/carousel',
     '/admin/configuration',
     '/admin/content',
     '/admin/inventory',
@@ -932,6 +934,7 @@ function adminAreaFromRoute(route: Route): AdminArea | null {
     '/admin': 'dashboard',
     '/admin/audit': 'audit',
     '/admin/catalog': 'catalog',
+    '/admin/carousel': 'carousel',
     '/admin/configuration': 'configuration',
     '/admin/content': 'content',
     '/admin/inventory': 'inventory',

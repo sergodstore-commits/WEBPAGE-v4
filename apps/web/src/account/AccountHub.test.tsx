@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError, authorizedRequest, ownAccount } from '../identity/api.js';
+import { authorizedRequest, ownAccount } from '../identity/api.js';
 import { AccountHub } from './AccountHub.js';
 
 vi.mock('../identity/api.js', async (importOriginal) => {
@@ -68,6 +68,8 @@ beforeEach(() => {
         ],
         nextCursor: null,
       } as never;
+    if (path === '/api/v1/account/tournament-identifiers')
+      return { item: { konamiId: null, kluCode: null } } as never;
     if (path === '/api/v1/account/delivery-preferences' && init?.method === 'PUT')
       return {
         item: {
@@ -84,16 +86,15 @@ beforeEach(() => {
 });
 
 describe('AccountHub', () => {
-  it('loads Loyalty as an independent destination without hidden account requests', async () => {
-    render(<AccountHub view="loyalty" />);
+  it('does not request removed loyalty data from the account view', async () => {
+    render(<AccountHub />);
 
-    expect(screen.getByRole('heading', { name: 'Loyalty' })).toBeInTheDocument();
-    expect(await screen.findByText('120')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Mis pedidos' })).not.toBeInTheDocument();
-    expect(ownAccount).not.toHaveBeenCalled();
+    expect(await screen.findByText('cliente@sergod.cl')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Loyalty' })).not.toBeInTheDocument();
+    expect(ownAccount).toHaveBeenCalled();
 
     const paths = vi.mocked(authorizedRequest).mock.calls.map(([path]) => path);
-    expect(paths).toEqual(['/api/v1/loyalty/account', '/api/v1/loyalty/movements?limit=25']);
+    expect(paths.some((path) => path.includes('/api/v1/loyalty/'))).toBe(false);
   });
 
   it('shows the complete customer account from the real account APIs', async () => {
@@ -102,8 +103,6 @@ describe('AccountHub', () => {
     expect(await screen.findByText('cliente@sergod.cl')).toBeInTheDocument();
     expect(await screen.findByText('SG-2026-000001')).toBeInTheDocument();
     expect(await screen.findByText('SG-2026-000002')).toBeInTheDocument();
-    expect(screen.getByText('120')).toBeInTheDocument();
-    expect(screen.getByText('Acumulación')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Editar perfil y seguridad' })).toHaveAttribute(
       'href',
       '/account',
@@ -123,23 +122,18 @@ describe('AccountHub', () => {
     );
   });
 
-  it('keeps orders visible when the customer has no loyalty account', async () => {
+  it('keeps orders visible when optional tournament identifiers are unavailable', async () => {
     vi.mocked(authorizedRequest).mockImplementation(async (path) => {
       if (path.includes('orderType=REGULAR')) return { items: [order], nextCursor: null } as never;
       if (path.includes('orderType=PREORDER')) return { items: [], nextCursor: null } as never;
-      if (path === '/api/v1/loyalty/account')
-        throw new ApiError('LOYALTY_ACCOUNT_NOT_FOUND', 'not found');
-      if (path === '/api/v1/loyalty/movements?limit=25')
-        return { items: [], nextCursor: null } as never;
+      if (path === '/api/v1/account/tournament-identifiers')
+        throw new Error('optional unavailable');
       if (path === '/api/v1/account/delivery-preferences') return { item: null } as never;
       throw new Error(`Unexpected request: ${path}`);
     });
 
     render(<AccountHub />);
     expect(await screen.findByText('SG-2026-000001')).toBeInTheDocument();
-    expect(
-      await screen.findByText('Aún no tienes una cuenta de puntos habilitada.'),
-    ).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('cliente@sergod.cl')).toBeInTheDocument());
   });
 });

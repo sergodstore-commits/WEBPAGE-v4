@@ -64,6 +64,8 @@ function doubles() {
     reserveContactChange: vi.fn(async () => 'contact-change-id'),
     resolveExternalIdentityReconciliation: vi.fn(async () => undefined),
     updateOptionalPhone: vi.fn(async () => undefined),
+    getTournamentIdentifiers: vi.fn(async () => ({ konamiId: null, kluCode: null })),
+    updateTournamentIdentifiers: vi.fn(async () => ({ konamiId: null, kluCode: null })),
   };
   return { provider, repository };
 }

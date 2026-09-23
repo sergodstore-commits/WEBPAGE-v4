@@ -54,6 +54,7 @@ interface ProductDetail extends ProductCard {
     readonly capacity: number;
     readonly closesAt: string;
     readonly estimatedArrivalText: string;
+    readonly maxPerCustomer?: number | null;
     readonly opensAt: string;
     readonly preorderCampaignId: string;
   } | null;
@@ -1324,6 +1325,15 @@ function ProductDetailPanel({
                 <dd>{publicDateTime(detail.preorder.closesAt)}</dd>
                 <dt>Llegada estimada</dt>
                 <dd>{detail.preorder.estimatedArrivalText}</dd>
+                {detail.preorder.maxPerCustomer != null && (
+                  <>
+                    <dt>Máximo por cliente</dt>
+                    <dd>
+                      {detail.preorder.maxPerCustomer} unidades por cuenta durante toda la campaña,
+                      entre todos sus pedidos.
+                    </dd>
+                  </>
+                )}
                 <dt>Cupos disponibles</dt>
                 <dd>
                   {detail.preorder.availableCapacity} de {detail.preorder.capacity}

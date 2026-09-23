@@ -946,6 +946,16 @@
     background: #0b1420;
     backface-visibility: hidden;
   }
+  & .home-showcase__link {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+  & .home-showcase__link:focus-visible {
+    outline: 3px solid #8ce8f1;
+    outline-offset: 3px;
+    border-radius: 12px;
+  }
   & .home-showcase__name {
     position: absolute;
     bottom: 9px;

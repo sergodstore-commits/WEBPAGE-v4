@@ -32,8 +32,8 @@ export class PgPreordersRepository implements PreordersRepository {
         `INSERT INTO preorder_campaigns (
           preorder_campaign_id,product_id,branch_id,fulfillment_group_key,operational_state,
           publication_status,capacity,opens_at,closes_at,estimated_arrival_text,created_by,
-          created_at,updated_at
-        ) VALUES ($1,$2,$3,$4,'DRAFT','DRAFT',$5,$6,$7,$8,$9,$10,$10)`,
+          created_at,updated_at,max_per_customer
+        ) VALUES ($1,$2,$3,$4,'DRAFT','DRAFT',$5,$6,$7,$8,$9,$10,$10,$11)`,
         [
           campaignId,
           input.campaign.productId,
@@ -45,6 +45,7 @@ export class PgPreordersRepository implements PreordersRepository {
           input.campaign.estimatedArrivalText,
           requiredActor(input.context),
           now,
+          input.campaign.maxPerCustomer ?? null,
         ],
       );
       await transaction.query(
@@ -110,6 +111,7 @@ export class PgPreordersRepository implements PreordersRepository {
       await transaction.query(
         `UPDATE preorder_campaigns SET product_id=$2,branch_id=$3,fulfillment_group_key=$4,
           capacity=$5,opens_at=$6,closes_at=$7,estimated_arrival_text=$8,
+          max_per_customer=CASE WHEN $10 THEN $11 ELSE max_per_customer END,
           version=version+1,updated_at=$9 WHERE preorder_campaign_id=$1`,
         [
           input.campaignId,
@@ -121,6 +123,8 @@ export class PgPreordersRepository implements PreordersRepository {
           input.campaign.closesAt,
           input.campaign.estimatedArrivalText,
           now,
+          input.campaign.maxPerCustomer !== undefined,
+          input.campaign.maxPerCustomer ?? null,
         ],
       );
       await transaction.query(
@@ -501,6 +505,7 @@ interface CampaignRow extends QueryResultRow {
   created_at: Date;
   estimated_arrival_text: string;
   fulfillment_group_key: string | null;
+  max_per_customer: string | null;
   opens_at: Date;
   operational_state: CampaignView['operationalState'];
   preorder_campaign_id: string;
@@ -522,6 +527,7 @@ function mapCampaign(row: CampaignRow): CampaignView {
     createdAt: row.created_at,
     estimatedArrivalText: row.estimated_arrival_text,
     fulfillmentGroupKey: row.fulfillment_group_key,
+    maxPerCustomer: row.max_per_customer == null ? null : integer(row.max_per_customer),
     opensAt: row.opens_at,
     operationalState: row.operational_state,
     preorderCampaignId: row.preorder_campaign_id,

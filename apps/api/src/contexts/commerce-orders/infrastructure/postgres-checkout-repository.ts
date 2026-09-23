@@ -315,6 +315,30 @@ export class PgCheckoutRepository implements CheckoutRepository {
             );
           } else {
             if (line.preorderCampaignId === null) throw conflict('PREORDER_CAMPAIGN_NOT_AVAILABLE');
+            // Serialize the capacity and customer-limit check on the same campaign row.
+            // The following SUM gets a fresh snapshot after any concurrent reservation commits.
+            const campaign = await transaction.query<{ max_per_customer: string | null }>(
+              `SELECT max_per_customer FROM preorder_campaigns
+                WHERE preorder_campaign_id=$1 FOR UPDATE`,
+              [line.preorderCampaignId],
+            );
+            const customerLimit = campaign.rows[0]?.max_per_customer;
+            if (customerLimit != null) {
+              const usage = await transaction.query<{ quantity: string }>(
+                `SELECT COALESCE(SUM(reservation.quantity),0)::text quantity
+                   FROM order_preorder_reservations reservation
+                   JOIN orders USING(order_id)
+                  WHERE reservation.preorder_campaign_id=$1 AND orders.account_id=$2
+                    AND reservation.status IN ('ACTIVE','COMMITTED')`,
+                [line.preorderCampaignId, input.accountId],
+              );
+              if (
+                safeNonnegative(usage.rows[0]?.quantity ?? '0') + line.quantity >
+                safePositive(customerLimit)
+              ) {
+                throw conflict('PREORDER_CUSTOMER_LIMIT_EXCEEDED');
+              }
+            }
             const reserved = await transaction.query(
               `UPDATE preorder_campaigns
                   SET temporarily_reserved=temporarily_reserved+$2,updated_at=$3,version=version+1
@@ -628,7 +652,13 @@ export class PgCheckoutRepository implements CheckoutRepository {
             validationStatus:
               delivery.errorCodes.length === 0 ? ('VALID' as const) : ('INVALID' as const),
           };
-    const lines = await loadLines(queryable, group.cart_group_id, delivery.branchId, now);
+    const lines = await loadLines(
+      queryable,
+      group.cart_group_id,
+      delivery.branchId,
+      now,
+      accountId,
+    );
     if (lines.length === 0) throw conflict('CHECKOUT_GROUP_EMPTY');
     const merchandiseSubtotalClp = safeSum(lines.map((line) => line.lineSubtotalClp));
     const promotions = await evaluatePromotions(
@@ -783,6 +813,7 @@ async function loadLines(
   groupId: string,
   branchId: string | null,
   now: Date,
+  accountId: string,
 ): Promise<CheckoutLineView[]> {
   const result = await queryable.query<LineRow>(
     `SELECT line.cart_line_id,line.product_id,line.preorder_campaign_id,line.quantity,
@@ -796,7 +827,11 @@ async function loadLines(
         campaign.product_id campaign_product_id,campaign.branch_id campaign_branch_id,
         campaign.operational_state,campaign.publication_status campaign_publication_status,
         campaign.capacity,campaign.temporarily_reserved,campaign.committed,
-        campaign.opens_at,campaign.closes_at
+        campaign.opens_at,campaign.closes_at,campaign.max_per_customer,
+        (SELECT COALESCE(SUM(reservation.quantity),0)::text
+           FROM order_preorder_reservations reservation JOIN orders USING(order_id)
+          WHERE reservation.preorder_campaign_id=campaign.preorder_campaign_id
+            AND orders.account_id=$3 AND reservation.status IN ('ACTIVE','COMMITTED')) customer_quantity
        FROM cart_lines line
        JOIN products product USING(product_id)
        JOIN tcg_games game ON game.game_id=product.game_id
@@ -807,7 +842,7 @@ async function loadLines(
        LEFT JOIN preorder_campaigns campaign
          ON campaign.preorder_campaign_id=line.preorder_campaign_id
       WHERE line.cart_group_id=$1 ORDER BY line.created_at,line.cart_line_id`,
-    [groupId, branchId],
+    [groupId, branchId, accountId],
   );
   return result.rows.map((row) => {
     const quantity = safePositive(row.quantity);
@@ -842,6 +877,13 @@ async function loadLines(
         quantity
     ) {
       errors.push('PREORDER_CAMPAIGN_NOT_AVAILABLE');
+    }
+    if (
+      row.sale_type === 'PREORDER' &&
+      row.max_per_customer != null &&
+      safeNonnegative(row.customer_quantity) + quantity > safePositive(row.max_per_customer)
+    ) {
+      errors.push('PREORDER_CUSTOMER_LIMIT_EXCEEDED');
     }
     const lineSubtotalClp = safeProduct(unitPriceClp, quantity);
     return {
@@ -1462,6 +1504,8 @@ interface GroupRow extends QueryResultRow {
 }
 interface LineRow extends QueryResultRow {
   readonly campaign_branch_id: string | null;
+  readonly customer_quantity: string;
+  readonly max_per_customer: string | null;
   readonly campaign_product_id: string | null;
   readonly campaign_publication_status: string | null;
   readonly capacity: string | null;

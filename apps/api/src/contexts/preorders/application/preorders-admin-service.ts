@@ -183,6 +183,7 @@ function normalizeCampaign<T extends CreatePreorderCampaign | EditPreorderCampai
   const closesAt = new Date(body.closesAt);
   assertCampaignWindow(opensAt, closesAt);
   assertPositiveQuantity(body.capacity);
+  if (body.maxPerCustomer != null) assertPositiveQuantity(body.maxPerCustomer);
   return {
     ...body,
     estimatedArrivalText: normalizeRequiredText(body.estimatedArrivalText),

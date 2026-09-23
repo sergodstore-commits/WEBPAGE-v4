@@ -170,13 +170,14 @@ export class PgCatalogPublicQueryRepository
                 co.collection_id, co.name AS collection_name,
                 preorder_detail.preorder_campaign_id AS detail_preorder_campaign_id,
                 preorder_detail.capacity AS preorder_capacity,
+                preorder_detail.max_per_customer AS preorder_max_per_customer,
                 preorder_detail.available_capacity AS preorder_available_capacity,
                 preorder_detail.opens_at AS preorder_opens_at,
                 preorder_detail.closes_at AS preorder_closes_at,
                 preorder_detail.estimated_arrival_text AS preorder_estimated_arrival_text
            ${publicProductFrom}
            LEFT JOIN LATERAL (
-             SELECT campaign.preorder_campaign_id, campaign.capacity,
+             SELECT campaign.preorder_campaign_id, campaign.capacity, campaign.max_per_customer,
                     GREATEST(
                       campaign.capacity-campaign.temporarily_reserved-campaign.committed,
                       0
@@ -230,6 +231,13 @@ export class PgCatalogPublicQueryRepository
                   'Preorder available capacity',
                 ),
                 capacity: requiredPositiveInteger(row.preorder_capacity, 'Preorder capacity'),
+                maxPerCustomer:
+                  row.preorder_max_per_customer == null
+                    ? null
+                    : requiredPositiveInteger(
+                        row.preorder_max_per_customer,
+                        'Preorder customer limit',
+                      ),
                 closesAt: requiredDate(
                   row.preorder_closes_at,
                   'Preorder closing date',
@@ -481,6 +489,7 @@ interface ProductDetailRow extends ProductListRow {
   readonly language: string | null;
   readonly preorder_available_capacity: string | null;
   readonly preorder_capacity: string | null;
+  readonly preorder_max_per_customer: string | null;
   readonly preorder_closes_at: Date | null;
   readonly preorder_estimated_arrival_text: string | null;
   readonly preorder_opens_at: Date | null;

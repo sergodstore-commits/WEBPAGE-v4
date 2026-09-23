@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
 
-import { metadataRegistry } from '@sergod/contracts';
+import {
+  accountTournamentIdentifiersSchema,
+  metadataRegistry,
+  type AccountTournamentIdentifiers,
+} from '@sergod/contracts';
 import type { Clock, ExecutionContext } from '@sergod/foundation';
 
 import type { ProtectedCapability } from '../domain/authorization.js';
@@ -235,6 +239,30 @@ export class IdentityAccessService {
       });
       throw error;
     }
+  }
+
+  async getTournamentIdentifiers(accessToken: string): Promise<AccountTournamentIdentifiers> {
+    const authorized = await this.authorize({
+      accessToken,
+      capability: { kind: 'ACCOUNT_SELF' },
+    });
+    return this.repository.getTournamentIdentifiers(authorized.account.accountId);
+  }
+
+  async updateTournamentIdentifiers(input: {
+    readonly accessToken: string;
+    readonly context: ExecutionContext;
+    readonly identifiers: AccountTournamentIdentifiers;
+  }): Promise<AccountTournamentIdentifiers> {
+    const authorized = await this.authorize({
+      accessToken: input.accessToken,
+      capability: { kind: 'ACCOUNT_SELF' },
+    });
+    return this.repository.updateTournamentIdentifiers({
+      accountId: authorized.account.accountId,
+      context: { ...input.context, actorId: authorized.account.accountId, actorType: 'USER' },
+      identifiers: accountTournamentIdentifiersSchema.parse(input.identifiers),
+    });
   }
 
   async updateOptionalPhone(input: {

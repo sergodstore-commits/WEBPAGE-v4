@@ -18,6 +18,7 @@ export interface CampaignView {
   readonly createdAt: Date;
   readonly estimatedArrivalText: string;
   readonly fulfillmentGroupKey: string | null;
+  readonly maxPerCustomer: number | null;
   readonly opensAt: Date;
   readonly operationalState: PreorderOperationalState;
   readonly preorderCampaignId: string;

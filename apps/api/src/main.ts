@@ -48,6 +48,9 @@ import {
 import { CatalogPublicResourceHttpApi } from './contexts/catalog/presentation/catalog-public-resource-http-api.js';
 import { CatalogResourceAdminHttpApi } from './contexts/catalog/presentation/catalog-resource-admin-http-api.js';
 import { CatalogResourceContentHttpApi } from './contexts/catalog/presentation/catalog-resource-content-http-api.js';
+import { HomeCarouselService } from './contexts/home-carousel/home-carousel-service.js';
+import { PgHomeCarouselRepository } from './contexts/home-carousel/postgres-home-carousel-repository.js';
+import { HomeCarouselHttpApi } from './contexts/home-carousel/home-carousel-http-api.js';
 import { IdentityAccessService } from './contexts/identity-access/application/identity-access-service.js';
 import { EditorialMediaService } from './contexts/editorial-content/application/editorial-media-service.js';
 import { EditorialService } from './contexts/editorial-content/application/editorial-service.js';
@@ -256,6 +259,12 @@ if (identityConfig !== null && pool !== null) {
     catalogStorage === null
       ? null
       : new CatalogPublicResourceService(new PgCatalogPublicQueryRepository(pool), catalogStorage);
+  const homeCarouselService = new HomeCarouselService(
+    new PgHomeCarouselRepository(pool, clock, uuids),
+    catalogAuthorizer,
+    catalogBinaryService,
+    catalogStorage,
+  );
   const inventoryService = new InventoryAdminService(
     new PgInventoryRepository(pool, clock, uuids),
     new PgInventoryAdminAuthorizer(pool),
@@ -329,6 +338,7 @@ if (identityConfig !== null && pool !== null) {
     new CatalogResourceAdminHttpApi(identityService, catalogResourceService, logger),
     new CatalogResourceContentHttpApi(identityService, catalogResourceDeliveryService),
     new CatalogAdminHttpApi(identityService, catalogService, logger),
+    new HomeCarouselHttpApi(identityService, homeCarouselService),
     new IdentityHttpApi(
       identityService,
       identityRepository,

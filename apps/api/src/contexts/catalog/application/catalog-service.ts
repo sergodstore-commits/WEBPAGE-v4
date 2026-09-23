@@ -249,6 +249,29 @@ export class CatalogService {
     }
   }
 
+  async ingestHomeCarouselImage(input: {
+    readonly altText: string;
+    readonly bytes: Uint8Array;
+    readonly context: ExecutionContext;
+    readonly declaredMimeType: string;
+    readonly originalFilename: string;
+    readonly requestFingerprint: string;
+  }) {
+    await this.authorize(input.context);
+    const { descriptor, registered } = await this.prepareCatalogImage({
+      ...input,
+      position: 1,
+      resourceClass: 'CONTENT_IMAGE',
+      storageFolder: 'home/carousel',
+    });
+    await this.activateResource({
+      context: input.context,
+      descriptor,
+      resourceId: registered.resourceId,
+    });
+    return { resourceId: registered.resourceId };
+  }
+
   async replaceAssociatedCatalogImage(input: {
     readonly altText: string;
     readonly bytes: Uint8Array;

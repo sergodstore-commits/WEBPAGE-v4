@@ -17,6 +17,8 @@ export * from './promotions-admin.js';
 export * from './preorders-admin.js';
 export * from './service-coverage.js';
 export * from './site-appearance.js';
+export * from './home-carousel.js';
+export * from './account-tournament-identifiers.js';
 export * from './pos.js';
 export * from './payload-registry.js';
 export * from './registry.js';

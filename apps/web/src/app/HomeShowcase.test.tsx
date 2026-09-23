@@ -53,23 +53,28 @@ describe('HomeShowcase', () => {
     expect(cancel.mock.calls.length).toBeGreaterThan(count);
   });
 
-  it('uses published image resources and handles broken images gracefully', async () => {
+  it('uses only admin-selected banners and keeps their destination functional', async () => {
     vi.mocked(publicRequest).mockResolvedValue({
       items: [
         {
-          productId: 'p1',
-          name: 'Producto publicado',
-          primaryResource: { resourceId: 'resource-1', altText: 'Producto' },
+          slideId: 'slide-1',
+          altText: 'Visitar Preventas',
+          linkPath: '/preorders',
         },
       ],
     });
     const { container } = render(<HomeShowcase />);
-    await screen.findByText('Una mirada a nuestro catálogo');
+    await screen.findByText('Banners de Sergod Store');
     const image = container.querySelector('img') as HTMLImageElement;
-    expect(image).toHaveAttribute('src', '/api/v1/catalog/resources/resource-1/content');
+    expect(image).toHaveAttribute('src', '/api/v1/home-carousel/slide-1/content');
+    expect(screen.getByRole('link', { name: 'Visitar Preventas' })).toHaveAttribute(
+      'href',
+      '/preorders',
+    );
     fireEvent.error(image);
     expect(image).toHaveAttribute('hidden');
     expect(publicRequest).toHaveBeenCalledTimes(1);
+    expect(publicRequest).toHaveBeenCalledWith('/api/v1/home-carousel');
   });
 
   it('keeps the scene usable when the catalog is unavailable', async () => {

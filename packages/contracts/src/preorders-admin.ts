@@ -20,6 +20,7 @@ export const createPreorderCampaignSchema = z
     closesAt: instant,
     estimatedArrivalText: z.string().trim().min(1).max(500),
     fulfillmentGroupKey: z.string().trim().min(1).max(255).nullable(),
+    maxPerCustomer: positiveQuantity.nullable().optional(),
     opensAt: instant,
     productId: z.uuid(),
   })
@@ -32,6 +33,7 @@ export const editPreorderCampaignSchema = z
     closesAt: instant,
     estimatedArrivalText: z.string().trim().min(1).max(500),
     fulfillmentGroupKey: z.string().trim().min(1).max(255).nullable(),
+    maxPerCustomer: positiveQuantity.nullable().optional(),
     opensAt: instant,
     productId: z.uuid(),
   })

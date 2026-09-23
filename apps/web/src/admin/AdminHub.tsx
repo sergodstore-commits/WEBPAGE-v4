@@ -5,6 +5,7 @@ import { readCoverage } from '../service-coverage/api.js';
 import { StoreField } from '../service-coverage/StoreField.js';
 import { firstStoreFromCoverage, type StoreSummary } from '../service-coverage/store.js';
 import { CatalogEditors, CatalogResourceManager, RecordEditors } from './AdminEditors.js';
+import { CarouselAdminPanel } from './CarouselAdminPanel.js';
 import {
   itemDetail,
   itemIdentifier,
@@ -31,6 +32,7 @@ interface ModuleDefinition {
 export type AdminArea =
   | 'audit'
   | 'catalog'
+  | 'carousel'
   | 'configuration'
   | 'content'
   | 'dashboard'
@@ -46,6 +48,7 @@ export type AdminRoute =
   | '/admin/appearance'
   | '/admin/audit'
   | '/admin/catalog'
+  | '/admin/carousel'
   | '/admin/configuration'
   | '/admin/content'
   | '/admin/inventory'
@@ -90,6 +93,7 @@ const modules = [
     path: '/api/v1/admin/system-configurations?limit=25',
   },
   { anchor: 'content', label: 'Contenido', path: '/api/v1/admin/content?limit=25' },
+  { anchor: 'carousel', label: 'Carrusel de inicio', path: '/api/v1/admin/home-carousel' },
   { anchor: 'audit', label: 'Auditoría', path: '/api/v1/admin/audit-entries?limit=25' },
 ] as const satisfies readonly ModuleDefinition[];
 
@@ -141,18 +145,18 @@ const adminAreas = [
     title: 'Promociones y cupones',
   },
   {
-    area: 'loyalty',
-    description: 'Configura cómo se acumulan y canjean puntos o corrige un saldo justificado.',
-    label: 'Puntos',
-    route: '/admin/loyalty',
-    title: 'Programa de puntos',
+    area: 'content',
+    description: 'Noticias, torneos y actividades de Comunidad.',
+    label: 'Comunidad',
+    route: '/admin/content',
+    title: 'Comunidad',
   },
   {
-    area: 'content',
-    description: 'Noticias, torneos, comunidad y cómics administrados por la tienda.',
-    label: 'Contenido editorial',
-    route: '/admin/content',
-    title: 'Contenido editorial',
+    area: 'carousel',
+    description: 'Administra las imágenes del carrusel de inicio y sus destinos.',
+    label: 'Carrusel de inicio',
+    route: '/admin/carousel',
+    title: 'Carrusel de inicio',
   },
   {
     area: 'configuration',
@@ -186,14 +190,13 @@ const adminNavigationGroups = [
       { label: 'Inventario', route: '/admin/inventory' },
       { label: 'Preventas', route: '/admin/preorders' },
       { label: 'Promociones', route: '/admin/promotions' },
-      { label: 'Puntos', route: '/admin/loyalty' },
     ],
   },
   {
     label: 'Contenido',
     links: [
       { label: 'Publicaciones', route: '/admin/content' },
-      { label: 'Apariencia web', route: '/admin/appearance' },
+      { label: 'Carrusel de inicio', route: '/admin/carousel' },
     ],
   },
   {
@@ -232,19 +235,14 @@ const dashboardActions = [
     route: '/admin/inventory',
   },
   {
-    description: 'Crear noticias, torneos, comunidad o cómics.',
-    label: 'Publicar contenido',
+    description: 'Crear noticias, torneos o actividades de Comunidad.',
+    label: 'Administrar Comunidad',
     route: '/admin/content',
   },
   {
     description: 'Editar dirección, horario y cobertura.',
     label: 'Configurar tienda',
     route: '/admin/service-coverage',
-  },
-  {
-    description: 'Mover imágenes y textos por capas en la portada.',
-    label: 'Editar apariencia web',
-    route: '/admin/appearance',
   },
 ] as const satisfies readonly {
   readonly description: string;
@@ -253,14 +251,14 @@ const dashboardActions = [
 }[];
 
 const managedTaskLabels = {
+  carousel: { create: 'Agregar banner', edit: 'Editar banners', records: 'Banners activos' },
   configuration: { create: 'Nuevo ajuste', edit: 'Editar ajuste', records: 'Versiones' },
   content: { create: 'Nueva publicación', edit: 'Editar publicación', records: 'Estados' },
-  loyalty: { create: 'Puntos y configuración', edit: 'Editar configuración', records: 'Estados' },
   preorders: { create: 'Nueva preventa', edit: 'Editar preventa', records: 'Campañas' },
   promotions: { create: 'Nueva promoción', edit: 'Editar promoción', records: 'Estados' },
 } as const satisfies Readonly<
   Record<
-    'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions',
+    'carousel' | 'configuration' | 'content' | 'preorders' | 'promotions',
     Readonly<Record<AdminTask, string>>
   >
 >;
@@ -272,7 +270,8 @@ const requiredModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
   content: ['content'],
   dashboard: ['orders', 'payments', 'fulfillments', 'catalog', 'games', 'categories'],
   inventory: ['catalog'],
-  loyalty: ['loyalty'],
+  carousel: ['carousel'],
+  loyalty: [],
   orders: ['orders', 'payments', 'fulfillments'],
   preorders: ['preorders', 'catalog'],
   promotions: ['promotions', 'coupons'],
@@ -285,7 +284,8 @@ const visibleModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
   content: ['content'],
   dashboard: [],
   inventory: [],
-  loyalty: ['loyalty'],
+  carousel: ['carousel'],
+  loyalty: [],
   orders: ['orders', 'payments', 'fulfillments'],
   preorders: ['preorders'],
   promotions: ['promotions', 'coupons'],
@@ -364,7 +364,7 @@ export function AdminHub({
   }, [area]);
 
   useEffect(() => {
-    if (!['loyalty', 'preorders'].includes(area)) return;
+    if (!['preorders'].includes(area)) return;
     let active = true;
     void readCoverage()
       .then((result) => {
@@ -501,7 +501,7 @@ export function AdminHub({
             'catalog',
             'configuration',
             'content',
-            'loyalty',
+            'carousel',
             'orders',
             'preorders',
             'promotions',
@@ -613,21 +613,20 @@ export function AdminHub({
               {managedTask === 'create' && managedArea === 'promotions' && (
                 <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
               )}
-              {managedTask === 'create' && managedArea === 'loyalty' && (
-                <LoyaltyOperations onAction={mutate} store={store} />
-              )}
+              {(managedTask === 'create' || managedTask === 'edit') &&
+                managedArea === 'carousel' && <CarouselAdminPanel />}
               {managedTask === 'create' && managedArea === 'configuration' && (
                 <ConfigurationComposer onAction={mutate} />
               )}
               {managedTask === 'create' && managedArea === 'content' && (
                 <EditorialComposer onAction={mutate} />
               )}
-              {managedTask === 'edit' && (
+              {managedTask === 'edit' && managedArea !== 'carousel' && (
                 <RecordEditors
                   area={managedArea}
                   configurations={data.configurations?.items ?? []}
                   content={data.content?.items ?? []}
-                  loyalty={data.loyalty?.items ?? []}
+                  loyalty={[]}
                   onAction={mutate}
                   preorders={data.preorders?.items ?? []}
                   products={data.catalog?.items ?? []}
@@ -655,8 +654,8 @@ export function AdminHub({
 
 function isManagedTaskArea(
   area: AdminArea,
-): area is 'configuration' | 'content' | 'loyalty' | 'preorders' | 'promotions' {
-  return ['configuration', 'content', 'loyalty', 'preorders', 'promotions'].includes(area);
+): area is 'configuration' | 'content' | 'carousel' | 'preorders' | 'promotions' {
+  return ['configuration', 'content', 'carousel', 'preorders', 'promotions'].includes(area);
 }
 
 export function AdminStandaloneLayout({
@@ -1473,6 +1472,7 @@ function PreorderComposer({
       {
         branchId: String(form.get('branchId')),
         capacity: Number(form.get('capacity')),
+        maxPerCustomer: nullableNumber(form.get('maxPerCustomer')),
         closesAt: new Date(String(form.get('closesAt'))).toISOString(),
         estimatedArrivalText: String(form.get('arrival')),
         fulfillmentGroupKey: nullable(form.get('groupKey')),
@@ -1490,8 +1490,12 @@ function PreorderComposer({
         <ProductSelect items={products} />
         <StoreField store={store} />
         <label>
-          Cupos
+          Unidades disponibles en total
           <input min="1" name="capacity" required type="number" />
+        </label>
+        <label>
+          Máximo por cliente (opcional)
+          <input min="1" name="maxPerCustomer" type="number" />
         </label>
         <label>
           Apertura
@@ -1511,90 +1515,6 @@ function PreorderComposer({
         </label>
         <button disabled={store === null}>Crear campaña</button>
       </form>
-    </section>
-  );
-}
-
-function LoyaltyOperations({
-  onAction,
-  store,
-}: {
-  readonly onAction: (
-    path: string,
-    body: unknown,
-    method?: string,
-    reload?: string,
-  ) => Promise<void>;
-  readonly store: StoreSummary | null;
-}) {
-  const correction = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    return onAction(
-      `/api/v1/admin/loyalty/accounts/${String(form.get('accountId'))}/corrections`,
-      { pointsSigned: Number(form.get('points')), reason: String(form.get('reason')) },
-      'POST',
-      'loyalty',
-    );
-  };
-  const configuration = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    return onAction(
-      '/api/v1/admin/loyalty/configurations',
-      {
-        branchId: String(form.get('branchId')),
-        earnClpPerPoint: Number(form.get('earn')),
-        maximumRedeemBasisPoints: nullableNumber(form.get('maximum')),
-        minimumRedeemPoints: Number(form.get('minimum')),
-        redeemClpPerPoint: Number(form.get('redeem')),
-      },
-      'POST',
-      'loyalty',
-    );
-  };
-  return (
-    <section className="cut-panel admin-module">
-      <h2>Programa de puntos</h2>
-      <div className="admin-form-grid">
-        <form onSubmit={(event) => void configuration(event)}>
-          <h3>Nueva configuración</h3>
-          <StoreField store={store} />
-          <label>
-            CLP para acumular un punto
-            <input min="1" name="earn" required type="number" />
-          </label>
-          <label>
-            CLP por punto canjeado
-            <input min="1" name="redeem" required type="number" />
-          </label>
-          <label>
-            Mínimo de puntos para canjear
-            <input min="0" name="minimum" required type="number" />
-          </label>
-          <label>
-            Máximo canjeable (puntos base)
-            <input max="10000" min="1" name="maximum" type="number" />
-          </label>
-          <button disabled={store === null}>Crear configuración</button>
-        </form>
-        <form onSubmit={(event) => void correction(event)}>
-          <h3>Corrección controlada de puntos</h3>
-          <label>
-            Cuenta cliente
-            <input name="accountId" required />
-          </label>
-          <label>
-            Puntos con signo
-            <input name="points" required type="number" />
-          </label>
-          <label>
-            Motivo
-            <input name="reason" required />
-          </label>
-          <button>Aplicar corrección</button>
-        </form>
-      </div>
     </section>
   );
 }
@@ -1847,15 +1767,6 @@ function EditorialComposer({
         : {};
     const categoryMetadata =
       type === 'NEWS' ? { category: String(form.get('newsCategory')).trim() } : {};
-    const comicMetadata =
-      type === 'COMIC_CHAPTER'
-        ? {
-            comic: {
-              chapterNumber: Number(form.get('chapterNumber')),
-              seriesSlug: String(form.get('seriesSlug')).trim(),
-            },
-          }
-        : {};
     await onAction(
       '/api/v1/admin/content',
       {
@@ -1863,7 +1774,6 @@ function EditorialComposer({
         excerpt: String(form.get('excerpt')),
         metadata: {
           ...categoryMetadata,
-          ...comicMetadata,
           ...eventMetadata,
           document: {
             blocks: [{ id: crypto.randomUUID(), text: body, type: 'TEXT' }],
@@ -1890,10 +1800,7 @@ function EditorialComposer({
             <option value="NEWS">Noticia</option>
             <option value="TOURNAMENT">Torneo informativo</option>
             <option value="COMMUNITY">Comunidad</option>
-            <option value="COMIC_SERIES">Serie de cómic</option>
-            <option value="COMIC_CHAPTER">Capítulo</option>
             <option value="QUEST">Quest</option>
-            <option value="HALL_OF_FAME">Hall of Fame</option>
           </select>
         </label>
         {(type === 'TOURNAMENT' || type === 'QUEST') && (
@@ -1916,18 +1823,6 @@ function EditorialComposer({
             Categoría de noticia
             <input defaultValue="General" name="newsCategory" required />
           </label>
-        )}
-        {type === 'COMIC_CHAPTER' && (
-          <>
-            <label>
-              Slug de la serie
-              <input name="seriesSlug" pattern="[a-z0-9-]+" required />
-            </label>
-            <label>
-              Número de capítulo
-              <input min="1" name="chapterNumber" required type="number" />
-            </label>
-          </>
         )}
         <label>
           Título

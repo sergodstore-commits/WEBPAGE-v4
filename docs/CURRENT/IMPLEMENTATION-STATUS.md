@@ -26,6 +26,20 @@
 | Despliegue web                                                                       | Producción PASS          | Vercel `1b8c420`, dominio canónico y CSS nuevo verificados                         | Ninguno de publicación               |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
+## Trabajo local sin publicar — 2026-09-23
+
+- El panel administrativo incorpora una ruta para administrar imágenes del carrusel de inicio; la
+  portada consulta únicamente las imágenes activas seleccionadas allí. La carga inactiva, la edición
+  versionada y el reintento de una carga conservan el contrato de la API.
+- El formulario de preventas distingue capacidad total de máximo opcional por cliente. Se retiró
+  lógica editorial de Cómics que había quedado inaccesible tras la reducción del menú.
+- Comprobaciones locales: 112 pruebas web, 2 pruebas unitarias del contrato de carrusel, 40 pruebas
+  PostgreSQL de catálogo, inventario, preventas y catálogo público, y 1 prueba PostgreSQL del
+  carrusel. La cadena de migraciones 001–027 pasó instalación limpia y actualización 024→027 en
+  una base local desechable. Lint, tipado y compilación terminaron correctamente.
+- Estos cambios continúan en el árbol de trabajo; aún no se han publicado ni se ha validado la
+  carga de contenido real en el entorno productivo.
+
 ## Publicación del rediseño cliente — 2026-09-23
 
 - Autorización expresa del propietario; promoción fast-forward de `main` desde `26fc102` hasta

@@ -739,6 +739,7 @@ export function RecordEditors({
       {
         branchId: String(form.get('branchId')),
         capacity: Number(form.get('capacity')),
+        maxPerCustomer: nullableNumber(form.get('maxPerCustomer')),
         closesAt: date(form.get('closesAt')),
         estimatedArrivalText: String(form.get('arrival')),
         fulfillmentGroupKey: nullable(form.get('groupKey')),
@@ -823,6 +824,7 @@ export function RecordEditors({
             onSelect={(item, form) =>
               fillForm(form, item, {
                 capacity: 'capacity',
+                maxPerCustomer: 'maxPerCustomer',
                 closesAt: 'closesAt',
                 estimatedArrivalText: 'arrival',
                 fulfillmentGroupKey: 'groupKey',
@@ -834,8 +836,12 @@ export function RecordEditors({
           <ItemSelect items={products} label="Producto" name="productId" />
           <StoreField store={store} />
           <label>
-            Cupos
+            Unidades disponibles en total
             <input min="1" name="capacity" required type="number" />
+          </label>
+          <label>
+            Máximo por cliente (opcional)
+            <input min="1" name="maxPerCustomer" type="number" />
           </label>
           <label>
             Apertura
@@ -1013,11 +1019,6 @@ interface EditorialEventValue {
   readonly status: 'UPCOMING' | 'COMPLETED';
 }
 
-interface EditorialComicValue {
-  readonly chapterNumber: number | '';
-  readonly seriesSlug: string;
-}
-
 function EditorialVisualEditor({
   content,
   onAction,
@@ -1077,18 +1078,6 @@ function EditorialVisualEditor({
       return {
         ...currentDraft,
         metadata: { ...currentDraft.metadata, event: { ...current, ...patch } },
-      };
-    });
-  };
-  const updateComic = (patch: Partial<EditorialComicValue>) => {
-    setDraft((currentDraft) => {
-      if (currentDraft === null) return null;
-      return {
-        ...currentDraft,
-        metadata: {
-          ...currentDraft.metadata,
-          comic: { ...comicFromMetadata(currentDraft.metadata), ...patch },
-        },
       };
     });
   };
@@ -1184,10 +1173,7 @@ function EditorialVisualEditor({
                 <option value="NEWS">Noticia</option>
                 <option value="TOURNAMENT">Torneo informativo</option>
                 <option value="COMMUNITY">Comunidad</option>
-                <option value="COMIC_SERIES">Serie de cómic</option>
-                <option value="COMIC_CHAPTER">Capítulo</option>
                 <option value="QUEST">Quest</option>
-                <option value="HALL_OF_FAME">Hall of Fame</option>
               </select>
             </label>
             {supportsEventMetadata(draft.type) && (
@@ -1235,33 +1221,6 @@ function EditorialVisualEditor({
                   value={newsCategoryFromMetadata(draft.metadata)}
                 />
               </label>
-            )}
-            {draft.type === 'COMIC_CHAPTER' && (
-              <>
-                <label>
-                  Slug de la serie
-                  <input
-                    onChange={(event) => updateComic({ seriesSlug: event.target.value })}
-                    pattern="[a-z0-9-]+"
-                    required
-                    value={comicFromMetadata(draft.metadata).seriesSlug}
-                  />
-                </label>
-                <label>
-                  Número de capítulo
-                  <input
-                    min="1"
-                    onChange={(event) =>
-                      updateComic({
-                        chapterNumber: event.target.value ? Number(event.target.value) : '',
-                      })
-                    }
-                    required
-                    type="number"
-                    value={comicFromMetadata(draft.metadata).chapterNumber}
-                  />
-                </label>
-              </>
             )}
             <label>
               Título
@@ -1482,21 +1441,9 @@ function metadataForEditorialType(
       ([key]) =>
         (key !== 'event' || supportsEventMetadata(type)) &&
         (key !== 'category' || type === 'NEWS') &&
-        (key !== 'comic' || type === 'COMIC_CHAPTER'),
+        key !== 'comic',
     ),
   );
-}
-
-function comicFromMetadata(metadata: Record<string, unknown>): EditorialComicValue {
-  const comic = metadata.comic;
-  if (!isItem(comic)) return { chapterNumber: '', seriesSlug: '' };
-  return {
-    chapterNumber:
-      typeof comic.chapterNumber === 'number' && Number.isInteger(comic.chapterNumber)
-        ? comic.chapterNumber
-        : '',
-    seriesSlug: typeof comic.seriesSlug === 'string' ? comic.seriesSlug : '',
-  };
 }
 
 function newsCategoryFromMetadata(metadata: Record<string, unknown>): string {

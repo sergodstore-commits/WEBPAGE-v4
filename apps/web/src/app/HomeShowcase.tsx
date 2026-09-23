@@ -2,17 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 
 import { publicRequest } from '../identity/api.js';
 
-interface ShowcaseProduct {
-  readonly productId: string;
-  readonly name: string;
-  readonly primaryResource: { readonly resourceId: string; readonly altText: string } | null;
+interface ShowcaseSlide {
+  readonly slideId: string;
+  readonly altText: string;
+  readonly linkPath: string | null;
 }
 
 const decorativeCards = Array.from({ length: 12 }, (_, index) => index);
 
-/** The scene is decorative; real commerce remains in the existing catalog. */
+/** Admin-selected images are shown when available; the empty scene stays decorative. */
 export function HomeShowcase() {
-  const [products, setProducts] = useState<readonly ShowcaseProduct[]>([]);
+  const [slides, setSlides] = useState<readonly ShowcaseSlide[]>([]);
   const [paused, setPaused] = useState(false);
   const [interacting, setInteracting] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -24,18 +24,18 @@ export function HomeShowcase() {
   const ring = useRef<HTMLDivElement>(null);
   const angle = useRef(0);
   const paint = useRef<() => void>(() => undefined);
-  const moving = !paused && !interacting && !focused && !reducedMotion && visible;
+  const cardIndices = slides.length > 0 ? slides.map((_, index) => index) : decorativeCards;
+  const moving =
+    !paused && !interacting && !focused && !reducedMotion && visible && cardIndices.length > 1;
 
   useEffect(() => {
     let disposed = false;
-    void publicRequest<{ items: ShowcaseProduct[] }>(
-      '/api/v1/catalog/products?limit=12&saleType=REGULAR&sort=NEWEST',
-    )
+    void publicRequest<{ items: ShowcaseSlide[] }>('/api/v1/home-carousel')
       .then(({ items }) => {
-        if (!disposed) setProducts(items.filter((item) => item.primaryResource !== null));
+        if (!disposed) setSlides(items);
       })
       .catch(() => {
-        /* An unavailable catalog never blocks home navigation. */
+        /* An unavailable carousel never blocks home navigation. */
       });
     return () => {
       disposed = true;
@@ -58,6 +58,11 @@ export function HomeShowcase() {
     const cards = Array.from(ring.current?.children ?? []) as HTMLElement[];
     const renderFrame = () => {
       for (const [index, card] of cards.entries()) {
+        if (cards.length === 1) {
+          card.style.transform = 'translate3d(0, 0, 0)';
+          card.style.opacity = '1';
+          continue;
+        }
         const degrees = angle.current + (index * 360) / cards.length;
         const radians = (degrees * Math.PI) / 180;
         const depth = Math.cos(radians);
@@ -79,17 +84,17 @@ export function HomeShowcase() {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [moving, products]);
+  }, [moving, slides]);
 
   function turn(direction: number) {
     setPaused(true);
-    angle.current += direction * (360 / decorativeCards.length);
+    angle.current += direction * (360 / cardIndices.length);
     paint.current();
   }
 
   return (
     <section
-      aria-label="Carrusel tridimensional del catálogo"
+      aria-label="Carrusel de inicio"
       className="home-showcase"
       data-moving={moving}
       onFocusCapture={() => setFocused(true)}
@@ -100,7 +105,6 @@ export function HomeShowcase() {
       <div
         className="home-showcase__scene"
         ref={scene}
-        aria-hidden="true"
         onPointerEnter={(event) => {
           if (event.pointerType === 'mouse') setInteracting(true);
         }}
@@ -126,22 +130,32 @@ export function HomeShowcase() {
         <div className="home-showcase__orbit" />
         <div className="home-showcase__perspective">
           <div className="home-showcase__ring" ref={ring}>
-            {decorativeCards.map((index) => {
-              const product = products.length > 0 ? products[index % products.length] : undefined;
+            {cardIndices.map((index) => {
+              const slide = slides[index];
+              const image = slide ? (
+                <img
+                  alt=""
+                  draggable={false}
+                  onError={(event) => {
+                    event.currentTarget.hidden = true;
+                  }}
+                  src={`/api/v1/home-carousel/${encodeURIComponent(slide.slideId)}/content`}
+                />
+              ) : null;
               return (
                 <div className="home-showcase__card" key={index} data-tone={index % 3}>
                   <div className="home-showcase__foil" />
-                  {product?.primaryResource && (
-                    <img
-                      alt=""
-                      src={`/api/v1/catalog/resources/${encodeURIComponent(product.primaryResource.resourceId)}/content`}
-                      draggable={false}
-                      onError={(event) => {
-                        event.currentTarget.hidden = true;
-                      }}
-                    />
+                  {slide?.linkPath ? (
+                    <a
+                      aria-label={slide.altText}
+                      className="home-showcase__link"
+                      href={slide.linkPath}
+                    >
+                      {image}
+                    </a>
+                  ) : (
+                    image
                   )}
-                  {product && <span className="home-showcase__name">{product.name}</span>}
                 </div>
               );
             })}
@@ -162,8 +176,8 @@ export function HomeShowcase() {
       </div>
       <div className="home-showcase__toolbar">
         <p>
-          {products.length > 0
-            ? 'Una mirada a nuestro catálogo'
+          {slides.length > 0
+            ? 'Banners de Sergod Store'
             : 'Escena de cartas decorativas · explora el catálogo en Tienda'}
         </p>
         <div className="home-showcase__controls" role="group" aria-label="Movimiento del carrusel">

@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { z } from 'zod';
+import { accountTournamentIdentifiersSchema } from '@sergod/contracts';
 import type { Clock } from '@sergod/foundation';
 
 import {
@@ -205,6 +206,21 @@ export class IdentityHttpApi {
           refreshToken: body.refreshToken,
         });
         return send(response, 202, { status: 'verification_required' });
+      }
+      if (url.pathname === '/api/v1/account/tournament-identifiers') {
+        if (request.method === 'GET') {
+          return send(response, 200, {
+            item: await this.service.getTournamentIdentifiers(readBearerToken(request)),
+          });
+        }
+        if (request.method === 'PUT') {
+          const item = await this.service.updateTournamentIdentifiers({
+            accessToken: readBearerToken(request),
+            context: { actorType: 'USER', correlationId },
+            identifiers: accountTournamentIdentifiersSchema.parse(await readJsonBody(request)),
+          });
+          return send(response, 200, { item });
+        }
       }
       if (request.method === 'PUT' && url.pathname === '/api/v1/account/phone') {
         await this.service.updateOptionalPhone({

@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto';
 
+import {
+  accountTournamentIdentifiersSchema,
+  type AccountTournamentIdentifiers,
+} from '@sergod/contracts';
 import type { Clock, ExecutionContext, UuidGenerator } from '@sergod/foundation';
 import type { Pool, QueryResultRow } from 'pg';
 
@@ -586,6 +590,38 @@ export class PgIdentityAccessRepository implements IdentityAccessRepository {
         throw error;
       }
       return id;
+    });
+  }
+
+  async getTournamentIdentifiers(accountId: string): Promise<AccountTournamentIdentifiers> {
+    const result = await this.pool.query<{ konami_id: string | null; klu_code: string | null }>(
+      `SELECT konami_id, klu_code FROM user_accounts WHERE account_id = $1 AND status = 'ACTIVE'`,
+      [accountId],
+    );
+    const row = required(result.rows[0]);
+    return { konamiId: row.konami_id, kluCode: row.klu_code };
+  }
+
+  async updateTournamentIdentifiers(input: {
+    readonly accountId: string;
+    readonly context: ExecutionContext;
+    readonly identifiers: AccountTournamentIdentifiers;
+  }): Promise<AccountTournamentIdentifiers> {
+    const identifiers = accountTournamentIdentifiersSchema.parse(input.identifiers);
+    return this.#transactions.execute(async (transaction) => {
+      const result = await transaction.query<{ account_id: string }>(
+        `UPDATE user_accounts SET konami_id = $2, klu_code = $3, updated_at = $4
+          WHERE account_id = $1 AND status = 'ACTIVE' RETURNING account_id`,
+        [input.accountId, identifiers.konamiId, identifiers.kluCode, this.clock.now()],
+      );
+      required(result.rows[0]);
+      await writeAudit(transaction, this.uuids.generate(), input.context, this.clock.now(), {
+        action: 'UPDATE_TOURNAMENT_IDENTIFIERS',
+        resourceId: input.accountId,
+        resourceType: 'USER_ACCOUNT',
+        result: 'SUCCESS',
+      });
+      return identifiers;
     });
   }
 

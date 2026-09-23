@@ -1,4 +1,5 @@
 import type { ExecutionContext } from '@sergod/foundation';
+import type { AccountTournamentIdentifiers } from '@sergod/contracts';
 
 import type { AccountAuthorizationProjection, LoginChannel } from '../domain/identity.js';
 import type { AuthorizationEvidence, ProtectedCapability } from '../domain/authorization.js';
@@ -132,6 +133,12 @@ export interface IdentityAccessRepository {
     readonly context: ExecutionContext;
     readonly phone: string | null;
   }): Promise<void>;
+  getTournamentIdentifiers(accountId: string): Promise<AccountTournamentIdentifiers>;
+  updateTournamentIdentifiers(input: {
+    readonly accountId: string;
+    readonly context: ExecutionContext;
+    readonly identifiers: AccountTournamentIdentifiers;
+  }): Promise<AccountTournamentIdentifiers>;
   requireAuthorization(input: {
     readonly authSessionId: string;
     readonly capability: ProtectedCapability;

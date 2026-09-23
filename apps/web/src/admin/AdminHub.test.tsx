@@ -156,7 +156,7 @@ describe('AdminHub', () => {
       'Productos',
       'Preventas',
       'Promociones',
-      'Puntos',
+      'Carrusel de inicio',
       'Publicaciones',
       'Clientes y usuarios',
       'Datos de la tienda',
@@ -310,12 +310,112 @@ describe('AdminHub', () => {
     expect(screen.getByLabelText('Avisar cuando queden')).toBeInTheDocument();
   });
 
+  it('sends a stock entry for the selected product to shared inventory', async () => {
+    render(<AdminHub area="inventory" navigate={vi.fn()} />);
+    const section = (
+      await screen.findByRole('heading', { name: 'Ingresar productos al inventario' })
+    ).closest('form');
+    if (!section) throw new Error('Inventory form was not rendered.');
+    fireEvent.change(within(section).getByLabelText('Producto'), {
+      target: { value: 'product-1' },
+    });
+    fireEvent.change(within(section).getByLabelText('Cantidad'), { target: { value: '3' } });
+    fireEvent.submit(section);
+
+    await waitFor(() => {
+      const call = vi
+        .mocked(authorizedRequest)
+        .mock.calls.find(
+          ([path]) => path === '/api/v1/admin/inventory/products/product-1/stock-entries',
+        );
+      expect(call).toBeDefined();
+      expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({ quantity: 3 });
+    });
+  });
+
+  it('creates a product with its category, price and sale type', async () => {
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
+    const form = (await screen.findByRole('heading', { name: 'Datos del producto' })).closest(
+      'form',
+    );
+    if (!form) throw new Error('Product creation form was not rendered.');
+    const fields = within(form);
+    fireEvent.change(fields.getByLabelText('Juego'), {
+      target: { value: '0198a8be-6677-7000-8000-000000000101' },
+    });
+    fireEvent.change(fields.getByLabelText('Categoría'), {
+      target: { value: '0198a8be-6677-7000-8000-000000000102' },
+    });
+    fireEvent.change(fields.getByLabelText('Nombre'), { target: { value: 'Caja nueva' } });
+    fireEvent.change(fields.getByLabelText('SKU'), { target: { value: 'NEW-001' } });
+    fireEvent.change(fields.getByLabelText('Precio CLP'), { target: { value: '19990' } });
+    fireEvent.change(fields.getByLabelText('Tipo'), { target: { value: 'PREORDER' } });
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      const call = vi
+        .mocked(authorizedRequest)
+        .mock.calls.find(
+          ([path, init]) => path === '/api/v1/admin/catalog/products' && init?.method === 'POST',
+        );
+      expect(call).toBeDefined();
+      expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
+        categoryId: '0198a8be-6677-7000-8000-000000000102',
+        gameId: '0198a8be-6677-7000-8000-000000000101',
+        name: 'Caja nueva',
+        priceAmountClp: 19990,
+        saleType: 'PREORDER',
+        sku: 'NEW-001',
+      });
+    });
+  });
+
   it('uses the configured store automatically instead of asking for an internal branch code', async () => {
     render(<AdminHub area="preorders" navigate={vi.fn()} />);
 
     expect(await screen.findAllByLabelText('Tienda configurada')).not.toHaveLength(0);
     expect(screen.getAllByLabelText('Tienda configurada')[0]).toHaveTextContent('Sergod Store');
     expect(screen.queryByLabelText('Sucursal')).not.toBeInTheDocument();
+  });
+
+  it('separates total preorder capacity from the optional per-customer maximum', async () => {
+    render(<AdminHub area="preorders" navigate={vi.fn()} />);
+    const section = (
+      await screen.findByRole('heading', { name: 'Nueva campaña de preventa' })
+    ).closest('section');
+    const form = section?.querySelector('form');
+    if (!form) throw new Error('Preorder form was not rendered.');
+    const fields = within(form);
+    await waitFor(() =>
+      expect(fields.getByRole('button', { name: 'Crear campaña' })).toBeEnabled(),
+    );
+    fireEvent.change(fields.getByLabelText('Producto'), { target: { value: 'product-1' } });
+    fireEvent.change(fields.getByLabelText('Unidades disponibles en total'), {
+      target: { value: '30' },
+    });
+    fireEvent.change(fields.getByLabelText('Máximo por cliente (opcional)'), {
+      target: { value: '2' },
+    });
+    fireEvent.change(fields.getByLabelText('Apertura'), { target: { value: '2026-10-01T10:00' } });
+    fireEvent.change(fields.getByLabelText('Cierre'), { target: { value: '2026-10-20T22:00' } });
+    fireEvent.change(fields.getByLabelText('Llegada estimada'), {
+      target: { value: 'Noviembre 2026' },
+    });
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      const call = vi
+        .mocked(authorizedRequest)
+        .mock.calls.find(
+          ([path, init]) => path === '/api/v1/admin/preorders/campaigns' && init?.method === 'POST',
+        );
+      expect(call).toBeDefined();
+      expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
+        capacity: 30,
+        maxPerCustomer: 2,
+        productId: 'product-1',
+      });
+    });
   });
 
   it('edits editorial content as ordered visual blocks instead of raw text only', async () => {
@@ -464,38 +564,14 @@ describe('AdminHub', () => {
     });
   });
 
-  it('creates a comic chapter linked to its series and chapter order', async () => {
+  it('does not expose removed comic content in the editorial composer', async () => {
     render(<AdminHub area="content" navigate={vi.fn()} />);
 
     expect(
       await screen.findByRole('heading', { name: 'Nuevo contenido editorial' }),
     ).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Tipo'), { target: { value: 'COMIC_CHAPTER' } });
-    fireEvent.change(screen.getByLabelText('Slug de la serie'), {
-      target: { value: 'guardianes-de-sergod' },
-    });
-    fireEvent.change(screen.getByLabelText('Número de capítulo'), { target: { value: '3' } });
-    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'El regreso' } });
-    fireEvent.change(screen.getByLabelText('Slug'), {
-      target: { value: 'guardianes-capitulo-3' },
-    });
-    fireEvent.change(screen.getByLabelText('Resumen'), { target: { value: 'Tercer capítulo.' } });
-    fireEvent.change(screen.getByLabelText('Contenido'), {
-      target: { value: 'Historia completa.' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar borrador' }));
-
-    await waitFor(() => {
-      const call = vi
-        .mocked(authorizedRequest)
-        .mock.calls.find(
-          ([path, init]) => path === '/api/v1/admin/content' && init?.method === 'POST',
-        );
-      expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
-        metadata: { comic: { chapterNumber: 3, seriesSlug: 'guardianes-de-sergod' } },
-        type: 'COMIC_CHAPTER',
-      });
-    });
+    expect(screen.queryByRole('option', { name: /capítulo/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Slug de la serie')).not.toBeInTheDocument();
   });
 
   it('sends a complete product edit with idempotency protection', async () => {
