@@ -2,9 +2,15 @@
 
 ## Estado actual
 
-La identidad visual de la interfaz está deliberadamente pendiente de un rediseño integral. El
-repositorio conserva una base neutral para permitir que el nuevo sistema se construya sin heredar ni
-imitar propuestas anteriores.
+El propietario aprobó el 2026-09-22 la nueva dirección visual de cliente: negro profundo, acentos
+celestes, superficies oscuras translúcidas, bordes finos y navegación limpia. Se implementa como capa
+independiente sobre la estructura neutral, sin recuperar propuestas visuales retiradas.
+
+La portada incorpora profundidad 3D, iluminación ambiental, partículas discretas, entrada animada y
+respuesta suave al cursor. El movimiento dispone de pausa y controles manuales, respeta movimiento
+reducido y se suspende con la pestaña oculta. Las imágenes del carrusel provienen del catálogo
+publicado; si no están disponibles, se muestran cartas decorativas identificadas como tales, nunca
+productos, precios o estadísticas inventados.
 
 ## Autoridad conservada
 
@@ -27,5 +33,5 @@ imitar propuestas anteriores.
 
 - `design/brand/` contiene únicamente el logo oficial.
 - `apps/web/src/styles/base.css` aporta solo estructura neutral, responsive y accesibilidad.
-- No existe una biblioteca visual aprobada ni una estética de producción vigente en este punto de
-  partida.
+- `apps/web/src/styles/client-theme.css` define la nueva capa de cliente, aislada del administrador.
+- La nueva identidad sigue en revisión local; no se ha promovido a producción.

@@ -43,6 +43,7 @@ import type { AdminArea } from '../admin/AdminHub.js';
 import { CartPage } from '../cart/CartPage.js';
 import { ComicsPage, CommunityHub, StorePage } from '../public-commerce/PublicPages.js';
 import { SiteChrome, SiteFooter } from './SiteChrome.js';
+import { HomeShowcase } from './HomeShowcase.js';
 import { TermsPage } from '../legal/TermsPage.js';
 import { SiteAppearancePreviewProvider } from '../appearance/SiteAppearancePreview.js';
 import { routeWithAppearancePreview } from './appearance-preview-route.js';
@@ -130,7 +131,7 @@ export function App() {
 
   return (
     <SiteAppearancePreviewProvider>
-      <div className="app-shell">
+      <div className={`app-shell${route.startsWith('/admin') ? '' : ' client-theme'}`}>
         {route !== '/' && <SiteChrome navigate={navigate} route={route} />}
         <RouteErrorBoundary key={route}>
           <Suspense fallback={<RouteLoading />}>
@@ -394,11 +395,13 @@ function Home({ navigate }: { readonly navigate: (route: Route) => void }) {
   return (
     <main className="home-page visual-public">
       <section aria-label="Inicio Sergod Store" className="home-content">
+        <span className="home-eyebrow">SERGOD STORE · TRADING CARD GAMES</span>
         <img
           alt="Sergod Store"
           className="home-logo"
           src="/assets/sergod/logo_sergod_store_oficial_transparente.webp"
         />
+        <HomeShowcase />
         <nav aria-label="Accesos principales" className="home-navigation">
           {launcherEntries.map((entry) => (
             <button key={entry.route} onClick={() => navigate(entry.route)} type="button">

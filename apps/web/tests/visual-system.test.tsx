@@ -21,7 +21,7 @@ function filesBelow(directory: string): string[] {
 
 describe('línea visual neutral', () => {
   it('conserva una sola hoja estructural sin referencias al diseño retirado', () => {
-    expect(readdirSync(stylesDirectory).sort()).toEqual(['base.css']);
+    expect(readdirSync(stylesDirectory).sort()).toEqual(['base.css', 'client-theme.css']);
     expect(baseStyles).not.toMatch(/\/assets\/sergod\//u);
     expect(baseStyles).not.toMatch(/halftone|launcher|clip-path|drop-shadow|keyframes/iu);
   });

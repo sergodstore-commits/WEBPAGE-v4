@@ -26,7 +26,22 @@
 | Despliegue web                                                                       | Producción PASS          | Vercel `c197044`, dominio canónico y sesión persistente                            | Publicar la futura identidad visual  |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
-## Punto de partida visual neutral — 2026-09-22
+## Rediseño cliente y portada con movimiento — 2026-09-22 (local, sin publicar)
+
+- Dirección oscura/celeste aprobada por el propietario, aplicada a las vistas públicas, Cuenta,
+  Carrito y formularios mediante `client-theme.css`; Admin conserva su base neutral.
+- Portada con carrusel 3D, imágenes reales del catálogo cuando están disponibles, cartas decorativas
+  explícitas como fallback, partículas, luz ambiental y respuesta al cursor. No añade dependencias.
+- Controles de giro, pausa/reanudación, pausa por foco/puntero y pestaña oculta; preferencia de
+  movimiento reducido respetada y cancelación de animación al desmontar.
+- Build web y tipado aprobados; 47 pruebas dirigidas aprobadas en App, HomeShowcase, sistema visual,
+  AdminHub y POS. Los dos timeouts del pase web anterior no se reprodujeron con dos workers.
+- Revisión visual de portada en 1280×800 y 390×844: sin overflow horizontal; pausa/reanudación
+  comprobadas. El catálogo local no entrega datos en esta sesión: la prueba con recursos publicados
+  está cubierta con mocks, pendiente de comprobar visualmente contra el catálogo disponible.
+- Preview local en `http://127.0.0.1:5174/`. Sin push, despliegue ni cambios en datos o pagos.
+
+## Punto de partida visual neutral — 2026-09-22 (histórico, previo al rediseño)
 
 - Por instrucción expresa del propietario se retiró del repositorio activo toda la identidad visual
   anterior: hojas de estilo temáticas, fondos, marcos, texturas, botones, referencias, propuestas y
