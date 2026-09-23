@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado local auditado hasta el 2026-09-22. Release productivo en `c197044`; el registro CLIENTE vuelve a
+> Estado auditado hasta el 2026-09-23. Release funcional productivo en `1b8c420`; el registro CLIENTE vuelve a
 > estar habilitado con aceptación obligatoria y versionada de los Términos y condiciones 1.0. Por
 > decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -20,13 +20,30 @@
 | Admin                                                                                | Producción PASS          | POS y mutaciones críticas compensadas con auditoría                                | Carga operativa del propietario      |
 | Comercio público                                                                     | Producción PASS          | Dominio, shell responsive, catálogo, carrito, checkout y Flow                      | Catálogo/contenido del propietario   |
 | Editorial                                                                            | Producción PASS          | Editor visual por bloques, imágenes privadas/publicadas y flujo de estados         | Contenido del propietario            |
-| Diseño y accesibilidad                                                               | Base neutral local PASS  | Identidad anterior retirada; logo oficial, estructura y accesibilidad preservados  | Nueva identidad visual               |
+| Diseño y accesibilidad                                                               | Rediseño publicado       | Tema cliente oscuro/celeste; portada 3D, pausa y movimiento reducido; logo oficial | Revisión estética del propietario    |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
-| Despliegue web                                                                       | Producción PASS          | Vercel `c197044`, dominio canónico y sesión persistente                            | Publicar la futura identidad visual  |
+| Despliegue web                                                                       | Producción PASS          | Vercel `1b8c420`, dominio canónico y CSS nuevo verificados                         | Ninguno de publicación               |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
-## Rediseño cliente y portada con movimiento — 2026-09-22 (local, sin publicar)
+## Publicación del rediseño cliente — 2026-09-23
+
+- Autorización expresa del propietario; promoción fast-forward de `main` desde `26fc102` hasta
+  `1b8c420`, conservando rollback en el tag `codex/pre-client-theme-20260923`.
+- Preview Vercel validada antes de promover. Producción Vercel `F7LdkWCwwTzYpPtdSLtnC1cD1cwD`
+  (`sergod-store-v4-oa3mhfc19-sergod-store.vercel.app`) terminó con estado `success`.
+- Render `sergod-store-api-v4` (`srv-da3ij5flk1mc7380htcg`) confirmó `1b8c420` Live en
+  `dep-dapk67p7lnhs73fr61h0`; no se crearon servicios ni se modificaron secretos o base de datos.
+- `www.sergodstore.cl` entrega el CSS `index-C2DCblzr.css` con `client-theme` y `home-showcase`.
+  Portada comprobada visualmente; Tienda, Preventas, Noticias, Torneos, Comunidad y Carrito cargan
+  con el nuevo tema sin overflow horizontal. Cuenta conserva su verificación de acceso; no se
+  ejecutó una nueva sesión autenticada ni una compra en esta publicación.
+- HTTP 200 en dominio, catálogo público, noticias y `/health`. El catálogo público está vacío:
+  el carrusel muestra cartas decorativas identificadas, no productos inventados.
+- Gates: 106 pruebas web y 4 pruebas editorial HTTP PASS; builds web/API, tipado web, lint dirigido
+  y formato de archivos modificados PASS. Sin cambios de migraciones, pagos ni permisos.
+
+## Rediseño cliente y portada con movimiento — 2026-09-22
 
 - Dirección oscura/celeste aprobada por el propietario, aplicada a las vistas públicas, Cuenta,
   Carrito y formularios mediante `client-theme.css`; Admin conserva su base neutral.
@@ -39,7 +56,8 @@
 - Revisión visual de portada en 1280×800 y 390×844: sin overflow horizontal; pausa/reanudación
   comprobadas. El catálogo local no entrega datos en esta sesión: la prueba con recursos publicados
   está cubierta con mocks, pendiente de comprobar visualmente contra el catálogo disponible.
-- Preview local en `http://127.0.0.1:5174/`. Sin push, despliegue ni cambios en datos o pagos.
+- Preview local en `http://127.0.0.1:5174/`; publicación posterior documentada arriba. Sin cambios
+  en datos ni pagos.
 
 ## Punto de partida visual neutral — 2026-09-22 (histórico, previo al rediseño)
 

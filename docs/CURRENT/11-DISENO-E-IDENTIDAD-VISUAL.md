@@ -34,4 +34,5 @@ productos, precios o estadísticas inventados.
 - `design/brand/` contiene únicamente el logo oficial.
 - `apps/web/src/styles/base.css` aporta solo estructura neutral, responsive y accesibilidad.
 - `apps/web/src/styles/client-theme.css` define la nueva capa de cliente, aislada del administrador.
-- La nueva identidad sigue en revisión local; no se ha promovido a producción.
+- La nueva identidad fue publicada en `www.sergodstore.cl` con autorización del propietario; versión
+  funcional `1b8c420`, verificada el 2026-09-23. La evidencia está en `IMPLEMENTATION-STATUS.md`.

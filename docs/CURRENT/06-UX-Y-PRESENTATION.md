@@ -10,16 +10,18 @@
 ## Navegación pública
 
 `/` es un lanzador visual de altura completa, sin encabezado general ni bloques promocionales debajo.
-Presenta el logo oficial y cinco destinos principales: Tienda, Preventas, Comunidad, Puntos Sergod y
-Cómics/Historias. Cambiar el arte de un acceso no puede cambiar su ruta ni su nombre accesible.
+Por la decisión posterior del propietario, presenta el logo oficial y cinco destinos principales:
+Tienda, Preventas, Noticias, Torneos y Comunidad; Cuenta y Carrito son accesos secundarios. Cómics y
+Puntos Sergod dejan de ser destinos del lanzador. Esto no elimina datos ni reglas comerciales existentes.
+Cambiar el arte de un acceso no puede cambiar su ruta ni su nombre accesible.
 
 Comunidad agrupa Noticias, Torneos, Quests y Visítanos como pestañas de una misma área. Las rutas
 históricas `/news`, `/tournaments` y `/quests` siguen siendo enlaces directos válidos hacia la pestaña
 correspondiente. Las publicaciones de actividad comunitaria existentes se muestran junto a Noticias
 para no perder contenido durante la consolidación.
 
-El encabezado principal aparece al entrar a una sección: Inicio, Tienda, Preventas, Comunidad y
-Cómics/Historias; Puntos Sergod, cuenta y carrito permanecen disponibles. La cabecera adapta todos los
+El encabezado principal aparece al entrar a una sección: Inicio, Tienda, Preventas, Comunidad,
+Torneos y Noticias; Cuenta y Carrito permanecen disponibles. La cabecera adapta todos los
 destinos a un menú compacto antes de que puedan envolverse, comprimirse o interferir con el contenido.
 
 El lanzador puede usar movimiento expresivo para presentar y seleccionar destinos. Las páginas de
