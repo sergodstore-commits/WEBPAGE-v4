@@ -173,8 +173,10 @@ describe('AdminHub', () => {
     const toggle = screen.getByRole('button', { name: 'Menú de administración' });
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(sidebar).toHaveClass('is-open');
     fireEvent.click(within(navigation).getByRole('link', { name: 'Pedidos' }));
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(sidebar).not.toHaveClass('is-open');
     expect(navigate).toHaveBeenCalledWith('/admin/orders');
   });
 

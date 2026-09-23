@@ -729,7 +729,10 @@ function AdminSidebar({
     </a>
   );
   return (
-    <aside aria-label="Navegación administrativa" className="admin-sidebar cut-panel">
+    <aside
+      aria-label="Navegación administrativa"
+      className={`admin-sidebar cut-panel${open ? ' is-open' : ''}`}
+    >
       <div className="admin-sidebar-heading">
         <p className="eyebrow">Sergod Store</p>
         <strong>Menú de administración</strong>

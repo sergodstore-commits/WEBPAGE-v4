@@ -1,0 +1,303 @@
+/* Administrative layout only; the public client theme stays independent. */
+.admin-shell {
+  --admin-ink: #17283a;
+  --admin-muted: #526579;
+  --admin-line: #d7e1ea;
+  --admin-accent: #176f8d;
+  width: min(calc(100% - 2rem), 80rem);
+  color: var(--admin-ink);
+}
+
+.admin-shell :where(.admin-heading, .admin-sidebar, .admin-module) {
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 7px 24px #17283a0a;
+}
+
+.admin-shell .admin-heading {
+  display: block;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  margin-bottom: 1.5rem;
+}
+
+.admin-shell .admin-heading h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.admin-shell .admin-heading p {
+  max-width: 62rem;
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.admin-shell .admin-heading .eyebrow {
+  margin-bottom: 0.6rem;
+  color: var(--admin-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-shell .admin-workspace {
+  grid-template-columns: minmax(14rem, 16rem) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.admin-shell .admin-sidebar {
+  position: sticky;
+  top: 6.5rem;
+  max-height: calc(100vh - 7.5rem);
+  min-width: 0;
+  overflow-y: auto;
+  padding: 1.15rem;
+}
+
+.admin-shell .admin-sidebar-heading {
+  padding: 0 0.5rem 1rem;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-shell .admin-sidebar-heading .eyebrow {
+  margin: 0 0 0.2rem;
+  color: var(--admin-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-shell .admin-sidebar-heading strong {
+  display: block;
+  line-height: 1.25;
+}
+
+.admin-shell .admin-area-navigation {
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.admin-shell .admin-nav-group {
+  gap: 0.15rem;
+}
+
+.admin-shell .admin-nav-group h2 {
+  margin: 0 0 0.35rem;
+  padding-inline: 0.65rem;
+  color: var(--admin-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-shell .admin-area-navigation a {
+  display: block;
+  padding: 0.65rem 0.75rem;
+  border-radius: 9px;
+  color: var(--admin-ink);
+  font-size: 0.88rem;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.admin-shell .admin-area-navigation a:hover,
+.admin-shell .admin-area-navigation a[aria-current='page'] {
+  background: #e7f4f8;
+  color: #0d5874;
+}
+
+.admin-shell .admin-area-navigation a[aria-current='page'] {
+  box-shadow: inset 3px 0 var(--admin-accent);
+  font-weight: 700;
+}
+
+.admin-shell
+  :where(
+    .admin-content,
+    .admin-content > section,
+    .admin-task-workspace,
+    .catalog-admin-workspace,
+    .admin-module
+  ) {
+  min-width: 0;
+}
+
+.admin-shell .admin-content {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+
+.admin-shell :where(.admin-task-workspace, .catalog-admin-workspace) {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.admin-shell .admin-module {
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.admin-shell .admin-module > :first-child,
+.admin-shell .admin-section-intro > :first-child {
+  margin-top: 0;
+}
+
+.admin-shell .admin-module .section-heading {
+  padding: 0 0 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.admin-shell :where(.admin-task-tabs, .catalog-admin-tabs) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-shell :where(.admin-task-tabs, .catalog-admin-tabs) button[aria-current='page'] {
+  border-color: var(--admin-accent);
+  background: #e7f4f8;
+  color: #0d5874;
+  font-weight: 700;
+}
+
+.admin-shell .admin-action-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+
+.admin-shell .admin-action-grid a {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1.1rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--admin-ink);
+  text-decoration: none;
+}
+
+.admin-shell .admin-action-grid a:hover {
+  border-color: var(--admin-accent);
+}
+
+.admin-shell .admin-action-grid span {
+  color: var(--admin-muted);
+  font-size: 0.85rem;
+}
+
+.admin-shell .admin-form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.admin-shell
+  :where(.admin-form-grid > *, .admin-action-grid > *, .admin-module form, .admin-module label) {
+  min-width: 0;
+}
+
+.admin-shell .admin-module :where(input, select, textarea) {
+  max-width: 100%;
+}
+
+.admin-shell .admin-module input[type='checkbox'] {
+  width: auto;
+  min-height: auto;
+}
+
+.admin-shell .admin-module .inline-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.admin-shell .admin-module .inline-action > :where(label, input, select) {
+  flex: 1 1 9rem;
+  min-width: 0;
+}
+
+.admin-shell .admin-module :where(.table-actions, .admin-inline-actions, .card-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-shell .admin-module .table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.admin-shell .admin-module table {
+  min-width: 52rem;
+}
+
+.admin-shell .admin-module th {
+  background: #f2f6f9;
+}
+
+.admin-shell .admin-module :where(td, th):nth-child(2),
+.admin-shell .admin-module :where(td, th):nth-child(4) {
+  min-width: 8rem;
+  white-space: nowrap;
+}
+
+.admin-shell .admin-module :where(td, th):nth-child(3) {
+  min-width: 18rem;
+}
+
+.admin-shell .admin-module form:not(.inline-action) > button {
+  justify-self: start;
+}
+
+.admin-shell .admin-form-grid img {
+  display: block;
+  width: 100%;
+  max-height: 15rem;
+  object-fit: contain;
+}
+
+@media (max-width: 900px) {
+  .admin-shell .admin-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-shell .admin-sidebar-toggle {
+    display: inline-flex;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .admin-shell .admin-sidebar {
+    display: none;
+    position: static;
+    max-height: none;
+  }
+
+  .admin-shell .admin-sidebar.is-open {
+    display: block;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-shell {
+    width: min(calc(100% - 1rem), 80rem);
+  }
+
+  .admin-shell .admin-heading {
+    margin-bottom: 1rem;
+  }
+
+  .admin-shell :where(.admin-task-tabs, .catalog-admin-tabs) button {
+    flex: 1 1 9rem;
+  }
+}

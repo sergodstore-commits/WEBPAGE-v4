@@ -5,6 +5,7 @@ import { App } from './app/App';
 import { initializeSession } from './identity/api';
 import './styles/base.css';
 import './styles/client-theme.css';
+import './styles/admin.css';
 
 const rootElement = document.querySelector<HTMLDivElement>('#root');
 
