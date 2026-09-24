@@ -1,6 +1,6 @@
 # Implementation Status — CODEX-READY V4
 
-> Seguimiento actualizado el 2026-09-24: producción llegó a `7957f1f`, pero la aceptación
+> Seguimiento actualizado el 2026-09-24: correcciones publicadas en `61d938d`; la aceptación
 > administrativa anterior fue insuficiente. Los estados PASS históricos de esta tabla no prueban
 > los flujos reportados por el propietario; prevalece el apartado de correcciones de Operaciones.
 > El registro CLIENTE vuelve a
@@ -26,7 +26,7 @@
 | Diseño y accesibilidad                                                               | Rediseño publicado       | Tema cliente oscuro/celeste; portada 3D, pausa y movimiento reducido; logo oficial | Revisión estética del propietario    |
 | Notificaciones                                                                       | Producción PASS          | Outbox, worker activo y entrega Resend desde dominio verificado                    | Ninguno                              |
 | Despliegue API                                                                       | Producción PASS          | Render Free, Supabase PROD, TLS estricto, sesiones y cuatro jobs verificados       | Ninguno                              |
-| Despliegue web                                                                       | Producción PASS          | Vercel `1b8c420`, dominio canónico y CSS nuevo verificados                         | Ninguno de publicación               |
+| Despliegue web                                                                       | Producción PASS          | Vercel `61d938d`, dominio canónico y CSS nuevo verificados                         | Ninguno de publicación               |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
 ## Correcciones de Operaciones — 2026-09-24
@@ -48,8 +48,22 @@
 - Integración PostgreSQL LOCAL: 171 pruebas en 15 archivos PASS, incluyendo POS e inventario.
   No se ejecutó una venta en producción: el control de seguridad rechazó ese ensayo por generar
   un movimiento financiero permanente. No se modificó stock real ni cuentas existentes.
-- Pendiente de cierre de esta entrega: gate global final, revisión visual en Preview y promoción
-  verificada a `www.sergodstore.cl`. Sin nuevas migraciones ni cambios de secretos.
+- Gate final: `npm run verify` PASS (514 pruebas, 1 omitida; formato, lint, tipado y build).
+  No repetir este gate sin cambios de código. Evidencia local en
+  `.runtime/codex/operations-verify-20260924.log` y `operations-integration-20260924.log`.
+- Release funcional `61d938d` publicado en GitHub/main. Preview Ready
+  `sergod-store-v4-kohdmz7wz-sergod-store.vercel.app`; producción Vercel Ready
+  `CLSPvxvMbLrxFPKQcCY3hp6wANQk` y Render Live `dep-daqkfp0ae00c73884e1g`.
+  `www.sergodstore.cl` sirve el CSS nuevo `index-9y-JjLDy.css`. Cuenta autenticada revisada
+  en computador: perfil e identificadores cargan, sidebar/título sin superposición ni overflow
+  horizontal. POS autenticado muestra el nuevo flujo de ticket y caja lista.
+- Sin nuevas migraciones ni cambios de secretos: Supabase conserva baseline 027.
+  Rollback de código: tag remoto `codex/pre-operations-fix-20260924` → `7957f1f`.
+- Límite de aceptación pendiente: no se completó una venta física REAL en producción; POS
+  validado con integración PostgreSQL local. La relectura remota de contenido/imágenes se
+  comprobó vía API, no se recorrió manualmente cada formulario publicado de punta a punta.
+  Los ejemplos de catálogo siguen visibles mientras no existan productos reales publicados;
+  el banner QA quedó inactivo. Cargar contenido real corresponde al propietario desde la web.
 
 ## Ajustes de Cuenta y Operaciones en rama Preview — 2026-09-23 (histórico)
 
