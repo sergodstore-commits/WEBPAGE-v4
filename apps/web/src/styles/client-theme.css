@@ -654,6 +654,9 @@
     grid-template-columns: 235px minmax(0, 1fr);
     align-items: start;
   }
+  & :where(.account-layout, .account-content, .account-panel, .account-metrics, .metric) {
+    min-width: 0;
+  }
   & .account-content {
     display: grid;
     gap: 22px;
@@ -664,7 +667,12 @@
     display: grid;
     gap: 12px;
   }
+  & .account-nav nav {
+    display: grid;
+    gap: 8px;
+  }
   & .account-nav a {
+    display: block;
     padding: 12px;
     border-radius: 8px;
     background: #152435;
@@ -679,6 +687,20 @@
     align-items: start;
     margin-bottom: 22px;
   }
+  & .account-panel-heading {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  & .order-heading {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+  }
+  & .order-heading > div {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
   & .metric {
     padding: 20px;
     border: 1px solid var(--line);
@@ -689,6 +711,11 @@
     display: block;
     color: var(--accent);
     font-size: 1.65rem;
+  }
+  & .account-metrics .metric strong {
+    font-size: 1rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
   & .order-summary {
     background: #0b1521;
@@ -1171,6 +1198,19 @@
     & .catalog-advanced-filters {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+  }
+}
+@media (max-width: 900px) {
+  .client-theme .account-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .client-theme .account-nav {
+    position: static;
+  }
+
+  .client-theme .account-nav nav {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   }
 }
 @media (max-width: 700px) {

@@ -26,6 +26,20 @@
 | Despliegue web                                                                       | Producción PASS          | Vercel `1b8c420`, dominio canónico y CSS nuevo verificados                         | Ninguno de publicación               |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
+## Ajustes de Cuenta y Operaciones en rama Preview — 2026-09-23
+
+- Cuenta deja de esperar una consulta de rol administrativo antes de mostrar su estructura a una
+  sesión cliente existente; los datos y las mutaciones siguen requiriendo autorización del servidor.
+  La navegación y las tarjetas se adaptan a 390 px sin solaparse ni desbordar.
+- Código KLU y Konami ID son visibles en Cuenta, con reintento y edición bloqueada si falla la lectura
+  para no sobrescribir valores desconocidos. Las rutas heredadas de puntos llevan a Cuenta o al panel
+  administrativo; no se presenta un módulo de puntos al cliente.
+- Operaciones agrupa acciones reales por Ventas, Productos, Publicaciones y Tienda, usa la paleta
+  oscuro/celeste aprobada, y carga el resumen de actividad solo al abrirlo.
+- Lint, tipado, compilación y 113 pruebas web pasaron. La inspección local a 1280 y 390 px no encontró
+  desbordamiento horizontal. Producción no se modificó: el guardado real de KLU/Konami en la Preview
+  depende de publicar también la API correspondiente, que todavía no está en `main`.
+
 ## Trabajo local sin publicar — 2026-09-23
 
 - El panel administrativo incorpora una ruta para administrar imágenes del carrusel de inicio; la
@@ -37,8 +51,8 @@
   PostgreSQL de catálogo, inventario, preventas y catálogo público, y 1 prueba PostgreSQL del
   carrusel. La cadena de migraciones 001–027 pasó instalación limpia y actualización 024→027 en
   una base local desechable. Lint, tipado y compilación terminaron correctamente.
-- Estos cambios continúan en el árbol de trabajo; aún no se han publicado ni se ha validado la
-  carga de contenido real en el entorno productivo.
+- Estos cambios se encuentran en la rama Preview; aún no se han promovido a Producción ni se ha
+  validado la carga de contenido real en el entorno productivo.
 
 ## Publicación del rediseño cliente — 2026-09-23
 

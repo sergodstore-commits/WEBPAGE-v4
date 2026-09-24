@@ -166,6 +166,10 @@ describe('AdminHub', () => {
       expect(within(navigation).getByRole('link', { name })).toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: '¿Qué necesitas hacer?' })).toBeInTheDocument();
+    for (const group of ['Ventas', 'Productos', 'Publicaciones', 'Tienda']) {
+      expect(screen.getByRole('region', { name: group })).toBeInTheDocument();
+    }
+    expect(authorizedRequest).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('link', { name: /Abrir POS/ }));
     expect(navigate).toHaveBeenCalledWith('/admin/pos');
     expect(screen.queryByText('Datos de servidor')).not.toBeInTheDocument();

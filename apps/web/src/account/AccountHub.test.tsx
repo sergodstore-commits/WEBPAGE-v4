@@ -135,5 +135,9 @@ describe('AccountHub', () => {
     render(<AccountHub />);
     expect(await screen.findByText('SG-2026-000001')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('cliente@sergod.cl')).toBeInTheDocument());
+    expect(screen.getByRole('heading', { name: 'Código KLU y Konami ID' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Código KLU (opcional)')).toBeDisabled();
+    expect(screen.getByLabelText('Konami ID (opcional)')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reintentar carga' })).toBeInTheDocument();
   });
 });

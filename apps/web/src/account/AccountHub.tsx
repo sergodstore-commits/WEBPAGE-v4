@@ -149,9 +149,10 @@ export function AccountHub() {
           Pedidos, datos personales y preferencias en un solo lugar.
         </p>
         <nav>
+          <a href="#profile">Datos personales</a>
+          <a href="#tournament-identifiers">Código KLU y Konami ID</a>
           <a href="#orders">Pedidos</a>
           <a href="#preorders">Preventas</a>
-          <a href="#profile">Datos personales</a>
           <a href="#delivery">Preferencias</a>
           <a href="/account">Seguridad</a>
         </nav>
@@ -167,9 +168,11 @@ export function AccountHub() {
               Editar perfil y seguridad
             </a>
           </div>
-          <p className="status" role={profileState === 'error' ? 'alert' : 'status'}>
-            {profileMessage}
-          </p>
+          {profileMessage && (
+            <p className="status" role={profileState === 'error' ? 'alert' : 'status'}>
+              {profileMessage}
+            </p>
+          )}
           {account && (
             <div className="metric-grid account-metrics">
               <Metric label="Correo" value={account.currentEmail} />
@@ -208,9 +211,11 @@ export function AccountHub() {
           <p className="eyebrow">Despacho</p>
           <h2>Preferencias de entrega</h2>
           <p>Despacho por pagar a agencia Chilexpress o Starken; el domicilio no es obligatorio.</p>
-          <p className="status" role={preferencesState === 'error' ? 'alert' : 'status'}>
-            {preferencesMessage}
-          </p>
+          {preferencesMessage && (
+            <p className="status" role={preferencesState === 'error' ? 'alert' : 'status'}>
+              {preferencesMessage}
+            </p>
+          )}
           {preferencesState === 'ready' && (
             <form
               className="account-delivery-form"
@@ -265,6 +270,7 @@ function TournamentIdentifiersForm() {
   const [state, setState] = useState<LoadState>('loading');
   const [message, setMessage] = useState('Cargando identificadores…');
   const [saving, setSaving] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -285,11 +291,11 @@ function TournamentIdentifiersForm() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [retry]);
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (saving) return;
+    if (saving || identifiers === null) return;
     const data = new FormData(event.currentTarget);
     const parsed = accountTournamentIdentifiersSchema.safeParse({
       konamiId: nullable(data.get('konamiId')),
@@ -323,51 +329,63 @@ function TournamentIdentifiersForm() {
   return (
     <section className="account-panel cut-panel" id="tournament-identifiers">
       <p className="eyebrow">Torneos presenciales</p>
-      <h2>Tus identificadores</h2>
+      <h2>Código KLU y Konami ID</h2>
       <p id="tournament-identifiers-help">
         Konami ID y código KLU son opcionales y se usan para torneos presenciales. No son necesarios
         para comprar. Puedes borrarlos cuando quieras.
       </p>
-      <p className="status" role={state === 'error' ? 'alert' : 'status'}>
-        {message}
-      </p>
-      {identifiers !== null && (
-        <form
-          className="account-delivery-form"
-          onSubmit={(event) => void save(event)}
-          key={JSON.stringify(identifiers)}
-        >
-          <label>
-            Konami ID (opcional)
-            <input
-              name="konamiId"
-              defaultValue={identifiers.konamiId ?? ''}
-              maxLength={64}
-              autoCapitalize="none"
-              autoComplete="off"
-              spellCheck={false}
-              aria-describedby="tournament-identifiers-help"
-              disabled={saving}
-            />
-          </label>
-          <label>
-            Código KLU (opcional)
-            <input
-              name="kluCode"
-              defaultValue={identifiers.kluCode ?? ''}
-              maxLength={64}
-              autoCapitalize="none"
-              autoComplete="off"
-              spellCheck={false}
-              aria-describedby="tournament-identifiers-help"
-              disabled={saving}
-            />
-          </label>
-          <button type="submit" disabled={saving}>
-            Guardar identificadores
-          </button>
-        </form>
+      {message && (
+        <p className="status" role={state === 'error' ? 'alert' : 'status'}>
+          {message}
+        </p>
       )}
+      {state === 'error' && identifiers === null && (
+        <button
+          onClick={() => {
+            setState('loading');
+            setMessage('Cargando identificadores…');
+            setRetry((current) => current + 1);
+          }}
+          type="button"
+        >
+          Reintentar carga
+        </button>
+      )}
+      <form
+        className="account-delivery-form"
+        onSubmit={(event) => void save(event)}
+        key={identifiers === null ? 'pending' : JSON.stringify(identifiers)}
+      >
+        <label>
+          Konami ID (opcional)
+          <input
+            name="konamiId"
+            defaultValue={identifiers?.konamiId ?? ''}
+            maxLength={64}
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            aria-describedby="tournament-identifiers-help"
+            disabled={saving || identifiers === null}
+          />
+        </label>
+        <label>
+          Código KLU (opcional)
+          <input
+            name="kluCode"
+            defaultValue={identifiers?.kluCode ?? ''}
+            maxLength={64}
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            aria-describedby="tournament-identifiers-help"
+            disabled={saving || identifiers === null}
+          />
+        </label>
+        <button type="submit" disabled={saving || identifiers === null}>
+          Guardar identificadores
+        </button>
+      </form>
     </section>
   );
 }
@@ -398,9 +416,11 @@ function OrderHistory(props: {
         </div>
         <span className="status-chip">{props.items.length} visibles</span>
       </div>
-      <p className="status" role={props.state === 'error' ? 'alert' : 'status'}>
-        {props.message}
-      </p>
+      {props.message && (
+        <p className="status" role={props.state === 'error' ? 'alert' : 'status'}>
+          {props.message}
+        </p>
+      )}
       <div className="order-history">
         {props.items.map((order) => (
           <article className="order-summary" key={order.orderId}>

@@ -10,6 +10,7 @@ const publicDirectory = join(webDirectory, 'public');
 const assetDirectory = join(publicDirectory, 'assets', 'sergod');
 const stylesDirectory = join(webDirectory, 'src', 'styles');
 const baseStyles = readFileSync(join(stylesDirectory, 'base.css'), 'utf8');
+const adminStyles = readFileSync(join(stylesDirectory, 'admin.css'), 'utf8');
 const siteChrome = readFileSync(join(webDirectory, 'src', 'app', 'SiteChrome.tsx'), 'utf8');
 
 function filesBelow(directory: string): string[] {
@@ -19,11 +20,17 @@ function filesBelow(directory: string): string[] {
   });
 }
 
-describe('línea visual neutral', () => {
-  it('conserva una sola hoja estructural sin referencias al diseño retirado', () => {
-    expect(readdirSync(stylesDirectory).sort()).toEqual(['base.css', 'client-theme.css']);
+describe('sistema visual', () => {
+  it('conserva la base estructural neutral y separa las capas cliente y administrador', () => {
+    expect(readdirSync(stylesDirectory).sort()).toEqual([
+      'admin.css',
+      'base.css',
+      'client-theme.css',
+    ]);
     expect(baseStyles).not.toMatch(/\/assets\/sergod\//u);
     expect(baseStyles).not.toMatch(/halftone|launcher|clip-path|drop-shadow|keyframes/iu);
+    expect(adminStyles).toContain('.admin-theme');
+    expect(adminStyles).not.toMatch(/\/assets\/sergod\//u);
   });
 
   it('publica únicamente las dos variantes inmutables del logo oficial', () => {

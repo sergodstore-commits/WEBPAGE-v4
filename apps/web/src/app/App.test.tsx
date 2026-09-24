@@ -151,15 +151,30 @@ describe('IdentityAccess presentation', () => {
     expect(screen.getByRole('heading', { name: 'Carrito' })).toBeInTheDocument();
   });
 
-  it('preserves the Loyalty destination while requesting authentication', () => {
+  it('redirects the retired points address to the customer account', () => {
     window.history.replaceState({}, '', '/loyalty');
     render(<App />);
 
+    expect(window.location.pathname).toBe('/account/overview');
     expect(screen.getByRole('heading', { name: 'Ingresa para continuar' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ingresar' })).toHaveAttribute(
       'href',
-      '/login?returnTo=%2Floyalty',
+      '/login?returnTo=%2Faccount%2Foverview',
     );
+  });
+
+  it('opens the customer account layout without waiting for an admin role check', () => {
+    vi.mocked(currentSession).mockReturnValue({ accessToken: 'customer-access' } as never);
+    vi.mocked(ownAccount).mockImplementation(() => new Promise(() => undefined));
+    window.history.replaceState({}, '', '/account/overview');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Resumen' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Código KLU y Konami ID' })).toHaveAttribute(
+      'href',
+      '#tournament-identifiers',
+    );
+    expect(screen.queryByRole('heading', { name: 'Verificando acceso' })).not.toBeInTheDocument();
   });
 
   it('keeps the public terms route available from a direct link', () => {

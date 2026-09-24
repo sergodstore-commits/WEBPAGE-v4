@@ -1,9 +1,62 @@
-/* Administrative layout only; the public client theme stays independent. */
+/* Administrative design layer; customer pages remain independent. */
+.admin-theme {
+  min-height: 100svh;
+  color: #eaf3fa;
+  color-scheme: dark;
+  background: radial-gradient(ellipse at 85% 0, #153c4c 0, transparent 42%), #07111b;
+}
+
+.admin-theme .site-header,
+.admin-theme .site-footer {
+  border-color: #304858;
+  background: #0c1b28;
+}
+
+.admin-theme .site-header :where(button, a),
+.admin-theme .site-footer :where(button, a) {
+  color: #eaf3fa;
+}
+
+.admin-theme :where(button, .button-link) {
+  border-color: #32738a;
+  border-radius: 9px;
+  background: #123b4c;
+  color: #eaf9ff;
+}
+
+.admin-theme :where(button, .button-link):hover:not(:disabled) {
+  border-color: #7ed6e6;
+  background: #19566a;
+}
+
+.admin-theme :where(input, select, textarea) {
+  border-color: #3b5869;
+  border-radius: 8px;
+  background: #091925;
+  color: #f0f7fa;
+}
+
+.admin-theme :where(button, a, input, select, textarea):focus-visible {
+  outline-color: #8de2f1;
+}
+
+.admin-theme :where(.pos-card, .service-coverage-panel, .account-card) {
+  border-color: #2d4a5a;
+  background: #102330;
+  color: #eaf3fa;
+}
+
+.admin-theme :where(.access-gate, .panel) {
+  border: 1px solid #2d4a5a;
+  background: #102330;
+  color: #eaf3fa;
+}
+
 .admin-shell {
-  --admin-ink: #17283a;
-  --admin-muted: #526579;
-  --admin-line: #d7e1ea;
-  --admin-accent: #176f8d;
+  --admin-ink: #eaf3fa;
+  --admin-muted: #a8bfca;
+  --admin-line: #2d4a5a;
+  --admin-accent: #8de2f1;
   width: min(calc(100% - 2rem), 80rem);
   color: var(--admin-ink);
 }
@@ -11,8 +64,8 @@
 .admin-shell :where(.admin-heading, .admin-sidebar, .admin-module) {
   border: 1px solid var(--admin-line);
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 7px 24px #17283a0a;
+  background: #102330;
+  box-shadow: 0 10px 30px #0004;
 }
 
 .admin-shell .admin-heading {
@@ -107,8 +160,8 @@
 
 .admin-shell .admin-area-navigation a:hover,
 .admin-shell .admin-area-navigation a[aria-current='page'] {
-  background: #e7f4f8;
-  color: #0d5874;
+  background: #19465a;
+  color: #d9f8ff;
 }
 
 .admin-shell .admin-area-navigation a[aria-current='page'] {
@@ -133,6 +186,73 @@
   gap: 1.25rem;
 }
 
+.admin-shell .admin-quick-actions {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-shell .admin-section-intro {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid #407387;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #154458, #102330 70%);
+}
+
+.admin-shell .admin-section-intro h2 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+}
+
+.admin-shell .admin-section-intro p:last-child {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.admin-shell .admin-action-sections {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-shell .admin-action-section h3 {
+  margin: 0 0 0.65rem;
+  color: var(--admin-accent);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-shell .admin-activity-summary {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: #102330;
+}
+
+.admin-shell .admin-activity-summary summary {
+  color: var(--admin-accent);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.admin-shell .admin-snapshot {
+  margin-top: 1rem;
+}
+
+.admin-shell .admin-snapshot .metric {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 10px;
+  background: #0a1a27;
+}
+
+.admin-shell .admin-snapshot .metric strong {
+  display: block;
+  color: var(--admin-accent);
+  font-size: 1.5rem;
+}
+
 .admin-shell :where(.admin-task-workspace, .catalog-admin-workspace) {
   display: grid;
   align-content: start;
@@ -141,6 +261,16 @@
 
 .admin-shell .admin-module {
   padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.admin-shell .status {
+  border-left-color: var(--admin-accent);
+  background: #153343;
+  color: var(--admin-ink);
+}
+
+.admin-shell :where(td, th) {
+  border-color: var(--admin-line);
 }
 
 .admin-shell .admin-module > :first-child,
@@ -164,8 +294,8 @@
 
 .admin-shell :where(.admin-task-tabs, .catalog-admin-tabs) button[aria-current='page'] {
   border-color: var(--admin-accent);
-  background: #e7f4f8;
-  color: #0d5874;
+  background: #19465a;
+  color: #d9f8ff;
   font-weight: 700;
 }
 
@@ -181,13 +311,14 @@
   padding: 1.1rem;
   border: 1px solid var(--admin-line);
   border-radius: 12px;
-  background: #fff;
+  background: #102330;
   color: var(--admin-ink);
   text-decoration: none;
 }
 
 .admin-shell .admin-action-grid a:hover {
   border-color: var(--admin-accent);
+  background: #194052;
 }
 
 .admin-shell .admin-action-grid span {
@@ -242,7 +373,7 @@
 }
 
 .admin-shell .admin-module th {
-  background: #f2f6f9;
+  background: #183849;
 }
 
 .admin-shell .admin-module :where(td, th):nth-child(2),

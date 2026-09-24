@@ -100,6 +100,9 @@ const modules = [
 const initialModules = Object.fromEntries(
   modules.map(({ anchor }) => [anchor, emptyModule()]),
 ) as Record<string, ModuleState>;
+const dashboardSummaryModules = modules.filter(({ anchor }) =>
+  ['orders', 'payments', 'fulfillments', 'catalog'].includes(anchor),
+);
 
 const adminAreas = [
   {
@@ -216,36 +219,43 @@ const adminNavigationGroups = [
 const dashboardActions = [
   {
     description: 'Registrar una venta presencial.',
+    group: 'Ventas',
     label: 'Abrir POS',
     route: '/admin/pos',
   },
   {
     description: 'Crear, editar o cargar imágenes.',
+    group: 'Productos',
     label: 'Administrar productos',
     route: '/admin/catalog',
   },
   {
     description: 'Revisar pagos y preparar entregas.',
+    group: 'Ventas',
     label: 'Revisar pedidos',
     route: '/admin/orders',
   },
   {
     description: 'Ingresar stock o corregir existencias.',
+    group: 'Productos',
     label: 'Ajustar inventario',
     route: '/admin/inventory',
   },
   {
     description: 'Crear noticias, torneos o actividades de Comunidad.',
+    group: 'Publicaciones',
     label: 'Administrar Comunidad',
     route: '/admin/content',
   },
   {
     description: 'Editar dirección, horario y cobertura.',
+    group: 'Tienda',
     label: 'Configurar tienda',
     route: '/admin/service-coverage',
   },
 ] as const satisfies readonly {
   readonly description: string;
+  readonly group: 'Productos' | 'Publicaciones' | 'Tienda' | 'Ventas';
   readonly label: string;
   readonly route: AdminRoute;
 }[];
@@ -268,7 +278,7 @@ const requiredModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
   catalog: ['catalog', 'games', 'categories', 'collections'],
   configuration: ['configurations'],
   content: ['content'],
-  dashboard: ['orders', 'payments', 'fulfillments', 'catalog', 'games', 'categories'],
+  dashboard: [],
   inventory: ['catalog'],
   carousel: ['carousel'],
   loyalty: [],
@@ -305,10 +315,8 @@ export function AdminHub({
   const [catalogWorkspace, setCatalogWorkspace] = useState<'create' | 'edit' | 'images'>('create');
   const [managedTask, setManagedTask] = useState<AdminTask>('create');
   const [ordersModule, setOrdersModule] = useState('orders');
+  const [activityOpen, setActivityOpen] = useState(false);
   const areaDefinition = adminAreas.find((definition) => definition.area === area) ?? adminAreas[0];
-  const requiredModules = modules.filter(({ anchor }) =>
-    requiredModulesByArea[area].includes(anchor),
-  );
   const visibleModules = modules.filter(({ anchor }) =>
     visibleModulesByArea[area].includes(anchor),
   );
@@ -356,6 +364,11 @@ export function AdminHub({
       if (definition) void load(definition);
     }
   }, [area, load]);
+
+  useEffect(() => {
+    if (area !== 'dashboard' || !activityOpen) return;
+    for (const definition of dashboardSummaryModules) void load(definition);
+  }, [activityOpen, area, load]);
 
   useEffect(() => {
     setCatalogWorkspace('create');
@@ -421,39 +434,58 @@ export function AdminHub({
         />
         <div className="admin-content">
           <section id={`${area}-workspace`}>
-            <p className="status" role="status">
-              {actionMessage}
-            </p>
+            {actionMessage && (
+              <p className="status" role="status">
+                {actionMessage}
+              </p>
+            )}
             {area === 'dashboard' && (
               <>
                 <section aria-labelledby="admin-actions-title" className="admin-quick-actions">
                   <div className="admin-section-intro">
-                    <p className="eyebrow">Trabajo frecuente</p>
+                    <p className="eyebrow">Panel de operación</p>
                     <h2 id="admin-actions-title">¿Qué necesitas hacer?</h2>
+                    <p>
+                      Elige una tarea. Cada acceso abre directamente la herramienta correspondiente.
+                    </p>
                   </div>
-                  <div className="admin-action-grid">
-                    {dashboardActions.map((action) => (
-                      <a
-                        href={action.route}
-                        key={action.route}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          navigate(action.route);
-                        }}
-                      >
-                        <strong>{action.label}</strong>
-                        <span>{action.description}</span>
-                      </a>
+                  <div className="admin-action-sections">
+                    {(['Ventas', 'Productos', 'Publicaciones', 'Tienda'] as const).map((group) => (
+                      <section aria-label={group} className="admin-action-section" key={group}>
+                        <h3>{group}</h3>
+                        <div className="admin-action-grid">
+                          {dashboardActions
+                            .filter((action) => action.group === group)
+                            .map((action) => (
+                              <a
+                                href={action.route}
+                                key={action.route}
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  navigate(action.route);
+                                }}
+                              >
+                                <strong>{action.label}</strong>
+                                <span>{action.description}</span>
+                              </a>
+                            ))}
+                        </div>
+                      </section>
                     ))}
                   </div>
                 </section>
-                <details className="admin-activity-summary">
+                <details
+                  className="admin-activity-summary"
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) setActivityOpen(true);
+                  }}
+                >
                   <summary>Ver actividad reciente</summary>
                   <div
                     aria-label="Resumen operativo visible"
                     className="metric-grid admin-snapshot"
                   >
-                    {requiredModules.map((module) => (
+                    {dashboardSummaryModules.map((module) => (
                       <div className="metric" key={module.anchor}>
                         <span>{module.label} recientes</span>
                         <strong>
@@ -773,9 +805,11 @@ function AdminModule({
         <h2>{definition.label}</h2>
         <span className="status-chip">{module.items.length} visibles</span>
       </div>
-      <p className="status" role={module.state === 'error' ? 'alert' : 'status'}>
-        {module.message}
-      </p>
+      {module.message && (
+        <p className="status" role={module.state === 'error' ? 'alert' : 'status'}>
+          {module.message}
+        </p>
+      )}
       {module.items.length > 0 && (
         <div className="table-scroll">
           <table>

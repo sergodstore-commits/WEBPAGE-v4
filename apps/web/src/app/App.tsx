@@ -85,7 +85,6 @@ export type Route =
   | '/community'
   | '/community/visit'
   | '/comics'
-  | '/loyalty'
   | '/preorders'
   | '/quests'
   | '/auth/callback/confirm'
@@ -132,7 +131,7 @@ export function App() {
 
   return (
     <SiteAppearancePreviewProvider>
-      <div className={`app-shell${route.startsWith('/admin') ? '' : ' client-theme'}`}>
+      <div className={`app-shell ${route.startsWith('/admin') ? 'admin-theme' : 'client-theme'}`}>
         {route !== '/' && <SiteChrome navigate={navigate} route={route} />}
         <RouteErrorBoundary key={route}>
           <Suspense fallback={<RouteLoading />}>
@@ -154,11 +153,6 @@ export function App() {
                 </AccessGate>
               )}
               {route === '/account/overview' && (
-                <AccessGate>
-                  <AccountHub />
-                </AccessGate>
-              )}
-              {route === '/loyalty' && (
                 <AccessGate>
                   <AccountHub />
                 </AccessGate>
@@ -312,13 +306,13 @@ function AccessGate({
     () =>
       subscribeSession((session) => {
         setActiveSession(session);
-        if (session !== null) setState('loading');
+        if (session !== null && requiredRole !== undefined) setState('loading');
       }),
-    [],
+    [requiredRole],
   );
 
   useEffect(() => {
-    if (activeSession === null) return;
+    if (activeSession === null || requiredRole === undefined) return;
     let active = true;
     void ownAccount()
       .then((account) => {
@@ -335,7 +329,8 @@ function AccessGate({
     };
   }, [activeSession, requiredRole]);
 
-  const visibleState = activeSession === null ? 'signed-out' : state;
+  const visibleState =
+    activeSession === null ? 'signed-out' : requiredRole === undefined ? 'allowed' : state;
   if (visibleState === 'allowed') return children;
 
   const copy = {
@@ -883,11 +878,18 @@ function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : 'No fue posible completar la solicitud.';
 }
 function loginReturnRoute(): Route {
-  const requested = new URLSearchParams(window.location.search).get('returnTo');
-  return requested === '/loyalty' ? '/loyalty' : '/account/overview';
+  return '/account/overview';
 }
 function routeFromLocation(): Route {
   const path = window.location.pathname;
+  if (path === '/loyalty') {
+    window.history.replaceState({}, '', '/account/overview');
+    return '/account/overview';
+  }
+  if (path === '/admin/loyalty') {
+    window.history.replaceState({}, '', '/admin');
+    return '/admin';
+  }
   const routes: readonly Route[] = [
     '/',
     '/account',
@@ -901,7 +903,6 @@ function routeFromLocation(): Route {
     '/admin/configuration',
     '/admin/content',
     '/admin/inventory',
-    '/admin/loyalty',
     '/admin/orders',
     '/admin/pos',
     '/admin/preorders',
@@ -915,7 +916,6 @@ function routeFromLocation(): Route {
     '/community',
     '/community/visit',
     '/comics',
-    '/loyalty',
     '/preorders',
     '/quests',
     '/auth/callback/confirm',
@@ -938,7 +938,6 @@ function adminAreaFromRoute(route: Route): AdminArea | null {
     '/admin/configuration': 'configuration',
     '/admin/content': 'content',
     '/admin/inventory': 'inventory',
-    '/admin/loyalty': 'loyalty',
     '/admin/orders': 'orders',
     '/admin/preorders': 'preorders',
     '/admin/promotions': 'promotions',
