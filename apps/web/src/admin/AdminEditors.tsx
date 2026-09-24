@@ -24,7 +24,7 @@ export type AdminAction = (
   body: unknown,
   method?: string,
   reload?: string,
-) => Promise<void>;
+) => Promise<unknown>;
 
 export function CatalogEditors({
   categories,
@@ -1129,7 +1129,7 @@ function EditorialVisualEditor({
       .flatMap((block) => (block.type === 'TEXT' ? [block.text] : []))
       .join('\n\n')
       .trim();
-    await onAction(
+    const saved = await onAction(
       `/api/v1/admin/content/${draft.id}`,
       {
         body: body || draft.excerpt,
@@ -1142,6 +1142,10 @@ function EditorialVisualEditor({
       'PUT',
       'content',
     );
+    if (saved === false) {
+      setMessage('No se guardó la publicación. Revisa el error indicado; tu texto sigue aquí.');
+      return;
+    }
     setDraft({ ...draft, document: { blocks, version: 1 } });
     setMessage('Diseño editorial guardado.');
   };
@@ -1151,6 +1155,32 @@ function EditorialVisualEditor({
     const form = event.currentTarget;
     setMessage('Subiendo y validando imagen…');
     try {
+      const blocks = draft.document.blocks.filter(
+        (block) => block.type !== 'TEXT' || block.text.trim() !== '',
+      );
+      const body = blocks
+        .flatMap((block) => (block.type === 'TEXT' ? [block.text] : []))
+        .join('\n\n')
+        .trim();
+      const saved = await onAction(
+        `/api/v1/admin/content/${draft.id}`,
+        {
+          body: body || draft.excerpt,
+          excerpt: draft.excerpt,
+          metadata: { ...draft.metadata, document: { blocks, version: 1 } },
+          slug: draft.slug,
+          title: draft.title,
+          type: draft.type,
+        },
+        'PUT',
+        'content',
+      );
+      if (saved === false) {
+        setMessage(
+          'No se pudo guardar el texto. La imagen todavía no se subió y tus cambios siguen aquí.',
+        );
+        return;
+      }
       const result = await authorizedRequest<{ item: Item }>(
         `/api/v1/admin/content/${draft.id}/resources`,
         {
@@ -1590,7 +1620,11 @@ function setField(form: HTMLFormElement, name: string, value: unknown) {
     return;
   if (value === null || value === undefined) field.value = '';
   else if (field instanceof HTMLInputElement && field.type === 'datetime-local')
-    field.value = String(value).slice(0, 16);
+    field.value = new Date(
+      new Date(String(value)).getTime() - new Date(String(value)).getTimezoneOffset() * 60_000,
+    )
+      .toISOString()
+      .slice(0, 16);
   else field.value = String(value);
 }
 function isItem(value: unknown): value is Item {

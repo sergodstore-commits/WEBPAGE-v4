@@ -6,6 +6,7 @@ import { StoreField } from '../service-coverage/StoreField.js';
 import { firstStoreFromCoverage, type StoreSummary } from '../service-coverage/store.js';
 import { CatalogEditors, CatalogResourceManager, RecordEditors } from './AdminEditors.js';
 import { CarouselAdminPanel } from './CarouselAdminPanel.js';
+import { AuditHistory } from './AuditHistory.js';
 import {
   itemDetail,
   itemIdentifier,
@@ -142,10 +143,10 @@ const adminAreas = [
   },
   {
     area: 'promotions',
-    description: 'Crea descuentos y cupones, define su vigencia y controla su estado.',
-    label: 'Promociones y cupones',
+    description: 'Aplica un descuento porcentual a un producto del catálogo.',
+    label: 'Descuentos por producto',
     route: '/admin/promotions',
-    title: 'Promociones y cupones',
+    title: 'Descuentos por producto',
   },
   {
     area: 'content',
@@ -207,7 +208,6 @@ const adminNavigationGroups = [
     links: [
       { label: 'Clientes y usuarios', route: '/admin/accounts' },
       { label: 'Datos de la tienda', route: '/admin/service-coverage' },
-      { label: 'Ajustes', route: '/admin/configuration' },
       { label: 'Actividad', route: '/admin/audit' },
     ],
   },
@@ -283,8 +283,8 @@ const requiredModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
   carousel: ['carousel'],
   loyalty: [],
   orders: ['orders', 'payments', 'fulfillments'],
-  preorders: ['preorders', 'catalog'],
-  promotions: ['promotions', 'coupons'],
+  preorders: ['preorders', 'catalog', 'games', 'categories', 'collections'],
+  promotions: ['promotions', 'catalog'],
 };
 
 const visibleModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
@@ -298,7 +298,7 @@ const visibleModulesByArea: Readonly<Record<AdminArea, readonly string[]>> = {
   loyalty: [],
   orders: ['orders', 'payments', 'fulfillments'],
   preorders: ['preorders'],
-  promotions: ['promotions', 'coupons'],
+  promotions: ['promotions'],
 };
 
 export function AdminHub({
@@ -310,6 +310,7 @@ export function AdminHub({
 }) {
   const [data, setData] = useState<Record<string, ModuleState>>(initialModules);
   const [actionMessage, setActionMessage] = useState('');
+  const [preorderStep, setPreorderStep] = useState<'product' | 'images' | 'campaign'>('campaign');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [store, setStore] = useState<StoreSummary | null>(null);
   const [catalogWorkspace, setCatalogWorkspace] = useState<
@@ -411,8 +412,10 @@ export function AdminHub({
       setActionMessage('Operación guardada correctamente.');
       const definition = modules.find(({ anchor }) => anchor === reload);
       if (definition) await load(definition);
+      return true;
     } catch (error) {
       setActionMessage(messageOf(error));
+      return false;
     }
   };
 
@@ -444,7 +447,7 @@ export function AdminHub({
         <div className="admin-content">
           <section id={`${area}-workspace`}>
             {actionMessage && (
-              <p className="status" role="status">
+              <p className="status admin-action-feedback" role="status" aria-live="polite">
                 {actionMessage}
               </p>
             )}
@@ -699,37 +702,93 @@ export function AdminHub({
                 ))}
               </nav>
               {managedTask === 'create' && managedArea === 'preorders' && (
-                <PreorderComposer
-                  onAction={mutate}
-                  products={data.catalog?.items ?? []}
-                  store={store}
-                />
+                <>
+                  <nav className="admin-task-tabs" aria-label="Preparar preventa">
+                    <button type="button" onClick={() => setPreorderStep('product')}>
+                      1. Producto de preventa
+                    </button>
+                    <button type="button" onClick={() => setPreorderStep('images')}>
+                      2. Imágenes
+                    </button>
+                    <button type="button" onClick={() => setPreorderStep('campaign')}>
+                      3. Campaña
+                    </button>
+                  </nav>
+                  {preorderStep === 'product' && (
+                    <CatalogComposer
+                      defaultSaleType="PREORDER"
+                      categories={data.categories?.items ?? []}
+                      collections={data.collections?.items ?? []}
+                      games={data.games?.items ?? []}
+                      onAction={mutate}
+                      onCreated={(product) => {
+                        setCreatedProduct(product);
+                        setPreorderStep('images');
+                        const definition = modules.find((item) => item.anchor === 'catalog');
+                        if (definition) void load(definition);
+                      }}
+                    />
+                  )}
+                  {preorderStep === 'images' && (
+                    <CatalogResourceManager
+                      categories={data.categories?.items ?? []}
+                      collections={data.collections?.items ?? []}
+                      games={data.games?.items ?? []}
+                      initialProductId={
+                        createdProduct?.saleType === 'PREORDER'
+                          ? String(createdProduct.productId)
+                          : ''
+                      }
+                      products={(data.catalog?.items ?? []).filter(
+                        (item) =>
+                          item.saleType === 'PREORDER' && item.publicationStatus !== 'ARCHIVED',
+                      )}
+                      onContinue={() => setPreorderStep('campaign')}
+                    />
+                  )}
+                  {preorderStep === 'campaign' && (
+                    <PreorderComposer
+                      onAction={mutate}
+                      products={data.catalog?.items ?? []}
+                      store={store}
+                    />
+                  )}
+                </>
               )}
               {managedTask === 'create' && managedArea === 'promotions' && (
-                <PromotionComposer onAction={mutate} promotions={data.promotions?.items ?? []} />
+                <PromotionComposer onAction={mutate} products={data.catalog?.items ?? []} />
               )}
-              {(managedTask === 'create' || managedTask === 'edit') &&
-                managedArea === 'carousel' && <CarouselAdminPanel />}
+              {managedArea === 'carousel' && <CarouselAdminPanel />}
               {managedTask === 'create' && managedArea === 'configuration' && (
                 <ConfigurationComposer onAction={mutate} />
               )}
               {managedTask === 'create' && managedArea === 'content' && (
                 <EditorialComposer onAction={mutate} />
               )}
-              {managedTask === 'edit' && managedArea !== 'carousel' && (
-                <RecordEditors
-                  area={managedArea}
-                  configurations={data.configurations?.items ?? []}
-                  content={data.content?.items ?? []}
-                  loyalty={[]}
+              {managedTask === 'edit' && managedArea === 'promotions' && (
+                <PromotionComposer
                   onAction={mutate}
-                  preorders={data.preorders?.items ?? []}
                   products={data.catalog?.items ?? []}
                   promotions={data.promotions?.items ?? []}
-                  store={store}
                 />
               )}
+              {managedTask === 'edit' &&
+                managedArea !== 'carousel' &&
+                managedArea !== 'promotions' && (
+                  <RecordEditors
+                    area={managedArea}
+                    configurations={data.configurations?.items ?? []}
+                    content={data.content?.items ?? []}
+                    loyalty={[]}
+                    onAction={mutate}
+                    preorders={data.preorders?.items ?? []}
+                    products={data.catalog?.items ?? []}
+                    promotions={data.promotions?.items ?? []}
+                    store={store}
+                  />
+                )}
               {managedTask === 'records' &&
+                managedArea !== 'carousel' &&
                 visibleModules.map((module) => (
                   <AdminModule
                     definition={module}
@@ -859,7 +918,7 @@ function AdminModule({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
   readonly onLoadMore: () => void;
 }) {
   return (
@@ -873,7 +932,10 @@ function AdminModule({
           {module.message}
         </p>
       )}
-      {module.items.length > 0 && (
+      {definition.anchor === 'audit' && module.items.length > 0 && (
+        <AuditHistory items={module.items} />
+      )}
+      {definition.anchor !== 'audit' && module.items.length > 0 && (
         <div className="table-scroll">
           <table>
             <thead>
@@ -918,7 +980,7 @@ function AdminRow({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   const id = itemIdentifier(item);
   const primaryReference = itemReference(item);
@@ -939,6 +1001,16 @@ function AdminRow({
   );
 }
 
+function catalogPublicationActions(state: string): readonly (readonly [string, string])[] {
+  if (state === 'ARCHIVED') return [];
+  return [
+    ...(state !== 'PUBLISHED'
+      ? [['Publicar', 'PUBLISHED'] as const]
+      : [['Retirar', 'UNPUBLISHED'] as const]),
+    ['Archivar', 'ARCHIVED'] as const,
+  ];
+}
+
 function RowAction({
   anchor,
   id,
@@ -953,7 +1025,7 @@ function RowAction({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   if (anchor === 'payments')
     return (
@@ -971,11 +1043,7 @@ function RowAction({
   if (anchor === 'catalog')
     return (
       <StateButtons
-        actions={[
-          ['Publicar', 'PUBLISHED'],
-          ['Retirar', 'UNPUBLISHED'],
-          ['Archivar', 'ARCHIVED'],
-        ]}
+        actions={catalogPublicationActions(String(item.publicationStatus ?? 'DRAFT'))}
         onSelect={(nextStatus) =>
           onAction(
             `/api/v1/admin/catalog/products/${id}/publication-transitions`,
@@ -990,15 +1058,16 @@ function RowAction({
     const segment = anchor === 'games' ? 'tcg-games' : anchor;
     return (
       <StateButtons
-        actions={[
-          ['Publicar', 'PUBLISHED'],
-          ['Retirar', 'UNPUBLISHED'],
-          ['Archivar', 'ARCHIVED'],
-        ]}
+        actions={catalogPublicationActions(String(item.publicationStatus ?? 'DRAFT'))}
         onSelect={(nextStatus) =>
           onAction(
             `/api/v1/admin/catalog/${segment}/${id}/publication-transitions`,
-            { descendantStrategy: 'REJECT', nextStatus },
+            {
+              nextStatus,
+              ...(item.publicationStatus === 'PUBLISHED' && nextStatus !== 'PUBLISHED'
+                ? { descendantStrategy: 'REJECT' }
+                : {}),
+            },
             'POST',
             anchor,
           )
@@ -1027,10 +1096,12 @@ function RowAction({
           ['Borrador', 'draft'],
           ['Archivar', 'archive'],
         ]}
-        onSelect={(action) => onAction(`/api/v1/admin/content/${id}/${action}`, {}, 'POST', anchor)}
+        onSelect={(action) =>
+          onAction(`/api/v1/admin/content/${id}/${action}`, undefined, 'POST', anchor)
+        }
       />
     );
-  if (anchor === 'preorders') return <PreorderAction id={id} onAction={onAction} />;
+  if (anchor === 'preorders') return <PreorderAction id={id} item={item} onAction={onAction} />;
   if (anchor === 'loyalty' && item.state === 'DRAFT')
     return (
       <button
@@ -1063,7 +1134,7 @@ function ConfigurationAction({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1093,7 +1164,7 @@ function FulfillmentAction({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1141,15 +1212,17 @@ function FulfillmentAction({
 
 function PreorderAction({
   id,
+  item,
   onAction,
 }: {
   readonly id: string;
+  readonly item: Item;
   readonly onAction: (
     path: string,
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   const operational = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1161,9 +1234,20 @@ function PreorderAction({
       'preorders',
     );
   };
-  const publication = (event: FormEvent<HTMLFormElement>) => {
+  const publication = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    if (form.get('nextStatus') === 'PUBLISHED' && item.operationalState === 'DRAFT') {
+      const nextState =
+        new Date(String(item.opensAt)).getTime() > Date.now() ? 'SCHEDULED' : 'OPEN';
+      const saved = await onAction(
+        `/api/v1/admin/preorders/campaigns/${id}/operational-transitions`,
+        { nextState, reason: 'Preparar campaña para publicación' },
+        'POST',
+        'preorders',
+      );
+      if (saved === false) return;
+    }
     return onAction(
       `/api/v1/admin/preorders/campaigns/${id}/publication-transitions`,
       { nextStatus: String(form.get('nextStatus')), reason: nullable(form.get('reason')) },
@@ -1173,20 +1257,45 @@ function PreorderAction({
   };
   return (
     <div className="stacked-actions">
+      <small>
+        Al publicar un borrador se abre o programa automáticamente según su fecha. El producto debe
+        estar publicado y tener imagen.
+      </small>
       <form className="inline-action" onSubmit={(event) => void operational(event)}>
         <select aria-label="Estado operativo de preventa" name="nextState">
-          <option value="SCHEDULED">Programar</option>
-          <option value="OPEN">Abrir</option>
-          <option value="CLOSED">Cerrar</option>
-          <option value="CANCELLED">Cancelar</option>
+          <option disabled={item.operationalState !== 'DRAFT'} value="SCHEDULED">
+            Programar
+          </option>
+          <option disabled={item.operationalState !== 'DRAFT'} value="OPEN">
+            Abrir
+          </option>
+          <option
+            disabled={!['OPEN', 'SCHEDULED'].includes(String(item.operationalState))}
+            value="CLOSED"
+          >
+            Cerrar
+          </option>
+          <option disabled={item.operationalState === 'CANCELLED'} value="CANCELLED">
+            Cancelar
+          </option>
         </select>
         <input aria-label="Motivo operativo" name="reason" placeholder="Motivo" />
         <button>Aplicar</button>
       </form>
       <form className="inline-action" onSubmit={(event) => void publication(event)}>
         <select aria-label="Publicación de preventa" name="nextStatus">
-          <option value="PUBLISHED">Publicar</option>
-          <option value="UNPUBLISHED">Retirar</option>
+          <option
+            disabled={
+              item.publicationStatus === 'PUBLISHED' ||
+              ['CLOSED', 'CANCELLED'].includes(String(item.operationalState))
+            }
+            value="PUBLISHED"
+          >
+            Publicar
+          </option>
+          <option disabled={item.publicationStatus !== 'PUBLISHED'} value="UNPUBLISHED">
+            Retirar
+          </option>
         </select>
         <input aria-label="Motivo de publicación" name="reason" placeholder="Motivo" />
         <button>Aplicar</button>
@@ -1200,12 +1309,28 @@ function StateButtons({
   onSelect,
 }: {
   readonly actions: readonly (readonly [string, string])[];
-  readonly onSelect: (value: string) => Promise<void>;
+  readonly onSelect: (value: string) => Promise<unknown>;
 }) {
+  const [pending, setPending] = useState(false);
+  const select = async (value: string) => {
+    if (pending) return;
+    setPending(true);
+    try {
+      await onSelect(value);
+    } finally {
+      setPending(false);
+    }
+  };
   return (
-    <div className="table-actions">
+    <div className="table-actions" aria-busy={pending}>
       {actions.map(([label, value]) => (
-        <button className="link" key={value} onClick={() => void onSelect(value)} type="button">
+        <button
+          className="link"
+          key={value}
+          disabled={pending}
+          onClick={() => void select(value)}
+          type="button"
+        >
           {label}
         </button>
       ))}
@@ -1223,7 +1348,7 @@ function InventoryPanel({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   const [task, setTask] = useState<'entry' | 'adjust' | 'threshold'>('entry');
   const submit = (event: FormEvent<HTMLFormElement>, kind: 'ENTRY' | 'ADJUST' | 'THRESHOLD') => {
@@ -1352,6 +1477,7 @@ function ProductSelect({ items }: { readonly items: readonly Item[] }) {
 }
 
 function CatalogComposer({
+  defaultSaleType = 'REGULAR',
   categories,
   collections,
   games,
@@ -1366,7 +1492,8 @@ function CatalogComposer({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
+  readonly defaultSaleType?: 'PREORDER' | 'REGULAR';
   readonly onCreated: (product: Item) => void;
 }) {
   const [saving, setSaving] = useState(false);
@@ -1499,7 +1626,7 @@ function CatalogComposer({
           </div>
           <label>
             Tipo
-            <select name="saleType">
+            <select name="saleType" defaultValue={defaultSaleType}>
               <option value="REGULAR">Regular</option>
               <option value="PREORDER">Preventa</option>
             </select>
@@ -1627,7 +1754,7 @@ function PreorderComposer({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
   readonly store: StoreSummary | null;
 }) {
   const [error, setError] = useState('');
@@ -1667,8 +1794,9 @@ function PreorderComposer({
     <section className="cut-panel admin-module">
       <h2>Nueva campaña de preventa</h2>
       <p>
-        Primero crea en Productos un artículo de tipo «Preventa» y agrega sus imágenes. Luego define
-        esta campaña; al final revisa su publicación en «Campañas».
+        Usa los pasos 1 y 2 para crear el producto y subir sus imágenes aquí mismo. Luego define la
+        campaña. Para hacerla visible, publica el producto en Catálogo y abre y publica la campaña
+        en «Campañas».
       </p>
       {error && (
         <p className="status" role="alert">
@@ -1676,7 +1804,11 @@ function PreorderComposer({
         </p>
       )}
       <form onSubmit={(event) => void submit(event)}>
-        <ProductSelect items={products} />
+        <ProductSelect
+          items={products.filter(
+            (item) => item.saleType === 'PREORDER' && item.publicationStatus !== 'ARCHIVED',
+          )}
+        />
         <StoreField store={store} />
         <label>
           Unidades disponibles en total
@@ -1710,6 +1842,7 @@ function PreorderComposer({
 
 function PromotionComposer({
   onAction,
+  products,
   promotions,
 }: {
   readonly onAction: (
@@ -1717,155 +1850,127 @@ function PromotionComposer({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
-  readonly promotions: readonly Item[];
+  ) => Promise<unknown>;
+  readonly products: readonly Item[];
+  readonly promotions?: readonly Item[];
 }) {
-  const promotion = (event: FormEvent<HTMLFormElement>) => {
+  const [selectedId, setSelectedId] = useState('');
+  const selected = promotions?.find((item) => item.promotionId === selectedId);
+  const targets = selected?.targets as Item[] | undefined;
+  const benefit = selected?.benefit as Item | undefined;
+  const available = products.filter(
+    (item) => item.publicationStatus === 'PUBLISHED' && item.saleType === 'REGULAR',
+  );
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    return onAction(
-      '/api/v1/admin/promotions',
+    const productId = String(form.get('productId'));
+    const percent = Number(form.get('percentage'));
+    const product = products.find((item) => item.productId === productId);
+    const endsAt = new Date(String(form.get('endsAt')));
+    if (!Number.isFinite(endsAt.getTime()) || endsAt.getTime() <= Date.now()) return;
+    await onAction(
+      selected ? `/api/v1/admin/promotions/${selectedId}` : '/api/v1/admin/promotions',
       {
-        activationMode: String(form.get('activationMode')),
-        benefit: { basisPoints: Number(form.get('basisPoints')), type: 'PERCENTAGE_DISCOUNT' },
-        branchId: nullable(form.get('branchId')),
-        channel: String(form.get('channel')),
-        endsAt: new Date(String(form.get('endsAt'))).toISOString(),
-        globalLimit: nullableNumber(form.get('globalLimit')),
-        minimumEligibleAmountClp: nullableNumber(form.get('minimumAmount')),
-        minimumEligibleQuantity: nullableNumber(form.get('minimumQuantity')),
-        name: String(form.get('name')),
-        perAccountLimit: nullableNumber(form.get('perAccountLimit')),
-        priority: Number(form.get('priority')),
+        activationMode: 'AUTOMATIC',
+        benefit: { basisPoints: Math.round(percent * 100), type: 'PERCENTAGE_DISCOUNT' },
+        branchId: null,
+        channel: 'BOTH',
+        endsAt: endsAt.toISOString(),
+        globalLimit: null,
+        minimumEligibleAmountClp: null,
+        minimumEligibleQuantity: null,
+        name: `${percent}% · ${String(product?.name ?? 'Producto')}`,
+        perAccountLimit: null,
+        priority: 0,
         schedules: [],
-        scope: String(form.get('scope')),
-        startsAt: new Date(String(form.get('startsAt'))).toISOString(),
+        scope: 'LINE',
+        startsAt: selected?.startsAt ?? new Date().toISOString(),
         targets: [
           {
             categoryId: null,
             gameId: null,
-            kind: 'ALL_PRODUCTS',
+            kind: 'PRODUCT',
             position: 1,
-            productId: null,
+            productId,
             side: 'BENEFITED',
           },
         ],
       },
-      'POST',
+      selected ? 'PATCH' : 'POST',
       'promotions',
-    );
-  };
-  const coupon = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    return onAction(
-      '/api/v1/admin/coupons',
-      {
-        code: String(form.get('code')),
-        endsAt: nullableDate(form.get('endsAt')),
-        globalLimit: nullableNumber(form.get('globalLimit')),
-        perAccountLimit: nullableNumber(form.get('perAccountLimit')),
-        promotionId: String(form.get('promotionId')),
-        startsAt: nullableDate(form.get('startsAt')),
-      },
-      'POST',
-      'coupons',
     );
   };
   return (
     <section className="cut-panel admin-module">
-      <h2>Crear promociones y cupones</h2>
-      <div className="admin-form-grid">
-        <form onSubmit={(event) => void promotion(event)}>
-          <h3>Promoción porcentual general</h3>
+      <h2>{promotions ? 'Editar descuento' : 'Descuento por producto'}</h2>
+      <p>
+        Selecciona el producto y su descuento. Se aplicará automáticamente en tienda y POS al
+        activarlo en «Estados». No necesitas cupones.
+      </p>
+      {promotions && (
+        <label>
+          Descuento
+          <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
+            <option value="">Selecciona un descuento</option>
+            {promotions
+              .filter((item) => ['DRAFT', 'SUSPENDED'].includes(String(item.state)))
+              .map((item) => (
+                <option key={String(item.promotionId)} value={String(item.promotionId)}>
+                  {String(item.name)}
+                </option>
+              ))}
+          </select>
+          <small>Suspende un descuento activo antes de editarlo.</small>
+        </label>
+      )}
+      {(!promotions || selected) && (
+        <form key={selectedId} onSubmit={(event) => void submit(event)}>
           <label>
-            Nombre
-            <input name="name" required />
-          </label>
-          <label>
-            Descuento en puntos base
-            <input max="10000" min="1" name="basisPoints" required type="number" />
-          </label>
-          <label>
-            Inicio
-            <input name="startsAt" required type="datetime-local" />
-          </label>
-          <label>
-            Fin
-            <input name="endsAt" required type="datetime-local" />
-          </label>
-          <label>
-            Canal
-            <select name="channel">
-              <option value="BOTH">Tienda y POS</option>
-              <option value="ECOMMERCE">Tienda online</option>
-              <option value="POS">POS</option>
+            Producto del catálogo
+            <select name="productId" required defaultValue={String(targets?.[0]?.productId ?? '')}>
+              <option value="">Selecciona un producto publicado</option>
+              {available.map((item) => (
+                <option key={String(item.productId)} value={String(item.productId)}>
+                  {String(item.name)} · ${Number(item.priceAmountClp).toLocaleString('es-CL')}
+                </option>
+              ))}
             </select>
           </label>
           <label>
-            Alcance
-            <select name="scope">
-              <option value="ORDER">Pedido</option>
-              <option value="LINE">Línea</option>
-            </select>
+            Descuento (%)
+            <input
+              name="percentage"
+              type="number"
+              min="0.01"
+              max="100"
+              step="0.01"
+              required
+              defaultValue={benefit ? Number(benefit.basisPoints) / 100 : undefined}
+            />
           </label>
           <label>
-            Activación
-            <select name="activationMode">
-              <option value="AUTOMATIC">Automática</option>
-              <option value="COUPON_REQUIRED">Requiere cupón</option>
-            </select>
+            Válido hasta
+            <input
+              name="endsAt"
+              type="datetime-local"
+              required
+              defaultValue={selected?.endsAt ? localDateTime(String(selected.endsAt)) : undefined}
+            />
+            <small>Evita dejar un descuento vigente por accidente. Puedes suspenderlo antes.</small>
           </label>
-          <label>
-            Prioridad
-            <input defaultValue="0" name="priority" required type="number" />
-          </label>
-          <label>
-            Monto mínimo CLP
-            <input min="1" name="minimumAmount" type="number" />
-          </label>
-          <label>
-            Cantidad mínima
-            <input min="1" name="minimumQuantity" type="number" />
-          </label>
-          <label>
-            Límite global
-            <input min="1" name="globalLimit" type="number" />
-          </label>
-          <label>
-            Límite por cuenta
-            <input min="1" name="perAccountLimit" type="number" />
-          </label>
-          <button>Crear promoción</button>
+          <button disabled={available.length === 0}>
+            {selected ? 'Guardar descuento' : 'Crear descuento'}
+          </button>
         </form>
-        <form onSubmit={(event) => void coupon(event)}>
-          <h3>Cupón</h3>
-          <EntitySelect items={promotions} label="Promoción" name="promotionId" />
-          <label>
-            Código
-            <input name="code" required />
-          </label>
-          <label>
-            Inicio opcional
-            <input name="startsAt" type="datetime-local" />
-          </label>
-          <label>
-            Fin opcional
-            <input name="endsAt" type="datetime-local" />
-          </label>
-          <label>
-            Límite global
-            <input min="1" name="globalLimit" type="number" />
-          </label>
-          <label>
-            Límite por cuenta
-            <input min="1" name="perAccountLimit" type="number" />
-          </label>
-          <button>Crear cupón</button>
-        </form>
-      </div>
+      )}
     </section>
   );
+}
+
+function localDateTime(value: string): string {
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
 function ConfigurationComposer({
@@ -1876,7 +1981,7 @@ function ConfigurationComposer({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1937,7 +2042,7 @@ function EditorialComposer({
     body: unknown,
     method?: string,
     reload?: string,
-  ) => Promise<void>;
+  ) => Promise<unknown>;
 }) {
   const [type, setType] = useState('NEWS');
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -1976,8 +2081,7 @@ function EditorialComposer({
       'POST',
       'content',
     );
-    formElement.reset();
-    setType('NEWS');
+    // Keep the author's draft intact, including when the server rejects the save.
   };
   return (
     <section className="cut-panel admin-module">
@@ -2041,10 +2145,6 @@ function nullable(value: FormDataEntryValue | null): string | null {
 function nullableNumber(value: FormDataEntryValue | null): number | null {
   const text = String(value ?? '').trim();
   return text === '' ? null : Number(text);
-}
-function nullableDate(value: FormDataEntryValue | null): string | null {
-  const text = String(value ?? '').trim();
-  return text === '' ? null : new Date(text).toISOString();
 }
 function messageOf(error: unknown): string {
   if (error instanceof ApiError && error.code === 'INVENTORY_CONFIGURATION_REQUIRED')

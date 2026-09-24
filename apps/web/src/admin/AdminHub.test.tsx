@@ -77,6 +77,7 @@ beforeEach(() => {
             priceAmountClp: 39990,
             productId: 'product-1',
             publicationStatus: 'PUBLISHED',
+            saleType: 'PREORDER',
             sku: 'PKM-001',
           },
         ],
@@ -160,7 +161,6 @@ describe('AdminHub', () => {
       'Publicaciones',
       'Clientes y usuarios',
       'Datos de la tienda',
-      'Ajustes',
       'Actividad',
     ])
       expect(within(navigation).getByRole('link', { name })).toBeInTheDocument();
@@ -269,7 +269,7 @@ describe('AdminHub', () => {
     render(<AdminHub area="promotions" navigate={vi.fn()} />);
 
     expect(
-      (await screen.findAllByRole('heading', { name: 'Promoción porcentual general' })).length,
+      (await screen.findAllByRole('heading', { name: 'Descuento por producto' })).length,
     ).toBeGreaterThan(0);
     expect(screen.queryByRole('heading', { name: 'Campaña de preventa' })).not.toBeInTheDocument();
     expect(
@@ -282,19 +282,19 @@ describe('AdminHub', () => {
     render(<AdminHub area="promotions" navigate={vi.fn()} />);
 
     expect(
-      await screen.findByRole('heading', { name: 'Crear promociones y cupones' }),
+      await screen.findByRole('heading', { name: 'Descuento por producto' }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Editar operaciones' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar promoción' }));
-    expect(screen.getByRole('heading', { name: 'Editar operaciones' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Editar descuento' })).toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: 'Crear promociones y cupones' }),
+      screen.queryByRole('heading', { name: 'Descuento por producto' }),
     ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Estados' }));
     expect(await screen.findByRole('heading', { name: 'Promociones' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Cupones' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Cupones' })).not.toBeInTheDocument();
   });
 
   it('shows one inventory operation at a time with plain labels', async () => {
@@ -922,5 +922,33 @@ describe('AdminHub', () => {
           ([path, init]) => path.endsWith('/product-1/resources') && init?.method === 'POST',
         ),
     ).toBe(false);
+  });
+});
+
+it('publishes editorial entries without a body rejected by the HTTP contract', async () => {
+  render(<AdminHub area="content" navigate={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Estados' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Publicar' }));
+  await waitFor(() => {
+    const call = vi
+      .mocked(authorizedRequest)
+      .mock.calls.find(([path]) => path.endsWith('/publish'));
+    expect(call).toBeDefined();
+    expect(call?.[1]?.body).toBeUndefined();
+  });
+});
+it('publishes a catalog parent without descendantStrategy', async () => {
+  render(<AdminHub area="catalog" navigate={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Publicar y revisar' }));
+  const section = (await screen.findByRole('heading', { name: 'Juegos TCG' })).closest('section');
+  if (!section) throw new Error('Missing games');
+  fireEvent.click(within(section).getByRole('button', { name: 'Publicar' }));
+  await waitFor(() => {
+    const call = vi
+      .mocked(authorizedRequest)
+      .mock.calls.find(
+        ([path]) => path.includes('/tcg-games/') && path.endsWith('/publication-transitions'),
+      );
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({ nextStatus: 'PUBLISHED' });
   });
 });

@@ -1,4 +1,5 @@
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import { operationError } from '../admin/operation-errors.js';
 
 export interface SessionTokens {
   readonly accessToken: string;
@@ -407,6 +408,7 @@ async function requestResponse<Value = void>(
   path: string,
   init: RequestInit = {},
 ): Promise<AuthorizedResponse<Value>> {
+  if (init.body instanceof FormData) await normalizeImageUpload(init.body);
   const contentHeaders =
     init.body instanceof FormData ? {} : { 'content-type': 'application/json' };
   const response = await fetch(path, {
@@ -435,7 +437,8 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
   ) {
-    super(message);
+    super(operationError(code, message));
     this.name = 'ApiError';
   }
 }
+import { normalizeImageUpload } from '../admin/image-upload.js';

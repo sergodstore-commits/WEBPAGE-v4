@@ -50,7 +50,18 @@ Debe separar claramente:
 
 ## Cuenta y Admin
 
-Cuenta cliente prioriza pedidos, preventas, puntos, datos personales y preferencias de despacho. Admin prioriza operación real, no dashboards decorativos.
+Cuenta cliente prioriza pedidos, preventas, datos personales, KLU/Konami opcionales y preferencias
+de despacho. Por decisión expresa del propietario no se ofrecen puntos ni Quests. Admin prioriza
+operación real, no dashboards decorativos.
+
+Decisión del propietario, 2026-09-24: promociones se opera como descuento porcentual sobre un
+producto del catálogo, con vigencia visible y controles de activación/suspensión. El módulo genérico
+de Ajustes no forma parte del menú de uso diario; sus configuraciones internas no se borran.
+POS presenta un ticket de venta física regular con búsqueda SKU/nombre, cantidad, precio, subtotal
+y stock; registra el pago recibido externamente y descuenta inventario, sin iniciar pagos online.
+Las cargas de imágenes se realizan desde los formularios web y conservan validación del servidor,
+almacenamiento privado, confirmación y persistencia. El navegador corrige extensiones/MIME
+incorrectamente inferidos a partir del nombre sin alterar los bytes del archivo.
 
 ## Diseño
 

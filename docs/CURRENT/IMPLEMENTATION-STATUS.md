@@ -1,6 +1,9 @@
 # Implementation Status — CODEX-READY V4
 
-> Estado auditado hasta el 2026-09-23. Release funcional productivo en `1b8c420`; el registro CLIENTE vuelve a
+> Seguimiento actualizado el 2026-09-24: producción llegó a `7957f1f`, pero la aceptación
+> administrativa anterior fue insuficiente. Los estados PASS históricos de esta tabla no prueban
+> los flujos reportados por el propietario; prevalece el apartado de correcciones de Operaciones.
+> El registro CLIENTE vuelve a
 > estar habilitado con aceptación obligatoria y versionada de los Términos y condiciones 1.0. Por
 > decisión expresa del
 > propietario, Flow es el único proveedor de pago online productivo; Webpay Plus queda fuera de la
@@ -26,7 +29,29 @@
 | Despliegue web                                                                       | Producción PASS          | Vercel `1b8c420`, dominio canónico y CSS nuevo verificados                         | Ninguno de publicación               |
 | Aceptación externa final                                                             | PASS                     | Sesión, Flow, Webpay, Resend, limpieza, backup/restore y rollback tienen evidencia | Ninguno                              |
 
-## Ajustes de Cuenta y Operaciones en rama Preview — 2026-09-23
+## Correcciones de Operaciones — 2026-09-24
+
+- Causas reproducidas: publicación de padres del catálogo enviaba `descendantStrategy` fuera
+  de contexto; publicación editorial enviaba `{}` a una ruta sin cuerpo; el logo de origen `.png`
+  contiene JPEG y provocaba rechazo MIME; el POS enviaba `preorderCampaignId: "null"` en venta regular.
+- Correcciones: normalización de nombre/MIME en cargas sin cambiar los bytes ni relajar el servidor;
+  contratos de publicación corregidos; feedback visible y conservación del borrador si falla;
+  carrusel con lista refrescada; preventas con pasos producto/galería/campaña y preparación automática
+  al publicar; promociones por producto y porcentaje; Ajustes retirado del menú operativo;
+  historial con fecha, resultado y explicación; POS de ticket regular sin pagos online ni puntos;
+  sidebar de Cuenta limitado a su columna y título de tamaño legible.
+- Aceptación real sin movimientos financieros: `QA-OPS-1790264477568` comprobó creación, imágenes,
+  publicación, retirada y relectura de catálogo; creación/edición/apertura/publicación de preventa;
+  publicación editorial con imagen; carrusel público activo/inactivo; descuento por producto.
+  Registros QA archivados/retirados, promoción cancelada, campaña cancelada y banner desactivado;
+  limpieza lógica sin errores. Los registros históricos de auditoría se conservan.
+- Integración PostgreSQL LOCAL: 171 pruebas en 15 archivos PASS, incluyendo POS e inventario.
+  No se ejecutó una venta en producción: el control de seguridad rechazó ese ensayo por generar
+  un movimiento financiero permanente. No se modificó stock real ni cuentas existentes.
+- Pendiente de cierre de esta entrega: gate global final, revisión visual en Preview y promoción
+  verificada a `www.sergodstore.cl`. Sin nuevas migraciones ni cambios de secretos.
+
+## Ajustes de Cuenta y Operaciones en rama Preview — 2026-09-23 (histórico)
 
 - El flujo de Productos en Operaciones ahora encadena guardar datos → galería seleccionada →
   publicación. Si el guardado falla conserva el formulario y permite reintento con la misma clave

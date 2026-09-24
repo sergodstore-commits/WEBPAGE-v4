@@ -939,7 +939,7 @@ function adminAreaFromRoute(route: Route): AdminArea | null {
     '/admin/audit': 'audit',
     '/admin/catalog': 'catalog',
     '/admin/carousel': 'carousel',
-    '/admin/configuration': 'configuration',
+    '/admin/configuration': 'dashboard',
     '/admin/content': 'content',
     '/admin/inventory': 'inventory',
     '/admin/orders': 'orders',
