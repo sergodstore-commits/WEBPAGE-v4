@@ -239,6 +239,7 @@ describe('AdminHub', () => {
 
   it('presents operational labels and repairs only verified damaged text', async () => {
     render(<AdminHub area="catalog" navigate={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar y revisar' }));
 
     expect((await screen.findAllByText('Preventa aceptación Fase 7')).length).toBeGreaterThan(0);
     expect(screen.getByText('Publicado')).toBeInTheDocument();
@@ -376,6 +377,79 @@ describe('AdminHub', () => {
     });
   });
 
+  it('opens the saved product gallery immediately after creation', async () => {
+    const original = vi.mocked(authorizedRequest).getMockImplementation();
+    vi.mocked(authorizedRequest).mockImplementation(async (path, init) => {
+      if (path === '/api/v1/admin/catalog/products' && init?.method === 'POST')
+        return { item: { name: 'Caja nueva', productId: 'new-product-1' } } as never;
+      return original?.(path, init) as never;
+    });
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
+    const form = (await screen.findByRole('heading', { name: 'Datos del producto' })).closest(
+      'form',
+    );
+    if (!form) throw new Error('Product creation form was not rendered.');
+    const fields = within(form);
+    fireEvent.change(fields.getByLabelText('Juego'), {
+      target: { value: '0198a8be-6677-7000-8000-000000000101' },
+    });
+    fireEvent.change(fields.getByLabelText('Categoría'), {
+      target: { value: '0198a8be-6677-7000-8000-000000000102' },
+    });
+    fireEvent.change(fields.getByLabelText('Nombre'), { target: { value: 'Caja nueva' } });
+    fireEvent.change(fields.getByLabelText('SKU'), { target: { value: 'NEW-001' } });
+    fireEvent.change(fields.getByLabelText('Precio CLP'), { target: { value: '19990' } });
+    fireEvent.submit(form);
+    const gallery = (await screen.findByRole('heading', { name: 'Galería del producto' })).closest(
+      'section',
+    );
+    if (!gallery) throw new Error('Product gallery was not rendered.');
+    expect(within(gallery).getByLabelText('Producto')).toHaveValue('new-product-1');
+    await waitFor(() =>
+      expect(authorizedResponse).toHaveBeenCalledWith(
+        '/api/v1/admin/catalog/products/new-product-1/resources?limit=100',
+      ),
+    );
+    fireEvent.click(within(gallery).getByRole('button', { name: 'Continuar a publicación' }));
+    const publication = screen.getByRole('region', { name: 'Publicación del catálogo' });
+    const createdRow = within(publication).getByRole('row', { name: /Caja nueva/u });
+    fireEvent.click(within(createdRow).getByRole('button', { name: 'Publicar' }));
+    await waitFor(() =>
+      expect(authorizedRequest).toHaveBeenCalledWith(
+        '/api/v1/admin/catalog/products/new-product-1/publication-transitions',
+        expect.objectContaining({ method: 'POST' }),
+      ),
+    );
+  });
+
+  it('keeps the product form open after a failed save', async () => {
+    const original = vi.mocked(authorizedRequest).getMockImplementation();
+    vi.mocked(authorizedRequest).mockImplementation(async (path, init) => {
+      if (path === '/api/v1/admin/catalog/products' && init?.method === 'POST')
+        throw new Error('No se guardó el producto.');
+      return original?.(path, init) as never;
+    });
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
+    const form = (await screen.findByRole('heading', { name: 'Datos del producto' })).closest(
+      'form',
+    );
+    if (!form) throw new Error('Product creation form was not rendered.');
+    const fields = within(form);
+    fireEvent.change(fields.getByLabelText('Juego'), {
+      target: { value: '0198a8be-6677-7000-8000-000000000101' },
+    });
+    fireEvent.change(fields.getByLabelText('Categoría'), {
+      target: { value: '0198a8be-6677-7000-8000-000000000102' },
+    });
+    fireEvent.change(fields.getByLabelText('Nombre'), { target: { value: 'Caja nueva' } });
+    fireEvent.change(fields.getByLabelText('SKU'), { target: { value: 'NEW-001' } });
+    fireEvent.change(fields.getByLabelText('Precio CLP'), { target: { value: '19990' } });
+    fireEvent.submit(form);
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se guardó el producto.');
+    expect(fields.getByLabelText('Nombre')).toHaveValue('Caja nueva');
+    expect(screen.queryByRole('heading', { name: 'Galería del producto' })).not.toBeInTheDocument();
+  });
+
   it('uses the configured store automatically instead of asking for an internal branch code', async () => {
     render(<AdminHub area="preorders" navigate={vi.fn()} />);
 
@@ -422,6 +496,34 @@ describe('AdminHub', () => {
         productId: 'product-1',
       });
     });
+  });
+
+  it('rejects impossible preorder limits before sending a campaign', async () => {
+    render(<AdminHub area="preorders" navigate={vi.fn()} />);
+    const form = (await screen.findByRole('heading', { name: 'Nueva campaña de preventa' }))
+      .closest('section')
+      ?.querySelector('form');
+    if (!form) throw new Error('Preorder form was not rendered.');
+    const fields = within(form);
+    fireEvent.change(fields.getByLabelText('Producto'), { target: { value: 'product-1' } });
+    fireEvent.change(fields.getByLabelText('Unidades disponibles en total'), {
+      target: { value: '2' },
+    });
+    fireEvent.change(fields.getByLabelText('Máximo por cliente (opcional)'), {
+      target: { value: '3' },
+    });
+    fireEvent.change(fields.getByLabelText('Apertura'), { target: { value: '2026-10-01T10:00' } });
+    fireEvent.change(fields.getByLabelText('Cierre'), { target: { value: '2026-10-20T22:00' } });
+    fireEvent.change(fields.getByLabelText('Llegada estimada'), { target: { value: 'Noviembre' } });
+    fireEvent.submit(form);
+    expect(await screen.findByRole('alert')).toHaveTextContent('El máximo por cliente');
+    expect(
+      vi
+        .mocked(authorizedRequest)
+        .mock.calls.some(
+          ([path, init]) => path === '/api/v1/admin/preorders/campaigns' && init?.method === 'POST',
+        ),
+    ).toBe(false);
   });
 
   it('edits editorial content as ordered visual blocks instead of raw text only', async () => {
@@ -798,5 +900,27 @@ describe('AdminHub', () => {
     ];
     expect(retryKey).toBe(failedKey);
     expect(await screen.findByText('1 imagen subida correctamente.')).toBeInTheDocument();
+  });
+
+  it('rejects unsupported gallery files without sending them to the server', async () => {
+    render(<AdminHub area="catalog" navigate={vi.fn()} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Imágenes' }));
+    const section = (await screen.findByRole('heading', { name: 'Galería del producto' })).closest(
+      'section',
+    );
+    if (!section) throw new Error('Catalog resource manager was not rendered.');
+    const fields = within(section);
+    fireEvent.change(fields.getByLabelText('Producto'), { target: { value: 'product-1' } });
+    const file = new File(['invalid'], 'animation.gif', { type: 'image/gif' });
+    fireEvent.change(fields.getByLabelText(/Seleccionar imágenes/u), { target: { files: [file] } });
+    expect(fields.getByRole('status')).toHaveTextContent('no se puede subir');
+    expect(fields.getByRole('button', { name: 'Añadir a la galería' })).toBeDisabled();
+    expect(
+      vi
+        .mocked(authorizedRequest)
+        .mock.calls.some(
+          ([path, init]) => path.endsWith('/product-1/resources') && init?.method === 'POST',
+        ),
+    ).toBe(false);
   });
 });

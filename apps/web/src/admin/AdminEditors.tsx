@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EditorialDocumentView } from '../editorial/EditorialDocument.js';
 import {
@@ -243,15 +243,19 @@ export function CatalogResourceManager({
   categories,
   collections,
   games,
+  initialProductId = '',
+  onContinue,
   products,
 }: {
   readonly categories: readonly Item[];
   readonly collections: readonly Item[];
   readonly games: readonly Item[];
+  readonly initialProductId?: string;
+  readonly onContinue?: () => void;
   readonly products: readonly Item[];
 }) {
   const [owner, setOwner] = useState<(typeof owners)[number]['segment']>('products');
-  const [entityId, setEntityId] = useState('');
+  const [entityId, setEntityId] = useState(initialProductId);
   const [items, setItems] = useState<readonly Item[]>([]);
   const [etag, setEtag] = useState('');
   const [retireReasons, setRetireReasons] = useState<Record<string, string>>({});
@@ -274,44 +278,65 @@ export function CatalogResourceManager({
   const base = `/api/v1/admin/catalog/${owner}/${entityId}/resources`;
   const selectedEntity = entities.find((item) => itemIdentifier(item) === entityId);
   const selectedLabel = selectedEntity ? itemReference(selectedEntity) : '';
-  const load = async (targetEntityId = entityId, targetOwner = owner) => {
-    if (!targetEntityId) return setMessage('Selecciona una entidad.');
-    const generation = ++loadGeneration.current;
-    try {
-      const loaded: Item[] = [];
-      const seenCursors = new Set<string>();
-      let cursor: string | null = null;
-      let representationEtag = '';
-      do {
-        const targetBase = `/api/v1/admin/catalog/${targetOwner}/${targetEntityId}/resources`;
-        const pagePath: string = `${targetBase}?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
-        const response: AuthorizedResponse<{ items: Item[]; nextCursor: string | null }> =
-          await authorizedResponse(pagePath);
-        const pageEtag = response.headers.get('etag') ?? '';
-        if (representationEtag && pageEtag !== representationEtag)
-          throw new Error('Las imágenes cambiaron durante la carga. Vuelve a intentarlo.');
-        representationEtag = pageEtag;
-        loaded.push(...response.body.items);
-        cursor = response.body.nextCursor;
-        if (cursor && seenCursors.has(cursor))
-          throw new Error('La paginación de imágenes no avanzó.');
-        if (cursor) seenCursors.add(cursor);
-      } while (cursor);
-      if (generation !== loadGeneration.current) return;
-      setItems(loaded);
-      setEtag(representationEtag);
-      setMessage(loaded.length ? 'Imágenes cargadas.' : 'Esta entidad todavía no tiene imágenes.');
-    } catch (error) {
-      if (generation === loadGeneration.current) setMessage(messageOf(error));
-    }
-  };
+  const load = useCallback(
+    async (targetEntityId: string, targetOwner: (typeof owners)[number]['segment']) => {
+      if (!targetEntityId) return setMessage('Selecciona una entidad.');
+      const generation = ++loadGeneration.current;
+      try {
+        const loaded: Item[] = [];
+        const seenCursors = new Set<string>();
+        let cursor: string | null = null;
+        let representationEtag = '';
+        do {
+          const targetBase = `/api/v1/admin/catalog/${targetOwner}/${targetEntityId}/resources`;
+          const pagePath: string = `${targetBase}?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+          const response: AuthorizedResponse<{ items: Item[]; nextCursor: string | null }> =
+            await authorizedResponse(pagePath);
+          const pageEtag = response.headers.get('etag') ?? '';
+          if (representationEtag && pageEtag !== representationEtag)
+            throw new Error('Las imágenes cambiaron durante la carga. Vuelve a intentarlo.');
+          representationEtag = pageEtag;
+          loaded.push(...response.body.items);
+          cursor = response.body.nextCursor;
+          if (cursor && seenCursors.has(cursor))
+            throw new Error('La paginación de imágenes no avanzó.');
+          if (cursor) seenCursors.add(cursor);
+        } while (cursor);
+        if (generation !== loadGeneration.current) return;
+        setItems(loaded);
+        setEtag(representationEtag);
+        setMessage(
+          loaded.length ? 'Imágenes cargadas.' : 'Esta entidad todavía no tiene imágenes.',
+        );
+      } catch (error) {
+        if (generation === loadGeneration.current) setMessage(messageOf(error));
+      }
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!initialProductId) return;
+    const timeout = window.setTimeout(() => void load(initialProductId, 'products'), 0);
+    return () => window.clearTimeout(timeout);
+  }, [initialProductId, load]);
   useEffect(() => {
     pendingUploadsRef.current = pendingUploads;
   }, [pendingUploads]);
   useEffect(() => () => revokeUploadPreviews(pendingUploadsRef.current), []);
   const selectFiles = (files: FileList | readonly File[] | null) => {
-    revokeUploadPreviews(pendingUploads);
+    if (uploading) return;
     const selected = files === null ? [] : Array.from(files);
+    const invalid = selected.find(
+      (file) =>
+        !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) ||
+        file.size === 0 ||
+        file.size > 10 * 1024 * 1024,
+    );
+    if (invalid) {
+      setMessage(`«${invalid.name}» no se puede subir. Usa JPG, PNG, WebP o AVIF de hasta 10 MB.`);
+      return;
+    }
+    revokeUploadPreviews(pendingUploads);
     const firstPosition = nextCatalogImagePosition(items);
     setPendingUploads(
       selected.map((file, index) => ({
@@ -362,7 +387,7 @@ export function CatalogResourceManager({
       form.reset();
       revokeUploadPreviews(pendingUploads);
       setPendingUploads([]);
-      await load();
+      await load(entityId, owner);
       setMessage(
         `${uploaded} ${uploaded === 1 ? 'imagen subida' : 'imágenes subidas'} correctamente.`,
       );
@@ -375,7 +400,7 @@ export function CatalogResourceManager({
           : `${uploaded} ${uploaded === 1 ? 'imagen se guardó' : 'imágenes se guardaron'}; faltan ${remaining.length}. ${messageOf(error)}`;
       revokeUploadPreviews(completed);
       setPendingUploads(remaining);
-      await load();
+      await load(entityId, owner);
       setMessage(feedback);
     } finally {
       setUploading(false);
@@ -389,7 +414,7 @@ export function CatalogResourceManager({
         method,
       });
       setMessage('Operación de imagen guardada.');
-      await load();
+      await load(entityId, owner);
     } catch (error) {
       setMessage(messageOf(error));
     }
@@ -403,7 +428,7 @@ export function CatalogResourceManager({
         method: 'POST',
       });
       setMessage('Imagen reemplazada correctamente.');
-      await load();
+      await load(entityId, owner);
     } catch (error) {
       setMessage(messageOf(error));
     }
@@ -424,6 +449,11 @@ export function CatalogResourceManager({
     <section className="cut-panel admin-module" id="catalog-resources">
       <h2>Galería del producto</h2>
       <p>Sube las fotos, define la portada y ordénalas como aparecerán en la tienda.</p>
+      <p>
+        Usa fotos nítidas, preferiblemente cuadradas o verticales y con el producto completo dentro
+        del encuadre. Formatos JPG, PNG, WebP o AVIF; máximo técnico 10 MB por archivo. El servidor
+        valida las dimensiones y puede aplicar un límite configurado menor.
+      </p>
       <p className="status" role="status">
         {message}
       </p>
@@ -432,6 +462,7 @@ export function CatalogResourceManager({
           <label>
             Tipo de contenido
             <select
+              disabled={uploading}
               value={owner}
               onChange={(event) => {
                 setOwner(event.target.value as typeof owner);
@@ -452,6 +483,7 @@ export function CatalogResourceManager({
             </select>
           </label>
           <ItemSelect
+            disabled={uploading}
             items={entities}
             label={owners.find((entry) => entry.segment === owner)?.label ?? 'Entidad'}
             name="resourceEntity"
@@ -490,7 +522,7 @@ export function CatalogResourceManager({
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
               event.preventDefault();
-              selectFiles(event.dataTransfer.files);
+              if (!uploading) selectFiles(event.dataTransfer.files);
             }}
           >
             Seleccionar imágenes
@@ -499,7 +531,6 @@ export function CatalogResourceManager({
               multiple
               name="file"
               onChange={(event) => selectFiles(event.target.files)}
-              required
               disabled={uploading}
               type="file"
             />
@@ -645,6 +676,11 @@ export function CatalogResourceManager({
             );
           })}
         </div>
+      )}
+      {entityId && owner === 'products' && onContinue && (
+        <button onClick={onContinue} type="button">
+          Continuar a publicación
+        </button>
       )}
     </section>
   );
@@ -1173,7 +1209,11 @@ function EditorialVisualEditor({
                 <option value="NEWS">Noticia</option>
                 <option value="TOURNAMENT">Torneo informativo</option>
                 <option value="COMMUNITY">Comunidad</option>
-                <option value="QUEST">Quest</option>
+                {draft.type === 'QUEST' && (
+                  <option disabled value="QUEST">
+                    Quest (contenido heredado)
+                  </option>
+                )}
               </select>
             </label>
             {supportsEventMetadata(draft.type) && (
@@ -1492,6 +1532,7 @@ function EditorialAdminImage({
 
 function ItemSelect({
   allowEmpty = false,
+  disabled = false,
   items,
   label,
   name,
@@ -1500,6 +1541,7 @@ function ItemSelect({
   value,
 }: {
   readonly allowEmpty?: boolean;
+  readonly disabled?: boolean;
   readonly items: readonly Item[];
   readonly label: string;
   readonly name: string;
@@ -1511,6 +1553,7 @@ function ItemSelect({
     <label>
       {label}
       <select
+        disabled={disabled}
         name={name}
         onChange={(event) => {
           onChange?.(event.target.value);

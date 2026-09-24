@@ -158,7 +158,7 @@ const sectionPreviewCopy: Readonly<
       title: 'Tarde de comunidad',
     },
     {
-      detail: 'Torneos y Quests conectados con su propia sección.',
+      detail: 'Noticias y torneos conectados con su propia sección.',
       kicker: 'Agenda · Muestra visual',
       title: 'Próximos encuentros',
     },
@@ -562,6 +562,10 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const [cartRevision, setCartRevision] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [initialContent, setInitialContent] = useState<{
+    view: 'catalog' | 'preorders';
+    empty: boolean;
+  } | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
   const load = (nextFilters: CatalogFilters, cursor?: string) => {
     setLoading(true);
@@ -574,6 +578,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
         setItems((current) =>
           cursor === undefined ? result.items : [...current, ...result.items],
         );
+        if (result.items.length > 0) setInitialContent({ view, empty: false });
         setNextCursor(result.nextCursor);
         setMessage(
           cursor === undefined && result.items.length === 0
@@ -588,10 +593,14 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
     void requestProductPage(defaultFilters)
       .then((result) => {
         setItems(result.items);
+        setInitialContent({ view, empty: result.items.length === 0 });
         setNextCursor(result.nextCursor);
         setMessage(result.items.length === 0 ? 'No encontramos productos con esos filtros.' : '');
       })
-      .catch((error: unknown) => setMessage(messageOf(error)))
+      .catch((error: unknown) => {
+        setInitialContent({ view, empty: false });
+        setMessage(messageOf(error));
+      })
       .finally(() => setLoading(false));
     if (view === 'preorders') return;
     void loadFilterOptions()
@@ -610,6 +619,8 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
     setDetail(null);
     load(filters);
   };
+  const showExample =
+    initialContent?.view === view && initialContent.empty && !loading && items.length === 0;
   const update = <Key extends keyof CatalogFilters>(key: Key, value: CatalogFilters[Key]) => {
     setFilters((current) => ({
       ...current,
@@ -661,11 +672,13 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
           </p>
         )}
         <div aria-busy={loading} className="preorder-reference-content">
-          <PreorderReferenceCard
-            featured
-            onDetail={featured ? () => void showDetail(featured.productId) : undefined}
-            product={featured}
-          />
+          {(featured || showExample) && (
+            <PreorderReferenceCard
+              featured
+              onDetail={featured ? () => void showDetail(featured.productId) : undefined}
+              product={featured}
+            />
+          )}
           {detail && (
             <ProductDetailPanel
               detail={detail}
@@ -683,8 +696,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
                 product={product}
               />
             ))}
-            {!loading &&
-              items.length === 0 &&
+            {showExample &&
               Array.from({ length: 4 }, (_, index) => (
                 <PreorderReferenceCard key={`sample-${index}`} />
               ))}
@@ -892,7 +904,7 @@ export function StorePage({ view = 'catalog' }: { readonly view?: 'catalog' | 'p
               pending={addingProductId === detail.productId}
             />
           )}
-          {!loading && items.length === 0 && (
+          {showExample && (
             <section
               aria-label="Vista de ejemplo del catálogo"
               className="catalog-reference-preview"
@@ -2045,7 +2057,7 @@ export function NewsPage({
           )}
         </>
       )}
-      {items.length === 0 && message !== 'Cargando noticias…' && (
+      {items.length === 0 && message === 'Todavía no hay noticias publicadas.' && (
         <section className="editorial-empty cut-panel" role="status">
           <p className="eyebrow">Portada editorial</p>
           <h2>Aún no hay noticias para mostrar</h2>
@@ -2144,9 +2156,6 @@ function CommunityLanding({ navigate }: { readonly navigate: (route: CommunityRo
           </button>
           <button onClick={() => navigate('/tournaments')} type="button">
             <span aria-hidden="true">◆</span> Torneos
-          </button>
-          <button onClick={() => navigate('/quests')} type="button">
-            <span aria-hidden="true">▣</span> Quests
           </button>
           <button onClick={() => navigate('/community/visit')} type="button">
             <span aria-hidden="true">◆</span> Visítanos
@@ -2532,7 +2541,7 @@ export function ComicsPage() {
             ))}
           </div>
         </section>
-      ) : message !== 'Cargando cómics e historias…' ? (
+      ) : message === 'Todavía no hay cómics publicados.' ? (
         <section className="editorial-empty cut-panel" role="status">
           <p className="eyebrow">Portada de cómics</p>
           <h2>Aún no hay series para mostrar</h2>

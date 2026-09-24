@@ -85,7 +85,7 @@ export function SiteChrome({ navigate, route }: SiteChromeProps) {
               <button
                 aria-current={
                   route === item.route ||
-                  (item.route === '/community' && ['/community/visit', '/quests'].includes(route))
+                  (item.route === '/community' && route === '/community/visit')
                     ? 'page'
                     : undefined
                 }

@@ -882,6 +882,10 @@ function loginReturnRoute(): Route {
 }
 function routeFromLocation(): Route {
   const path = window.location.pathname;
+  if (path === '/quests') {
+    window.history.replaceState({}, '', '/community');
+    return '/community';
+  }
   if (path === '/loyalty') {
     window.history.replaceState({}, '', '/account/overview');
     return '/account/overview';

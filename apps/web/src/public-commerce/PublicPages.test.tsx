@@ -181,7 +181,7 @@ describe('public Store cart action', () => {
     );
   });
 
-  it('shows an explicit empty state when the catalog cannot return products', async () => {
+  it('shows an explicit error without sample cards when the catalog fails', async () => {
     vi.mocked(publicRequest).mockRejectedValue(new Error('Catálogo temporalmente no disponible.'));
 
     render(<StorePage />);
@@ -190,11 +190,30 @@ describe('public Store cart action', () => {
       await screen.findByRole('heading', { name: 'No hay productos para mostrar' }),
     ).toBeInTheDocument();
     expect(await screen.findByText('Catálogo temporalmente no disponible.')).toBeInTheDocument();
-    const preview = screen.getByRole('region', { name: 'Vista de ejemplo del catálogo' });
-    expect(within(preview).getAllByRole('article')).toHaveLength(8);
-    for (const button of within(preview).getAllByRole('button', { name: 'Agregar' })) {
-      expect(button).toBeDisabled();
-    }
+    expect(
+      screen.queryByRole('region', { name: 'Vista de ejemplo del catálogo' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not restore sample cards for an empty filter once real products exist', async () => {
+    let productCalls = 0;
+    vi.mocked(publicRequest).mockImplementation(async (path) => {
+      if (path.startsWith('/api/v1/catalog/products?')) {
+        productCalls += 1;
+        return {
+          items: productCalls === 1 ? [homeProduct('Producto real', 'REGULAR')] : [],
+          nextCursor: null,
+        } as never;
+      }
+      return { items: [], nextCursor: null } as never;
+    });
+    render(<StorePage />);
+    expect(await screen.findByText('Producto real')).toBeInTheDocument();
+    fireEvent.submit(screen.getByRole('search'));
+    expect(await screen.findByText('No hay productos para mostrar')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'Vista de ejemplo del catálogo' }),
+    ).not.toBeInTheDocument();
   });
 
   it('creates an anonymous cart when required and retries the line command', async () => {
@@ -699,8 +718,7 @@ describe('public editorial sections', () => {
     expect(await screen.findByText('Tarde de juego')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Noticias' }));
     expect(navigate).toHaveBeenCalledWith('/news');
-    fireEvent.click(screen.getByRole('button', { name: 'Quests' }));
-    expect(navigate).toHaveBeenCalledWith('/quests');
+    expect(screen.queryByRole('button', { name: 'Quests' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Visítanos' }));
     expect(navigate).toHaveBeenCalledWith('/community/visit');
     fireEvent.click(screen.getByRole('button', { name: 'Ver detalle' }));

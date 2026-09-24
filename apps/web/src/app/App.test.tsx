@@ -69,6 +69,14 @@ describe('IdentityAccess presentation', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('sends an old Quest bookmark to Comunidad without showing a Quest tab', async () => {
+    window.history.replaceState({}, '', '/quests');
+    render(<App />);
+    expect(window.location.pathname).toBe('/community');
+    expect(await screen.findByRole('heading', { name: 'Comunidad', level: 1 })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Quests' })).not.toBeInTheDocument();
+  });
+
   it('uses the launcher as the home navigation and restores the regular header inside sections', () => {
     render(<App />);
     const homeNavigation = within(screen.getByRole('navigation', { name: 'Accesos principales' }));
@@ -88,9 +96,10 @@ describe('IdentityAccess presentation', () => {
     const communityNavigation = within(
       screen.getByRole('navigation', { name: 'Secciones de Comunidad' }),
     );
-    for (const label of ['Noticias', 'Torneos', 'Quests', 'Visítanos']) {
+    for (const label of ['Noticias', 'Torneos', 'Visítanos']) {
       expect(communityNavigation.getByRole('button', { name: label })).toBeInTheDocument();
     }
+    expect(communityNavigation.queryByRole('button', { name: 'Quests' })).not.toBeInTheDocument();
   });
 
   it('preserves draft appearance mode when navigating inside the real preview', () => {

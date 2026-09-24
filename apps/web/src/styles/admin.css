@@ -330,6 +330,17 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 
+.admin-shell .admin-field-with-help {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.admin-shell .admin-field-with-help small {
+  color: var(--admin-muted);
+}
+
 .admin-shell
   :where(.admin-form-grid > *, .admin-action-grid > *, .admin-module form, .admin-module label) {
   min-width: 0;

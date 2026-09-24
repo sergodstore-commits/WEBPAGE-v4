@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ApiError, authorizedRequest } from '../identity/api.js';
 import { readCoverage } from '../service-coverage/api.js';
@@ -312,7 +312,10 @@ export function AdminHub({
   const [actionMessage, setActionMessage] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [store, setStore] = useState<StoreSummary | null>(null);
-  const [catalogWorkspace, setCatalogWorkspace] = useState<'create' | 'edit' | 'images'>('create');
+  const [catalogWorkspace, setCatalogWorkspace] = useState<
+    'create' | 'edit' | 'images' | 'publish'
+  >('create');
+  const [createdProduct, setCreatedProduct] = useState<Item | null>(null);
   const [managedTask, setManagedTask] = useState<AdminTask>('create');
   const [ordersModule, setOrdersModule] = useState('orders');
   const [activityOpen, setActivityOpen] = useState(false);
@@ -394,11 +397,17 @@ export function AdminHub({
   const mutate = async (path: string, body: unknown, method = 'POST', reload?: string) => {
     setActionMessage('Guardando operación…');
     try {
-      await authorizedRequest(path, {
+      const result = await authorizedRequest<{ item?: Item }>(path, {
         body: JSON.stringify(body),
         headers: { 'idempotency-key': crypto.randomUUID() },
         method,
       });
+      if (
+        reload === 'catalog' &&
+        result.item &&
+        result.item.productId === createdProduct?.productId
+      )
+        setCreatedProduct(result.item);
       setActionMessage('Operación guardada correctamente.');
       const definition = modules.find(({ anchor }) => anchor === reload);
       if (definition) await load(definition);
@@ -574,6 +583,13 @@ export function AdminHub({
                 >
                   Imágenes
                 </button>
+                <button
+                  aria-current={catalogWorkspace === 'publish' ? 'page' : undefined}
+                  onClick={() => setCatalogWorkspace('publish')}
+                  type="button"
+                >
+                  Publicar y revisar
+                </button>
               </nav>
               {catalogWorkspace === 'create' && (
                 <CatalogComposer
@@ -581,6 +597,12 @@ export function AdminHub({
                   collections={data.collections?.items ?? []}
                   games={data.games?.items ?? []}
                   onAction={mutate}
+                  onCreated={(product) => {
+                    setCreatedProduct(product);
+                    setCatalogWorkspace('images');
+                    const definition = modules.find(({ anchor }) => anchor === 'catalog');
+                    if (definition) void load(definition);
+                  }}
                 />
               )}
               {catalogWorkspace === 'edit' && (
@@ -597,25 +619,66 @@ export function AdminHub({
                   categories={data.categories?.items ?? []}
                   collections={data.collections?.items ?? []}
                   games={data.games?.items ?? []}
-                  products={data.catalog?.items ?? []}
+                  initialProductId={String(createdProduct?.productId ?? '')}
+                  onContinue={() => setCatalogWorkspace('publish')}
+                  products={[
+                    ...(createdProduct &&
+                    !(data.catalog?.items ?? []).some(
+                      (item) => item.productId === createdProduct.productId,
+                    )
+                      ? [createdProduct]
+                      : []),
+                    ...(data.catalog?.items ?? []),
+                  ]}
                 />
               )}
-              <details className="catalog-publication-tools">
-                <summary>Publicar y revisar registros del catálogo</summary>
-                <p>
-                  Aquí puedes revisar estados y publicar, retirar o archivar productos y sus
-                  clasificaciones.
-                </p>
-                {visibleModules.map((module) => (
-                  <AdminModule
-                    definition={module}
-                    key={module.anchor}
-                    module={data[module.anchor] ?? emptyModule()}
-                    onAction={mutate}
-                    onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
-                  />
-                ))}
-              </details>
+              {catalogWorkspace === 'publish' && (
+                <section aria-label="Publicación del catálogo" className="admin-task-workspace">
+                  <div className="cut-panel admin-module">
+                    <h2>Antes de mostrarlo en la tienda</h2>
+                    <p>
+                      Publica primero el juego, la categoría y, si corresponde, la colección.
+                      Después publica el producto y registra su stock para que pueda comprarse. Cada
+                      paso muestra el estado que devuelve el servidor.
+                    </p>
+                    {createdProduct && (
+                      <p>
+                        Producto recién creado:{' '}
+                        <strong>
+                          {String(
+                            createdProduct.name ?? createdProduct.sku ?? createdProduct.productId,
+                          )}
+                        </strong>
+                      </p>
+                    )}
+                    <button onClick={() => navigate('/admin/inventory')} type="button">
+                      Ir a inventario
+                    </button>
+                  </div>
+                  {visibleModules
+                    .filter((module) =>
+                      ['games', 'categories', 'collections', 'catalog'].includes(module.anchor),
+                    )
+                    .map((module) => {
+                      const loaded = data[module.anchor] ?? emptyModule();
+                      const recent =
+                        module.anchor === 'catalog' &&
+                        createdProduct &&
+                        !loaded.items.some((item) => item.productId === createdProduct.productId)
+                          ? { ...loaded, items: [createdProduct, ...loaded.items] }
+                          : loaded;
+                      return (
+                        <AdminModule
+                          definition={module}
+                          key={module.anchor}
+                          module={recent}
+                          onAction={mutate}
+                          onLoadMore={() => void load(module, data[module.anchor]?.nextCursor)}
+                        />
+                      );
+                    })}
+                </section>
+              )}
             </section>
           )}
           {managedArea && (
@@ -1293,6 +1356,7 @@ function CatalogComposer({
   collections,
   games,
   onAction,
+  onCreated,
 }: {
   readonly categories: readonly Item[];
   readonly collections: readonly Item[];
@@ -1303,7 +1367,12 @@ function CatalogComposer({
     method?: string,
     reload?: string,
   ) => Promise<void>;
+  readonly onCreated: (product: Item) => void;
 }) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedGameId, setSelectedGameId] = useState('');
+  const pendingSubmission = useRef<{ fingerprint: string; key: string } | null>(null);
   const parent = (event: FormEvent<HTMLFormElement>, kind: 'categories' | 'tcg-games') => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -1332,50 +1401,102 @@ function CatalogComposer({
       'collections',
     );
   };
-  const product = (event: FormEvent<HTMLFormElement>) => {
+  const product = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (saving) return;
     const form = new FormData(event.currentTarget);
-    return onAction(
-      '/api/v1/admin/catalog/products',
-      {
-        categoryId: String(form.get('categoryId')),
-        collectionId: nullable(form.get('collectionId')),
-        condition: nullable(form.get('condition')),
-        description: nullable(form.get('description')),
-        edition: nullable(form.get('edition')),
-        gameId: String(form.get('gameId')),
-        language: nullable(form.get('language')),
-        name: String(form.get('name')),
-        priceAmountClp: Number(form.get('price')),
-        saleType: String(form.get('saleType')),
-        sku: String(form.get('sku')),
-      },
-      'POST',
-      'catalog',
-    );
+    const payload = {
+      categoryId: String(form.get('categoryId')),
+      collectionId: nullable(form.get('collectionId')),
+      condition: nullable(form.get('condition')),
+      description: nullable(form.get('description')),
+      edition: nullable(form.get('edition')),
+      gameId: String(form.get('gameId')),
+      language: nullable(form.get('language')),
+      name: String(form.get('name')),
+      priceAmountClp: Number(form.get('price')),
+      saleType: String(form.get('saleType')),
+      sku: String(form.get('sku')),
+    };
+    const fingerprint = JSON.stringify(payload);
+    if (pendingSubmission.current?.fingerprint !== fingerprint)
+      pendingSubmission.current = { fingerprint, key: crypto.randomUUID() };
+    setSaving(true);
+    setError('');
+    try {
+      const response = await authorizedRequest<{ item: Item }>('/api/v1/admin/catalog/products', {
+        body: fingerprint,
+        headers: { 'idempotency-key': pendingSubmission.current.key },
+        method: 'POST',
+      });
+      if (!response.item || typeof response.item.productId !== 'string')
+        throw new Error(
+          'El servidor no confirmó el producto creado. Revisa el catálogo antes de repetir.',
+        );
+      pendingSubmission.current = null;
+      onCreated(response.item);
+    } catch (cause) {
+      setError(messageOf(cause));
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <section className="cut-panel admin-module">
       <h2>Nuevo producto</h2>
-      <p>Completa los datos comerciales. Después podrás cargar y ordenar sus imágenes.</p>
+      <p>
+        1. Guarda los datos. 2. Subirás las fotos del mismo producto sin volver a buscarlo. 3.
+        Revisa inventario y publicación.
+      </p>
       <div className="catalog-product-form">
         <form onSubmit={(event) => void product(event)}>
           <h3>Datos del producto</h3>
-          <EntitySelect items={games} label="Juego" name="gameId" />
+          {(games.length === 0 || categories.length === 0) && (
+            <p className="status" role="status">
+              Para crear un producto necesitas al menos un juego y una categoría. Agrégalos en
+              «Administrar juegos, categorías y colecciones».
+            </p>
+          )}
+          {error && (
+            <p className="status" role="alert">
+              {error}
+            </p>
+          )}
+          <EntitySelect items={games} label="Juego" name="gameId" onChange={setSelectedGameId} />
           <EntitySelect items={categories} label="Categoría" name="categoryId" />
-          <EntitySelect allowEmpty items={collections} label="Colección" name="collectionId" />
+          <EntitySelect
+            allowEmpty
+            items={collections.filter((item) => item.gameId === selectedGameId)}
+            label="Colección"
+            name="collectionId"
+          />
           <label>
             Nombre
             <input name="name" required />
           </label>
-          <label>
-            SKU
-            <input name="sku" required />
-          </label>
-          <label>
-            Precio CLP
-            <input min="0" name="price" required type="number" />
-          </label>
+          <div className="admin-field-with-help">
+            <label>
+              SKU
+              <input aria-describedby="new-product-sku-help" name="sku" required />
+            </label>
+            <small id="new-product-sku-help">
+              Código interno único; no es el código de barras.
+            </small>
+          </div>
+          <div className="admin-field-with-help">
+            <label>
+              Precio CLP
+              <input
+                aria-describedby="new-product-price-help"
+                min="0"
+                name="price"
+                required
+                step="1"
+                type="number"
+              />
+            </label>
+            <small id="new-product-price-help">Pesos chilenos, sin puntos ni signo $.</small>
+          </div>
           <label>
             Tipo
             <select name="saleType">
@@ -1404,7 +1525,9 @@ function CatalogComposer({
             Descripción
             <textarea name="description" />
           </label>
-          <button>Crear producto</button>
+          <button disabled={saving || games.length === 0 || categories.length === 0}>
+            {saving ? 'Guardando producto…' : 'Crear producto y continuar a imágenes'}
+          </button>
         </form>
       </div>
       <details className="catalog-reference-tools">
@@ -1463,16 +1586,22 @@ function EntitySelect({
   items,
   label,
   name,
+  onChange,
 }: {
   readonly allowEmpty?: boolean;
   readonly items: readonly Item[];
   readonly label: string;
   readonly name: string;
+  readonly onChange?: (value: string) => void;
 }) {
   return (
     <label>
       {label}
-      <select name={name} required={!allowEmpty}>
+      <select
+        name={name}
+        onChange={(event) => onChange?.(event.target.value)}
+        required={!allowEmpty}
+      >
         <option value="">{allowEmpty ? 'Sin asignar' : 'Selecciona'}</option>
         {items.map((item) => {
           const id = itemIdentifier(item) ?? '';
@@ -1501,19 +1630,33 @@ function PreorderComposer({
   ) => Promise<void>;
   readonly store: StoreSummary | null;
 }) {
+  const [error, setError] = useState('');
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const capacity = Number(form.get('capacity'));
+    const maxPerCustomer = nullableNumber(form.get('maxPerCustomer'));
+    const opensAt = new Date(String(form.get('opensAt')));
+    const closesAt = new Date(String(form.get('closesAt')));
+    if (maxPerCustomer !== null && maxPerCustomer > capacity) {
+      setError('El máximo por cliente no puede superar las unidades disponibles.');
+      return;
+    }
+    if (!(opensAt.getTime() < closesAt.getTime())) {
+      setError('El cierre debe ser posterior a la apertura.');
+      return;
+    }
+    setError('');
     return onAction(
       '/api/v1/admin/preorders/campaigns',
       {
         branchId: String(form.get('branchId')),
-        capacity: Number(form.get('capacity')),
-        maxPerCustomer: nullableNumber(form.get('maxPerCustomer')),
-        closesAt: new Date(String(form.get('closesAt'))).toISOString(),
+        capacity,
+        maxPerCustomer,
+        closesAt: closesAt.toISOString(),
         estimatedArrivalText: String(form.get('arrival')),
         fulfillmentGroupKey: nullable(form.get('groupKey')),
-        opensAt: new Date(String(form.get('opensAt'))).toISOString(),
+        opensAt: opensAt.toISOString(),
         productId: String(form.get('productId')),
       },
       'POST',
@@ -1523,6 +1666,15 @@ function PreorderComposer({
   return (
     <section className="cut-panel admin-module">
       <h2>Nueva campaña de preventa</h2>
+      <p>
+        Primero crea en Productos un artículo de tipo «Preventa» y agrega sus imágenes. Luego define
+        esta campaña; al final revisa su publicación en «Campañas».
+      </p>
+      {error && (
+        <p className="status" role="alert">
+          {error}
+        </p>
+      )}
       <form onSubmit={(event) => void submit(event)}>
         <ProductSelect items={products} />
         <StoreField store={store} />
@@ -1794,7 +1946,7 @@ function EditorialComposer({
     const form = new FormData(formElement);
     const body = String(form.get('body'));
     const eventMetadata =
-      type === 'TOURNAMENT' || type === 'QUEST'
+      type === 'TOURNAMENT'
         ? {
             event: {
               startsAt: new Date(String(form.get('eventStartsAt'))).toISOString(),
@@ -1837,10 +1989,9 @@ function EditorialComposer({
             <option value="NEWS">Noticia</option>
             <option value="TOURNAMENT">Torneo informativo</option>
             <option value="COMMUNITY">Comunidad</option>
-            <option value="QUEST">Quest</option>
           </select>
         </label>
-        {(type === 'TOURNAMENT' || type === 'QUEST') && (
+        {type === 'TOURNAMENT' && (
           <>
             <label>
               Estado del evento

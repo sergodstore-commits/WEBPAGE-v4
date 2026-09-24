@@ -28,6 +28,22 @@
 
 ## Ajustes de Cuenta y Operaciones en rama Preview — 2026-09-23
 
+- El flujo de Productos en Operaciones ahora encadena guardar datos → galería seleccionada →
+  publicación. Si el guardado falla conserva el formulario y permite reintento con la misma clave
+  idempotente; la galería valida formato/peso antes de enviar, acepta arrastre y no cambia de producto
+  mientras sube archivos. La publicación expone el orden de juego/categoría/colección/producto y el
+  paso de inventario, sin publicar ni crear contenido real de forma automática.
+- Preventas valida localmente que el máximo por cliente no exceda la capacidad y que el cierre siga
+  a la apertura. El servidor sigue siendo la autoridad. Pasaron 509 pruebas de 119 archivos (una
+  prueba omitida), tipado, build, formato y lint. No se ha ejecutado todavía una prueba remota autenticada de producto + imagen +
+  publicación ni se han promovido estas mejoras a Producción.
+- Se retiró el acceso Quest de Comunidad y de la creación editorial; `/quests` redirige a Comunidad
+  para conservar enlaces antiguos. Los registros históricos no fueron eliminados. Las tarjetas de
+  ejemplo de Tienda/Preventas no reaparecen al aplicar filtros sin resultados cuando ya existe
+  contenido publicado; tampoco se muestran por un error de carga. Noticias y Cómics muestran su
+  ejemplo solo ante una respuesta vacía satisfactoria. Las pruebas focales de App, Comercio público y
+  Admin pasaron (65 casos).
+
 - Cuenta deja de esperar una consulta de rol administrativo antes de mostrar su estructura a una
   sesión cliente existente; los datos y las mutaciones siguen requiriendo autorización del servidor.
   La navegación y las tarjetas se adaptan a 390 px sin solaparse ni desbordar.
