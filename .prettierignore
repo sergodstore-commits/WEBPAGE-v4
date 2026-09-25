@@ -1,0 +1,9 @@
+node_modules
+.data
+.next
+.next-e2e
+.next-build
+package-lock.json
+playwright-report
+test-results
+.git

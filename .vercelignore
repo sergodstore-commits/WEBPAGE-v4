@@ -1,0 +1,8 @@
+.data
+.env*
+.git
+.next
+.next-e2e
+.next-build
+test-results
+playwright-report
