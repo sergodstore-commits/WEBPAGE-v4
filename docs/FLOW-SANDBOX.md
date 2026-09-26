@@ -4,7 +4,7 @@ El código de la tienda crea y consulta pagos desde el servidor. Una notificaci�
 
 ## Estado de comprobación
 
-La prueba real en sandbox queda pendiente hasta configurar credenciales propias de sandbox y una dirección HTTPS pública donde Flow pueda alcanzar las rutas de confirmación y retorno. No se han creado cargos reales. Registrar aquí fecha, versión de Git, pedidos de prueba y resultados al completar el protocolo; no registrar claves, sesiones ni datos personales.
+Se probó contra **Flow sandbox real** en `https://www.sergodstore.cl`, con el código funcional `87d7566`, entre el 25 y 26 de septiembre de 2026. Hubo creación desde el servidor, reserva de stock, simulación aprobada y rechazada en Flow, retorno POST, consulta directa al proveedor y notificaciones repetidas. No hubo cobros de dinero real. Los artículos técnicos quedaron retirados; los pedidos se conservan como evidencia.
 
 ## Contrato consultado
 
@@ -57,6 +57,13 @@ PGlite ejecuta PostgreSQL embebido y serializa su conexión. La prueba de concur
 
 | Fecha / versión | Ambiente     | Caso               | Pedido / Flow order | Resultado y evidencia                                  |
 | --------------- | ------------ | ------------------ | ------------------- | ------------------------------------------------------ |
-| Pendiente       | Flow sandbox | Recorrido completo | —                   | Requiere credenciales e instancia pública configuradas |
+| 25–26/09/2026 · `87d7566` | Flow sandbox real | Expiración | Pedido #1 / 10660782 | Estado Flow 4 verificado, pedido `expired`, reserva liberada. La ejecución se interrumpió antes de pagar. |
+| 26/09/2026 · `87d7566` | Flow sandbox real | Aprobación con retiro | Pedido #2 / consultar panel | $1.000 CLP, pendiente → aprobado; stock 3 → 2 y reserva 1 → 0. Retorno a detalle de pedido. |
+| 26/09/2026 · `87d7566` | Flow sandbox real | Cuatro callbacks repetidos | Pedido #2 | HTTP 200; un movimiento de inventario de −1 y un correo de aprobación; retorno repetido HTTP 303. |
+| 26/09/2026 · `87d7566` | Flow sandbox real | Rechazo | Pedido #3 / 10661466 | Estado Flow 3; pedido `rejected`, stock 2 y reserva 0. |
+
+Se comprobaron seis mensajes transaccionales aceptados por SMTP, sin duplicados de evento. Esto no asegura llegada a la bandeja de entrada. El cron por minuto está activo en Supabase y respondió HTTP 200.
+
+Los escenarios de importe manipulado, creación incierta, pagos tardíos, competencia POS/checkout y flete por pagar cuentan con pruebas controladas de servidor (incluyendo PostgreSQL remoto); no se forzaron fallos de red ni pagos tardíos reales del proveedor. El pago real de sandbox se realizó con retiro; repetir con los transportistas comerciales definitivos antes de habilitar envíos. Mantener `FLOW_ENV=sandbox` hasta la decisión explícita de abrir cobros reales y configurar credenciales de producción.
 
 No marcar esta validación como aprobada por un mock, una captura de pantalla del retorno o una prueba local aislada.

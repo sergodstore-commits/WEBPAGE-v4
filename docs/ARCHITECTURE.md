@@ -121,7 +121,7 @@ El POS vende artículos de Tienda publicados. Las preventas se reservan desde la
 
 Los eventos comerciales escriben mensajes en `mail_outbox` dentro de su transacción. Las rutas solicitan envío después de responder y el cron reintenta pendientes. SMTP procesa lotes pequeños, usa un identificador estable por mensaje y limita los intentos; deben revisarse los errores persistentes. Sin SMTP en desarrollo, el mensaje queda como local y solo el administrador puede leerlo. En producción esa herramienta está deshabilitada.
 
-`/api/jobs/reconcile`, protegido por `CRON_SECRET`, debe ejecutarse cada minuto para consultar pagos y procesar mantenimiento. Su configuración, las limitaciones de Vercel Hobby y los pasos de operación se describen en [DEPLOYMENT.md](DEPLOYMENT.md). No se incluye un servicio programador local permanente.
+`/api/jobs/reconcile`, protegido por `CRON_SECRET`, se ejecuta cada minuto desde Supabase Cron/pg_net. `scripts/schedule-reconciliation.ts` configura la tarea y guarda las credenciales en Vault. Su operación se describe en [DEPLOYMENT.md](DEPLOYMENT.md). No se incluye un servicio programador local permanente.
 
 ## Pruebas y límites de la validación
 
@@ -131,4 +131,6 @@ PGlite serializa su conexión. Por ello se ejecutó además `scripts/verify-post
 
 La suite de navegador completó 8/8 recorridos sobre una compilación de producción local: subida/optimización real, persistencia tras recargar, permisos, edición, retirada pública, publicaciones, POS, carrito y 18 rutas en computador y celular. La compilación actual y TypeScript también pasaron. El detalle está en [VERIFICATION.md](VERIFICATION.md).
 
-Resend aceptó autenticación SMTP sin enviar mensajes, y Flow sandbox respondió a una consulta firmada de lectura sin encontrar una transacción. Eso no prueba recepción de correo ni un pago. La validación pendiente incluye despliegue, carga de imágenes desde la web remota, envío/recepción de correo, cron y compra real en sandbox con callbacks públicos. El sistema no debe considerarse listo para cobros de producción hasta completar esos recorridos.
+La versión publicada en Vercel pasó el recorrido remoto de productos/preventas con imágenes en Supabase. Flow sandbox produjo pedidos aprobado, rechazado y expirado; el aprobado consumió una unidad una sola vez aun después de cuatro callbacks repetidos. Resend aceptó los correos transaccionales y la tarea programada respondió HTTP 200. La recepción en la bandeja del destinatario es una comprobación distinta. El ambiente sigue siendo sandbox y no está habilitado para cobros comerciales; véase [VERIFICATION.md](VERIFICATION.md).
+
+Las construcciones de producción utilizan Webpack. `scripts/verify-build-trace.mjs` verifica dependencias críticas y ausencia de archivos privados en los manifiestos del servidor; esto evita publicar un artefacto incompleto aunque Next.js termine la compilación.

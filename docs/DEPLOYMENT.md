@@ -2,7 +2,7 @@
 
 Esta guía describe cómo publicar una instancia revisable en Vercel con PostgreSQL y Storage de Supabase. El código no contrata planes ni publica automáticamente la tienda. Las credenciales se guardan en el entorno privado del servidor.
 
-Estado registrado: Supabase ya tiene las migraciones y el administrador en `sergod_store`, además del bucket público nuevo `product-images`; el proyecto anterior en `public` se conserva. Vercel tiene configurado Next.js y 19 variables privadas en producción, pero todavía no hay un despliegue de este código. El remoto GitHub ya está enlazado y la etiqueta `legacy-before-rebuild-20260925` conserva su versión anterior `bf8cf4d`; la versión nueva todavía no se ha subido. SMTP y Flow tienen comprobaciones iniciales de credenciales, descritas en [VERIFICATION.md](VERIFICATION.md); correo entregado, pago sandbox y cron siguen pendientes.
+Estado registrado al 26 de septiembre de 2026: la nueva rama `main` de [WEBPAGE-v4](https://github.com/sergodstore-commits/WEBPAGE-v4) se publicó en [www.sergodstore.cl](https://www.sergodstore.cl). Supabase usa el esquema privado `sergod_store` y el bucket público `product-images`; el proyecto anterior en `public` y su bucket privado se conservan. Vercel tiene Next.js y 19 variables de servidor guardadas como secretos. La etiqueta `legacy-before-rebuild-20260925` conserva la versión anterior `bf8cf4d`. Flow sigue en sandbox; sus casos aprobado, rechazado y expirado están comprobados. Resend aceptó los mensajes de pedidos y Supabase Cron ejecuta la conciliación por minuto. El detalle y las comprobaciones pendientes de recepción de correo están en [VERIFICATION.md](VERIFICATION.md).
 
 Mantén Flow en **sandbox** hasta completar el [protocolo de validación](FLOW-SANDBOX.md). Usar la opción de producción de Vercel para obtener una URL estable no obliga a usar pagos de producción: el entorno de Flow se elige por separado con `FLOW_ENV`.
 
@@ -78,7 +78,9 @@ Este script requiere permisos para crear y eliminar su propio esquema. Ignora `D
 5. Publica después de aplicar las migraciones. Comprueba `GET /api/health`, `/api/settings`, `/api/products`, carga del inicio, acceso administrativo, lectura/escritura de configuración y carga de imágenes. El endpoint de salud solo comprueba conexión; no certifica el esquema, Flow, SMTP ni Storage.
 6. Configura el local y transportistas desde el panel, publica contenido propio y ejecuta los recorridos de navegador. La base inicial no contiene artículos o publicaciones ficticios.
 
-No hay configuración que active automáticamente un plan de pago ni un cron en este repositorio. El operador elige el proveedor y el plan al publicar.
+La compilación de producción usa `next build --webpack` y después `scripts/verify-build-trace.mjs`. Este control exige el runtime de Next.js, PostgreSQL, Sharp y migraciones dentro del artefacto y rechaza archivos privados. Se añadió tras detectar un paquete incompleto con Turbopack que compilaba pero respondía 500 en Vercel. Desarrollo puede seguir usando Turbopack.
+
+El despliegue no contrata planes ni programa tareas por sí solo. En esta instalación se ejecutó explícitamente el programador de Supabase descrito a continuación.
 
 ## 6. Programar la conciliación cada minuto
 
@@ -92,6 +94,14 @@ Authorization: Bearer <CRON_SECRET>
 Usa un secreto aleatorio independiente de al menos 32 caracteres para `CRON_SECRET` y el mismo valor en la aplicación y el programador. La ruta no debe invocarse desde código público del navegador. El trabajo consulta pagos pendientes, procesa vencimientos seguros, intenta enviar correos y limpia sesiones, tokens y límites vencidos.
 
 **El cron de Vercel Hobby permite frecuencia diaria y no satisface esta necesidad.** Para programarlo por minuto, elige un cron externo que pueda enviar el encabezado de autorización, o un plan de Vercel que admita esa frecuencia, como Pro. Consulta [uso y precios oficiales de Vercel Cron Jobs](https://vercel.com/docs/cron-jobs/usage-and-pricing). Esta guía no autoriza contratar ni activar un plan de pago.
+
+**Configuración vigente:** se reutilizan `pg_cron`, `pg_net` y Vault ya habilitados en Supabase. Con las variables privadas de producción cargadas en el proceso, ejecutar:
+
+```sh
+node --import tsx scripts/schedule-reconciliation.ts
+```
+
+El script guarda/actualiza `sergod_store_app_url` y `sergod_store_cron_secret` en Vault y programa `sergod_store_reconcile` cada minuto. El texto de `cron.job` contiene referencias a Vault, no el secreto. No modifica las tareas del proyecto anterior. La instalación creó el trabajo 5 y comprobó una respuesta HTTP 200 sin fallos del endpoint. Consulta `cron.job_run_details` para ejecución SQL y `net._http_response` para el resultado HTTP: éxito SQL por sí solo no demuestra que la tienda respondió. Si cambia dominio o secreto, vuelve a ejecutar el script con el mismo `DATABASE_SCHEMA`. Para detener únicamente esta tarea: `SELECT cron.unschedule('sergod_store_reconcile');`. [Programación oficial con Supabase](https://supabase.com/docs/guides/functions/schedule-functions).
 
 Si se elige Vercel Cron en un plan adecuado, agrega una entrada al `vercel.json` del repositorio conservando su framework y comando de construcción:
 
@@ -156,7 +166,7 @@ El código reconoce además controles internos que no forman parte de `.env.exam
 - Retiro con dirección/horario reales; envío a domicilio o agencia; flete por pagar excluido del total Flow; preparación y seguimiento visibles al cliente.
 - Cron cada minuto, correo pendiente, reintentos y consulta de pedidos si falla un callback.
 
-El estado documentado es **45/45 resultados locales aprobados** —43 casos y dos contenedores—, **8/8 recorridos de navegador** sobre una compilación de producción local y **9/9 comprobaciones de PostgreSQL remoto** con tres conexiones simultáneas y limpieza verificada. La compilación actual pasó. Faltan el despliegue de esta versión, imágenes desde la web publicada, entrega de correo, cron y el pago real de Flow sandbox. Consulta [el registro de comprobación](VERIFICATION.md); una compilación o una autenticación de servicio no certifica por sí sola el circuito de venta.
+El estado documentado es **45/45 resultados de servidor**, **8/8 recorridos de navegador en GitHub Actions** y **9/9 comprobaciones PostgreSQL remotas** con tres conexiones simultáneas y limpieza verificada. La web publicada pasó carga/lectura de imágenes, publicación/edición/retirada de productos y preventas, y pagos reales del proveedor en sandbox. El cron está activo. Antes de abrir cobros comerciales se necesitan claves Flow de producción, contenido/transportistas definitivos y cerrar las comprobaciones de correo descritas en [VERIFICATION.md](VERIFICATION.md).
 
 ## Respaldos y recuperación
 

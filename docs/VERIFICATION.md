@@ -1,6 +1,6 @@
-# Estado de comprobación — 25 de septiembre de 2026
+# Estado de comprobación — 26 de septiembre de 2026
 
-La versión revisable se ejecuta localmente y su infraestructura remota ya está preparada parcialmente. Supabase tiene un esquema privado nuevo y se completaron pruebas con conexiones PostgreSQL reales. Todavía no se ha publicado este código en GitHub ni desplegado esta versión en Vercel, y no se ha completado una compra real en Flow sandbox.
+La versión revisable está publicada en [www.sergodstore.cl](https://www.sergodstore.cl), con código en [WEBPAGE-v4](https://github.com/sergodstore-commits/WEBPAGE-v4). La nueva tienda reemplazó el contenido de `main` conservando el historial anterior y una etiqueta de respaldo. Supabase, Storage, Resend y Flow sandbox están conectados. **No hay cobros de dinero real:** la interfaz muestra el modo de prueba.
 
 ## Comprobaciones automatizadas
 
@@ -12,17 +12,21 @@ La versión revisable se ejecuta localmente y su infraestructura remota ya está
 - Dos casos de protección de limpieza: solo se acepta el nombre aleatorio exacto creado por la ejecución y su marcador; se rechazan esquemas productivos, patrones e inyección SQL.
 - Los casos de inventario incluyen la última unidad disputada por 20 compradores, POS frente a checkout, límites acumulados de preventa, formularios administrativos antiguos, callbacks repetidos, expiración segura y pagos tardíos.
 
-La compilación de producción actual y TypeScript pasaron. También se revisó el manifiesto de archivos del servidor: incluye las tres migraciones y excluye `.data` y los archivos `.env`.
+La compilación de producción actual y TypeScript pasaron. El primer paquete Turbopack compiló pero omitió dependencias internas del servidor y devolvió HTTP 500 en Vercel. Se corrigió en `87d7566` usando Webpack. `scripts/verify-build-trace.mjs` ahora bloquea la construcción si faltan runtime/dependencias críticas o aparecen archivos privados. Los manifiestos comprobados incluyen 100 dependencias para páginas y 268 para la API, con las tres migraciones y sin `.data`, `s` ni archivos `.env`.
 
 ## Preparación y verificación remotas
 
 - **Supabase PostgreSQL:** conexión TLS validada, tres migraciones aplicadas en `sergod_store` y administrador verificado creado. La aplicación usa autenticación propia; no importa cuentas de Supabase Auth.
 - **Proyecto anterior:** las tablas de `public` permanecen intactas. El inventario leído conserva siete productos, cero pedidos y dos cuentas. No se migró su contenido ni se mezcló con el catálogo nuevo.
-- **Storage:** creado el bucket público `product-images`; la clave `service_role` JWT heredada se comprobó válida. Falta el recorrido de carga y publicación desde la web desplegada.
-- **Correo:** Resend aceptó la autenticación SMTP. No se envió correo en esta comprobación; entrega, recepción y enlaces de verificación/recuperación siguen pendientes.
-- **Flow:** las credenciales sandbox respondieron a una consulta firmada de lectura con `Transaction not found`. No se creó ni pagó una transacción real de sandbox.
-- **Vercel:** framework Next.js actualizado y 19 variables privadas guardadas en el entorno de producción. Aún no se desplegó esta versión.
-- **GitHub:** remoto `origin` enlazado a `sergodstore-commits/WEBPAGE-v4`, rama `main` leída en `bf8cf4d`. La etiqueta `legacy-before-rebuild-20260925` ya se subió para conservar esa versión anterior. El código nuevo todavía no se subió.
+- **Storage:** bucket público nuevo `product-images`; carga autenticada mediante la API publicada, optimización a WebP y lectura pública HTTP 200 comprobadas. El bucket antiguo sigue privado.
+- **Productos/preventas:** por la API administrativa publicada se creó cada tipo, cargó su imagen, publicó, leyó dos veces desde las rutas públicas, editó, volvió a comprobar y retiró. Los dos artículos se identificaron como pruebas técnicas y no están publicados.
+- **Local:** dirección, horario y contacto que ya figuraban publicados en el proyecto antiguo se guardaron y releyeron mediante la API nueva. No se trasladaron los siete productos antiguos.
+- **Correo de pedidos:** seis mensajes aceptados por Resend/SMTP y registrados `sent`, sin duplicados: pendiente y vencimiento del pedido #1, pendiente y aprobación del #2, pendiente y rechazo del #3. `sent` comprueba aceptación por SMTP, no presencia en la bandeja del destinatario.
+- **Cuenta remota:** con el correo expresamente autorizado se comprobó registro, inicio de sesión, verificación con token de un solo uso, rechazo HTTP 403 del acceso administrativo, recuperación de contraseña, revocación de la sesión anterior y acceso con la nueva contraseña. Resend/SMTP aceptó los dos mensajes de verificación y recuperación, con un intento cada uno. Los tokens se obtuvieron de los mensajes de esa cuenta en la cola del servidor y se usaron contra la API publicada; no se accedió a su bandeja externa. La contraseña queda únicamente en el archivo privado local `.data/verified-customer.json`.
+- **Flow real en sandbox:** tres órdenes de $1.000 CLP. #1 expiró (estado Flow 4) y liberó reserva; #2 fue aprobada mediante el simulador MACH, descontó stock 3 → 2 y liberó la reserva; #3 fue rechazada (estado Flow 3), conservando stock 2 y reserva 0. El retorno del navegador llegó al detalle protegido del pedido. Cuatro confirmaciones repetidas de #2 devolvieron HTTP 200 sin duplicar movimiento, evento ni correo; el retorno repetido respondió 303. Véase [registro Flow](FLOW-SANDBOX.md).
+- **Vercel:** proyecto `sergod-store-v4`, Next.js, Node 24 y 19 variables del servidor guardadas como secretos en producción. El [despliegue funcional `87d7566`](https://vercel.com/sergod-store/sergod-store-v4/8n3cpZD9vnSfnzGw7m6C8np3FDwb) sirve el dominio, `/api/health`, ajustes, catálogo y acceso administrativo.
+- **GitHub:** `main` se actualizó sin forzar ni borrar historia. La etiqueta `legacy-before-rebuild-20260925` conserva `bf8cf4d`. La carpeta `s`, claves y datos locales están excluidos del repositorio y del artefacto; se comprobaron los archivos nuevos contra los valores secretos suministrados.
+- **Conciliación:** trabajo `sergod_store_reconcile` (id 5) cada minuto en Supabase Cron; credenciales guardadas en Vault. Se comprobaron ejecuciones SQL correctas y una invocación HTTP 200 con `failed=0`. Los trabajos antiguos permanecen separados.
 
 La ejecución de `node --import tsx scripts/verify-postgres.ts` contra PostgreSQL remoto aprobó **9/9 comprobaciones**:
 
@@ -55,10 +59,12 @@ Los ocho recorridos cubren:
 
 **Resultado: 8/8 recorridos aprobados, sin reintentos automáticos, en 2,8 minutos incluyendo la compilación.** Entorno: Windows, Node.js 24.18.1, Next.js 16.3.6 y Playwright 1.63.0 con Chrome. Las capturas y trazas se guardan en `test-results/`, excluido del repositorio por contener datos de prueba. Después del ajuste final de tipografía del panel, la comprobación de las 18 rutas en escritorio/celular se repitió y pasó nuevamente (1/1, 1,1 minutos incluyendo compilación). `npm run typecheck` también pasó con generación automática de tipos para copias nuevas del repositorio.
 
+Después del cambio de empaquetado, [GitHub Actions sobre `87d7566`](https://github.com/sergodstore-commits/WEBPAGE-v4/actions/runs/36212003148) aprobó nuevamente tipos, 45 resultados de servidor, construcción con control de artefactos y los ocho recorridos en Chromium/Linux. La repetición local tuvo una interrupción prolongada (50,9 minutos): siete recorridos pasaron y carrito venció por timeout; se repitió solo ese caso y pasó en 54,4 segundos incluyendo construcción. No se ocultó ese fallo mediante reintentos automáticos.
+
 ## Pendiente antes de abrir ventas online
 
-No se ha ejecutado un pago contra Flow sandbox. Los resultados controlados y la consulta inicial de credenciales no sustituyen esa validación. Las claves ya están configuradas; falta desplegar una URL HTTPS pública de esta versión y comprobar creación, retorno, confirmación y conciliación real.
+Flow permanece deliberadamente en sandbox. Para abrir ventas comerciales faltan las claves de producción, cargar catálogo real y configurar los transportistas e instrucciones definitivas. El pago real de sandbox usó retiro; el flete por pagar se comprobó con pruebas de servidor/navegador, no con un transportista comercial durante el pago remoto.
 
-También faltan subir el código nuevo, desplegarlo, repetir los recorridos desde la web remota, cargar y leer imágenes en Storage, comprobar recepción de correos y activar/verificar el cron cada minuto. La concurrencia de PostgreSQL ya se comprobó con conexiones independientes; esto no reemplaza la verificación del recorrido HTTP completo en Vercel.
+La recepción efectiva en la bandeja de entrada debe confirmarla el destinatario; el registro, la verificación y la recuperación remotos ya están comprobados con los tokens de los mensajes enviados. Los casos de creación de pago incierta y pago tardío se probaron con respuestas controladas; no se provocaron fallos de red contra el proveedor. El servicio Render del proyecto anterior, sus cron y sus tablas se conservaron; la web nueva usa su servidor Next.js y el esquema privado nuevo.
 
 Sigue [despliegue y variables](DEPLOYMENT.md) y [protocolo de Flow sandbox](FLOW-SANDBOX.md). Las cuentas y claves se configuran en variables de entorno, sin incluirlas en Git ni en los archivos de pruebas.
