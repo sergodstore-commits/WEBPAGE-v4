@@ -2,7 +2,9 @@ import { PGlite } from '@electric-sql/pglite';
 import { Pool } from 'pg';
 import { mkdir, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { databasePoolConfig, databaseSchema } from './database-config';
 export type Db = {
+  schema?: string;
   query: <T = any>(sql: string, params?: any[]) => Promise<{ rows: T[] }>;
   exec: (sql: string) => Promise<unknown>;
   transaction: <T>(callback: (tx: Db) => Promise<T>) => Promise<T>;
@@ -11,7 +13,42 @@ export type Db = {
 export const dataDir = () =>
   path.resolve(/* turbopackIgnore: true */ process.env.LOCAL_DATA_DIR || '.data');
 const globalDb = globalThis as unknown as { sergodDB?: Promise<Db>; sergodRaw?: PGlite | Pool };
+export function scopeDatabase(raw: Db, schema: string): Db {
+  // Validate before interpolating an identifier anywhere, including test adapters.
+  databaseSchema({ DATABASE_SCHEMA: schema });
+  const transaction: Db['transaction'] = (callback) =>
+    raw.transaction(async (tx) => {
+      // Transaction poolers may select another backend each time. SET LOCAL is
+      // applied on the checked-out transaction and disappears on commit/rollback.
+      // No public fallback: an absent private table must fail, not use old data.
+      await tx.query("SELECT set_config('search_path', $1, true)", [`"${schema}"`]);
+      return callback({
+        ...tx,
+        schema,
+        transaction: async () => {
+          throw new Error('Nested transactions are not supported');
+        },
+      });
+    });
+  return {
+    schema,
+    query: (sql, params) => transaction((tx) => tx.query(sql, params)),
+    exec: (sql) => transaction((tx) => tx.exec(sql)),
+    transaction,
+  };
+}
 export async function migrate(db: Db) {
+  const schema = databaseSchema({ DATABASE_SCHEMA: db.schema || process.env.DATABASE_SCHEMA });
+  if (schema !== 'public') {
+    await db.transaction(async (tx) => {
+      // Serialize first creation between deployment/migration processes.
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`sergod-schema:${schema}`]);
+      if (!(await tx.query('SELECT 1 FROM pg_namespace WHERE nspname=$1', [schema])).rows.length) {
+        await tx.exec(`CREATE SCHEMA "${schema}" AUTHORIZATION CURRENT_USER`);
+        await tx.exec(`REVOKE ALL ON SCHEMA "${schema}" FROM PUBLIC`);
+      }
+    });
+  }
   await db.exec(
     'CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())',
   );
@@ -30,20 +67,9 @@ export async function getDb(): Promise<Db> {
   if (!globalDb.sergodDB)
     globalDb.sergodDB = (async () => {
       let db: Db;
+      const schema = databaseSchema();
       if (process.env.DATABASE_URL) {
-        const pool = new Pool({
-          connectionString: process.env.DATABASE_URL,
-          max: 5,
-          connectionTimeoutMillis: 8000,
-          idleTimeoutMillis: 20000,
-          ssl:
-            process.env.DATABASE_SSL === 'false'
-              ? false
-              : {
-                  rejectUnauthorized: true,
-                  ca: process.env.DATABASE_SSL_CA?.replace(/\\n/g, '\n'),
-                },
-        });
+        const pool = new Pool(databasePoolConfig());
         globalDb.sergodRaw = pool;
         db = {
           query: async (sql, params) => (await pool.query(sql, params)) as any,
@@ -87,6 +113,7 @@ export async function getDb(): Promise<Db> {
         });
         db = wrap(local);
       }
+      db = scopeDatabase(db, schema);
       if (!process.env.DATABASE_URL || process.env.AUTO_MIGRATE === 'true') await migrate(db);
       return db;
     })().catch((e) => {

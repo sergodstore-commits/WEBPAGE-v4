@@ -6,7 +6,7 @@ La aplicación usa Next.js 16, React, TypeScript y PostgreSQL. En desarrollo fun
 
 ## Iniciar la versión local
 
-Requisitos: Node.js compatible con Next.js 16 —mínimo 20.9— y npm. Ejecuta los comandos desde la carpeta del repositorio. Utiliza una versión vigente de Node admitida por el destino de despliegue.
+Requisitos: Node.js 24 y npm. Ejecuta los comandos desde la carpeta del repositorio; `package.json` fija la misma versión mayor usada en Vercel y en las pruebas.
 
 ```sh
 npm ci
@@ -18,7 +18,7 @@ Abre [la tienda local](http://localhost:3000) o [el panel administrativo](http:/
 
 Sin `DATABASE_URL`, el primer comando `admin:create` genera un acceso de desarrollo y lo guarda en `.data/initial-access.txt`. Consulta ese archivo en tu equipo; no lo publiques ni lo subas a GitHub. Al usar una base remota, el script exige `ADMIN_EMAIL` y `ADMIN_PASSWORD`, aunque no se haya definido `NODE_ENV`. El script no reemplaza cuentas existentes: si ya creaste el administrador, utiliza el acceso guardado o la recuperación de contraseña.
 
-No necesitas crear `.env.local` para probar el catálogo local. Para personalizar el entorno, copia `.env.example` a `.env.local` y configura solo lo necesario. Deja `DATABASE_URL` vacío para PGlite. Las migraciones se aplican automáticamente en desarrollo; también puedes ejecutarlas con `npm run db:migrate`.
+No necesitas crear `.env.local` para probar el catálogo local. Para personalizar el entorno, copia `.env.example` a `.env.local` y configura solo lo necesario. Deja `DATABASE_URL` vacío para PGlite. `DATABASE_SCHEMA` selecciona el esquema y usa `public` por defecto; la instalación remota de esta tienda utiliza `sergod_store` para mantener separado el proyecto anterior. Las migraciones se aplican automáticamente con PGlite; también puedes ejecutarlas con `npm run db:migrate`.
 
 PGlite debe abrirse desde un único proceso de la aplicación. Detén `npm run dev` antes de ejecutar scripts que abran la misma base local, de crear otro administrador o de respaldar `.data`. Los comandos iniciales anteriores ya respetan ese orden.
 
@@ -35,9 +35,9 @@ El envío **por pagar al recibir** muestra el flete como un cobro separado del t
 
 ## Qué está comprobado
 
-`npm test` completa **40/40 pruebas locales**: 38 casos y dos contenedores de suite. Son 29 casos de integración con PGlite aislado y nueve de contrato HTTP y controles Flow con respuestas simuladas. Se comprueban guardado y lectura real, publicación, stock y reservas, POS, descuentos calculados por el servidor, límites de preventa, cambios concurrentes, idempotencia de pedidos y resultados de pago, autorización, recuperación de cuenta, firma HMAC y fallos de red. Los datos de integración se crean en un directorio independiente; no son contenido real de la tienda.
+La suite local conjunta aprobó **45/45 resultados**: 43 casos y dos contenedores de suite. Incluye 29 casos de integración con PGlite aislado, nueve de contrato HTTP y controles Flow con respuestas simuladas, tres de aislamiento de esquemas/TLS y dos de protección de limpieza. Se comprueban guardado y lectura real, publicación, stock y reservas, POS, descuentos calculados por el servidor, límites de preventa, idempotencia, autorización, recuperación de cuenta, firma HMAC y fallos de red. Los datos de integración no son contenido real de la tienda.
 
-Estas pruebas comprueban las reglas de pago con respuestas controladas: **no equivalen a un pago realizado en Flow sandbox**. La prueba con credenciales Flow, PostgreSQL remoto, Supabase Storage, SMTP real y callbacks públicos sigue pendiente. El registro de pruebas y el recorrido exigido están en [FLOW-SANDBOX.md](docs/FLOW-SANDBOX.md).
+La verificación adicional con PostgreSQL remoto aprobó **9/9 comprobaciones**, usando tres conexiones simultáneas y un esquema temporal eliminado al finalizar. Cubre competencia checkout/POS, cupos, callbacks duplicados, rollback y persistencia tras reconectar. Flow estuvo simulado y no se envió correo: **no equivale a un pago realizado en Flow sandbox**. Consulta el [script reproducible](scripts/verify-postgres.md) y el [registro de comprobación](docs/VERIFICATION.md).
 
 ```sh
 npm run typecheck
@@ -53,7 +53,9 @@ Las pruebas de navegador requieren Chrome instalado. Para usar el Chromium de Pl
 
 En desarrollo, `.data/postgres` contiene la base, `.data/objects` las imágenes y `.data/initial-access.txt` el acceso inicial local. La sesión de cliente se conserva mediante una cookie del servidor. El navegador almacena únicamente IDs y cantidades del carrito, no el catálogo ni el stock.
 
-Para publicar, el código está preparado para GitHub, Vercel, PostgreSQL de Supabase, Supabase Storage, Flow y SMTP. **No hay un despliegue público ni servicios externos conectados por defecto.** Las credenciales se configuran al realizar ese paso. La migración de los registros e imágenes locales hacia servicios remotos no está implementada: la instancia remota comienza con sus propias tablas y configuración, y necesita contenido cargado desde el panel.
+La preparación remota ya conectó Supabase: las migraciones y el administrador están en el esquema privado `sergod_store`, y se creó el bucket público `product-images`. Las tablas del proyecto anterior en `public` permanecen intactas; no se trasladó su contenido ni las cuentas antiguas. El catálogo nuevo necesita contenido cargado desde el panel. Tampoco está implementada una migración de los registros e imágenes locales hacia servicios remotos.
+
+Resend aceptó la autenticación SMTP, pero aún falta comprobar envío y recepción. Las credenciales de Flow sandbox respondieron a una consulta de lectura; no se ha creado ni pagado una transacción real de sandbox. Vercel tiene el framework y 19 variables privadas de producción preparados, pero aún no se desplegó esta versión. El remoto GitHub está enlazado y la versión anterior está conservada en la etiqueta `legacy-before-rebuild-20260925`; el código nuevo todavía no se ha subido. El cron por minuto sigue pendiente.
 
 - [Despliegue, variables de entorno, cron y respaldos](docs/DEPLOYMENT.md)
 - [Arquitectura y reglas del sistema](docs/ARCHITECTURE.md)

@@ -128,7 +128,15 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       after(() => flushMail());
       return json(result);
     }
-    if (route === 'settings' && method === 'GET') return json(await getSettings());
+    if (route === 'settings' && method === 'GET')
+      return json({
+        ...(await getSettings()),
+        payment_mode: flowConfigured()
+          ? process.env.FLOW_ENV === 'production'
+            ? 'production'
+            : 'sandbox'
+          : 'disabled',
+      });
     if (route === 'products' && method === 'GET')
       return json(await getProducts(false, url.searchParams));
     if (path[0] === 'products' && path.length === 2 && method === 'GET')

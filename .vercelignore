@@ -1,4 +1,5 @@
 .data
+s
 .env*
 .git
 .next

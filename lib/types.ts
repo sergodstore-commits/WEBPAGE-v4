@@ -56,6 +56,7 @@ export type Carrier = {
   price: number;
 };
 export type Settings = {
+  payment_mode?: 'disabled' | 'sandbox' | 'production';
   name: string;
   description: string;
   address: string;

@@ -1,4 +1,5 @@
 import { loadEnvConfig } from '@next/env';
+import { databasePoolConfig, databaseSchema } from '../lib/server/database-config';
 loadEnvConfig(process.cwd());
 const required = [
   'APP_URL',
@@ -11,6 +12,12 @@ const required = [
   'CRON_SECRET',
 ];
 const errors = required.filter((key) => !process.env[key]).map((key) => `Falta ${key}`);
+try {
+  databaseSchema();
+  if (process.env.DATABASE_URL) databasePoolConfig();
+} catch (error) {
+  errors.push(error instanceof Error ? error.message : 'Configuración PostgreSQL no válida');
+}
 for (const key of ['APP_URL', 'SUPABASE_URL'])
   if (process.env[key]) {
     try {

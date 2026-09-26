@@ -1,15 +1,18 @@
 # Despliegue y operación
 
-Esta guía describe cómo publicar una instancia revisable en Vercel con PostgreSQL y Storage de Supabase. El repositorio puede guardarse en GitHub cuando se conecte la cuenta correspondiente. Estos pasos requieren cuentas y credenciales propias; el código local no crea servicios, contrata planes ni publica automáticamente la tienda.
+Esta guía describe cómo publicar una instancia revisable en Vercel con PostgreSQL y Storage de Supabase. El código no contrata planes ni publica automáticamente la tienda. Las credenciales se guardan en el entorno privado del servidor.
+
+Estado registrado: Supabase ya tiene las migraciones y el administrador en `sergod_store`, además del bucket público nuevo `product-images`; el proyecto anterior en `public` se conserva. Vercel tiene configurado Next.js y 19 variables privadas en producción, pero todavía no hay un despliegue de este código. El remoto GitHub ya está enlazado y la etiqueta `legacy-before-rebuild-20260925` conserva su versión anterior `bf8cf4d`; la versión nueva todavía no se ha subido. SMTP y Flow tienen comprobaciones iniciales de credenciales, descritas en [VERIFICATION.md](VERIFICATION.md); correo entregado, pago sandbox y cron siguen pendientes.
 
 Mantén Flow en **sandbox** hasta completar el [protocolo de validación](FLOW-SANDBOX.md). Usar la opción de producción de Vercel para obtener una URL estable no obliga a usar pagos de producción: el entorno de Flow se elige por separado con `FLOW_ENV`.
 
 ## 1. Preparar PostgreSQL
 
-1. Crea el proyecto de Supabase destinado a la instancia revisable y obtén su cadena de conexión PostgreSQL desde el panel del proyecto. No uses una clave de la API REST como `DATABASE_URL`.
+1. Selecciona el proyecto de Supabase destinado a la instancia revisable y obtén su cadena de conexión PostgreSQL desde el panel del proyecto. No uses una clave de la API REST como `DATABASE_URL`. En esta instalación se reutiliza el proyecto existente con un esquema nuevo; no hay que borrar las tablas anteriores.
 2. Usa una conexión adecuada para las funciones de Vercel; el pooler de transacciones es la opción prevista para tráfico serverless. Para la ejecución administrativa de migraciones, elige una conexión compatible con tu red y las transacciones SQL. Confirma puertos, usuario y parámetros en el panel de conexión, sin inventar el hostname. Consulta [las modalidades de conexión oficiales de Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres).
-3. Configura `DATABASE_URL` como secreto del servidor y `DATABASE_SSL=true`. El cliente exige validación del certificado TLS. Si el proveedor exige una autoridad certificadora propia, guarda su certificado PEM en `DATABASE_SSL_CA`; se admiten saltos de línea reales o `\n`. No soluciones un error de certificado desactivando TLS en producción; revisa la cadena de conexión y la confianza del certificado.
-4. Las tablas de la aplicación son privadas para el navegador. Las migraciones habilitan RLS en las tablas de negocio sin políticas públicas. Las consultas pasan por las API autenticadas de Next.js y por una conexión PostgreSQL del servidor con permisos de propietario sobre esas tablas. No expongas la contraseña de ese rol ni crees acceso de escritura para roles `anon` o `authenticated`.
+3. Configura `DATABASE_URL` como secreto del servidor y `DATABASE_SSL=true`. El cliente exige validación del certificado TLS. Si el proveedor exige una autoridad certificadora propia, guarda su certificado PEM en `DATABASE_SSL_CA`; se admiten saltos de línea reales o `\n`. El adaptador retira los parámetros SSL de la URL antes de crear la conexión para que `sslmode` no reemplace la CA ni la validación configurada. No soluciones errores de certificado desactivando TLS en producción.
+4. Configura **`DATABASE_SCHEMA=sergod_store`** en los scripts de operación y Vercel. El valor por defecto es `public`, adecuado para una base local nueva; no lo uses contra las tablas del proyecto anterior. Se admiten identificadores SQL en minúsculas de hasta 63 caracteres, excluyendo esquemas reservados. Cada consulta o transacción establece su esquema solo durante esa transacción; es compatible con el pooler y no busca tablas faltantes en `public`.
+5. Las migraciones crean el esquema explícito si falta, con propietario actual y sin acceso `PUBLIC`; no recrean ni vacían uno existente. Las tablas de la aplicación tienen RLS sin políticas públicas. Las consultas pasan por las API autenticadas de Next.js y una conexión privada con permisos del propietario. No expongas la contraseña de ese rol ni habilites acceso directo de `anon` o `authenticated` al esquema de la tienda.
 
 La aplicación **no utiliza Supabase Auth**. Registro, contraseñas, verificación, recuperación y sesiones viven en las tablas propias de PostgreSQL. No hay que configurar proveedores de Supabase Auth para iniciar sesión.
 
@@ -17,7 +20,7 @@ La aplicación **no utiliza Supabase Auth**. Registro, contraseñas, verificaci�
 
 1. Crea un bucket público llamado `product-images`, o usa otro nombre y guárdalo en `SUPABASE_STORAGE_BUCKET`.
 2. Público significa que las fotografías del catálogo pueden leerse mediante su URL. No habilites políticas de carga, actualización ni borrado anónimo sobre ese bucket.
-3. Configura `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` exclusivamente en el servidor. El administrador carga imágenes a la API de la tienda; la API autentica su rol, optimiza con Sharp y escribe al bucket con la clave de servicio. El navegador nunca recibe esa clave.
+3. Configura `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` exclusivamente en el servidor. La instalación actual utiliza una clave `service_role` JWT heredada cuya validez se comprobó. El administrador carga imágenes a la API de la tienda; la API autentica su rol, optimiza con Sharp y escribe al bucket. El navegador nunca recibe esa clave.
 4. Verifica una carga desde **Nuevo artículo**. Se aceptan JPG, PNG, WebP y AVIF de hasta 4 MB por imagen; el servidor genera WebP de hasta 1600 × 1600 sin ampliar imágenes pequeñas. Las referencias quedan en `uploads` y `products` o `posts`.
 
 El límite de carga de la aplicación se mantiene por debajo del límite de cuerpo de las funciones de Vercel, considerando el formulario. Comprueba los límites efectivos del plan y runtime al publicar, especialmente tamaño de petición, memoria y duración; las rutas API usan Node.js y solicitan `maxDuration=60`. Véanse [los límites de funciones de Vercel](https://vercel.com/docs/functions/limitations).
@@ -44,6 +47,7 @@ Instala exactamente las dependencias del lockfile con `npm ci`. Desde un equipo 
 
 ```powershell
 $env:NODE_ENV = 'production'
+$env:DATABASE_SCHEMA = 'sergod_store'
 npm run check:production
 npm run db:migrate
 npm run admin:create
@@ -53,17 +57,25 @@ Las variables se pueden proporcionar mediante el gestor de secretos del entorno 
 
 `check:production` comprueba presencia y consistencia básica de variables, HTTPS, TLS y longitud del secreto de cron. No abre conexiones ni valida credenciales externas. Permite publicar con Flow deshabilitado si ambas claves están vacías; si se configura una, exige la otra. Un resultado correcto no sustituye las pruebas de conexión, correo, imágenes ni pagos.
 
-Aplica las migraciones **antes del despliegue de la versión que las necesita**. El runtime remoto no migra por defecto. El historial se registra en `schema_migrations`; cada archivo SQL se ejecuta en una transacción y solo una vez. No edites un archivo ya aplicado: agrega una migración versionada nueva.
+Aplica las migraciones **antes del despliegue de la versión que las necesita**. El runtime remoto no migra por defecto. El historial se registra en `schema_migrations` dentro del esquema elegido; cada archivo SQL se ejecuta en una transacción y solo una vez. En `sergod_store` ya se aplicaron las tres migraciones y se creó el administrador. No edites un archivo ya aplicado: agrega una migración versionada nueva.
 
 Los scripts de migración crean las tablas, pero no transportan la información de `.data` a Supabase. **No está implementada una herramienta de migración de datos locales o de imágenes locales a almacenamiento remoto.** Si necesitas trasladar contenido real, prepara y valida un procedimiento específico antes de cambiar el entorno; no basta con copiar `.data` a Vercel.
+
+Para comprobar concurrencia sobre PostgreSQL real sin usar los datos de la tienda:
+
+```powershell
+node --import tsx scripts/verify-postgres.ts
+```
+
+Este script requiere permisos para crear y eliminar su propio esquema. Ignora `DATABASE_SCHEMA`, genera un esquema `sergod_verify_<32 caracteres hexadecimales>`, simula Flow y deshabilita SMTP/Storage. Verifica tres conexiones simultáneas y las operaciones comerciales; después cierra conexiones y elimina exclusivamente el esquema creado, comprobando nombre y marcador. La ejecución remota completó 9/9 comprobaciones y confirmó la limpieza. No valida pagos ni correo reales. Consulta [sus instrucciones y límites](../scripts/verify-postgres.md).
 
 ## 5. Publicar en Vercel
 
 1. Sube el repositorio a GitHub sin `.env.local`, `.data`, credenciales, informes privados ni `node_modules`. Revisa `.gitignore` y el contenido preparado para el commit.
-2. Importa el repositorio en Vercel y selecciona Next.js. Usa `npm ci` para instalar y conserva la construcción configurada en `vercel.json`: `npm run check:production && npm run build`. Así se bloquea una publicación con configuración mínima incompleta. No cambies el proyecto a una exportación estática: cuenta, inventario, imágenes y pagos necesitan el servidor.
+2. Importa el repositorio en Vercel, o revisa el proyecto existente, y selecciona Next.js. Comprueba que la raíz, salida y comandos no conserven valores del sitio anterior. Usa Node.js 24, `npm ci` para instalar y la construcción de `vercel.json`: `npm run check:production && npm run build`. Así se bloquea una publicación con configuración mínima incompleta. No cambies a exportación estática: cuenta, inventario, imágenes y pagos necesitan el servidor.
 3. Configura las variables del ambiente correcto. Una revisión y la tienda definitiva deben tener bases y credenciales deliberadamente separadas; no conectes por accidente una vista previa a pedidos de clientes reales.
 4. Establece la URL estable en `APP_URL` y vuelve a desplegar si cambia. La aplicación solo acepta escrituras desde ese origen. Ingresar desde otro alias sin configurar no debe considerarse un fallo de sesión.
-5. Publica después de aplicar las migraciones. Comprueba `GET /api/health`, carga del inicio, acceso administrativo, lectura/escritura de configuración y carga de imágenes. El endpoint de salud valida acceso a la base; no certifica Flow, SMTP ni Storage.
+5. Publica después de aplicar las migraciones. Comprueba `GET /api/health`, `/api/settings`, `/api/products`, carga del inicio, acceso administrativo, lectura/escritura de configuración y carga de imágenes. El endpoint de salud solo comprueba conexión; no certifica el esquema, Flow, SMTP ni Storage.
 6. Configura el local y transportistas desde el panel, publica contenido propio y ejecuta los recorridos de navegador. La base inicial no contiene artículos o publicaciones ficticios.
 
 No hay configuración que active automáticamente un plan de pago ni un cron en este repositorio. El operador elige el proveedor y el plan al publicar.
@@ -105,6 +117,7 @@ La expiración local no presume que un pago posiblemente creado en Flow fue rech
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `APP_URL`                   | `http://localhost:3000` por defecto.                                                                                        | URL HTTPS pública exacta. Se usa para origen, correos y callbacks.                                |
 | `DATABASE_URL`              | Vacía: PGlite persistente.                                                                                                  | Cadena PostgreSQL del servidor; obligatoria.                                                      |
+| `DATABASE_SCHEMA`           | `public` por defecto; admite un esquema explícito también con PGlite.                                                        | `sergod_store` en esta instalación; debe coincidir entre migración, administrador y runtime. Nunca reemplazarlo por el `public` antiguo. |
 | `DATABASE_SSL`              | `true`; sin efecto sobre PGlite.                                                                                            | `true` para TLS validado. `false` solo en una base local que lo requiera.                         |
 | `DATABASE_SSL_CA`           | Vacía salvo que una conexión remota lo requiera.                                                                            | Certificado CA en formato PEM si lo requiere PostgreSQL; admite `\n`.                             |
 | `LOCAL_DATA_DIR`            | `.data`; directorio de base, objetos y acceso inicial.                                                                      | No sustituye PostgreSQL/Storage remotos.                                                          |
@@ -143,7 +156,7 @@ El código reconoce además controles internos que no forman parte de `.env.exam
 - Retiro con dirección/horario reales; envío a domicilio o agencia; flete por pagar excluido del total Flow; preparación y seguimiento visibles al cliente.
 - Cron cada minuto, correo pendiente, reintentos y consulta de pedidos si falla un callback.
 
-El estado local documentado es **40/40 pruebas aprobadas** —38 casos y dos contenedores— y **8/8 recorridos de navegador** sobre una compilación de producción local. La integración real con servicios externos y el recorrido de Flow sandbox siguen pendientes. Consulta [el registro de comprobación](VERIFICATION.md); no debe declararse la tienda lista para cobrar por el solo éxito de la compilación.
+El estado documentado es **45/45 resultados locales aprobados** —43 casos y dos contenedores—, **8/8 recorridos de navegador** sobre una compilación de producción local y **9/9 comprobaciones de PostgreSQL remoto** con tres conexiones simultáneas y limpieza verificada. La compilación actual pasó. Faltan el despliegue de esta versión, imágenes desde la web publicada, entrega de correo, cron y el pago real de Flow sandbox. Consulta [el registro de comprobación](VERIFICATION.md); una compilación o una autenticación de servicio no certifica por sí sola el circuito de venta.
 
 ## Respaldos y recuperación
 

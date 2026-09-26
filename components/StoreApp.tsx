@@ -412,6 +412,11 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
         </span>
       </div>
       <header className="store-header">
+        {settings.payment_mode === 'sandbox' && (
+          <div className="store-sandbox-notice" role="status">
+            Versión de prueba · pagos de sandbox · sin cobros reales
+          </div>
+        )}
         <div className="store-header-inner">
           <Link href="/" className="store-brand" aria-label="SERGOD STORE, inicio">
             <span className="store-brand-mark">

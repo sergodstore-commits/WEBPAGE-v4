@@ -4,7 +4,7 @@ const config: NextConfig = {
   serverExternalPackages: ['@electric-sql/pglite', 'pg', 'sharp'],
   outputFileTracingIncludes: { '/api/**/*': ['./db/migrations/**/*'] },
   outputFileTracingExcludes: {
-    '/*': ['./.data/**/*', './.env*', './tests/**/*', './.git/**/*', './.next-e2e/**/*'],
+    '/*': ['./.data/**/*', './s/**/*', './.env*', './tests/**/*', './.git/**/*', './.next-e2e/**/*'],
   },
   async headers() {
     return [

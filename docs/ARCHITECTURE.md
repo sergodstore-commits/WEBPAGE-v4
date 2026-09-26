@@ -12,6 +12,7 @@ La aplicación es una sola instalación Next.js 16 con interfaz pública, panel 
 | `components/AdminApp.tsx`, `components/admin.css` | Artículos, imágenes, publicación, inventario, pedidos, entregas, clientes, contenido, configuración y POS.          |
 | `app/api/[...path]/route.ts`                      | Rutas HTTP, autenticación y autorización, protección de origen, límites y traducción de errores.                    |
 | `lib/server/db.ts`                                | Adaptador PostgreSQL/PGlite, conexiones, transacciones y migraciones.                                               |
+| `lib/server/database-config.ts`                   | Validación del esquema SQL y configuración TLS que conserva la CA explícita.                                      |
 | `lib/server/core.ts`                              | Errores, validadores comunes, tokens, límites, origen, eventos y respuestas públicas.                               |
 | `lib/server/auth.ts`                              | Registro, contraseñas, sesiones, verificación, recuperación y edición de cuenta.                                    |
 | `lib/server/catalog.ts`                           | Productos, preventas, publicación, inventario y configuración del local/transportistas.                             |
@@ -25,13 +26,22 @@ La aplicación es una sola instalación Next.js 16 con interfaz pública, panel 
 | `scripts`                                         | Aplicación de migraciones, creación inicial del administrador y comprobación básica de configuración de producción. |
 | `tests/store.test.ts`                             | Pruebas de integración sobre una base aislada.                                                                      |
 | `tests/flow.test.ts`                              | Firma HMAC, contrato HTTP y errores de Flow con respuestas simuladas; no llama al proveedor real.                   |
+| `tests/database-config.test.ts`                   | Convivencia con tablas antiguas, aislamiento de esquemas, migraciones y TLS.                                        |
+| `scripts/verify-postgres.ts`                      | Concurrencia y persistencia sobre PostgreSQL real en un esquema temporal propio.                                    |
+| `scripts/verify-postgres-guards.ts`, `tests/verify-postgres-guards.test.ts` | Validación del nombre y marcador que permiten eliminar exclusivamente el esquema de la verificación. |
 | `tests/e2e`                                       | Recorridos de navegador mediante Playwright.                                                                        |
 
 ## Datos y entornos
 
 En desarrollo, PGlite ejecuta PostgreSQL embebido y persiste en `.data/postgres`. Las imágenes optimizadas se guardan en `.data/objects`; una ruta del servidor las entrega por URL. Esto permite trabajar sin servicios externos y conservar cambios después de reiniciar.
 
-En producción, `DATABASE_URL` selecciona PostgreSQL remoto, previsto en Supabase. Las imágenes se escriben en Supabase Storage usando una clave de servicio privada. El bucket de fotografías es público para lectura; la carga siempre pasa por la autorización de administrador del servidor. No se almacenan imágenes como base64 en los registros de productos.
+En producción, `DATABASE_URL` selecciona PostgreSQL remoto en Supabase. `DATABASE_SCHEMA` selecciona el esquema SQL y tiene `public` como valor por defecto. La instalación remota actual usa explícitamente **`sergod_store`**, con sus migraciones y administrador ya creados; las tablas antiguas de `public` permanecen separadas. El mismo selector funciona con PGlite.
+
+El adaptador ejecuta cada consulta suelta dentro de una transacción y establece `search_path` localmente en ella. Las transacciones de varias consultas lo establecen una vez. Esto permite usar un pooler de transacciones sin depender de estado de sesión; no se añade `public` como alternativa si falta una tabla. Las migraciones crean un esquema explícito inexistente con propietario actual y revocan acceso `PUBLIC`; no vacían un esquema existente. El historial de migraciones también pertenece al esquema elegido.
+
+`database-config.ts` valida el identificador del esquema y retira los parámetros SSL de la URL antes de pasarla a `pg`. La configuración del servidor conserva `rejectUnauthorized: true` y el certificado de `DATABASE_SSL_CA`, incluso si la URL contiene `sslmode`.
+
+Las imágenes se escriben en Supabase Storage usando una clave de servicio privada. Ya se creó el bucket público `product-images` y se comprobó la clave `service_role` JWT heredada; la carga desde la versión publicada queda por validar. La lectura de fotografías es pública, y la carga pasa por la autorización del administrador. No se almacenan imágenes como base64 en los registros de productos.
 
 Las tablas principales son:
 
@@ -44,7 +54,7 @@ Las tablas principales son:
 
 Las tablas de negocio tienen RLS habilitado sin políticas públicas para clientes directos de Supabase. La aplicación usa una conexión PostgreSQL privada con permisos del propietario y realiza la autorización en las rutas del servidor. El navegador no dispone de conexión a la base ni de claves de servicio. La tabla técnica `schema_migrations` registra los archivos ya aplicados.
 
-No hay sincronización entre el entorno local y el remoto. Los SQL de migración actualizan la estructura, no trasladan productos, clientes, pedidos ni imágenes. No se ha implementado la migración de datos locales a Supabase.
+No hay sincronización entre el entorno local y el remoto. Los SQL actualizan la estructura, no trasladan productos, clientes, pedidos ni imágenes. No se ha implementado una migración de contenido local ni del proyecto anterior. El inventario leído del esquema antiguo conserva siete productos, cero pedidos y dos cuentas; esos registros no se copiaron a `sergod_store`.
 
 ## Cuentas y permisos
 
@@ -115,8 +125,10 @@ Los eventos comerciales escriben mensajes en `mail_outbox` dentro de su transacc
 
 ## Pruebas y límites de la validación
 
-La ejecución local termina con **40/40 pruebas aprobadas**, correspondientes a 38 casos y dos contenedores de suite. Los 29 casos de `store.test.ts` crean una base PGlite independiente, aplican las migraciones, escriben y leen datos y limpian únicamente su directorio temporal. La suite elimina la configuración de base remota y SMTP de su proceso para no usar los servicios de la tienda. Los nueve casos de `flow.test.ts` sustituyen HTTP para comprobar HMAC, codificación de formularios, consulta y errores de red o proveedor sin crear pagos reales.
+La ejecución local termina con **45/45 resultados aprobados**, correspondientes a 43 casos y dos contenedores de suite. Los 29 casos de `store.test.ts` usan PGlite independiente y eliminan la configuración de base remota y SMTP de su proceso. Los nueve casos de `flow.test.ts` sustituyen HTTP para comprobar HMAC, contrato y fallos. Tres casos de `database-config.test.ts` comprueban esquema/TLS; otros dos verifican que la limpieza no acepte nombres productivos ni un esquema sin su marcador.
 
-PGlite serializa su conexión: comprueba invariantes de la aplicación, pero no sustituye pruebas con varias conexiones PostgreSQL remotas. La suite de navegador completó 8/8 recorridos sobre una compilación de producción local: subida/optimización real, persistencia tras recargar, permisos, edición, retirada pública, publicaciones, POS, carrito y 18 rutas en computador y celular. El detalle está en [VERIFICATION.md](VERIFICATION.md).
+PGlite serializa su conexión. Por ello se ejecutó además `scripts/verify-postgres.ts` contra PostgreSQL remoto: **9/9 comprobaciones**, tres conexiones simultáneas y persistencia después de cerrar/reabrir el pool. El script usa un esquema aleatorio `sergod_verify_`, crea fixtures propios, simula todo HTTP de Flow y deshabilita correo/Storage. Su `finally` eliminó únicamente ese esquema después de verificar nombre y marcador; no usó los datos de `sergod_store` ni `public`. Véanse [sus instrucciones](../scripts/verify-postgres.md).
 
-La validación externa pendiente incluye Flow sandbox, SMTP real, Storage remoto, cron y concurrencia contra PostgreSQL de la instancia publicada. El sistema no debe considerarse listo para cobros de producción hasta completar esos recorridos.
+La suite de navegador completó 8/8 recorridos sobre una compilación de producción local: subida/optimización real, persistencia tras recargar, permisos, edición, retirada pública, publicaciones, POS, carrito y 18 rutas en computador y celular. La compilación actual y TypeScript también pasaron. El detalle está en [VERIFICATION.md](VERIFICATION.md).
+
+Resend aceptó autenticación SMTP sin enviar mensajes, y Flow sandbox respondió a una consulta firmada de lectura sin encontrar una transacción. Eso no prueba recepción de correo ni un pago. La validación pendiente incluye despliegue, carga de imágenes desde la web remota, envío/recepción de correo, cron y compra real en sandbox con callbacks públicos. El sistema no debe considerarse listo para cobros de producción hasta completar esos recorridos.
