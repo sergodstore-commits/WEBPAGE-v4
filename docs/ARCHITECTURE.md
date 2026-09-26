@@ -103,6 +103,8 @@ El flujo online es:
 
 Los estados visibles son pago pendiente, aprobado, rechazado, reserva vencida y pago en revisión. La preparación y entrega usan un estado separado. Solo se puede preparar o entregar un pedido con pago aprobado.
 
+Cada pedido web conserva `payment_environment` (`sandbox` o `production`). La migración 004 reconoce el ambiente de los anteriores solo cuando su URL pertenece a un host Flow conocido; el resto mantiene `NULL`. Las pruebas sandbox se identifican en el historial, no se suman a métricas comerciales ni se preparan como entregas comerciales en producción. Las consultas y enlaces de pago no cruzan ambientes. El cambio de claves exige resolver antes todos los pendientes del ambiente anterior.
+
 Un error al crear el enlace no provoca automáticamente una segunda creación: el pedido puede haber sido recibido por Flow. La conciliación consulta por `commerceId` si se perdió el token. El sistema tampoco libera por reloj una reserva que podría tener un pago válido: necesita comprobar el resultado con el proveedor. Las reservas que vencieron sin iniciar creación de pago sí pueden liberarse localmente.
 
 La notificación repetida no descuenta stock ni genera de nuevo el evento de aprobación. La deduplicación de correo usa una clave única por evento comercial. Esta protección no significa entrega SMTP exactamente una vez: una interrupción después de que el proveedor acepte un mensaje puede dejar un resultado de envío incierto.
@@ -131,6 +133,6 @@ PGlite serializa su conexión. Por ello se ejecutó además `scripts/verify-post
 
 La suite de navegador completó 8/8 recorridos sobre una compilación de producción local: subida/optimización real, persistencia tras recargar, permisos, edición, retirada pública, publicaciones, POS, carrito y 18 rutas en computador y celular. La compilación actual y TypeScript también pasaron. El detalle está en [VERIFICATION.md](VERIFICATION.md).
 
-La versión publicada en Vercel pasó el recorrido remoto de productos/preventas con imágenes en Supabase. Flow sandbox produjo pedidos aprobado, rechazado y expirado; el aprobado consumió una unidad una sola vez aun después de cuatro callbacks repetidos. Resend aceptó los correos transaccionales y la tarea programada respondió HTTP 200. La recepción en la bandeja del destinatario es una comprobación distinta. El ambiente sigue siendo sandbox y no está habilitado para cobros comerciales; véase [VERIFICATION.md](VERIFICATION.md).
+La versión publicada en Vercel pasó el recorrido remoto de productos/preventas con imágenes en Supabase. Flow sandbox produjo pedidos aprobado, rechazado y expirado; el aprobado consumió una unidad una sola vez aun después de cuatro callbacks repetidos. Resend aceptó los correos transaccionales y la tarea programada respondió HTTP 200. La recepción en la bandeja del destinatario es una comprobación distinta. Posteriormente el propietario autorizó Flow producción. Su activación valida credenciales por consulta firmada de solo lectura durante la construcción, sin crear ni pagar una orden; véase [VERIFICATION.md](VERIFICATION.md).
 
 Las construcciones de producción utilizan Webpack. `scripts/verify-build-trace.mjs` verifica dependencias críticas y ausencia de archivos privados en los manifiestos del servidor; esto evita publicar un artefacto incompleto aunque Next.js termine la compilación.

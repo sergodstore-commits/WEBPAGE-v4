@@ -37,7 +37,13 @@ import {
   withdrawProduct,
 } from '@/lib/server/catalog';
 import { deletePost, getPost, getPosts, savePost } from '@/lib/server/content';
-import { completePos, getOrder, listOrders, updateDelivery } from '@/lib/server/commerce';
+import {
+  commercialOrderStats,
+  completePos,
+  getOrder,
+  listOrders,
+  updateDelivery,
+} from '@/lib/server/commerce';
 import {
   checkout,
   expireOrders,
@@ -172,15 +178,17 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       if (route === 'admin/dashboard' && method === 'GET') {
         const rows = (
           await db.query(
-            `SELECT (SELECT count(*) FROM products WHERE deleted_at IS NULL)::integer AS products,(SELECT count(*) FROM orders)::integer AS orders,(SELECT count(*) FROM orders WHERE payment_status='pending')::integer AS pending,(SELECT count(*) FROM products WHERE deleted_at IS NULL AND stock-reserved<=3)::integer AS low_stock,(SELECT COALESCE(sum(total),0) FROM orders WHERE payment_status='approved') AS revenue`,
+            `SELECT (SELECT count(*) FROM products WHERE deleted_at IS NULL)::integer AS products,(SELECT count(*) FROM products WHERE deleted_at IS NULL AND stock-reserved<=3)::integer AS low_stock`,
           )
         ).rows[0];
         return json({
           ...rows,
-          revenue: Number(rows.revenue),
+          ...(await commercialOrderStats()),
           development: !isProd(),
           flow_configured: flowConfigured(),
-          recent_orders: (await listOrders(user, true)).slice(0, 6),
+          recent_orders: (await listOrders(user, true))
+            .filter((o) => o.payment_environment !== 'sandbox')
+            .slice(0, 6),
         });
       }
       if (route === 'admin/products' && method === 'GET')

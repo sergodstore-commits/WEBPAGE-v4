@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { getDb } from './db';
-import { appUrl, AppError, event, fail, publicOrder } from './core';
+import { appUrl, AppError, event, fail, flowEnvironment, publicOrder } from './core';
 import { applyPayment, releaseOrder, releaseUnstartedOrders, reserveOrder } from './commerce';
 export function flowSignature(params: Record<string, string | number>, secret: string) {
   return createHmac('sha256', secret)
@@ -17,7 +17,7 @@ export function flowConfigured() {
   return Boolean(process.env.FLOW_API_KEY && process.env.FLOW_SECRET_KEY);
 }
 function base() {
-  return process.env.FLOW_ENV === 'production'
+  return flowEnvironment() === 'production'
     ? 'https://www.flow.cl/api'
     : 'https://sandbox.flow.cl/api';
 }
@@ -142,6 +142,12 @@ export async function checkout(user: any, input: unknown) {
 }
 export async function verifyToken(token: string) {
   if (!token || token.length > 300) fail(400, 'Falta el token de pago.');
+  const known = (await (await getDb()).query('SELECT * FROM orders WHERE flow_token=$1', [token]))
+    .rows[0];
+  if (known && known.payment_environment !== flowEnvironment()) {
+    if (known.payment_status !== 'pending') return publicOrder(known);
+    fail(409, 'Este pedido pertenece a otro ambiente de pago y requiere revisión de la tienda.');
+  }
   const status = await flowRequest('payment/getStatus', { token });
   return applyPayment(token, status);
 }
@@ -150,6 +156,10 @@ export async function refreshPayment(id: string) {
   const o = (await db.query("SELECT * FROM orders WHERE id::text=$1 AND source='web'", [id]))
     .rows[0];
   if (!o) fail(404, 'Pedido no encontrado.');
+  if (o.payment_environment !== flowEnvironment()) {
+    if (o.payment_status !== 'pending') return publicOrder(o);
+    fail(409, 'Este pedido pertenece a otro ambiente de pago y requiere revisión de la tienda.');
+  }
   if (o.payment_status === 'approved' || o.payment_status === 'review') return publicOrder(o);
   if (o.flow_token) return verifyToken(o.flow_token);
   if (o.payment_status !== 'pending') return publicOrder(o);
@@ -161,10 +171,14 @@ export async function expireOrders() {
   const released = await releaseUnstartedOrders();
   const db = await getDb();
   const pending = (
-    await db.query(`UPDATE orders SET payment_checked_at=now() WHERE id IN (
+    await db.query(
+      `UPDATE orders SET payment_checked_at=now() WHERE id IN (
  SELECT id FROM orders WHERE source='web' AND payment_status='pending'
+ AND payment_environment=$1
  AND (payment_checked_at IS NULL OR payment_checked_at<now()-interval '1 minute')
- ORDER BY payment_checked_at NULLS FIRST,created_at LIMIT 6 FOR UPDATE SKIP LOCKED) RETURNING id`)
+ ORDER BY payment_checked_at NULLS FIRST,created_at LIMIT 6 FOR UPDATE SKIP LOCKED) RETURNING id`,
+      [flowEnvironment()],
+    )
   ).rows;
   let checked = 0,
     failed = 0;

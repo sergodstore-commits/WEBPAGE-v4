@@ -1454,6 +1454,7 @@ function OrderTable({ orders }: { orders: Order[] }) {
               <td>{money(o.total)}</td>
               <td>
                 <Tag good={o.payment_status === 'approved'}>{paymentLabels[o.payment_status]}</Tag>
+                {o.payment_environment === 'sandbox' && <Tag>Prueba sandbox</Tag>}
               </td>
               <td>{deliveryLabels[o.fulfillment_status]}</td>
             </tr>
@@ -1608,7 +1609,7 @@ function OrderPage({ id }: { id: string }) {
       </Link>
       <Heading
         title={`Pedido #${o.number}`}
-        description={`${date(o.created_at)} · ${o.source === 'pos' ? 'Venta en el local' : 'Compra en la web'}`}
+        description={`${date(o.created_at)} · ${o.source === 'pos' ? 'Venta en el local' : 'Compra en la web'}${o.payment_environment === 'sandbox' ? ' · Prueba sandbox, sin cobro real' : ''}`}
       >
         <Tag good={o.payment_status === 'approved'}>{paymentLabels[o.payment_status]}</Tag>
       </Heading>
@@ -1738,7 +1739,7 @@ function OrderPage({ id }: { id: string }) {
             <form onSubmit={save}>
               <Field label="Estado de la entrega">
                 <select
-                  disabled={o.payment_status !== 'approved'}
+                  disabled={o.payment_status !== 'approved' || !o.can_manage_delivery}
                   value={fulfillment}
                   onChange={(e) => setFulfillment(e.target.value)}
                 >
@@ -1777,7 +1778,7 @@ function OrderPage({ id }: { id: string }) {
               )}
               <button
                 className="admin-button full"
-                disabled={busy || o.payment_status !== 'approved'}
+                disabled={busy || o.payment_status !== 'approved' || !o.can_manage_delivery}
               >
                 {busy ? 'Guardando…' : 'Guardar entrega'}
               </button>
@@ -1785,6 +1786,11 @@ function OrderPage({ id }: { id: string }) {
           </section>
           <section className="admin-card admin-card-body">
             <h2>Pago</h2>
+            {o.payment_environment === 'sandbox' && (
+              <p className="admin-help">
+                Prueba sandbox, sin cobro real. No se incluye en las ventas comerciales.
+              </p>
+            )}
             <p>
               {paymentLabels[o.payment_status]} ·{' '}
               {o.payment_method === 'flow'
@@ -1801,7 +1807,7 @@ function OrderPage({ id }: { id: string }) {
             {o.expires_at && o.payment_status === 'pending' && (
               <p className="admin-help">Unidades reservadas hasta {date(o.expires_at)}.</p>
             )}
-            {o.source === 'web' && (
+            {o.can_refresh_payment && (
               <button className="admin-button secondary full" disabled={busy} onClick={refresh}>
                 Consultar pago en Flow
               </button>
@@ -2782,17 +2788,16 @@ function PosPage() {
 }
 
 function MailPage() {
-  const r =
-    useResource<
-      {
-        id: string;
-        recipient: string;
-        subject: string;
-        body: string;
-        status: string;
-        created_at: string;
-      }[]
-    >('/admin/mail');
+  const r = useResource<
+    {
+      id: string;
+      recipient: string;
+      subject: string;
+      body: string;
+      status: string;
+      created_at: string;
+    }[]
+  >('/admin/mail');
   return (
     <>
       <Heading

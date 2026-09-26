@@ -75,7 +75,7 @@ test('el esquema nuevo convive con tablas antiguas: migraciones, aislamiento, ro
   await migrate(db);
   assert.equal(
     (await db.query('SELECT count(*)::int AS count FROM schema_migrations')).rows[0].count,
-    3,
+    4,
   );
   assert.equal(
     (await db.query('SELECT current_schema() AS schema')).rows[0].schema,

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { getDb, type Db } from './db';
-import { appUrl, event, fail, hash, integer, publicOrder, uuid } from './core';
+import { appUrl, event, fail, flowEnvironment, hash, integer, publicOrder, uuid } from './core';
 import { enqueueMail } from './mail';
 import type { OrderItem, Settings } from '../types';
 const itemsSchema = z
@@ -75,8 +75,8 @@ async function buildItems(
       const used = Number(
         (
           await tx.query(
-            `SELECT COALESCE(sum((item->>'quantity')::integer),0) AS total FROM orders o CROSS JOIN LATERAL jsonb_array_elements(o.items) item WHERE o.user_id=$1 AND o.payment_status IN ('pending','approved','review') AND item->>'product_id'=$2`,
-            [user.id, p.id],
+            `SELECT COALESCE(sum((item->>'quantity')::integer),0) AS total FROM orders o CROSS JOIN LATERAL jsonb_array_elements(o.items) item WHERE o.user_id=$1 AND o.payment_status IN ('pending','approved','review') AND item->>'product_id'=$2 AND (o.payment_environment IS NULL OR o.payment_environment=$3)`,
+            [user.id, p.id, flowEnvironment()],
           )
         ).rows[0].total,
       );
@@ -148,7 +148,14 @@ export async function reserveOrder(user: any, input: unknown) {
     await tx.query('SELECT id FROM users WHERE id=$1 FOR UPDATE', [user.id]);
     const key = `web:${user.id}:${d.idempotency_key}`;
     const old = await existing(tx, key, fingerprint);
-    if (old) return old;
+    if (old) {
+      if (old.payment_environment !== flowEnvironment())
+        fail(
+          409,
+          'Este intento pertenece a otro ambiente de pago. Revisa tu carrito e inicia una nueva compra.',
+        );
+      return old;
+    }
     const settings = (await tx.query('SELECT data FROM settings WHERE id=1')).rows[0]
       .data as Settings;
     const delivery = shipping(settings, d.delivery);
@@ -159,7 +166,7 @@ export async function reserveOrder(user: any, input: unknown) {
     const id = uuid();
     const order = (
       await tx.query(
-        `INSERT INTO orders(id,user_id,customer_email,customer_name,source,payment_status,subtotal,shipping_price,total,delivery,items,idempotency_key,request_hash,expires_at) VALUES($1,$2,$3,$4,'web','pending',$5,$6,$7,$8,$9,$10,$11,now()+($12||' minutes')::interval) RETURNING *`,
+        `INSERT INTO orders(id,user_id,customer_email,customer_name,source,payment_status,subtotal,shipping_price,total,delivery,items,idempotency_key,request_hash,expires_at,payment_environment) VALUES($1,$2,$3,$4,'web','pending',$5,$6,$7,$8,$9,$10,$11,now()+($12||' minutes')::interval,$13) RETURNING *`,
         [
           id,
           user.id,
@@ -173,6 +180,7 @@ export async function reserveOrder(user: any, input: unknown) {
           key,
           fingerprint,
           settings.reservation_minutes,
+          flowEnvironment(),
         ],
       )
     ).rows[0];
@@ -312,6 +320,11 @@ export async function applyPayment(flowToken: string, verified: any) {
       ])
     ).rows[0];
     if (!o) fail(404, 'La transacción no corresponde a un pedido de esta tienda.');
+    if (o.payment_environment !== flowEnvironment())
+      fail(
+        409,
+        'El ambiente del pago no coincide con el pedido. Se requiere revisión de la tienda.',
+      );
     if (
       (o.flow_token && o.flow_token !== flowToken) ||
       (o.flow_order && o.flow_order !== String(d.flowOrder)) ||
@@ -404,6 +417,17 @@ export async function listOrders(user: any, admin = false) {
     )
   ).rows.map(publicOrder);
 }
+export async function commercialOrderStats() {
+  const row = (
+    await (
+      await getDb()
+    ).query(`SELECT count(*)::integer AS orders,
+    count(*) FILTER (WHERE payment_status='pending')::integer AS pending,
+    COALESCE(sum(total) FILTER (WHERE payment_status='approved'),0) AS revenue
+    FROM orders WHERE payment_environment IS DISTINCT FROM 'sandbox'`)
+  ).rows[0];
+  return { ...row, revenue: Number(row.revenue) };
+}
 export async function getOrder(id: string, user: any, admin = false) {
   const db = await getDb();
   const o = (
@@ -437,6 +461,8 @@ export async function updateDelivery(id: string, input: unknown) {
     if (!o) fail(404, 'Pedido no encontrado.');
     if (o.payment_status !== 'approved')
       fail(409, 'Solo puedes preparar o entregar pedidos con pago aprobado.');
+    if (o.payment_environment === 'sandbox' && flowEnvironment() === 'production')
+      fail(409, 'Este pedido es una prueba de sandbox. No corresponde a una entrega comercial.');
     if (o.delivery.method === 'pickup' && d.fulfillment_status === 'shipped')
       fail(400, 'Este pedido es para retiro en tienda.');
     if (o.delivery.method === 'shipping' && d.fulfillment_status === 'ready')

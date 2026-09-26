@@ -4,7 +4,7 @@ Tienda web de cartas coleccionables para SERGOD STORE, Copiapó, Chile. Incluye 
 
 La aplicación usa Next.js 16, React, TypeScript y PostgreSQL. En desarrollo funciona sin cuentas externas: PGlite guarda la base de datos en el servidor local, las imágenes se guardan como archivos WebP y los correos quedan en una bandeja privada del administrador. El pago online requiere configurar Flow; no se simulan aprobaciones desde la interfaz.
 
-Versión revisable publicada: [www.sergodstore.cl](https://www.sergodstore.cl) · [Administración](https://www.sergodstore.cl/admin) · [Repositorio](https://github.com/sergodstore-commits/WEBPAGE-v4). **Flow permanece en sandbox, sin cobros reales**, y la web lo muestra expresamente.
+Tienda publicada: [www.sergodstore.cl](https://www.sergodstore.cl) · [Administración](https://www.sergodstore.cl/admin) · [Repositorio](https://github.com/sergodstore-commits/WEBPAGE-v4). La configuración de Vercel usa **Flow producción**, autorizada después de las pruebas sandbox. Las claves se guardan como secretos del servidor. Consulta la evidencia y los límites en [VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Iniciar la versión local
 

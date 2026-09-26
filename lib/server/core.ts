@@ -95,7 +95,12 @@ export const publicUser = (u: any) => {
 export const publicOrder = (o: any) => {
   if (!o) return null;
   const { flow_token, flow_order, idempotency_key, request_hash, ...safe } = o;
+  safe.can_refresh_payment = o.source === 'web' && o.payment_environment === flowEnvironment();
+  safe.can_manage_delivery = o.payment_environment !== 'sandbox' || flowEnvironment() === 'sandbox';
+  if (!safe.can_refresh_payment) delete safe.payment_url;
   if (safe.payment_url && !safe.payment_url.startsWith('https://')) delete safe.payment_url;
   safe.number = Number(safe.number);
   return safe;
 };
+export const flowEnvironment = () =>
+  process.env.FLOW_ENV === 'production' ? 'production' : 'sandbox';

@@ -64,6 +64,8 @@ PGlite ejecuta PostgreSQL embebido y serializa su conexión. La prueba de concur
 
 Se comprobaron seis mensajes transaccionales aceptados por SMTP, sin duplicados de evento. Esto no asegura llegada a la bandeja de entrada. El cron por minuto está activo en Supabase y respondió HTTP 200.
 
+Después de este cierre, el propietario autorizó producción el 26/09/2026. Las claves se guardaron en Vercel y la migración 004 identifica estos tres pedidos como pruebas sandbox, conservando su historial y excluyéndolos de métricas comerciales. No se realizó un cobro de dinero real durante la activación. El estado vigente está en [VERIFICATION.md](VERIFICATION.md).
+
 Los escenarios de importe manipulado, creación incierta, pagos tardíos, competencia POS/checkout y flete por pagar cuentan con pruebas controladas de servidor (incluyendo PostgreSQL remoto); no se forzaron fallos de red ni pagos tardíos reales del proveedor. El pago real de sandbox se realizó con retiro; repetir con los transportistas comerciales definitivos antes de habilitar envíos. Mantener `FLOW_ENV=sandbox` hasta la decisión explícita de abrir cobros reales y configurar credenciales de producción.
 
 No marcar esta validación como aprobada por un mock, una captura de pantalla del retorno o una prueba local aislada.

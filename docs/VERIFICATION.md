@@ -1,6 +1,6 @@
 # Estado de comprobación — 26 de septiembre de 2026
 
-La versión revisable está publicada en [www.sergodstore.cl](https://www.sergodstore.cl), con código en [WEBPAGE-v4](https://github.com/sergodstore-commits/WEBPAGE-v4). La nueva tienda reemplazó el contenido de `main` conservando el historial anterior y una etiqueta de respaldo. Supabase, Storage, Resend y Flow sandbox están conectados. **No hay cobros de dinero real:** la interfaz muestra el modo de prueba.
+La versión revisable está publicada en [www.sergodstore.cl](https://www.sergodstore.cl), con código en [WEBPAGE-v4](https://github.com/sergodstore-commits/WEBPAGE-v4). La nueva tienda reemplazó el contenido de `main` conservando el historial anterior y una etiqueta de respaldo. Supabase, Storage, Resend y Flow sandbox están conectados. Estas pruebas iniciales usaron sandbox. El propietario autorizó posteriormente guardar las claves de producción en Vercel y habilitar pagos reales; la activación se documenta abajo.
 
 ## Comprobaciones automatizadas
 
@@ -61,9 +61,13 @@ Los ocho recorridos cubren:
 
 Después del cambio de empaquetado, [GitHub Actions sobre `87d7566`](https://github.com/sergodstore-commits/WEBPAGE-v4/actions/runs/36212003148) aprobó nuevamente tipos, 45 resultados de servidor, construcción con control de artefactos y los ocho recorridos en Chromium/Linux. La repetición local tuvo una interrupción prolongada (50,9 minutos): siete recorridos pasaron y carrito venció por timeout; se repitió solo ese caso y pasó en 54,4 segundos incluyendo construcción. No se ocultó ese fallo mediante reintentos automáticos.
 
-## Pendiente antes de abrir ventas online
+## Activación de producción y pendientes comerciales
 
-Flow permanece deliberadamente en sandbox. Para abrir ventas comerciales faltan las claves de producción, cargar catálogo real y configurar los transportistas e instrucciones definitivas. El pago real de sandbox usó retiro; el flete por pagar se comprobó con pruebas de servidor/navegador, no con un transportista comercial durante el pago remoto.
+El 26/09/2026 se autorizó cambiar Flow a producción y se guardaron sus dos claves y `FLOW_ENV=production` como secretos del entorno Production de Vercel. Antes del cambio se comprobaron cero pedidos pendientes y cero unidades reservadas. La migración 004 conserva e identifica los tres pedidos sandbox, excluyéndolos de las métricas comerciales y evitando consultas con credenciales de otro ambiente. La construcción verifica las credenciales por una consulta GET firmada de solo lectura; no crea pagos ni realiza cargos.
+
+La migración 004 se aplicó en Supabase y se releyeron #1 vencido, #2 aprobado y #3 rechazado, todos con ambiente `sandbox`, sin modificar stock ni reservas. Las métricas comerciales devolvieron cero pedidos, cero pendientes y cero ingresos. Las dos pruebas nuevas cubren migración conservadora y transición entre ambientes (historial, callbacks, cupos, entrega, métricas y POS). La suite inicial obtuvo 46/47 resultados; el único fallo era el contador de migraciones que esperaba tres. Se actualizó a cuatro y se repitió ese archivo con resultado 3/3. TypeScript pasó. La consulta real del nuevo script a Flow sandbox devolvió HTTP 200.
+
+Faltan cargar catálogo real y configurar los transportistas e instrucciones definitivas. No se ha realizado una compra con dinero real. El pago real de sandbox usó retiro; el flete por pagar se comprobó con pruebas de servidor/navegador, no con un transportista comercial durante el pago remoto.
 
 La recepción efectiva en la bandeja de entrada debe confirmarla el destinatario; el registro, la verificación y la recuperación remotos ya están comprobados con los tokens de los mensajes enviados. Los casos de creación de pago incierta y pago tardío se probaron con respuestas controladas; no se provocaron fallos de red contra el proveedor. El servicio Render del proyecto anterior, sus cron y sus tablas se conservaron; la web nueva usa su servidor Next.js y el esquema privado nuevo.
 

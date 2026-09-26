@@ -84,6 +84,9 @@ export type Order = {
   customer_email: string;
   customer_name: string;
   source: 'web' | 'pos';
+  payment_environment: 'sandbox' | 'production' | null;
+  can_refresh_payment: boolean;
+  can_manage_delivery: boolean;
   payment_status: 'pending' | 'approved' | 'rejected' | 'expired' | 'review';
   fulfillment_status: 'received' | 'preparing' | 'ready' | 'shipped' | 'delivered' | 'cancelled';
   subtotal: number;

@@ -11,7 +11,11 @@ process.env.LOCAL_DATA_DIR = testDirectory;
 delete process.env.DATABASE_URL;
 delete process.env.VERCEL;
 delete process.env.SMTP_HOST;
-Object.assign(process.env, { NODE_ENV: 'test', APP_URL: 'http://localhost:3000' });
+Object.assign(process.env, {
+  NODE_ENV: 'test',
+  APP_URL: 'http://localhost:3000',
+  FLOW_ENV: 'sandbox',
+});
 
 test('SERGOD STORE · integración con base PostgreSQL local real', async (t) => {
   await mkdir(testDirectory, { recursive: true });
@@ -730,6 +734,87 @@ test('SERGOD STORE · integración con base PostgreSQL local real', async (t) =>
       );
       await assert.rejects(() => auth.login({ email, password: oldPassword }));
       assert.equal((await auth.login({ email, password: newPassword })).user?.id, registered.id);
+    },
+  );
+
+  await t.test(
+    'cambiar a producción conserva pruebas sin consultarlas ni contarlas como ventas',
+    async () => {
+      const flow = await import('../lib/server/flow');
+      const p = await product({ stock: 12 });
+      const before = await commerce.commercialOrderStats();
+      const sandbox = await commerce.reserveOrder(
+        customer,
+        input([{ product_id: p.id, quantity: 1 }]),
+      );
+      assert.equal(sandbox.payment_environment, 'sandbox');
+      const sandboxPayment = await payment(sandbox);
+      await commerce.applyPayment(sandboxPayment.token, sandboxPayment.result);
+      const pendingRequest = input([{ product_id: p.id, quantity: 1 }]);
+      const pending = await commerce.reserveOrder(customer, pendingRequest);
+      const pendingPayment = await payment(pending, 1);
+      await db.query('UPDATE orders SET payment_url=$2 WHERE id=$1', [
+        sandbox.id,
+        'https://sandbox.flow.cl/app/web/pay.php?token=test',
+      ]);
+      const originalFetch = globalThis.fetch;
+      let calls = 0;
+      globalThis.fetch = async () => {
+        calls++;
+        throw new Error('No se permite consultar otro ambiente');
+      };
+      process.env.FLOW_ENV = 'production';
+      try {
+        const historical = await flow.refreshPayment(sandbox.id);
+        assert.equal(historical.payment_status, 'approved');
+        assert.equal(historical.payment_environment, 'sandbox');
+        assert.equal(historical.can_refresh_payment, false);
+        assert.equal(historical.can_manage_delivery, false);
+        assert.equal(historical.payment_url, undefined);
+        assert.equal((await flow.verifyToken(sandboxPayment.token)).payment_status, 'approved');
+        await assert.rejects(() => flow.refreshPayment(pending.id), { status: 409 });
+        await assert.rejects(() => flow.verifyToken(pendingPayment.token), { status: 409 });
+        await assert.rejects(
+          () =>
+            commerce.applyPayment(pendingPayment.token, { ...pendingPayment.result, status: 2 }),
+          { status: 409 },
+        );
+        await assert.rejects(() => commerce.reserveOrder(customer, pendingRequest), {
+          status: 409,
+        });
+        await assert.rejects(
+          () => commerce.updateDelivery(sandbox.id, { fulfillment_status: 'preparing' }),
+          { status: 409 },
+        );
+        assert.deepEqual(await commerce.commercialOrderStats(), before);
+        assert.equal((await flow.expireOrders()).checked, 0);
+        assert.equal(calls, 0);
+        assert.equal((await order(pending.id)).payment_status, 'pending');
+        const real = await commerce.reserveOrder(
+          customer,
+          input([{ product_id: p.id, quantity: 1 }]),
+        );
+        assert.equal(real.payment_environment, 'production');
+        const realPayment = await payment(real);
+        await commerce.applyPayment(realPayment.token, realPayment.result);
+        const pos = await commerce.completePos(
+          admin,
+          input([{ product_id: p.id, quantity: 1 }], {
+            payment_method: 'cash',
+            cash_received: 10000,
+          }),
+        );
+        assert.equal(pos.payment_environment, null);
+        assert.equal(pos.can_manage_delivery, true);
+        const after = await commerce.commercialOrderStats();
+        assert.equal(after.orders, before.orders + 2);
+        assert.equal(after.revenue, before.revenue + real.total + pos.total);
+        assert.equal(after.pending, before.pending);
+        assert.deepEqual(await stock(p.id), { stock: 9, reserved: 1 });
+      } finally {
+        process.env.FLOW_ENV = 'sandbox';
+        globalThis.fetch = originalFetch;
+      }
     },
   );
 

@@ -2116,6 +2116,9 @@ function AccountDashboard({ user, refreshUser }: { user: User; refreshUser: () =
                     <Link key={o.id} href={`/cuenta/pedidos/${o.id}`} className="store-order-row">
                       <div>
                         <strong>Pedido #{o.number}</strong>
+                        {o.payment_environment === 'sandbox' && (
+                          <small>Prueba sandbox, sin cobro real</small>
+                        )}
                         <small>{date(o.created_at)}</small>
                       </div>
                       <div>
@@ -2295,7 +2298,11 @@ function OrderDetail({
     }
   }, [remote.data, cart, setCart]);
   useEffect(() => {
-    if (remote.data?.payment_status === 'pending' && !checked.current) {
+    if (
+      remote.data?.payment_status === 'pending' &&
+      remote.data.can_refresh_payment &&
+      !checked.current
+    ) {
       checked.current = true;
       refresh();
     }
@@ -2335,6 +2342,11 @@ function OrderDetail({
         title={`Pedido #${o.number}`}
         body={date(o.created_at)}
       />
+      {o.payment_environment === 'sandbox' && (
+        <div className="store-message" role="status">
+          Pedido de prueba sandbox · sin cobro real.
+        </div>
+      )}
       <div className="store-order-status">
         <div>
           <span className={`store-pill store-payment-${o.payment_status}`}>
@@ -2363,7 +2375,7 @@ function OrderDetail({
                     : 'La tienda revisará el resultado antes de confirmar el pedido.'}
           </p>
         </div>
-        {o.payment_status === 'pending' && (
+        {o.payment_status === 'pending' && o.can_refresh_payment && (
           <div className="store-order-status-actions">
             <button
               className="store-button store-button-secondary"
