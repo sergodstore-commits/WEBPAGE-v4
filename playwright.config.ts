@@ -22,7 +22,7 @@ export default defineConfig({
   webServer: {
     // The setup process closes its PGlite connection before Next opens the same test database.
     command:
-      'node --import tsx scripts/e2e-setup.ts && node node_modules/next/dist/bin/next build && node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100',
+      'node --import tsx scripts/e2e-setup.ts && npm run build && node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3100',
     url: 'http://localhost:3100/api/health',
     timeout: 180_000,
     reuseExistingServer: false,
@@ -33,6 +33,7 @@ export default defineConfig({
       NEXT_DIST_DIR: '.next-e2e',
       LOCAL_DATA_DIR: '.data/e2e',
       DATABASE_URL: '',
+      DATABASE_SCHEMA: 'public',
       SMTP_HOST: '',
       FLOW_API_KEY: '',
       FLOW_SECRET_KEY: '',
