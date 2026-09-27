@@ -61,7 +61,7 @@ La construcción de Vercel ejecuta además `node --import tsx scripts/check-flow
 
 Antes de sustituir claves o ambiente, comprueba que no existan pedidos web pendientes ni unidades reservadas. La migración `004_payment_environment.sql` conserva el ambiente de cada pedido y reconoce los anteriores por el host de su URL de pago. Los pedidos sandbox quedan identificados como pruebas, excluidos de las métricas comerciales y de entregas comerciales en producción; el servidor no consulta sus tokens con claves del otro ambiente. Conserva su historial.
 
-Aplica las migraciones **antes del despliegue de la versión que las necesita**. El runtime remoto no migra por defecto. El historial se registra en `schema_migrations` dentro del esquema elegido; cada archivo SQL se ejecuta en una transacción y solo una vez. En `sergod_store` se aplican las cuatro migraciones y se creó el administrador. No edites un archivo ya aplicado: agrega una migración versionada nueva.
+Aplica las migraciones **antes del despliegue de la versión que las necesita**. El runtime remoto no migra por defecto. El historial se registra en `schema_migrations` dentro del esquema elegido; cada archivo SQL se ejecuta en una transacción y solo una vez. En `sergod_store` se aplicaron las cinco migraciones, incluida `005_catalog_variants.sql`, y se creó el administrador. No edites un archivo ya aplicado: agrega una migración versionada nueva.
 
 Los scripts de migración crean las tablas, pero no transportan la información de `.data` a Supabase. **No está implementada una herramienta de migración de datos locales o de imágenes locales a almacenamiento remoto.** Si necesitas trasladar contenido real, prepara y valida un procedimiento específico antes de cambiar el entorno; no basta con copiar `.data` a Vercel.
 
@@ -170,7 +170,7 @@ El código reconoce además controles internos que no forman parte de `.env.exam
 - Retiro con dirección/horario reales; envío a domicilio o agencia; flete por pagar excluido del total Flow; preparación y seguimiento visibles al cliente.
 - Cron cada minuto, correo pendiente, reintentos y consulta de pedidos si falla un callback.
 
-El estado documentado es **45/45 resultados de servidor**, **8/8 recorridos de navegador en GitHub Actions** y **9/9 comprobaciones PostgreSQL remotas** con tres conexiones simultáneas y limpieza verificada. La web publicada pasó carga/lectura de imágenes, publicación/edición/retirada de productos y preventas, y pagos reales del proveedor en sandbox. El cron está activo. Antes de abrir cobros comerciales se necesitan claves Flow de producción, contenido/transportistas definitivos y cerrar las comprobaciones de correo descritas en [VERIFICATION.md](VERIFICATION.md).
+El estado documentado es **55/55 resultados de servidor**, **9/9 recorridos de navegador en GitHub Actions** y **9/9 comprobaciones PostgreSQL remotas** con tres conexiones simultáneas y limpieza verificada. La web publicada pasó carga/lectura de imágenes, publicación/edición/retirada de productos y preventas, y pagos reales del proveedor en sandbox. Flow producción y el cron están activos. El propietario debe revisar precios, existencias, transportistas e instrucciones definitivas y cerrar las comprobaciones de recepción de correo descritas en [VERIFICATION.md](VERIFICATION.md). No se ha realizado una compra con dinero real.
 
 ## Respaldos y recuperación
 

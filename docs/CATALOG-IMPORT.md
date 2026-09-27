@@ -34,3 +34,11 @@ Un SKU existente de otro origen detiene la importación. Los artículos ya publi
 - Las variantes de playmats, porta playmats y Dados Elemental reciben SKU deterministas basados en el SKU de familia y su opción, porque el fabricante no publica identificadores individuales para esas galerías.
 
 La importación no sobrescribe artículos anteriores ni altera pedidos. La nueva migración solo añade metadatos y conserva el stock existente.
+
+## Verificación en la tienda publicada
+
+El 27/09/2026 se completó la importación en [SERGOD STORE](https://www.sergodstore.cl/tienda). La lectura independiente del servidor confirmó **12 familias, 72 variantes publicadas y stock total cero**. Se compararon nombres, precios, descripciones, opciones y fichas con el manifiesto. Los **77 archivos WebP** respondieron HTTP 200 desde el bucket propio; los dos artículos técnicos anteriores conservaron sus datos.
+
+La importación se interrumpió inicialmente en una respuesta de creación. Al reanudar con el diario recuperó ese borrador sin duplicarlo. Una nueva ejecución completa devolvió **creados: 0, publicados: 0, conservados: 72**. Los informes y el diario permanecen en `.data/zeromulligan-import/`, fuera de Git.
+
+En el navegador se comprobaron las doce familias después de recargar, las doce portadas cargadas, el filtro de marca, la vista rápida y el cambio de formato/color con imagen y SKU correspondientes. La compra permaneció deshabilitada con stock cero. [GitHub Actions](https://github.com/sergodstore-commits/WEBPAGE-v4/actions/runs/36309019944) aprobó tipos, **55/55 resultados de servidor**, compilación y **9/9 recorridos de navegador**, incluida edición administrativa y carrito con inventario independiente por variante.
