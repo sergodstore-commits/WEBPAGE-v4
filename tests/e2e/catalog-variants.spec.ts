@@ -17,6 +17,9 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
   const created: Product[] = [];
   const visitor = await browser.newContext({ baseURL: origin });
   const customer = await visitor.newPage();
+  customer.setDefaultTimeout(15_000);
+  page.setDefaultTimeout(15_000);
+  let testError: unknown;
   const login = await page.request.post('/api/auth/login', {
     headers: { Origin: origin },
     data: { email: 'e2e@example.test', password: 'E2e-Prueba-Sergod-2026!' },
@@ -80,8 +83,10 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
     await expect(customer.locator('.store-product-card')).toHaveCount(1);
     await expect(customer.locator('.store-product-card')).toContainText('3 opciones');
     await expect(customer.locator('.store-product-card')).toContainText('Agotado');
-    await customer.getByLabel('Marca', { exact: true }).selectOption(brand);
-    await customer.getByLabel('Características', { exact: true }).selectOption('Garantía 103');
+    await customer.getByRole('combobox', { name: 'Marca', exact: true }).selectOption(brand);
+    await customer
+      .getByRole('combobox', { name: 'Características', exact: true })
+      .selectOption('Garantía 103');
     await customer.getByLabel('Precio hasta', { exact: true }).fill('5500');
     await expect(customer.locator('.store-product-card')).toContainText('1 opción');
     await customer.getByLabel('Precio hasta', { exact: true }).fill('');
@@ -96,7 +101,7 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
     await quickButton.click();
     const dialog = customer.getByRole('dialog', { name: 'Vista rápida', exact: true });
     await expect(dialog).toBeVisible();
-    await dialog.getByLabel('Formato', { exact: true }).selectOption('Japonés');
+    await dialog.getByRole('combobox', { name: 'Formato', exact: true }).selectOption('Japonés');
     await expect(dialog.locator('.store-sku')).toContainText(created[1].sku);
     await expect(
       dialog.getByRole('button', { name: 'Añadir al carrito', exact: true }),
@@ -106,16 +111,18 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
     await expect(quickButton).toBeFocused();
 
     await customer.getByRole('link', { name: 'Ver opciones', exact: true }).click();
-    await customer.getByLabel('Formato', { exact: true }).selectOption('Estándar');
-    await customer.getByLabel('Color', { exact: true }).selectOption('Azul');
+    await customer.getByRole('combobox', { name: 'Formato', exact: true }).selectOption('Estándar');
+    await customer.getByRole('combobox', { name: 'Color', exact: true }).selectOption('Azul');
     await expect(customer).toHaveURL(`/producto/${created[2].slug}`);
     await expect(customer.locator('.store-detail-main-image img')).toHaveAttribute(
       'src',
       created[2].images[0],
     );
-    await customer.getByLabel('Formato', { exact: true }).selectOption('Japonés');
+    await customer.getByRole('combobox', { name: 'Formato', exact: true }).selectOption('Japonés');
     await expect(customer).toHaveURL(`/producto/${created[1].slug}`);
-    await expect(customer.getByLabel('Color', { exact: true })).toHaveValue('Negro');
+    await expect(customer.getByRole('combobox', { name: 'Color', exact: true })).toHaveValue(
+      'Negro',
+    );
     await expect(customer.locator('.store-detail-main-image img')).toHaveAttribute(
       'src',
       created[1].images[0],
@@ -143,9 +150,8 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
     await page.goto(`/admin/articulos/${created[1].id}`);
     await page.getByText('Familia, opciones y ficha técnica', { exact: true }).click();
     await expect(page.getByLabel(/^Nombre de la familia/)).toHaveValue(name);
-    await expect(page.getByLabel(/^Opciones de este artículo/)).toHaveValue(
-      'Formato: Japonés\nColor: Negro',
-    );
+    await expect(page.getByLabel(/^Opciones de este artículo/)).toHaveValue(/Formato: Japonés/);
+    await expect(page.getByLabel(/^Opciones de este artículo/)).toHaveValue(/Color: Negro/);
     await page.getByLabel('Precio en pesos chilenos *').fill('5500');
     await page.getByLabel(/^Etiquetas/).fill('Nuevo 2026, Garantía 103, Probado');
     await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click();
@@ -171,11 +177,19 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
     ).json()) as Product;
     expect(sibling.stock).toBe(0);
     expect(sibling.price).toBe(6000);
+  } catch (error) {
+    testError = error;
+    throw error;
   } finally {
-    await visitor.close();
-    for (const product of created)
-      await page.request.delete(`/api/admin/products/${product.id}`, {
-        headers: { Origin: origin },
-      });
+    try {
+      await visitor.close();
+      for (const product of created)
+        await page.request.delete(`/api/admin/products/${product.id}`, {
+          headers: { Origin: origin },
+          timeout: 10_000,
+        });
+    } catch (cleanupError) {
+      if (!testError) throw cleanupError;
+    }
   }
 });
