@@ -4,24 +4,24 @@ Lote solicitado el 27/09/2026, preparado en `data/catalogs/selected-tcg-2026-09.
 
 ## Presentaciones y clasificación
 
-| Artículo | Precio inicial CLP | Sección prevista |
-| --- | ---: | --- |
-| Beyond the Brave · Display de 24 sobres · Inglés | $104.790 | Tienda |
-| Beyond the Brave · Token Box · Inglés | $19.249 | Tienda |
-| Beyond the Brave · Sobre · Inglés | $4.990 | Tienda |
-| Magnificent Maestros · Caja | Pendiente | Preventas, borrador |
-| Glorious Victors · Sobre | Pendiente | Preventas, borrador |
-| Immortal Phoenix · Sobre | Pendiente | Preventas, borrador |
-| Leyendas Primer Bloque 4.0 · 3 displays + 3 Buy a Box | $177.990 | Tienda |
-| Leyendas Primer Bloque 4.0 · Display + 1 Buy a Box | $65.990 | Tienda |
-| Leyendas Primer Bloque 4.0 · Sobre | **$2.500** | Tienda |
-| Leyendas Primera Era 4.0 · Display | $58.990 | Tienda |
-| Relatos Dominios de Ra · Sabiduría (Sacerdote) | $26.990 | Tienda |
-| Relatos Dominios de Ra · Invasores (Faraón) | $26.990 | Tienda |
-| Relatos Dominios de Ra · Amanecer (Eterno) | $26.990 | Tienda |
-| Halloween · Tinieblas | $29.990 | Preventas, borrador |
-| Halloween · Abismo | $29.990 | Preventas, borrador |
-| Leyendas Primera Era 4.0 · Sobre | **$2.500** | Tienda |
+| Artículo                                              | Precio inicial CLP | Sección prevista    |
+| ----------------------------------------------------- | -----------------: | ------------------- |
+| Beyond the Brave · Display de 24 sobres · Inglés      |           $104.790 | Tienda              |
+| Beyond the Brave · Token Box · Inglés                 |            $19.249 | Tienda              |
+| Beyond the Brave · Sobre · Inglés                     |             $4.990 | Tienda              |
+| Magnificent Maestros · Caja                           |          Pendiente | Preventas, borrador |
+| Glorious Victors · Sobre                              |          Pendiente | Preventas, borrador |
+| Immortal Phoenix · Sobre                              |          Pendiente | Preventas, borrador |
+| Leyendas Primer Bloque 4.0 · 3 displays + 3 Buy a Box |           $177.990 | Tienda              |
+| Leyendas Primer Bloque 4.0 · Display + 1 Buy a Box    |            $65.990 | Tienda              |
+| Leyendas Primer Bloque 4.0 · Sobre                    |         **$2.500** | Tienda              |
+| Leyendas Primera Era 4.0 · Display                    |            $58.990 | Tienda              |
+| Relatos Dominios de Ra · Sabiduría (Sacerdote)        |            $26.990 | Tienda              |
+| Relatos Dominios de Ra · Invasores (Faraón)           |            $26.990 | Tienda              |
+| Relatos Dominios de Ra · Amanecer (Eterno)            |            $26.990 | Tienda              |
+| Halloween · Tinieblas                                 |            $29.990 | Preventas, borrador |
+| Halloween · Abismo                                    |            $29.990 | Preventas, borrador |
+| Leyendas Primera Era 4.0 · Sobre                      |         **$2.500** | Tienda              |
 
 Los dos precios de $2.500 son instrucciones expresas del propietario. El resto son precios visibles de referencia, editables en el panel; no se copian descuentos ni disponibilidad de otros vendedores. Los tres Beyond the Brave van a Tienda por instrucción del propietario aunque las referencias aún mencionen preventa. En Mitos y Leyendas solo Halloween va a Preventas.
 
@@ -47,3 +47,13 @@ node --import tsx scripts/import-catalog.ts --manifest data/catalogs/selected-tc
 Sin `--apply` no escribe en la tienda. Reutiliza siempre el mismo diario al reanudar. La fase `draft` preserva los borradores terminados: repetir la importación no publica preventas ni restablece precios, stock o ediciones posteriores del administrador. Cada borrador se lee dos veces desde administración y se comprueba que su detalle público responda 404; cada artículo publicado se vuelve a leer públicamente. El informe final se guarda junto al diario privado.
 
 Las descripciones se redactaron a partir de los datos de los enlaces proporcionados; no se copiaron políticas de cancelación, envío, cuotas ni contactos de otros comercios. Las referencias concretas quedan en `source_url` dentro del manifiesto y en el editor administrativo.
+
+## Comprobación en producción
+
+El 27/09/2026 a las 20:04:58 UTC, una lectura independiente de la API de SERGOD confirmó **16 artículos: 11 publicados en Tienda y 5 borradores de Preventas**, todos con stock y reservas cero. Coincidieron nombres, precios, clasificación, opciones, fichas y referencias con el manifiesto. Las **25 imágenes** se sirven desde el bucket de SERGOD como WebP con respuesta HTTP 200. Los **74 registros anteriores** conservaron todos sus datos.
+
+La primera ejecución se detuvo al encontrar la redirección del servidor oficial de imágenes de Yu-Gi-Oh!. Después de comprobarla y admitir únicamente ese destino, se reanudó con el mismo diario y conservó los tres Beyond ya publicados. La repetición completa a las 20:05:14 UTC creó cero artículos, publicó cero y conservó los 16, incluidos los cinco borradores.
+
+En el navegador se comprobaron las tres presentaciones Beyond, el filtro Mitos y Leyendas, las familias Primer Bloque y Primera Era separadas y ambos sobres a $2.500 después de recargar, con sus imágenes y SKU propios. Los artículos sin stock muestran Agotado y no permiten añadir unidades al carrito. No se realizaron pagos ni cambios de inventario comerciales.
+
+El [commit funcional f1c0e0d](https://github.com/sergodstore-commits/WEBPAGE-v4/commit/f1c0e0d81d8d1a247b08b0e3a3e80f5b03d95fd5) aprobó [GitHub Actions](https://github.com/sergodstore-commits/WEBPAGE-v4/actions/runs/36346595302): TypeScript, **64 resultados de servidor**, compilación y **9 recorridos de navegador**. Incluye nueve pruebas del importador, entre ellas compatibilidad con el lote anterior, borradores incompletos y restricciones de URL/redirección. El [despliegue en Vercel](https://vercel.com/sergod-store/sergod-store-v4/G3Ut5VVXMd14E4zU1BQBwiQB3S8B) terminó correctamente.
