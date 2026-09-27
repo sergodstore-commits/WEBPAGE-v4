@@ -64,5 +64,6 @@ En la web publicada se comprobaron imágenes, productos/preventas y persistencia
 - [Despliegue, variables de entorno, cron y respaldos](docs/DEPLOYMENT.md)
 - [Arquitectura y reglas del sistema](docs/ARCHITECTURE.md)
 - [Prueba real de Flow sandbox](docs/FLOW-SANDBOX.md)
+- [Catálogo Zero Mulligan: variantes, existencias e importación](docs/CATALOG-IMPORT.md)
 
 La aplicación tiene autenticación propia con sesiones de PostgreSQL. **No utiliza Supabase Auth.** Las claves de base de datos, Storage, correo y Flow pertenecen exclusivamente al servidor y no deben llevar el prefijo `NEXT_PUBLIC_`.

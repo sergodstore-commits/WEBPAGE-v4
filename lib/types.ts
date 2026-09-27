@@ -7,6 +7,13 @@ export type Product = {
   price: number;
   discount_percent: number;
   category: string;
+  catalog_group: string;
+  catalog_name: string;
+  brand: string;
+  options: Record<string, string>;
+  tags: string[];
+  specifications: { label: string; value: string }[];
+  source_url: string;
   stock: number;
   reserved: number;
   available: number;

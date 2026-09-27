@@ -6,6 +6,18 @@ const nullableDate = z
   .union([z.iso.datetime({ offset: true }), z.literal(''), z.null()])
   .optional()
   .transform((v) => v || null);
+const sourceUrl = z
+  .string()
+  .trim()
+  .max(2000)
+  .refine((value) => {
+    if (!value) return true;
+    try {
+      return ['https:', 'http:'].includes(new URL(value).protocol);
+    } catch {
+      return false;
+    }
+  }, 'El enlace de origen debe ser una URL HTTP o HTTPS válida.');
 const productSchema = z.object({
   name: z.string().trim().min(2, 'Escribe un nombre de al menos 2 caracteres.').max(180),
   description: z.string().max(12000).default(''),
@@ -13,6 +25,41 @@ const productSchema = z.object({
   price: integer,
   discount_percent: z.number().int().min(0).max(99).default(0),
   category: z.string().trim().max(80).default(''),
+  // Optional on writes so older editors do not erase imported catalog information.
+  catalog_group: z
+    .string()
+    .trim()
+    .max(120)
+    .regex(
+      /^$|^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      'El grupo debe usar letras minúsculas, números y guiones.',
+    )
+    .optional(),
+  catalog_name: z.string().trim().max(180).optional(),
+  brand: z.string().trim().max(100).optional(),
+  options: z
+    .record(
+      z
+        .string()
+        .trim()
+        .min(1)
+        .max(60)
+        .refine((key) => !['__proto__', 'prototype', 'constructor'].includes(key)),
+      z.string().trim().min(1).max(160),
+    )
+    .refine((value) => Object.keys(value).length <= 6, 'Usa como máximo 6 opciones por variante.')
+    .optional(),
+  tags: z.array(z.string().trim().min(1).max(80)).max(30).optional(),
+  specifications: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1).max(80),
+        value: z.string().trim().min(1).max(1000),
+      }),
+    )
+    .max(30)
+    .optional(),
+  source_url: sourceUrl.optional(),
   stock: integer,
   kind: z.enum(['store', 'preorder']),
   status: z.enum(['draft', 'published', 'withdrawn']).default('draft'),
@@ -106,8 +153,14 @@ export async function getProducts(
   if (!admin) add('status=?', 'published');
   if (['store', 'preorder'].includes(query.get('kind') || '')) add('kind=?', query.get('kind'));
   if (query.get('q'))
-    add("(name || ' ' || sku) ILIKE ?", '%' + query.get('q')!.slice(0, 100) + '%');
+    add(
+      "(name || ' ' || sku || ' ' || catalog_name || ' ' || brand || ' ' || options::text || ' ' || tags::text || ' ' || specifications::text) ILIKE ?",
+      '%' + query.get('q')!.slice(0, 100) + '%',
+    );
   if (query.get('category')) add('category=?', query.get('category'));
+  if (query.get('group')) add('catalog_group=?', query.get('group'));
+  if (query.get('brand')) add('brand=?', query.get('brand'));
+  if (query.get('tag')) add('tags @> ?::jsonb', JSON.stringify([query.get('tag')]));
   sql += ' ORDER BY created_at DESC LIMIT 1000';
   return (await (await getDb()).query<Product>(sql, params)).rows;
 }
@@ -142,6 +195,17 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
         409,
         'El artículo cambió desde que abriste el formulario, posiblemente por una venta o reserva. Recarga sus datos antes de guardar.',
       );
+    const metadata = {
+      catalog_group: d.catalog_group ?? old?.catalog_group ?? '',
+      catalog_name: d.catalog_name ?? old?.catalog_name ?? '',
+      brand: d.brand ?? old?.brand ?? '',
+      options: d.options ?? old?.options ?? {},
+      tags: d.tags ?? old?.tags ?? [],
+      specifications: d.specifications ?? old?.specifications ?? [],
+      source_url: d.source_url ?? old?.source_url ?? '',
+    };
+    if (Boolean(metadata.catalog_group) !== Boolean(metadata.catalog_name))
+      fail(400, 'Completa el grupo y el nombre de catálogo juntos, o deja ambos vacíos.');
     if (d.stock < (old?.reserved || 0))
       fail(
         409,
@@ -168,7 +232,7 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
     if (status === 'published') validatePublication(d);
     const slug = old?.slug || `${slugify(d.name)}-${productId.slice(0, 8)}`;
     await tx.query(
-      `INSERT INTO products(id,name,slug,description,sku,price,discount_percent,category,stock,kind,status,images,opens_at,closes_at,max_per_customer,delivery_terms) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,description=EXCLUDED.description,sku=EXCLUDED.sku,price=EXCLUDED.price,discount_percent=EXCLUDED.discount_percent,category=EXCLUDED.category,stock=EXCLUDED.stock,kind=EXCLUDED.kind,status=EXCLUDED.status,images=EXCLUDED.images,opens_at=EXCLUDED.opens_at,closes_at=EXCLUDED.closes_at,max_per_customer=EXCLUDED.max_per_customer,delivery_terms=EXCLUDED.delivery_terms,updated_at=now()`,
+      `INSERT INTO products(id,name,slug,description,sku,price,discount_percent,category,stock,kind,status,images,opens_at,closes_at,max_per_customer,delivery_terms,catalog_group,catalog_name,brand,options,tags,specifications,source_url) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,description=EXCLUDED.description,sku=EXCLUDED.sku,price=EXCLUDED.price,discount_percent=EXCLUDED.discount_percent,category=EXCLUDED.category,stock=EXCLUDED.stock,kind=EXCLUDED.kind,status=EXCLUDED.status,images=EXCLUDED.images,opens_at=EXCLUDED.opens_at,closes_at=EXCLUDED.closes_at,max_per_customer=EXCLUDED.max_per_customer,delivery_terms=EXCLUDED.delivery_terms,catalog_group=EXCLUDED.catalog_group,catalog_name=EXCLUDED.catalog_name,brand=EXCLUDED.brand,options=EXCLUDED.options,tags=EXCLUDED.tags,specifications=EXCLUDED.specifications,source_url=EXCLUDED.source_url,updated_at=now()`,
       [
         productId,
         d.name,
@@ -186,6 +250,13 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
         d.closes_at,
         d.max_per_customer,
         d.delivery_terms,
+        metadata.catalog_group,
+        metadata.catalog_name,
+        metadata.brand,
+        JSON.stringify(metadata.options),
+        JSON.stringify(metadata.tags),
+        JSON.stringify(metadata.specifications),
+        metadata.source_url,
       ],
     );
     const delta = d.stock - (old?.stock || 0);
@@ -197,13 +268,18 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
   });
   return getProduct(productId, true);
 }
-export async function publishProduct(id: string) {
+export async function publishProduct(id: string, expectedVersion?: number) {
   const db = await getDb();
   await db.transaction(async (tx) => {
     const p = (
       await tx.query('SELECT * FROM products WHERE id=$1 AND deleted_at IS NULL FOR UPDATE', [id])
     ).rows[0];
     if (!p) fail(404, 'Artículo no encontrado.');
+    if (expectedVersion !== undefined && expectedVersion !== p.version)
+      fail(
+        409,
+        'El artículo cambió antes de publicarse. Recarga sus datos y revisa los cambios antes de publicar.',
+      );
     validatePublication(p);
     await validateImages(tx, p.images);
     await tx.query("UPDATE products SET status='published',updated_at=now() WHERE id=$1", [id]);

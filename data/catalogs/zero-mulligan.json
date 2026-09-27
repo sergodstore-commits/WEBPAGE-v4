@@ -1,0 +1,2428 @@
+{
+  "version": 1,
+  "source": "https://zeromulligan.cl/catalogo/",
+  "collected_at": "2026-09-26T20:09:25.514Z",
+  "warnings": [
+    "La ficha indica 12 colores, pero sólo nombra e ilustra Azul, Calipso, Crystal, Morado, Rojo y Verde. Se importan los seis verificables; no se inventan los otros seis.",
+    "La fuente etiqueta esta familia como Pronto disponible. El stock inicial de todas las variantes es cero y no se ha inferido fecha de llegada.",
+    "La ficha incluye una sola presentación XL 2026 e indica Nuevo color sin nombrar color ni opciones. Se conserva una sola ficha sin inventar variantes de color.",
+    "Cada formato tiene portada propia. Sus otras dos fotos son vistas generales de la línea y se etiquetan como referenciales.",
+    "Los precios proceden del PVP sugerido del fabricante; deben ser revisados por SERGOD STORE. Ninguna existencia del origen se utiliza como stock.",
+    "Los SKU individuales de Playmats, Porta Playmats y Dados Elemental se generan a partir del SKU público de familia y el nombre de su variante; la fuente no publica SKU individuales para esas galerías."
+  ],
+  "products": [
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-AMARILLO",
+      "name": "Fortuna Matte · Standard · Amarillo",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Amarillo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Amarillo"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=amarillo",
+      "images": ["https://zeromulligan.cl/_astro/standard-amarillo.B1qZuSVA_LT7nb.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-AZUL",
+      "name": "Fortuna Matte · Standard · Azul",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Azul.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Azul"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=azul",
+      "images": ["https://zeromulligan.cl/_astro/standard-azul.BsTygxxI_TKTEt.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-AZUL_ELECTRICO",
+      "name": "Fortuna Matte · Standard · Azul Eléctrico",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Azul Eléctrico.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Azul Eléctrico"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=azul-electrico",
+      "images": ["https://zeromulligan.cl/_astro/standard-azul-electrico.DbB98Y6R_Z2vPoE2.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-BLANCO",
+      "name": "Fortuna Matte · Standard · Blanco",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Blanco.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Blanco"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=blanco",
+      "images": ["https://zeromulligan.cl/_astro/standard-blanco.DnfuU9at_Z12GzhN.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-CYAN_PASTEL",
+      "name": "Fortuna Matte · Standard · Cyan Pastel",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Cyan Pastel.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Cyan Pastel"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=cyan-pastel",
+      "images": ["https://zeromulligan.cl/_astro/standard-cyan-pastel.CiDeFwwq_1swT1d.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-DORADO",
+      "name": "Fortuna Matte · Standard · Dorado",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Dorado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Dorado"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=dorado",
+      "images": ["https://zeromulligan.cl/_astro/standard-dorado.sA1RD6h9_Za0uc6.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-LILA",
+      "name": "Fortuna Matte · Standard · Lila",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Lila.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Lila"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=lila",
+      "images": ["https://zeromulligan.cl/_astro/standard-lila.DdJxQnHh_2vIQct.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-MATCHA",
+      "name": "Fortuna Matte · Standard · Matcha",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Matcha.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Matcha"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=matcha",
+      "images": ["https://zeromulligan.cl/_astro/standard-matcha.3WlcVxXp_1NKkXr.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-MENTA",
+      "name": "Fortuna Matte · Standard · Menta",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Menta.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Menta"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=menta",
+      "images": ["https://zeromulligan.cl/_astro/standard-menta.3tnWu9W0_npH4Y.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-MORADO",
+      "name": "Fortuna Matte · Standard · Morado",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Morado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Morado"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=morado",
+      "images": ["https://zeromulligan.cl/_astro/standard-morado.CjzZCAZg_GJMKu.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-NARANJO",
+      "name": "Fortuna Matte · Standard · Naranjo",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Naranjo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Naranjo"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=naranjo",
+      "images": ["https://zeromulligan.cl/_astro/standard-naranjo.BSncl5fc_15uBJM.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-NEGRO",
+      "name": "Fortuna Matte · Standard · Negro",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Negro.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Negro"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=negro",
+      "images": ["https://zeromulligan.cl/_astro/standard-negro.B92hCqZW_1sfenh.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-PERLA",
+      "name": "Fortuna Matte · Standard · Perla",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Perla.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Perla"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=perla",
+      "images": ["https://zeromulligan.cl/_astro/standard-perla.D6EDp5fU_Z1p1GKL.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-ROJO",
+      "name": "Fortuna Matte · Standard · Rojo",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Rojo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Rojo"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=rojo",
+      "images": ["https://zeromulligan.cl/_astro/standard-rojo.DnGaBscA_1mO8IF.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-ROSA_GOLD",
+      "name": "Fortuna Matte · Standard · Rosa Gold",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Rosa Gold.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Rosa Gold"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=rosa-gold",
+      "images": ["https://zeromulligan.cl/_astro/standard-rosa-gold.lBpsJcFJ_14kUwq.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-ROSADO",
+      "name": "Fortuna Matte · Standard · Rosado",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Rosado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Rosado"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=rosado",
+      "images": ["https://zeromulligan.cl/_astro/standard-rosado.CVKk-MLZ_2rd5Il.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-SILVER",
+      "name": "Fortuna Matte · Standard · Silver",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Silver.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Silver"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=silver",
+      "images": ["https://zeromulligan.cl/_astro/standard-silver.DLTSM7-L_nuCBU.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-VERDE",
+      "name": "Fortuna Matte · Standard · Verde",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Verde.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Verde"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=verde",
+      "images": ["https://zeromulligan.cl/_astro/standard-verde.BCrx123h_Z2oerIJ.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-VERDE_MANZANA",
+      "name": "Fortuna Matte · Standard · Verde Manzana",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Verde Manzana.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Verde Manzana"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=verde-manzana",
+      "images": ["https://zeromulligan.cl/_astro/standard-verde-manzana.DxHWEgfp_FeQ6S.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-STANDARD-VIOLETA",
+      "name": "Fortuna Matte · Standard · Violeta",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Standard, medida 66x92 mm, color Violeta.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Violeta"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=standard&color=violeta",
+      "images": ["https://zeromulligan.cl/_astro/standard-violeta.Cad0noVZ_Z23aPIq.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-AMARILLO",
+      "name": "Fortuna Matte · Japanese · Amarillo",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Amarillo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Amarillo"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=amarillo",
+      "images": ["https://zeromulligan.cl/_astro/japanese-amarillo.5_OB1ljs_Z1SOAyq.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-AZUL",
+      "name": "Fortuna Matte · Japanese · Azul",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Azul.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Azul"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=azul",
+      "images": ["https://zeromulligan.cl/_astro/japanese-azul.C5uIScs6_1AHY2o.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-AZUL_ELECTRICO",
+      "name": "Fortuna Matte · Japanese · Azul Eléctrico",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Azul Eléctrico.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Azul Eléctrico"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=azul-electrico",
+      "images": ["https://zeromulligan.cl/_astro/japanese-azul-electrico.DerRw8yV_Z1Bg1aI.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-BLANCO",
+      "name": "Fortuna Matte · Japanese · Blanco",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Blanco.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Blanco"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=blanco",
+      "images": ["https://zeromulligan.cl/_astro/japanese-blanco.BXMWBbBk_1ayc7r.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-CYAN_PASTEL",
+      "name": "Fortuna Matte · Japanese · Cyan Pastel",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Cyan Pastel.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Cyan Pastel"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=cyan-pastel",
+      "images": ["https://zeromulligan.cl/_astro/japanese-cyan-pastel.Dpnz4inA_ZTcqlm.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-DORADO",
+      "name": "Fortuna Matte · Japanese · Dorado",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Dorado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Dorado"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=dorado",
+      "images": ["https://zeromulligan.cl/_astro/japanese-dorado.DGhIqWuX_8QTYe.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-LILA",
+      "name": "Fortuna Matte · Japanese · Lila",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Lila.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Lila"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=lila",
+      "images": ["https://zeromulligan.cl/_astro/japanese-lila.C-VIdO4G_VAct4.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-MATCHA",
+      "name": "Fortuna Matte · Japanese · Matcha",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Matcha.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Matcha"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=matcha",
+      "images": ["https://zeromulligan.cl/_astro/japanese-matcha.B4vkz5xs_CGbzs.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-MENTA",
+      "name": "Fortuna Matte · Japanese · Menta",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Menta.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Menta"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=menta",
+      "images": ["https://zeromulligan.cl/_astro/japanese-menta.Cg1pcm-g_Z2637N2.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-MORADO",
+      "name": "Fortuna Matte · Japanese · Morado",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Morado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Morado"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=morado",
+      "images": ["https://zeromulligan.cl/_astro/japanese-morado.DNIAPTmI_Z2nrwiX.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-NARANJO",
+      "name": "Fortuna Matte · Japanese · Naranjo",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Naranjo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Naranjo"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=naranjo",
+      "images": ["https://zeromulligan.cl/_astro/japanese-naranjo.DPyKIHI3_ZdG1oX.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-NEGRO",
+      "name": "Fortuna Matte · Japanese · Negro",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Negro.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Negro"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=negro",
+      "images": ["https://zeromulligan.cl/_astro/japanese-negro.CzuDaPSo_tUki0.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-PERLA",
+      "name": "Fortuna Matte · Japanese · Perla",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Perla.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Perla"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=perla",
+      "images": ["https://zeromulligan.cl/_astro/japanese-perla.DPsgjII3_1Gpn0j.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-ROJO",
+      "name": "Fortuna Matte · Japanese · Rojo",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Rojo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Rojo"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=rojo",
+      "images": ["https://zeromulligan.cl/_astro/japanese-rojo.mi6HbUYz_1j5RzM.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-ROSA_GOLD",
+      "name": "Fortuna Matte · Japanese · Rosa Gold",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Rosa Gold.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Rosa Gold"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=rosa-gold",
+      "images": ["https://zeromulligan.cl/_astro/japanese-rosa-gold.D37nKpZA_Z2d0faN.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-ROSADO",
+      "name": "Fortuna Matte · Japanese · Rosado",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Rosado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Rosado"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=rosado",
+      "images": ["https://zeromulligan.cl/_astro/japanese-rosado.uEz4goLC_Z1lkfb4.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-SILVER",
+      "name": "Fortuna Matte · Japanese · Silver",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Silver.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Silver"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=silver",
+      "images": ["https://zeromulligan.cl/_astro/japanese-silver.gm5SpwnE_2cH6D4.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-VERDE",
+      "name": "Fortuna Matte · Japanese · Verde",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Verde.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Verde"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=verde",
+      "images": ["https://zeromulligan.cl/_astro/japanese-verde.DQ3ia8iJ_ZNBlkf.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-VERDE_MANZANA",
+      "name": "Fortuna Matte · Japanese · Verde Manzana",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Verde Manzana.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Verde Manzana"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=verde-manzana",
+      "images": ["https://zeromulligan.cl/_astro/japanese-verde-manzana.D90WNnvM_FrH8Y.webp"]
+    },
+    {
+      "sku": "ZM-FORTUNA-MATTE-JAPANESE-VIOLETA",
+      "name": "Fortuna Matte · Japanese · Violeta",
+      "description": "Caja de protectores Zero Mulligan con dorso mate y cara transparente brillante. Contiene 103 unidades, sin ácido ni PVC. Formato Japanese, medida 63x90 mm, color Violeta.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-fortuna-matte",
+      "catalog_name": "Fortuna Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Violeta"
+      },
+      "tags": ["Nuevos colores", "Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Reverso matte y frente glossy extra claro"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/fortuna-matte/?formato=japanese&color=violeta",
+      "images": ["https://zeromulligan.cl/_astro/japanese-violeta.LujB8fIr_ZXYWSI.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-STANDARD-CELESTE",
+      "name": "Augurio Dual Matte · Standard · Celeste",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Standard, medida 66x91 mm, color Celeste.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Celeste"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x91 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=standard&color=celeste",
+      "images": ["https://zeromulligan.cl/_astro/standard-celeste.BbRwjEuw_2gNBvt.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-STANDARD-GRIS",
+      "name": "Augurio Dual Matte · Standard · Gris",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Standard, medida 66x91 mm, color Gris.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Gris"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x91 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=standard&color=gris",
+      "images": ["https://zeromulligan.cl/_astro/standard-gris.Dxs95c3g_jzXfE.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-STANDARD-MORADO",
+      "name": "Augurio Dual Matte · Standard · Morado",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Standard, medida 66x91 mm, color Morado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Morado"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x91 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=standard&color=morado",
+      "images": ["https://zeromulligan.cl/_astro/standard-morado.C9crxkMn_Z2wkEyG.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-STANDARD-ROJO",
+      "name": "Augurio Dual Matte · Standard · Rojo",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Standard, medida 66x91 mm, color Rojo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Rojo"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x91 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=standard&color=rojo",
+      "images": ["https://zeromulligan.cl/_astro/standard-rojo.Brfq5ebg_m5foV.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-STANDARD-VERDE",
+      "name": "Augurio Dual Matte · Standard · Verde",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Standard, medida 66x91 mm, color Verde.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Verde"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x91 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=standard&color=verde",
+      "images": ["https://zeromulligan.cl/_astro/standard-verde.C8SQNSMS_2iWAhe.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-JAPANESE-CELESTE",
+      "name": "Augurio Dual Matte · Japanese · Celeste",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Japanese, medida 63x90 mm, color Celeste.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Celeste"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=japanese&color=celeste",
+      "images": ["https://zeromulligan.cl/_astro/japanese-celeste.mK7_ZQh5_TAIxs.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-JAPANESE-GRIS",
+      "name": "Augurio Dual Matte · Japanese · Gris",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Japanese, medida 63x90 mm, color Gris.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Gris"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=japanese&color=gris",
+      "images": ["https://zeromulligan.cl/_astro/japanese-gris.DZ_sSYk4_2ecdkQ.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-JAPANESE-MORADO",
+      "name": "Augurio Dual Matte · Japanese · Morado",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Japanese, medida 63x90 mm, color Morado.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Morado"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=japanese&color=morado",
+      "images": ["https://zeromulligan.cl/_astro/japanese-morado.DdSE4kTX_ZfrmAy.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-JAPANESE-ROJO",
+      "name": "Augurio Dual Matte · Japanese · Rojo",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Japanese, medida 63x90 mm, color Rojo.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Rojo"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=japanese&color=rojo",
+      "images": ["https://zeromulligan.cl/_astro/japanese-rojo.D_zdahSZ_1cgqoj.webp"]
+    },
+    {
+      "sku": "ZM-AUGURIO-DUAL-MATTE-JAPANESE-VERDE",
+      "name": "Augurio Dual Matte · Japanese · Verde",
+      "description": "Protectores Zero Mulligan Dual Matte con dorso opaco texturizado y cara transparente brillante. La caja incluye 103 unidades. Formato Japanese, medida 63x90 mm, color Verde.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-augurio-dual-matte",
+      "catalog_name": "Augurio Dual Matte",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Verde"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual Matte con frente glossy extra claro"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/augurio-dual-matte/?formato=japanese&color=verde",
+      "images": ["https://zeromulligan.cl/_astro/japanese-verde.Duy5nXUq_10vonj.webp"]
+    },
+    {
+      "sku": "ZM-ETERNAL-OUTER-SLEEVES-STANDARD",
+      "name": "Eternal Outer Sleeves · Standard",
+      "description": "Caja de 103 fundas externas Zero Mulligan para cubrir protectores de cartas. Frente transparente y reverso con textura; material sin ácido ni PVC. Formato Standard, medida 69x94 mm. Las fotos secundarias muestran vistas generales de la línea.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-eternal-outer-sleeves",
+      "catalog_name": "Eternal Outer Sleeves",
+      "options": {
+        "Formato": "Standard"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "69x94 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Cara extra clara y reverso poroso"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/eternal-outer-sleeves/?formato=standard",
+      "images": [
+        "https://zeromulligan.cl/_astro/standard.CYD1q1X3_y88Vr.webp",
+        "https://zeromulligan.cl/_astro/producto-01.DsXlMGgX_1AgJjG.webp",
+        "https://zeromulligan.cl/_astro/producto-02.CVnM7tUT_Z1PS7yz.webp"
+      ]
+    },
+    {
+      "sku": "ZM-ETERNAL-OUTER-SLEEVES-JAPANESE",
+      "name": "Eternal Outer Sleeves · Japanese",
+      "description": "Caja de 103 fundas externas Zero Mulligan para cubrir protectores de cartas. Frente transparente y reverso con textura; material sin ácido ni PVC. Formato Japanese, medida 66x92 mm. Las fotos secundarias muestran vistas generales de la línea.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-eternal-outer-sleeves",
+      "catalog_name": "Eternal Outer Sleeves",
+      "options": {
+        "Formato": "Japanese"
+      },
+      "tags": ["Garantía 103", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Cara extra clara y reverso poroso"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/eternal-outer-sleeves/?formato=japanese",
+      "images": [
+        "https://zeromulligan.cl/_astro/japanese.BvFdQc9u_Z1wrJ2V.webp",
+        "https://zeromulligan.cl/_astro/producto-01.DsXlMGgX_1AgJjG.webp",
+        "https://zeromulligan.cl/_astro/producto-02.CVnM7tUT_Z1PS7yz.webp"
+      ]
+    },
+    {
+      "sku": "ZM-DESTELLO-SHINY-STANDARD-SILVER",
+      "name": "Destello Shiny · Standard · Silver",
+      "description": "Protectores Zero Mulligan de color Silver con acabado brillante escarchado. Caja de 103 unidades. Formato Standard, medida 66x92 mm, color Silver.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-destello-shiny",
+      "catalog_name": "Destello Shiny",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Silver"
+      },
+      "tags": ["Nuevo 2026", "Garantía 103", "Destello Permanente"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Plateado escarchado shiny"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/destello-shiny/?formato=standard",
+      "images": ["https://zeromulligan.cl/_astro/shiny-standard-silver.DzIzpnvT_ZgvjTi.webp"]
+    },
+    {
+      "sku": "ZM-DESTELLO-SHINY-JAPANESE-SILVER",
+      "name": "Destello Shiny · Japanese · Silver",
+      "description": "Protectores Zero Mulligan de color Silver con acabado brillante escarchado. Caja de 103 unidades. Formato Japanese, medida 63x90 mm, color Silver.",
+      "price": 7990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-destello-shiny",
+      "catalog_name": "Destello Shiny",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Silver"
+      },
+      "tags": ["Nuevo 2026", "Garantía 103", "Destello Permanente"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Plateado escarchado shiny"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/destello-shiny/?formato=japanese",
+      "images": ["https://zeromulligan.cl/_astro/shiny-japanese-silver.DDSSPA7o_Z2sfLAd.webp"]
+    },
+    {
+      "sku": "ZM-DESTELLO-DUAL-SHINY-STANDARD-PINK",
+      "name": "Destello Dual Shiny · Standard · Fucsia",
+      "description": "Protectores Zero Mulligan de color Fucsia con acabado Dual Shiny. Caja de 103 unidades. Formato Standard, medida 66x92 mm, color Fucsia.",
+      "price": 8990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-destello-dual-shiny",
+      "catalog_name": "Destello Dual Shiny",
+      "options": {
+        "Formato": "Standard",
+        "Color": "Fucsia"
+      },
+      "tags": ["Nuevo 2026", "Garantía 103", "Destello Permanente"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "66x92 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual shiny fucsia"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/destello-dual-shiny/?formato=standard",
+      "images": ["https://zeromulligan.cl/_astro/dual-shiny-standard-pink.DNAOjA1k_Z5aN9S.webp"]
+    },
+    {
+      "sku": "ZM-DESTELLO-DUAL-SHINY-JAPANESE-PINK",
+      "name": "Destello Dual Shiny · Japanese · Fucsia",
+      "description": "Protectores Zero Mulligan de color Fucsia con acabado Dual Shiny. Caja de 103 unidades. Formato Japanese, medida 63x90 mm, color Fucsia.",
+      "price": 8990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-destello-dual-shiny",
+      "catalog_name": "Destello Dual Shiny",
+      "options": {
+        "Formato": "Japanese",
+        "Color": "Fucsia"
+      },
+      "tags": ["Nuevo 2026", "Garantía 103", "Destello Permanente"],
+      "specifications": [
+        {
+          "label": "Medida",
+          "value": "63x90 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "103 protectores"
+        },
+        {
+          "label": "Acabado",
+          "value": "Dual shiny fucsia"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/destello-dual-shiny/?formato=japanese",
+      "images": ["https://zeromulligan.cl/_astro/dual-shiny-japanese-pink.BTVJY-9p_Q0hVv.webp"]
+    },
+    {
+      "sku": "ZM-VITRUM-FIT-INNER",
+      "name": "Vitrum Fit Inner",
+      "description": "Paquete de 100 fundas internas transparentes Zero Mulligan para cartas Standard. Medida de 64,5 × 89 mm y material sin ácido ni PVC.",
+      "price": 2990,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-vitrum-fit-inner",
+      "catalog_name": "Vitrum Fit Inner",
+      "options": {
+        "Formato": "Standard"
+      },
+      "tags": ["Nuevo 2026"],
+      "specifications": [
+        {
+          "label": "Formato",
+          "value": "Standard 64.5x89 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "100 unidades"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        },
+        {
+          "label": "Protección",
+          "value": "Contra polvo y humedad"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/vitrum-fit-inner/",
+      "images": ["https://zeromulligan.cl/_astro/fit-inner.uVvqAcC0_ZdFhPG.webp"]
+    },
+    {
+      "sku": "ZM-VITRUM-COLLECTOR-CLEAR",
+      "name": "Vitrum Collector Clear",
+      "description": "Paquete de 100 protectores transparentes Zero Mulligan para cartas Standard. Medida de 66 × 91 mm, superficie lisa y material sin ácido ni PVC.",
+      "price": 3490,
+      "category": "Protectores",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-vitrum-collector-clear",
+      "catalog_name": "Vitrum Collector Clear",
+      "options": {
+        "Formato": "Standard"
+      },
+      "tags": ["Nuevo 2026", "Coleccionismo"],
+      "specifications": [
+        {
+          "label": "Formato",
+          "value": "Standard 66x91 mm"
+        },
+        {
+          "label": "Contenido",
+          "value": "100 unidades"
+        },
+        {
+          "label": "Acabado",
+          "value": "Textura lisa, espesor medio"
+        },
+        {
+          "label": "Material",
+          "value": "Libre de ácido y PVC"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/vitrum-collector-clear/",
+      "images": ["https://zeromulligan.cl/_astro/collector-clear.DufNrqf9_2mPSrN.webp"]
+    },
+    {
+      "sku": "ZM-DECKBOX-FORTALEZA",
+      "name": "Deckbox Fortaleza",
+      "description": "Organizador Zero Mulligan Fortaleza XL para cartas y accesorios. Exterior de PC, interior gamuzado y compartimentos para dados y playmat. Medidas: 41 × 20 × 8 cm.",
+      "price": 39990,
+      "category": "Accesorios",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-deckbox-fortaleza",
+      "catalog_name": "Deckbox Fortaleza",
+      "options": {},
+      "tags": ["Nuevo color", "Destacado"],
+      "specifications": [
+        {
+          "label": "Medidas",
+          "value": "41 cm largo, 20 cm ancho, 8 cm alto"
+        },
+        {
+          "label": "Material",
+          "value": "PC impermeabilizante"
+        },
+        {
+          "label": "Interior",
+          "value": "Gamuzado"
+        },
+        {
+          "label": "Capacidad",
+          "value": "550+ cartas sueltas, 7 deckboxes 70+ o 5 deckboxes 80+"
+        },
+        {
+          "label": "Extra",
+          "value": "Sección para dados y playmat"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/deckbox-fortaleza/",
+      "images": ["https://zeromulligan.cl/_astro/fortaleza-xl-2026.Dd8h3OAd_Eq0Bf.webp"]
+    },
+    {
+      "sku": "ZM-PLAYMATS-PAISAJES-NEOCHINA-RIO-AZUL",
+      "name": "Playmats Paisajes NeoChina · Río Azul",
+      "description": "Playmat Zero Mulligan de 60 × 35 cm y 3 mm de espesor, con borde bordado y material impermeable. Ilustración de Heraldo Ortega. Diseño: Río Azul.",
+      "price": 10990,
+      "category": "Accesorios",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-playmats-paisajes-neochina",
+      "catalog_name": "Playmats Paisajes NeoChina",
+      "options": {
+        "Diseño": "Río Azul"
+      },
+      "tags": ["Nuevo 2026", "Destacado", "Arte original", "Pronto disponible"],
+      "specifications": [
+        {
+          "label": "Medidas",
+          "value": "60x35 cm"
+        },
+        {
+          "label": "Espesor",
+          "value": "3 mm"
+        },
+        {
+          "label": "Terminación",
+          "value": "Bordada"
+        },
+        {
+          "label": "Material",
+          "value": "Impermeable"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/playmats-paisajes-neochina/#gallery-playmats-paisajes-neochina-panel-0",
+      "images": ["https://zeromulligan.cl/_astro/rio-azul.CeF29nkS_m30sW.webp"]
+    },
+    {
+      "sku": "ZM-PLAYMATS-PAISAJES-NEOCHINA-MONTANAS-DE-KUNLUN",
+      "name": "Playmats Paisajes NeoChina · Montañas de Kunlun",
+      "description": "Playmat Zero Mulligan de 60 × 35 cm y 3 mm de espesor, con borde bordado y material impermeable. Ilustración de Heraldo Ortega. Diseño: Montañas de Kunlun.",
+      "price": 10990,
+      "category": "Accesorios",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-playmats-paisajes-neochina",
+      "catalog_name": "Playmats Paisajes NeoChina",
+      "options": {
+        "Diseño": "Montañas de Kunlun"
+      },
+      "tags": ["Nuevo 2026", "Destacado", "Arte original", "Pronto disponible"],
+      "specifications": [
+        {
+          "label": "Medidas",
+          "value": "60x35 cm"
+        },
+        {
+          "label": "Espesor",
+          "value": "3 mm"
+        },
+        {
+          "label": "Terminación",
+          "value": "Bordada"
+        },
+        {
+          "label": "Material",
+          "value": "Impermeable"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/playmats-paisajes-neochina/#gallery-playmats-paisajes-neochina-panel-1",
+      "images": ["https://zeromulligan.cl/_astro/montanas-kunlun.CFPzZ69k_1LnW3X.webp"]
+    },
+    {
+      "sku": "ZM-PLAYMATS-PAISAJES-NEOCHINA-CIUDAD-PROHIBIDA",
+      "name": "Playmats Paisajes NeoChina · Ciudad Prohibida",
+      "description": "Playmat Zero Mulligan de 60 × 35 cm y 3 mm de espesor, con borde bordado y material impermeable. Ilustración de Heraldo Ortega. Diseño: Ciudad Prohibida.",
+      "price": 10990,
+      "category": "Accesorios",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-playmats-paisajes-neochina",
+      "catalog_name": "Playmats Paisajes NeoChina",
+      "options": {
+        "Diseño": "Ciudad Prohibida"
+      },
+      "tags": ["Nuevo 2026", "Destacado", "Arte original", "Pronto disponible"],
+      "specifications": [
+        {
+          "label": "Medidas",
+          "value": "60x35 cm"
+        },
+        {
+          "label": "Espesor",
+          "value": "3 mm"
+        },
+        {
+          "label": "Terminación",
+          "value": "Bordada"
+        },
+        {
+          "label": "Material",
+          "value": "Impermeable"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/playmats-paisajes-neochina/#gallery-playmats-paisajes-neochina-panel-2",
+      "images": ["https://zeromulligan.cl/_astro/ciudad-prohibida.DrCvAGeT_Z2k7Ykh.webp"]
+    },
+    {
+      "sku": "ZM-PORTA-PLAYMATS-HEXAGONAL-ROSADO",
+      "name": "Porta Playmats Hexagonal · Rosado",
+      "description": "Estuche Zero Mulligan de sección hexagonal para transportar un playmat. Largo de 39 cm, ancho de 6,5 cm y logotipo impreso. Color: Rosado.",
+      "price": 7990,
+      "category": "Accesorios",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-porta-playmats-hexagonal",
+      "catalog_name": "Porta Playmats Hexagonal",
+      "options": {
+        "Color": "Rosado"
+      },
+      "tags": ["Nuevos colores"],
+      "specifications": [
+        {
+          "label": "Largo",
+          "value": "39 cm"
+        },
+        {
+          "label": "Ancho",
+          "value": "6.5 cm"
+        },
+        {
+          "label": "Forma",
+          "value": "Hexagonal"
+        },
+        {
+          "label": "Acabado",
+          "value": "Logo impreso"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/porta-playmats-hexagonal/#gallery-porta-playmats-hexagonal-panel-0",
+      "images": [
+        "https://zeromulligan.cl/_astro/rosado-01.B51aCyyC_20R9s8.webp",
+        "https://zeromulligan.cl/_astro/rosado-02.Br_HbFx5_2poG9A.webp"
+      ]
+    },
+    {
+      "sku": "ZM-PORTA-PLAYMATS-HEXAGONAL-MORADO",
+      "name": "Porta Playmats Hexagonal · Morado",
+      "description": "Estuche Zero Mulligan de sección hexagonal para transportar un playmat. Largo de 39 cm, ancho de 6,5 cm y logotipo impreso. Color: Morado.",
+      "price": 7990,
+      "category": "Accesorios",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-porta-playmats-hexagonal",
+      "catalog_name": "Porta Playmats Hexagonal",
+      "options": {
+        "Color": "Morado"
+      },
+      "tags": ["Nuevos colores"],
+      "specifications": [
+        {
+          "label": "Largo",
+          "value": "39 cm"
+        },
+        {
+          "label": "Ancho",
+          "value": "6.5 cm"
+        },
+        {
+          "label": "Forma",
+          "value": "Hexagonal"
+        },
+        {
+          "label": "Acabado",
+          "value": "Logo impreso"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/porta-playmats-hexagonal/#gallery-porta-playmats-hexagonal-panel-2",
+      "images": [
+        "https://zeromulligan.cl/_astro/morado-01.DFn83oC0_TBEuO.webp",
+        "https://zeromulligan.cl/_astro/morado-02.BkGuBdxP_ZSIl2Y.webp"
+      ]
+    },
+    {
+      "sku": "ZM-PORTA-PLAYMATS-HEXAGONAL-TRANSPARENTE",
+      "name": "Porta Playmats Hexagonal · Transparente",
+      "description": "Estuche Zero Mulligan de sección hexagonal para transportar un playmat. Largo de 39 cm, ancho de 6,5 cm y logotipo impreso. Color: Transparente.",
+      "price": 7990,
+      "category": "Accesorios",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-porta-playmats-hexagonal",
+      "catalog_name": "Porta Playmats Hexagonal",
+      "options": {
+        "Color": "Transparente"
+      },
+      "tags": ["Nuevos colores"],
+      "specifications": [
+        {
+          "label": "Largo",
+          "value": "39 cm"
+        },
+        {
+          "label": "Ancho",
+          "value": "6.5 cm"
+        },
+        {
+          "label": "Forma",
+          "value": "Hexagonal"
+        },
+        {
+          "label": "Acabado",
+          "value": "Logo impreso"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/porta-playmats-hexagonal/#gallery-porta-playmats-hexagonal-panel-4",
+      "images": [
+        "https://zeromulligan.cl/_astro/transparente-01.DUU8sBFL_80YYr.webp",
+        "https://zeromulligan.cl/_astro/transparente-02.Bnhvisil_w29nO.webp"
+      ]
+    },
+    {
+      "sku": "ZM-DADOS-ELEMENTAL-AZUL",
+      "name": "Dados Elemental · Azul",
+      "description": "Set Zero Mulligan de siete dados: D4, D6, D8, dos D10, D12 y D20. Para juegos de rol, cartas y mesa. Color: Azul.",
+      "price": 3490,
+      "category": "Dados",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-dados-elemental",
+      "catalog_name": "Dados Elemental",
+      "options": {
+        "Color": "Azul"
+      },
+      "tags": ["Destacado"],
+      "specifications": [
+        {
+          "label": "Contenido",
+          "value": "7 dados"
+        },
+        {
+          "label": "Dados",
+          "value": "D20, D12, D6, 2xD10, D4 y D8"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/dados-elemental/#gallery-dados-elemental-panel-0",
+      "images": ["https://zeromulligan.cl/_astro/azul._wCKgj7Q_ZOiM66.webp"]
+    },
+    {
+      "sku": "ZM-DADOS-ELEMENTAL-CALIPSO",
+      "name": "Dados Elemental · Calipso",
+      "description": "Set Zero Mulligan de siete dados: D4, D6, D8, dos D10, D12 y D20. Para juegos de rol, cartas y mesa. Color: Calipso.",
+      "price": 3490,
+      "category": "Dados",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-dados-elemental",
+      "catalog_name": "Dados Elemental",
+      "options": {
+        "Color": "Calipso"
+      },
+      "tags": ["Destacado"],
+      "specifications": [
+        {
+          "label": "Contenido",
+          "value": "7 dados"
+        },
+        {
+          "label": "Dados",
+          "value": "D20, D12, D6, 2xD10, D4 y D8"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/dados-elemental/#gallery-dados-elemental-panel-1",
+      "images": ["https://zeromulligan.cl/_astro/calipso.9HegmwpN_Z1vwFn7.webp"]
+    },
+    {
+      "sku": "ZM-DADOS-ELEMENTAL-CRYSTAL",
+      "name": "Dados Elemental · Crystal",
+      "description": "Set Zero Mulligan de siete dados: D4, D6, D8, dos D10, D12 y D20. Para juegos de rol, cartas y mesa. Color: Crystal.",
+      "price": 3490,
+      "category": "Dados",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-dados-elemental",
+      "catalog_name": "Dados Elemental",
+      "options": {
+        "Color": "Crystal"
+      },
+      "tags": ["Destacado"],
+      "specifications": [
+        {
+          "label": "Contenido",
+          "value": "7 dados"
+        },
+        {
+          "label": "Dados",
+          "value": "D20, D12, D6, 2xD10, D4 y D8"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/dados-elemental/#gallery-dados-elemental-panel-2",
+      "images": ["https://zeromulligan.cl/_astro/crystal.CkII5K65_ZjB0Jr.webp"]
+    },
+    {
+      "sku": "ZM-DADOS-ELEMENTAL-MORADO",
+      "name": "Dados Elemental · Morado",
+      "description": "Set Zero Mulligan de siete dados: D4, D6, D8, dos D10, D12 y D20. Para juegos de rol, cartas y mesa. Color: Morado.",
+      "price": 3490,
+      "category": "Dados",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-dados-elemental",
+      "catalog_name": "Dados Elemental",
+      "options": {
+        "Color": "Morado"
+      },
+      "tags": ["Destacado"],
+      "specifications": [
+        {
+          "label": "Contenido",
+          "value": "7 dados"
+        },
+        {
+          "label": "Dados",
+          "value": "D20, D12, D6, 2xD10, D4 y D8"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/dados-elemental/#gallery-dados-elemental-panel-3",
+      "images": ["https://zeromulligan.cl/_astro/morado.cf2SsMiS_1MPh8i.webp"]
+    },
+    {
+      "sku": "ZM-DADOS-ELEMENTAL-ROJO",
+      "name": "Dados Elemental · Rojo",
+      "description": "Set Zero Mulligan de siete dados: D4, D6, D8, dos D10, D12 y D20. Para juegos de rol, cartas y mesa. Color: Rojo.",
+      "price": 3490,
+      "category": "Dados",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-dados-elemental",
+      "catalog_name": "Dados Elemental",
+      "options": {
+        "Color": "Rojo"
+      },
+      "tags": ["Destacado"],
+      "specifications": [
+        {
+          "label": "Contenido",
+          "value": "7 dados"
+        },
+        {
+          "label": "Dados",
+          "value": "D20, D12, D6, 2xD10, D4 y D8"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/dados-elemental/#gallery-dados-elemental-panel-4",
+      "images": ["https://zeromulligan.cl/_astro/rojo.DNk6KWOp_8Jvtq.webp"]
+    },
+    {
+      "sku": "ZM-DADOS-ELEMENTAL-VERDE",
+      "name": "Dados Elemental · Verde",
+      "description": "Set Zero Mulligan de siete dados: D4, D6, D8, dos D10, D12 y D20. Para juegos de rol, cartas y mesa. Color: Verde.",
+      "price": 3490,
+      "category": "Dados",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-dados-elemental",
+      "catalog_name": "Dados Elemental",
+      "options": {
+        "Color": "Verde"
+      },
+      "tags": ["Destacado"],
+      "specifications": [
+        {
+          "label": "Contenido",
+          "value": "7 dados"
+        },
+        {
+          "label": "Dados",
+          "value": "D20, D12, D6, 2xD10, D4 y D8"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/dados-elemental/#gallery-dados-elemental-panel-5",
+      "images": ["https://zeromulligan.cl/_astro/verde.DbQ_xE4l_Z1QSnj5.webp"]
+    },
+    {
+      "sku": "ZM-DADOS-DESTINO",
+      "name": "Dados Destino",
+      "description": "Set Zero Mulligan con seis dados de colores variados: dos D6, dos D12 y dos D20.",
+      "price": 3490,
+      "category": "Dados",
+      "brand": "Zero Mulligan",
+      "catalog_group": "zero-mulligan-dados-destino",
+      "catalog_name": "Dados Destino",
+      "options": {
+        "Color": "Mix de colores"
+      },
+      "tags": ["Nuevo 2026"],
+      "specifications": [
+        {
+          "label": "Contenido",
+          "value": "6 dados"
+        },
+        {
+          "label": "Dados",
+          "value": "2xD6, 2xD12 y 2xD20"
+        },
+        {
+          "label": "Color",
+          "value": "Mix de colores"
+        }
+      ],
+      "source_url": "https://zeromulligan.cl/catalogo/dados-destino/",
+      "images": ["https://zeromulligan.cl/_astro/destino.CS63hn2V_Z1dQ141.webp"]
+    }
+  ]
+}

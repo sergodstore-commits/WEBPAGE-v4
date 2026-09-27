@@ -1,5 +1,5 @@
 import { after, NextResponse } from 'next/server';
-import { ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 import { getDb } from '@/lib/server/db';
 import {
   appUrl,
@@ -200,7 +200,12 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         if (path.length === 3 && method === 'PATCH')
           return json(await saveProduct(user, await body(request), path[2]));
         if (path.length === 3 && method === 'DELETE') return json(await deleteProduct(path[2]));
-        if (path[3] === 'publish' && method === 'POST') return json(await publishProduct(path[2]));
+        if (path[3] === 'publish' && method === 'POST') {
+          const input = z
+            .object({ expected_version: z.number().int().min(1).optional() })
+            .parse(await body(request));
+          return json(await publishProduct(path[2], input.expected_version));
+        }
         if (path[3] === 'withdraw' && method === 'POST')
           return json(await withdrawProduct(path[2]));
       }

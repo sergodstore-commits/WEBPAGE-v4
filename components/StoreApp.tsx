@@ -198,44 +198,96 @@ function availability(p: Product) {
   if (p.available < 1) return 'Agotado';
   return '';
 }
+function productFamilies(products: Product[]) {
+  const families = new Map<string, Product[]>();
+  for (const product of products) {
+    const key = `${product.kind}:${product.catalog_group || product.id}`;
+    const family = families.get(key) || [];
+    family.push(product);
+    families.set(key, family);
+  }
+  return [...families.values()];
+}
+function familyName(p: Product) {
+  return p.catalog_name || p.name;
+}
+function representative(products: Product[]) {
+  return products.find((p) => !availability(p)) || products[0];
+}
 function ProductCard({
   product: p,
+  variants = [p],
   add,
+  quickView,
 }: {
   product: Product;
+  variants?: Product[];
   add: (p: Product, n?: number) => void;
+  quickView?: (p: Product) => void;
 }) {
-  const closed = availability(p);
+  const options = Boolean(p.catalog_group) || variants.length > 1;
+  const closed = variants.every((variant) => availability(variant)) ? availability(p) : '';
+  const minimum = Math.min(...variants.map(price));
+  const maximum = Math.max(...variants.map(price));
+  const available = variants.reduce(
+    (sum, variant) => sum + (availability(variant) ? 0 : variant.available),
+    0,
+  );
+  const title = options ? familyName(p) : p.name;
   return (
     <article className="store-product-card">
       <Link href={`/producto/${p.slug}`} className="store-product-visual">
-        <ProductImage src={p.images[0]} name={p.name} />
-        {p.discount_percent > 0 && <span className="store-discount">−{p.discount_percent}%</span>}
+        <ProductImage src={p.images[0]} name={title} />
+        {!options && p.discount_percent > 0 && (
+          <span className="store-discount">−{p.discount_percent}%</span>
+        )}
         {p.kind === 'preorder' && <span className="store-kind-label">Preventa</span>}
       </Link>
       <div className="store-product-content">
         <p className="store-product-category">{p.category || 'Coleccionables'}</p>
         <Link href={`/producto/${p.slug}`} className="store-product-title">
-          {p.name}
+          {title}
         </Link>
         <div className="store-product-price">
-          <strong>{money(price(p))}</strong>
-          {p.discount_percent > 0 && <del>{money(p.price)}</del>}
+          <strong>
+            {minimum !== maximum ? `${money(minimum)} – ${money(maximum)}` : money(minimum)}
+          </strong>
+          {!options && p.discount_percent > 0 && <del>{money(p.price)}</del>}
         </div>
+        {options && (
+          <small className="store-muted">
+            {variants.length} {variants.length === 1 ? 'opción' : 'opciones'}
+          </small>
+        )}
         <div className="store-product-bottom">
           <span className={closed ? 'store-muted' : 'store-stock-dot'}>
-            {closed || `${p.available} disponibles`}
+            {closed || `${available} disponibles`}
           </span>
-          <button
-            className="store-icon-button store-add-button"
-            aria-label={`Añadir ${p.name} al carrito`}
-            title={closed || 'Añadir al carrito'}
-            disabled={Boolean(closed)}
-            onClick={() => add(p)}
-          >
-            <Plus size={19} />
-          </button>
+          {options ? (
+            <Link href={`/producto/${p.slug}`} className="store-text-link">
+              Ver opciones
+            </Link>
+          ) : (
+            <button
+              className="store-icon-button store-add-button"
+              aria-label={`Añadir ${p.name} al carrito`}
+              title={closed || 'Añadir al carrito'}
+              disabled={Boolean(closed)}
+              onClick={() => add(p)}
+            >
+              <Plus size={19} />
+            </button>
+          )}
         </div>
+        {quickView && (
+          <button
+            className="store-text-link store-quick-link"
+            onClick={() => quickView(p)}
+            aria-label={`Vista rápida de ${title}`}
+          >
+            Vista rápida
+          </button>
+        )}
       </div>
     </article>
   );
@@ -661,9 +713,16 @@ function Home({ settings, add }: { settings: Settings; add: (p: Product, n?: num
           <RemoteError error={products.error} reload={products.reload} />
         ) : products.data?.length ? (
           <div className="store-product-grid">
-            {products.data.slice(0, 4).map((p) => (
-              <ProductCard key={p.id} product={p} add={add} />
-            ))}
+            {productFamilies(products.data)
+              .slice(0, 4)
+              .map((family) => (
+                <ProductCard
+                  key={family[0].id}
+                  product={representative(family)}
+                  variants={family}
+                  add={add}
+                />
+              ))}
           </div>
         ) : (
           <Empty
@@ -767,31 +826,58 @@ function Catalog({
   const products = useRemote<Product[]>(`/products?kind=${kind}`),
     [search, setSearch] = useState(''),
     [category, setCategory] = useState(''),
+    [brand, setBrand] = useState(''),
+    [tag, setTag] = useState(''),
+    [minimumPrice, setMinimumPrice] = useState(''),
+    [maximumPrice, setMaximumPrice] = useState(''),
     [sort, setSort] = useState('recent'),
-    [available, setAvailable] = useState(false);
+    [available, setAvailable] = useState(false),
+    [page, setPage] = useState(1),
+    [quickProduct, setQuickProduct] = useState<Product | null>(null);
   const categories = useMemo(
     () => [...new Set((products.data || []).map((p) => p.category).filter(Boolean))].sort(),
     [products.data],
   );
+  const brands = useMemo(
+    () => [...new Set((products.data || []).map((p) => p.brand).filter(Boolean))].sort(),
+    [products.data],
+  );
+  const tags = useMemo(
+    () => [...new Set((products.data || []).flatMap((p) => p.tags || []))].sort(),
+    [products.data],
+  );
+  useEffect(
+    () => setPage(1),
+    [search, category, brand, tag, minimumPrice, maximumPrice, sort, available],
+  );
   const visible = useMemo(() => {
     const q = search.toLocaleLowerCase('es').trim();
-    return (products.data || [])
-      .filter(
-        (p) =>
-          (!q || `${p.name} ${p.description} ${p.sku}`.toLocaleLowerCase('es').includes(q)) &&
-          (!category || p.category === category) &&
-          (!available || !availability(p)),
-      )
-      .sort((a, b) =>
-        sort === 'price-asc'
-          ? price(a) - price(b)
-          : sort === 'price-desc'
-            ? price(b) - price(a)
-            : sort === 'name'
-              ? a.name.localeCompare(b.name)
-              : b.created_at.localeCompare(a.created_at),
-      );
-  }, [products.data, search, category, sort, available]);
+    const matches = (products.data || []).filter(
+      (p) =>
+        (!q ||
+          `${p.name} ${p.catalog_name || ''} ${p.description} ${p.sku} ${p.brand || ''} ${Object.values(p.options || {}).join(' ')} ${(p.tags || []).join(' ')}`
+            .toLocaleLowerCase('es')
+            .includes(q)) &&
+        (!category || p.category === category) &&
+        (!brand || p.brand === brand) &&
+        (!tag || p.tags?.includes(tag)) &&
+        (!minimumPrice || price(p) >= Number(minimumPrice)) &&
+        (!maximumPrice || price(p) <= Number(maximumPrice)) &&
+        (!available || !availability(p)),
+    );
+    return productFamilies(matches).sort((a, b) =>
+      sort === 'price-asc'
+        ? Math.min(...a.map(price)) - Math.min(...b.map(price))
+        : sort === 'price-desc'
+          ? Math.max(...b.map(price)) - Math.max(...a.map(price))
+          : sort === 'name'
+            ? familyName(a[0]).localeCompare(familyName(b[0]), 'es')
+            : b[0].created_at.localeCompare(a[0].created_at),
+    );
+  }, [products.data, search, category, brand, tag, minimumPrice, maximumPrice, sort, available]);
+  const pages = Math.max(1, Math.ceil(visible.length / 24));
+  const currentPage = Math.min(page, pages);
+  const pageProducts = visible.slice((currentPage - 1) * 24, currentPage * 24);
   return (
     <div className="store-page">
       <PageIntro
@@ -815,6 +901,52 @@ function Catalog({
               ))}
             </select>
           </label>
+          {brands.length > 0 && (
+            <label className="store-label">
+              Marca
+              <select value={brand} onChange={(e) => setBrand(e.target.value)}>
+                <option value="">Todas las marcas</option>
+                {brands.map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          {tags.length > 0 && (
+            <label className="store-label">
+              Características
+              <select value={tag} onChange={(e) => setTag(e.target.value)}>
+                <option value="">Todas las características</option>
+                {tags.map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className="store-price-filters">
+            <label className="store-label">
+              Precio desde
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={minimumPrice}
+                onChange={(e) => setMinimumPrice(e.target.value)}
+                placeholder="$0"
+              />
+            </label>
+            <label className="store-label">
+              Precio hasta
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={maximumPrice}
+                onChange={(e) => setMaximumPrice(e.target.value)}
+                placeholder="Sin límite"
+              />
+            </label>
+          </div>
           <label className="store-check">
             <input
               type="checkbox"
@@ -823,12 +955,16 @@ function Catalog({
             />
             Solo disponibles
           </label>
-          {(search || category || available) && (
+          {(search || category || brand || tag || minimumPrice || maximumPrice || available) && (
             <button
               className="store-text-link store-reset"
               onClick={() => {
                 setSearch('');
                 setCategory('');
+                setBrand('');
+                setTag('');
+                setMinimumPrice('');
+                setMaximumPrice('');
                 setAvailable(false);
               }}
             >
@@ -880,7 +1016,7 @@ function Catalog({
           <div className="store-results-count">
             {products.loading
               ? 'Consultando catálogo…'
-              : `${visible.length} ${visible.length === 1 ? 'artículo' : 'artículos'}`}
+              : `${visible.length} ${visible.length === 1 ? 'producto' : 'productos'}`}
           </div>
           {products.loading ? (
             <Loading />
@@ -888,8 +1024,14 @@ function Catalog({
             <RemoteError error={products.error} reload={products.reload} />
           ) : visible.length ? (
             <div className="store-product-grid store-catalog-grid">
-              {visible.map((p) => (
-                <ProductCard key={p.id} product={p} add={add} />
+              {pageProducts.map((family) => (
+                <ProductCard
+                  key={family[0].id}
+                  product={representative(family)}
+                  variants={family}
+                  add={add}
+                  quickView={setQuickProduct}
+                />
               ))}
             </div>
           ) : (
@@ -908,16 +1050,179 @@ function Catalog({
               }
             />
           )}
+          {pages > 1 && (
+            <nav className="store-pagination" aria-label="Páginas del catálogo">
+              <button
+                className="store-button store-button-secondary"
+                disabled={currentPage === 1}
+                onClick={() => setPage(currentPage - 1)}
+              >
+                Anterior
+              </button>
+              <span>
+                Página {currentPage} de {pages}
+              </span>
+              <button
+                className="store-button store-button-secondary"
+                disabled={currentPage === pages}
+                onClick={() => setPage(currentPage + 1)}
+              >
+                Siguiente
+              </button>
+            </nav>
+          )}
         </div>
       </div>
+      {quickProduct && (
+        <QuickProduct
+          key={quickProduct.id}
+          product={quickProduct}
+          add={add}
+          close={() => setQuickProduct(null)}
+        />
+      )}
     </div>
   );
 }
 
-function ProductDetail({ slug, add }: { slug: string; add: (p: Product, n?: number) => void }) {
+function VariantOptions({
+  product,
+  variants,
+  select,
+}: {
+  product: Product;
+  variants: Product[];
+  select: (p: Product) => void;
+}) {
+  const availableKeys = [...new Set(variants.flatMap((p) => Object.keys(p.options || {})))];
+  const keys = [
+    ...['Formato', 'Color', 'Diseño'].filter((key) => availableKeys.includes(key)),
+    ...availableKeys.filter((key) => !['Formato', 'Color', 'Diseño'].includes(key)),
+  ];
+  if (!keys.length)
+    return variants.length > 1 ? (
+      <label className="store-label">
+        Opción
+        <select
+          value={product.id}
+          onChange={(e) => {
+            const p = variants.find((p) => p.id === e.target.value);
+            if (p) select(p);
+          }}
+        >
+          {variants.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+              {availability(p) ? ' · Agotado' : ''}
+            </option>
+          ))}
+        </select>
+      </label>
+    ) : null;
+  return (
+    <div className="store-variant-options" aria-label="Opciones del producto">
+      {keys.map((key, index) => {
+        const preceding = keys.slice(0, index);
+        const candidates = variants.filter((p) =>
+          preceding.every((k) => p.options?.[k] === product.options?.[k]),
+        );
+        const values = [...new Set(candidates.map((p) => p.options?.[key]).filter(Boolean))];
+        return (
+          <label key={key} className="store-label">
+            {key}
+            <select
+              value={product.options?.[key] || ''}
+              onChange={(e) => {
+                const matches = candidates.filter((p) => p.options?.[key] === e.target.value);
+                const score = (p: Product) =>
+                  keys.slice(index + 1).filter((k) => p.options?.[k] === product.options?.[k])
+                    .length;
+                const selected = matches.sort((a, b) => score(b) - score(a))[0];
+                if (selected) select(selected);
+              }}
+            >
+              {values.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                  {candidates
+                    .filter((p) => p.options?.[key] === value)
+                    .every((p) => availability(p))
+                    ? ' · Agotado'
+                    : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+function QuickProduct({
+  product,
+  add,
+  close,
+}: {
+  product: Product;
+  add: (p: Product, n?: number) => void;
+  close: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [slug, setSlug] = useState(product.slug);
+  useEffect(() => {
+    const element = dialog.current;
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const overflow = document.body.style.overflow;
+    element?.showModal();
+    document.body.style.overflow = 'hidden';
+    return () => {
+      element?.close();
+      document.body.style.overflow = overflow;
+      active?.focus();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={dialog}
+      className="store-quick-dialog"
+      aria-labelledby="quick-product-title"
+      onClose={close}
+    >
+      <div className="store-quick-header">
+        <h2 id="quick-product-title">Vista rápida</h2>
+        <button className="store-icon-button" aria-label="Cerrar vista rápida" onClick={close}>
+          <X size={22} />
+        </button>
+      </div>
+      <ProductDetail slug={slug} add={add} quick onSelectVariant={(p) => setSlug(p.slug)} />
+      <Link className="store-button store-button-secondary" href={`/producto/${slug}`}>
+        Ver ficha completa <ArrowRight size={16} />
+      </Link>
+    </dialog>
+  );
+}
+
+function ProductDetail({
+  slug,
+  add,
+  quick = false,
+  onSelectVariant,
+}: {
+  slug: string;
+  add: (p: Product, n?: number) => void;
+  quick?: boolean;
+  onSelectVariant?: (p: Product) => void;
+}) {
+  const router = useRouter();
   const remote = useRemote<Product>(`/products/${encodeURIComponent(slug)}`),
     [selected, setSelected] = useState(0),
     [quantity, setQuantity] = useState(1);
+  const siblings = useRemote<Product[]>(
+    remote.data?.catalog_group
+      ? `/products?group=${encodeURIComponent(remote.data.catalog_group)}&kind=${remote.data.kind}`
+      : null,
+  );
   useEffect(() => {
     setSelected(0);
     setQuantity(1);
@@ -935,19 +1240,31 @@ function ProductDetail({ slug, add }: { slug: string; add: (p: Product, n?: numb
     );
   const p = remote.data;
   if (!p) return null;
+  if (p.slug !== slug) return <Loading />;
   const closed = availability(p),
     maximum = Math.min(100, p.available, (p.kind === 'preorder' ? p.max_per_customer : 100) || 100);
+  const variants = siblings.data?.filter(
+    (sibling) => sibling.catalog_group === p.catalog_group && sibling.kind === p.kind,
+  ) || [p];
+  const selectVariant = (variant: Product) => {
+    setQuantity(1);
+    setSelected(0);
+    if (onSelectVariant) onSelectVariant(variant);
+    else router.push(`/producto/${variant.slug}`, { scroll: false });
+  };
   return (
-    <div className="store-page">
-      <nav className="store-breadcrumb" aria-label="Ruta">
-        <Link href="/">Inicio</Link>
-        <span>/</span>
-        <Link href={p.kind === 'preorder' ? '/preventas' : '/tienda'}>
-          {p.kind === 'preorder' ? 'Preventas' : 'Tienda'}
-        </Link>
-        <span>/</span>
-        <span>{p.name}</span>
-      </nav>
+    <div className={quick ? 'store-quick-content' : 'store-page'}>
+      {!quick && (
+        <nav className="store-breadcrumb" aria-label="Ruta">
+          <Link href="/">Inicio</Link>
+          <span>/</span>
+          <Link href={p.kind === 'preorder' ? '/preventas' : '/tienda'}>
+            {p.kind === 'preorder' ? 'Preventas' : 'Tienda'}
+          </Link>
+          <span>/</span>
+          <span>{p.name}</span>
+        </nav>
+      )}
       <div className="store-detail-layout">
         <div className="store-detail-gallery">
           <ProductImage
@@ -975,8 +1292,27 @@ function ProductDetail({ slug, add }: { slug: string; add: (p: Product, n?: numb
             {p.category}
             {p.kind === 'preorder' ? ' · PREVENTA' : ''}
           </span>
-          <h1>{p.name}</h1>
+          {quick ? <h2>{familyName(p)}</h2> : <h1>{familyName(p)}</h1>}
+          {p.catalog_name && p.catalog_name !== p.name && <p>{p.name}</p>}
+          {p.brand && <p className="store-muted">Marca: {p.brand}</p>}
           <p className="store-sku">SKU: {p.sku}</p>
+          {(p.tags || []).length > 0 && (
+            <div className="store-product-tags">
+              {p.tags.map((tag) => (
+                <span key={tag} className="store-pill">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          {p.catalog_group &&
+            (siblings.loading ? (
+              <Loading />
+            ) : siblings.error ? (
+              <RemoteError error={siblings.error} reload={siblings.reload} />
+            ) : (
+              <VariantOptions product={p} variants={variants} select={selectVariant} />
+            ))}
           <div className="store-detail-price">
             <strong>{money(price(p))}</strong>
             {p.discount_percent > 0 && (
@@ -988,7 +1324,20 @@ function ProductDetail({ slug, add }: { slug: string; add: (p: Product, n?: numb
           </div>
           <p className="store-tax-note">Precio en pesos chilenos</p>
           <div className="store-description store-preline">{p.description}</div>
-          <div className="store-detail-stock">
+          {(p.specifications || []).length > 0 && (
+            <section className="store-specifications" aria-label="Ficha técnica">
+              <h3>Ficha técnica</h3>
+              <dl>
+                {p.specifications.map((item, index) => (
+                  <div key={`${item.label}-${index}`}>
+                    <dt>{item.label}</dt>
+                    <dd>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+          <div className="store-detail-stock" aria-live="polite">
             {closed ? (
               <span className="store-pill">{closed}</span>
             ) : (
@@ -1071,10 +1420,15 @@ function ProductDetail({ slug, add }: { slug: string; add: (p: Product, n?: numb
               Envío según disponibilidad
             </span>
           </div>
-          <Link href={p.kind === 'preorder' ? '/preventas' : '/tienda'} className="store-text-link">
-            <ArrowLeft size={16} />
-            Seguir explorando
-          </Link>
+          {!quick && (
+            <Link
+              href={p.kind === 'preorder' ? '/preventas' : '/tienda'}
+              className="store-text-link"
+            >
+              <ArrowLeft size={16} />
+              Seguir explorando
+            </Link>
+          )}
         </div>
       </div>
     </div>

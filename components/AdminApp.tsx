@@ -477,7 +477,14 @@ function ProductsPage({ preorders = false }: { preorders?: boolean }) {
     (p) =>
       (!preorders || p.kind === 'preorder') &&
       (status === 'all' || p.status === status) &&
-      [p.name, p.sku, p.category].some((s) => s.toLowerCase().includes(query.toLowerCase())),
+      [
+        p.name,
+        p.sku,
+        p.category,
+        p.catalog_name || '',
+        p.brand || '',
+        ...Object.values(p.options || {}),
+      ].some((s) => s.toLowerCase().includes(query.toLowerCase())),
   );
   async function action(p: Product, remove: boolean) {
     if (
@@ -662,6 +669,13 @@ type ProductForm = {
   closes_at: string;
   max_per_customer: string;
   delivery_terms: string;
+  catalog_group: string;
+  catalog_name: string;
+  brand: string;
+  options_text: string;
+  tags_text: string;
+  specifications_text: string;
+  source_url: string;
 };
 const blankProduct: ProductForm = {
   name: '',
@@ -677,6 +691,13 @@ const blankProduct: ProductForm = {
   closes_at: '',
   max_per_customer: '1',
   delivery_terms: '',
+  catalog_group: '',
+  catalog_name: '',
+  brand: '',
+  options_text: '',
+  tags_text: '',
+  specifications_text: '',
+  source_url: '',
 };
 function localDate(value: string | null) {
   if (!value) return '';
@@ -698,7 +719,31 @@ function toProductForm(p: Product): ProductForm {
     closes_at: localDate(p.closes_at),
     max_per_customer: String(p.max_per_customer || 1),
     delivery_terms: p.delivery_terms,
+    catalog_group: p.catalog_group || '',
+    catalog_name: p.catalog_name || '',
+    brand: p.brand || '',
+    options_text: Object.entries(p.options || {})
+      .map(([label, value]) => `${label}: ${value}`)
+      .join('\n'),
+    tags_text: (p.tags || []).join(', '),
+    specifications_text: (p.specifications || [])
+      .map(({ label, value }) => `${label}: ${value}`)
+      .join('\n'),
+    source_url: p.source_url || '',
   };
+}
+function readProductPairs(value: string, field: string) {
+  return value
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line, index) => {
+      const separator = line.indexOf(':');
+      const label = line.slice(0, separator).trim();
+      const content = line.slice(separator + 1).trim();
+      if (separator < 1 || !label || !content)
+        throw new Error(`${field}, línea ${index + 1}: escribe «Nombre: valor».`);
+      return { label, value: content };
+    });
 }
 function ProductEditor({ productId }: { productId?: string }) {
   const router = useRouter();
@@ -785,8 +830,32 @@ function ProductEditor({ productId }: { productId?: string }) {
     setNotice(null);
     setConfirmPublish(false);
     try {
+      const previous = product ? toProductForm(product) : null;
+      const options =
+        previous?.options_text === form.options_text
+          ? Object.entries(product!.options || {}).map(([label, value]) => ({ label, value }))
+          : readProductPairs(form.options_text, 'Opciones');
+      if (new Set(options.map((item) => item.label)).size !== options.length)
+        throw new Error('Cada nombre de opción debe aparecer una sola vez.');
+      const { options_text, tags_text, specifications_text, ...fields } = form;
       const payload = {
-        ...form,
+        ...fields,
+        options: Object.fromEntries(options.map((item) => [item.label, item.value])),
+        tags:
+          previous?.tags_text === tags_text
+            ? product!.tags || []
+            : [
+                ...new Set(
+                  tags_text
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .filter(Boolean),
+                ),
+              ],
+        specifications:
+          previous?.specifications_text === specifications_text
+            ? product!.specifications || []
+            : readProductPairs(specifications_text, 'Ficha técnica'),
         price: Number(form.price || 0),
         stock: Number(form.stock),
         discount_percent: Number(form.discount_percent),
@@ -1080,6 +1149,85 @@ function ProductEditor({ productId }: { productId?: string }) {
                 </strong>
               </div>
             </section>
+            <details className="admin-card admin-card-body admin-catalog-metadata">
+              <summary>Familia, opciones y ficha técnica</summary>
+              <p className="admin-section-description">
+                Agrupa colores, formatos o diseños de un mismo producto. Cada artículo conserva su
+                propio SKU, precio e inventario. Los cambios de esta ficha se aplican solo a este
+                artículo.
+              </p>
+              <div className="admin-form-grid">
+                <Field
+                  label="Nombre de la familia"
+                  hint="Nombre que verá el cliente en el catálogo, por ejemplo Fortuna Matte."
+                >
+                  <input
+                    value={form.catalog_name}
+                    onChange={(e) => update('catalog_name', e.target.value)}
+                    maxLength={180}
+                  />
+                </Field>
+                <Field
+                  label="Código de familia"
+                  hint="Usa el mismo código en todas las variantes. Déjalo vacío para un artículo independiente."
+                >
+                  <input
+                    value={form.catalog_group}
+                    onChange={(e) => update('catalog_group', e.target.value)}
+                    maxLength={100}
+                    placeholder="Ej. fortuna-matte"
+                  />
+                </Field>
+                <Field label="Marca">
+                  <input
+                    value={form.brand}
+                    onChange={(e) => update('brand', e.target.value)}
+                    maxLength={100}
+                  />
+                </Field>
+                <Field label="Etiquetas" hint="Separa las características con comas.">
+                  <input
+                    value={form.tags_text}
+                    onChange={(e) => update('tags_text', e.target.value)}
+                    placeholder="Ej. Nuevo 2026, Garantía 103"
+                  />
+                </Field>
+                <Field
+                  label="Opciones de este artículo"
+                  hint="Una por línea, con nombre y valor separados por dos puntos."
+                >
+                  <textarea
+                    rows={4}
+                    value={form.options_text}
+                    onChange={(e) => update('options_text', e.target.value)}
+                    placeholder={'Formato: Estándar\nColor: Negro'}
+                  />
+                </Field>
+                <Field
+                  label="Ficha técnica"
+                  hint="Una característica por línea, con nombre y valor separados por dos puntos."
+                >
+                  <textarea
+                    rows={5}
+                    value={form.specifications_text}
+                    onChange={(e) => update('specifications_text', e.target.value)}
+                    placeholder={'Medidas: 66 × 91 mm\nContenido: 103 unidades'}
+                  />
+                </Field>
+                <div className="admin-span-all">
+                  <Field
+                    label="Página de referencia"
+                    hint="Referencia interna del producto importado."
+                  >
+                    <input
+                      type="url"
+                      value={form.source_url}
+                      onChange={(e) => update('source_url', e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </div>
+            </details>
             {form.kind === 'preorder' && (
               <section className="admin-card admin-card-body">
                 <h2>
@@ -1286,7 +1434,9 @@ function InventoryPage() {
     }
   }
   const products = (r.data || []).filter((p) =>
-    [p.name, p.sku].some((s) => s.toLowerCase().includes(query.toLowerCase())),
+    [p.name, p.sku, p.catalog_name || '', ...Object.values(p.options || {})].some((s) =>
+      s.toLowerCase().includes(query.toLowerCase()),
+    ),
   );
   return (
     <>
@@ -1332,6 +1482,13 @@ function InventoryPage() {
                         <span>
                           <strong>{p.name}</strong>
                           <small>{p.sku}</small>
+                          {Object.keys(p.options || {}).length > 0 && (
+                            <small>
+                              {Object.entries(p.options)
+                                .map(([key, value]) => `${key}: ${value}`)
+                                .join(' · ')}
+                            </small>
+                          )}
                         </span>
                       </div>
                     </td>

@@ -57,6 +57,83 @@
 .store-app p {
   color: var(--muted);
 }
+.store-quick-link {
+  margin-top: 12px;
+}
+.store-price-filters,
+.store-variant-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.store-product-tags,
+.store-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+}
+.store-pagination {
+  justify-content: center;
+}
+.store-specifications {
+  margin: 24px 0;
+}
+.store-specifications h3 {
+  font-size: 16px;
+}
+.store-specifications dl {
+  margin: 0;
+}
+.store-specifications dl > div {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 2fr;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.store-specifications dd {
+  margin: 0;
+}
+.store-quick-dialog {
+  width: min(1100px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  border: 1px solid var(--line);
+  padding: 24px;
+  color: var(--ink);
+  background: #fff;
+  overflow-y: auto;
+}
+.store-quick-dialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+.store-quick-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.store-quick-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.store-quick-content {
+  margin-bottom: 24px;
+}
+@media (max-width: 600px) {
+  .store-quick-dialog {
+    padding: 16px;
+  }
+  .store-variant-options {
+    grid-template-columns: 1fr;
+  }
+}
 .store-topbar {
   height: 33px;
   background: #171717;

@@ -1746,3 +1746,11 @@
 .admin-shell .admin-row-actions a {
   font-size: 14px;
 }
+.admin-catalog-metadata summary {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+}
+.admin-catalog-metadata[open] summary {
+  margin-bottom: 20px;
+}
