@@ -65,5 +65,6 @@ En la web publicada se comprobaron imágenes, productos/preventas y persistencia
 - [Arquitectura y reglas del sistema](docs/ARCHITECTURE.md)
 - [Prueba real de Flow sandbox](docs/FLOW-SANDBOX.md)
 - [Catálogo Zero Mulligan: variantes, existencias e importación](docs/CATALOG-IMPORT.md)
+- [Selección Yu-Gi-Oh! y Mitos y Leyendas: formatos, precios y preventas pendientes](docs/SELECTED-TCG.md)
 
 La aplicación tiene autenticación propia con sesiones de PostgreSQL. **No utiliza Supabase Auth.** Las claves de base de datos, Storage, correo y Flow pertenecen exclusivamente al servidor y no deben llevar el prefijo `NEXT_PUBLIC_`.

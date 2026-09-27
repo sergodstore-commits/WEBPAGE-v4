@@ -1,0 +1,753 @@
+{
+  "version": 1,
+  "source": "sergod-selected-tcg-20260927",
+  "collected_at": "2026-09-27T14:24:33.553Z",
+  "warnings": [
+    "Precios visibles de referencia, editables en el panel. Los dos sobres de Mitos y Leyendas cuestan $2.500 por instrucción expresa del propietario.",
+    "Beyond the Brave va a Tienda en las tres presentaciones en inglés seleccionadas, aunque los proveedores lo anuncien como preventa.",
+    "Primer Bloque 4.0 y Primera Era 4.0 se mantienen en familias distintas; cada sobre tiene su propio SKU, fotografía e inventario.",
+    "Solo las tres novedades oficiales de Yu-Gi-Oh! y los dos especiales Halloween son preventas. Se guardan como borradores hasta completar las condiciones de SERGOD.",
+    "Las tres fichas oficiales Yu-Gi-Oh! carecen de precio CLP e idioma comercial confirmado: precio cero es un dato pendiente de borrador, nunca una oferta pública. Confirmar también presentación comercial antes de publicar.",
+    "No se convierten las fechas de lanzamiento de Europa o Norteamérica ni plazos de otra tienda en fechas de reserva o entrega de SERGOD.",
+    "Stock inicial cero en todas las presentaciones. No se copia la disponibilidad, descuentos, cuotas ni condiciones de otros vendedores.",
+    "Los packs Primer Bloque incluyen Buy a Box porque esas presentaciones fueron solicitadas expresamente. Asignar stock solo cuando estén completas. Las promociones externas Buy a Box de Halloween no se prometen.",
+    "Las distintas fotografías de arte del sobre Primer Bloque son una galería de referencia de un único SKU; no ofrecen elección de arte.",
+    "Los SKU con prefijo SG son identificadores internos de SERGOD, no códigos del fabricante."
+  ],
+  "products": [
+    {
+      "sku": "SG-YGO-BTBR-DISPLAY24-EN",
+      "name": "Yu-Gi-Oh! Beyond the Brave · Display de 24 sobres · Inglés",
+      "description": "Display sellado de Yu-Gi-Oh! TCG Beyond the Brave con 24 sobres en inglés. La expansión incorpora nuevas cartas para estrategias como Red-Eyes y Destiny HERO. El contenido de cada sobre es aleatorio.",
+      "price": 104790,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-beyond-the-brave",
+      "catalog_name": "Yu-Gi-Oh! Beyond the Brave",
+      "options": {
+        "Formato": "Display de 24 sobres",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Beyond the Brave", "Display", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 display sellado de 24 sobres"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        },
+        {
+          "label": "Expansión",
+          "value": "Beyond the Brave"
+        }
+      ],
+      "source_url": "https://www.geekers.cl/yu-gi-oh-tcg-beyond-the-brave?variant_id=120767410",
+      "images": ["https://cdnx.jumpseller.com/geekers1/image/78296037/thumb/719/719?1782690608"],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-YGO-BTBR-TOKEN-EN",
+      "name": "Yu-Gi-Oh! Beyond the Brave · Token Box · Inglés",
+      "description": "Token Box de Yu-Gi-Oh! TCG Beyond the Brave en inglés. Presentación de colección independiente del display y del sobre individual.",
+      "price": 19249,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-beyond-the-brave",
+      "catalog_name": "Yu-Gi-Oh! Beyond the Brave",
+      "options": {
+        "Formato": "Token Box",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Beyond the Brave", "Token Box", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 Token Box"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        },
+        {
+          "label": "Expansión",
+          "value": "Beyond the Brave"
+        }
+      ],
+      "source_url": "https://www.geekers.cl/yu-gi-oh-beyond-the-brave-token-box?variant_id=120767754",
+      "images": ["https://cdnx.jumpseller.com/geekers1/image/78296109/thumb/719/719?1782691291"],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-YGO-BTBR-SOBRE-EN",
+      "name": "Yu-Gi-Oh! Beyond the Brave · Sobre · Inglés",
+      "description": "Sobre sellado de Yu-Gi-Oh! TCG Beyond the Brave en inglés, con 9 cartas. La expansión incorpora nuevas cartas inspiradas en las estrategias de Joey Wheeler. El contenido es aleatorio.",
+      "price": 4990,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-beyond-the-brave",
+      "catalog_name": "Yu-Gi-Oh! Beyond the Brave",
+      "options": {
+        "Formato": "Sobre",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Beyond the Brave", "Sobre", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 sobre sellado"
+        },
+        {
+          "label": "Contenido",
+          "value": "9 cartas por sobre"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        },
+        {
+          "label": "Expansión",
+          "value": "Beyond the Brave"
+        }
+      ],
+      "source_url": "https://www.oneupstore.cl/product/preventa-sobre-yu-gi-oh-beyond-the-brave-ingles",
+      "images": [
+        "https://dojiw2m9tvv09.cloudfront.net/29535/product/X_0013742.png?149&t=1790518787"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-YGO-MAMS-CAJA",
+      "name": "Yu-Gi-Oh! Magnificent Maestros · Caja",
+      "description": "Caja de Yu-Gi-Oh! TCG con tres sobres de cinco cartas y tres cartas Secret Rare adicionales, que pueden aparecer en rareza Starlight. Incluye nuevas cartas inspiradas en rivales del anime y soporte para Toon, Artibruja y Desencadenada. Nombre, presentación y contenido sujetos a cambios del fabricante.\nLas fechas oficiales indicadas son de lanzamiento regional y no constituyen una fecha de entrega en Chile.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-magnificent-maestros",
+      "catalog_name": "Yu-Gi-Oh! Magnificent Maestros",
+      "options": {
+        "Formato": "Caja"
+      },
+      "tags": ["Yu-Gi-Oh!", "Caja", "Magnificent Maestros"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "Caja"
+        },
+        {
+          "label": "Contenido por caja",
+          "value": "3 sobres de 5 cartas y 3 cartas Secret Rare adicionales con posibilidad de Starlight Rare"
+        },
+        {
+          "label": "Colección",
+          "value": "125 cartas según la ficha oficial de Norteamérica"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "12 de noviembre de 2026"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "13 de noviembre de 2026"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/magnificent-maestros/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/07/MAMS-Tuckbox-03-SP.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/07/MAMS-Tuckbox-02-SP.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/07/MAMS-Tuckbox-01-SP.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-GLVI-SOBRE",
+      "name": "Yu-Gi-Oh! Glorious Victors · Sobre",
+      "description": "Sobre de Yu-Gi-Oh! TCG con siete cartas: una foil y seis Rare. La colección reúne 60 cartas e introduce las estrategias Zenet, Raise Moon y Trirealm Rift. Algunas cartas también cuentan con versiones Collector's Rare y Starlight Rare. Nombre, presentación y contenido sujetos a cambios del fabricante.\nLas fechas oficiales indicadas son de lanzamiento regional y no constituyen una fecha de entrega en Chile.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-glorious-victors",
+      "catalog_name": "Yu-Gi-Oh! Glorious Victors",
+      "options": {
+        "Formato": "Sobre"
+      },
+      "tags": ["Yu-Gi-Oh!", "Sobre", "Glorious Victors"],
+      "specifications": [
+        {
+          "label": "Presentación confirmada",
+          "value": "Sobre"
+        },
+        {
+          "label": "Contenido por sobre",
+          "value": "7 cartas: 1 foil y 6 Rare"
+        },
+        {
+          "label": "Colección",
+          "value": "60 cartas: 3 Secret Rare, 10 Ultra Rare, 10 Super Rare y 37 Rare"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "15 cartas también en Collector's Rare y 10 en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "3 de diciembre de 2026"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "4 de diciembre de 2026"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/glorious-victors/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/08/GLVI-Foil-Single-US.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/08/GLVI-Foil-Stack-US-1.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-IMPH-SOBRE",
+      "name": "Yu-Gi-Oh! Immortal Phoenix · Sobre",
+      "description": "Expansión de Yu-Gi-Oh! TCG con nuevas cartas Sun God inspiradas en Marik, además de novedades para Salamangreat, Winter Raven y Celestigard. La colección reúne 100 cartas e incluye versiones de arte extendido y Starlight Rare. Nombre, presentación y contenido sujetos a cambios del fabricante.\nLas fechas oficiales indicadas son de lanzamiento regional y no constituyen una fecha de entrega en Chile.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-immortal-phoenix",
+      "catalog_name": "Yu-Gi-Oh! Immortal Phoenix",
+      "options": {
+        "Formato": "Sobre"
+      },
+      "tags": ["Yu-Gi-Oh!", "Sobre", "Immortal Phoenix"],
+      "specifications": [
+        {
+          "label": "Presentación confirmada",
+          "value": "Sobre (Booster Pack)"
+        },
+        {
+          "label": "Colección",
+          "value": "100 cartas: 10 Secret Rare, 14 Ultra Rare, 26 Super Rare y 50 comunes"
+        },
+        {
+          "label": "Arte extendido",
+          "value": "5 cartas también en Ultra Rare y Starlight Rare con arte extendido"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "20 cartas adicionales también disponibles en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "28 de enero de 2027"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "29 de enero de 2027"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/immortal-phoenix/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/IMPH-Foil-Single-US.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/IMPH-Foil-Stack-US.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-MYL-PB40-3DISPLAY-BAB",
+      "name": "Mitos y Leyendas · Leyendas Primer Bloque 4.0 · 3 displays + 3 Buy a Box",
+      "description": "Pack de tres displays de Leyendas Primer Bloque 4.0 con tres cartas promocionales Buy a Box. Cada display contiene 24 sobres de 10 cartas: 72 sobres en total. Corresponde a la edición de Primer Bloque.",
+      "price": 177990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-leyendas-primer-bloque-4-0",
+      "catalog_name": "Leyendas Primer Bloque 4.0",
+      "options": {
+        "Formato": "3 displays + 3 Buy a Box",
+        "Idioma": "Español"
+      },
+      "tags": ["Primer Bloque", "Leyendas", "Display", "Sellado"],
+      "specifications": [
+        {
+          "label": "Edición",
+          "value": "Leyendas Primer Bloque 4.0"
+        },
+        {
+          "label": "Formato",
+          "value": "Pack de 3 displays"
+        },
+        {
+          "label": "Contenido",
+          "value": "72 sobres en total (24 por display), de 10 cartas cada uno"
+        },
+        {
+          "label": "Contenido adicional",
+          "value": "3 cartas Buy a Box"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Lanzamiento",
+          "value": "12 de junio de 2026"
+        }
+      ],
+      "source_url": "https://casamyl.cl/products/preventa-3-display-leyendas-primer-bloque-4-0-primer-bloque-3-buy-a-box-copia",
+      "images": [
+        "https://casamyl.cl/cdn/shop/files/WhatsApp_Image_2026-05-09_at_15.31.41.jpg?v=1778355396",
+        "https://casamyl.cl/cdn/shop/files/MockUpDisplay_Sobres.png?v=1778308832"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-MYL-PB40-DISPLAY-BAB",
+      "name": "Mitos y Leyendas · Leyendas Primer Bloque 4.0 · Display + 1 Buy a Box",
+      "description": "Display de Leyendas Primer Bloque 4.0 con 24 sobres de 10 cartas y una carta promocional Buy a Box. Edición de Primer Bloque, con una configuración de sobre que incluye cartas Reales, Cortesano, Vasallo y del Set Clásico.",
+      "price": 65990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-leyendas-primer-bloque-4-0",
+      "catalog_name": "Leyendas Primer Bloque 4.0",
+      "options": {
+        "Formato": "Display + 1 Buy a Box",
+        "Idioma": "Español"
+      },
+      "tags": ["Primer Bloque", "Leyendas", "Display", "Sellado"],
+      "specifications": [
+        {
+          "label": "Edición",
+          "value": "Leyendas Primer Bloque 4.0"
+        },
+        {
+          "label": "Contenido",
+          "value": "1 display de 24 sobres; 10 cartas por sobre"
+        },
+        {
+          "label": "Contenido adicional",
+          "value": "1 carta Buy a Box"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Lanzamiento",
+          "value": "12 de junio de 2026"
+        }
+      ],
+      "source_url": "https://casamyl.cl/products/preventa-display-leyendas-primer-bloque-4-0-primer-bloque-1-buy-a-box-copia",
+      "images": [
+        "https://casamyl.cl/cdn/shop/files/MockUpDisplay_Sobres.png?v=1778308832",
+        "https://casamyl.cl/cdn/shop/files/Display-Leyendas-Primer-Bloque-2025.png?v=1778308832"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-MYL-PB40-SOBRE",
+      "name": "Mitos y Leyendas · Leyendas Primer Bloque 4.0 · Sobre",
+      "description": "Sobre individual de Leyendas Primer Bloque 4.0 con 10 cartas. Su distribución base incluye 2 Reales foil, 3 Cortesano, 3 Vasallo y 2 del Set Clásico. Las cartas de mayor rareza pueden reemplazar una carta de la distribución base. Las imágenes muestran presentaciones de referencia del envase.",
+      "price": 2500,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-leyendas-primer-bloque-4-0",
+      "catalog_name": "Leyendas Primer Bloque 4.0",
+      "options": {
+        "Formato": "Sobre",
+        "Idioma": "Español"
+      },
+      "tags": ["Primer Bloque", "Leyendas", "Sobre", "Sellado"],
+      "specifications": [
+        {
+          "label": "Edición",
+          "value": "Leyendas Primer Bloque 4.0"
+        },
+        {
+          "label": "Contenido",
+          "value": "1 sobre de 10 cartas"
+        },
+        {
+          "label": "Distribución base",
+          "value": "2 Reales foil, 3 Cortesano, 3 Vasallo y 2 del Set Clásico"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Lanzamiento",
+          "value": "12 de junio de 2026"
+        }
+      ],
+      "source_url": "https://casamyl.cl/products/preventa-display-leyendas-primer-bloque-4-0-primer-bloque-1-buy-a-box-copia",
+      "images": [
+        "https://casamyl.cl/cdn/shop/files/Sobre-Leyendas-Primer-Bloque-2025_04.png?v=1778308836",
+        "https://casamyl.cl/cdn/shop/files/Sobre-Leyendas-Primer-Bloque-2025_03.png?v=1778308833",
+        "https://casamyl.cl/cdn/shop/files/Sobre-Leyendas-Primer-Bloque-2025_02.png?v=1778308832",
+        "https://casamyl.cl/cdn/shop/files/Sobre-Leyendas-Primer-Bloque-2025_01.png?v=1778308835"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-MYL-PE40-DISPLAY",
+      "name": "Mitos y Leyendas · Leyendas Primera Era 4.0 · Display",
+      "description": "Display de Leyendas Primera Era 4.0 con 24 sobres de 10 cartas. Corresponde a Primera Era, una edición diferente de Leyendas Primer Bloque 4.0. Los sobres combinan cartas Reales foil, Cortesano, Vasallo y del Set Clásico.",
+      "price": 58990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-leyendas-primera-era-4-0",
+      "catalog_name": "Leyendas Primera Era 4.0",
+      "options": {
+        "Formato": "Display",
+        "Idioma": "Español"
+      },
+      "tags": ["Primera Era", "Leyendas", "Display", "Sellado"],
+      "specifications": [
+        {
+          "label": "Edición",
+          "value": "Leyendas Primera Era 4.0"
+        },
+        {
+          "label": "Contenido",
+          "value": "1 display de 24 sobres; 10 cartas por sobre"
+        },
+        {
+          "label": "Código de referencia",
+          "value": "X24-0007"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Lanzamiento",
+          "value": "5 de septiembre de 2025"
+        }
+      ],
+      "source_url": "https://casamyl.cl/products/display-leyendas-primera-era-4-0",
+      "images": [
+        "https://casamyl.cl/cdn/shop/files/DisplayLeyendasPrimeraEra2025.png?v=1752613426",
+        "https://casamyl.cl/cdn/shop/files/Sobre-Leyendas-Primera-Era-2025_01.png?v=1752613917"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-MYL-RA-SABIDURIA",
+      "name": "Mitos y Leyendas · Relatos Dominios de Ra: Sabiduría (Sacerdote)",
+      "description": "Kit racial Sacerdote de Relatos Dominios de Ra para Mitos y Leyendas, formato Primer Bloque Extendido. Incluye 12 cartas nuevas de la raza y 8 sobres de Leyendas Primer Bloque 4.0. La composición anunciada incluye 2 Aliados fijos y una carta de soporte aleatoria entre 5 opciones.",
+      "price": 26990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-relatos-dominios-de-ra",
+      "catalog_name": "Relatos Dominios de Ra",
+      "options": {
+        "Formato": "Kit racial",
+        "Raza": "Sacerdote · Sabiduría",
+        "Idioma": "Español"
+      },
+      "tags": ["Primer Bloque Extendido", "Relatos", "Dominios de Ra"],
+      "specifications": [
+        {
+          "label": "Juego",
+          "value": "Mitos y Leyendas"
+        },
+        {
+          "label": "Presentación",
+          "value": "1 kit racial"
+        },
+        {
+          "label": "Formato",
+          "value": "Primer Bloque Extendido"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Contenido",
+          "value": "12 cartas nuevas Sacerdote y 8 sobres de Leyendas Primer Bloque 4.0"
+        },
+        {
+          "label": "Composición anunciada",
+          "value": "2 Aliados fijos y 1 carta soporte aleatoria entre 5 opciones"
+        },
+        {
+          "label": "EAN",
+          "value": "7818595691106"
+        }
+      ],
+      "source_url": "https://elreinodelosduelos.cl/producto/relatos-dominios-de-ra-sabiduria-sacerdote/",
+      "images": [
+        "https://elreinodelosduelos.cl/wp-content/uploads/2026/08/PRODUCTO-WEB-EL-REINO-2.jpg"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-MYL-RA-INVASORES",
+      "name": "Mitos y Leyendas · Relatos Dominios de Ra: Invasores (Faraón)",
+      "description": "Kit racial Faraón de Relatos Dominios de Ra para Mitos y Leyendas, formato Primer Bloque Extendido. Incluye 12 cartas nuevas de la raza y 8 sobres de Leyendas Primer Bloque 4.0. La composición anunciada incluye 2 Aliados fijos y una carta de soporte aleatoria entre 5 opciones.",
+      "price": 26990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-relatos-dominios-de-ra",
+      "catalog_name": "Relatos Dominios de Ra",
+      "options": {
+        "Formato": "Kit racial",
+        "Raza": "Faraón · Invasores",
+        "Idioma": "Español"
+      },
+      "tags": ["Primer Bloque Extendido", "Relatos", "Dominios de Ra"],
+      "specifications": [
+        {
+          "label": "Juego",
+          "value": "Mitos y Leyendas"
+        },
+        {
+          "label": "Presentación",
+          "value": "1 kit racial"
+        },
+        {
+          "label": "Formato",
+          "value": "Primer Bloque Extendido"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Contenido",
+          "value": "12 cartas nuevas Faraón y 8 sobres de Leyendas Primer Bloque 4.0"
+        },
+        {
+          "label": "Composición anunciada",
+          "value": "2 Aliados fijos y 1 carta soporte aleatoria entre 5 opciones"
+        },
+        {
+          "label": "EAN",
+          "value": "7818595691090"
+        }
+      ],
+      "source_url": "https://elreinodelosduelos.cl/producto/relatos-dominios-de-ra-invasores-faraon/",
+      "images": [
+        "https://elreinodelosduelos.cl/wp-content/uploads/2026/08/PRODUCTO-WEB-EL-REINO-1.jpg"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-MYL-RA-AMANECER",
+      "name": "Mitos y Leyendas · Relatos Dominios de Ra: Amanecer (Eterno)",
+      "description": "Kit racial Eterno de Relatos Dominios de Ra para Mitos y Leyendas, formato Primer Bloque Extendido. Incluye 12 cartas nuevas de la raza y 8 sobres de Leyendas Primer Bloque 4.0. La composición anunciada incluye 2 Aliados fijos y una carta de soporte aleatoria entre 5 opciones.",
+      "price": 26990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-relatos-dominios-de-ra",
+      "catalog_name": "Relatos Dominios de Ra",
+      "options": {
+        "Formato": "Kit racial",
+        "Raza": "Eterno · Amanecer",
+        "Idioma": "Español"
+      },
+      "tags": ["Primer Bloque Extendido", "Relatos", "Dominios de Ra"],
+      "specifications": [
+        {
+          "label": "Juego",
+          "value": "Mitos y Leyendas"
+        },
+        {
+          "label": "Presentación",
+          "value": "1 kit racial"
+        },
+        {
+          "label": "Formato",
+          "value": "Primer Bloque Extendido"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Contenido",
+          "value": "12 cartas nuevas Eterno y 8 sobres de Leyendas Primer Bloque 4.0"
+        },
+        {
+          "label": "Composición anunciada",
+          "value": "2 Aliados fijos y 1 carta soporte aleatoria entre 5 opciones"
+        },
+        {
+          "label": "EAN",
+          "value": "7818595691083"
+        }
+      ],
+      "source_url": "https://elreinodelosduelos.cl/producto/relatos-dominios-de-ra-amanecer-eterno/",
+      "images": [
+        "https://elreinodelosduelos.cl/wp-content/uploads/2026/08/PRODUCTO-WEB-EL-REINO.jpg"
+      ],
+      "kind": "store",
+      "publish": true
+    },
+    {
+      "sku": "SG-MYL-HALLOWEEN-TINIEBLAS",
+      "name": "Mitos y Leyendas · Producto Especial Halloween: Tinieblas",
+      "description": "Producto especial Tinieblas de Mitos y Leyendas, perteneciente a Leyendas de Ultratumba y al formato Primera Era Extendido. Cada caja contiene 24 cartas nuevas y 8 sobres de Leyendas Primera Era 4.0. El contenido de los sobres es aleatorio.",
+      "price": 29990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-halloween-leyendas-ultratumba",
+      "catalog_name": "Halloween · Leyendas de Ultratumba",
+      "options": {
+        "Presentación": "Tinieblas",
+        "Idioma": "Español"
+      },
+      "tags": ["Primera Era Extendido", "Halloween", "Leyendas de Ultratumba"],
+      "specifications": [
+        {
+          "label": "Juego",
+          "value": "Mitos y Leyendas"
+        },
+        {
+          "label": "Presentación",
+          "value": "1 caja de producto especial"
+        },
+        {
+          "label": "Formato",
+          "value": "Primera Era Extendido"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Contenido",
+          "value": "24 cartas nuevas y 8 sobres de Leyendas Primera Era 4.0"
+        }
+      ],
+      "source_url": "https://elreinodelosduelos.cl/producto/producto-especial-halloween-tinieblas/",
+      "images": [
+        "https://elreinodelosduelos.cl/wp-content/uploads/2026/09/PRODUCTO-WEB-EL-REINO-6.jpg"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-MYL-HALLOWEEN-ABISMO",
+      "name": "Mitos y Leyendas · Producto Especial Halloween: Abismo",
+      "description": "Producto especial Abismo de Mitos y Leyendas, perteneciente a Leyendas de Ultratumba y al formato Primera Era Extendido. Cada caja contiene 24 cartas nuevas y 8 sobres de Leyendas Primera Era 4.0. El contenido de los sobres es aleatorio.",
+      "price": 29990,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-halloween-leyendas-ultratumba",
+      "catalog_name": "Halloween · Leyendas de Ultratumba",
+      "options": {
+        "Presentación": "Abismo",
+        "Idioma": "Español"
+      },
+      "tags": ["Primera Era Extendido", "Halloween", "Leyendas de Ultratumba"],
+      "specifications": [
+        {
+          "label": "Juego",
+          "value": "Mitos y Leyendas"
+        },
+        {
+          "label": "Presentación",
+          "value": "1 caja de producto especial"
+        },
+        {
+          "label": "Formato",
+          "value": "Primera Era Extendido"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Contenido",
+          "value": "24 cartas nuevas y 8 sobres de Leyendas Primera Era 4.0"
+        }
+      ],
+      "source_url": "https://elreinodelosduelos.cl/producto/producto-especial-halloween-abismo/",
+      "images": [
+        "https://elreinodelosduelos.cl/wp-content/uploads/2026/09/PRODUCTO-WEB-EL-REINO-7.jpg"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-MYL-LEYENDAS-PE40-SOBRE",
+      "name": "Mitos y Leyendas · Leyendas Primera Era 4.0 · Sobre",
+      "description": "Sobre sellado de Mitos y Leyendas: Leyendas Primera Era 4.0, con 10 cartas. La colección reúne cartas nuevas y versiones de cartas anteriores para Primera Era. El contenido del sobre es aleatorio.",
+      "price": 2500,
+      "category": "Mitos y Leyendas",
+      "brand": "Mitos y Leyendas",
+      "catalog_group": "myl-leyendas-primera-era-4-0",
+      "catalog_name": "Leyendas Primera Era 4.0",
+      "options": {
+        "Formato": "Sobre",
+        "Idioma": "Español"
+      },
+      "tags": ["Primera Era", "Leyendas", "Sobre", "Sellado"],
+      "specifications": [
+        {
+          "label": "Juego",
+          "value": "Mitos y Leyendas"
+        },
+        {
+          "label": "Presentación",
+          "value": "1 sobre sellado"
+        },
+        {
+          "label": "Formato",
+          "value": "Primera Era"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        },
+        {
+          "label": "Contenido",
+          "value": "10 cartas por sobre"
+        },
+        {
+          "label": "EAN",
+          "value": "7818595689899"
+        }
+      ],
+      "source_url": "https://elreinodelosduelos.cl/producto/sobre-leyendas-primera-era-4-0/",
+      "images": [
+        "https://elreinodelosduelos.cl/wp-content/uploads/2025/07/PRODUCTO-WEB-EL-REINO-45.jpg"
+      ],
+      "kind": "store",
+      "publish": true
+    }
+  ]
+}

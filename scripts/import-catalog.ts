@@ -2,72 +2,24 @@ import { loadEnvConfig } from '@next/env';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
-import { z } from 'zod';
+import {
+  catalogImageUrl,
+  catalogImportManifestSchema,
+  resolveCatalogImageRedirect,
+} from './catalog-import-schema';
 
 loadEnvConfig(process.cwd());
-const sourceImage = z.url().refine((value) => {
-  const url = new URL(value);
-  return (
-    url.protocol === 'https:' && ['zeromulligan.cl', 'www.zeromulligan.cl'].includes(url.hostname)
-  );
-}, 'La imagen debe pertenecer al catálogo público autorizado de Zero Mulligan.');
-const manifestSchema = z.object({
-  version: z.literal(1),
-  source: z.literal('https://zeromulligan.cl/catalogo/'),
-  collected_at: z.iso.datetime(),
-  warnings: z
-    .array(
-      z.union([z.string(), z.object({ message: z.string() }).transform((value) => value.message)]),
-    )
-    .default([]),
-  products: z
-    .array(
-      z.object({
-        sku: z.string().trim().min(1).max(80),
-        name: z.string().trim().min(2).max(180),
-        description: z.string().min(1).max(12000),
-        price: z.number().int().positive().max(100000000),
-        category: z.string().trim().min(1).max(80),
-        brand: z.literal('Zero Mulligan'),
-        catalog_group: z
-          .string()
-          .max(120)
-          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-        catalog_name: z.string().trim().min(1).max(180),
-        options: z
-          .record(
-            z
-              .string()
-              .trim()
-              .min(1)
-              .max(60)
-              .refine((key) => !['__proto__', 'prototype', 'constructor'].includes(key)),
-            z.string().trim().min(1).max(160),
-          )
-          .refine((value) => Object.keys(value).length <= 6),
-        tags: z.array(z.string().trim().min(1).max(80)).max(30),
-        specifications: z
-          .array(
-            z.object({
-              label: z.string().trim().min(1).max(80),
-              value: z.string().trim().min(1).max(1000),
-            }),
-          )
-          .max(30),
-        source_url: sourceImage.max(2000),
-        images: z.array(sourceImage.max(1000)).min(1).max(8),
-      }),
-    )
-    .min(1)
-    .max(500),
-});
 type Journal = {
   origin: string;
   source: string;
   images: Record<string, string>;
   products: Record<
     string,
-    { id?: string; version?: number; phase: 'creating' | 'created' | 'published' | 'preserved' }
+    {
+      id?: string;
+      version?: number;
+      phase: 'creating' | 'created' | 'published' | 'draft' | 'preserved';
+    }
   >;
 };
 
@@ -77,13 +29,17 @@ async function main() {
     args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
   const manifestPath = argument('--manifest');
   if (!manifestPath) throw new Error('Usa --manifest ruta.json y, para guardar, --apply.');
-  const manifest = manifestSchema.parse(JSON.parse(await fs.readFile(manifestPath, 'utf8')));
-  if (new Set(manifest.products.map((p) => p.sku)).size !== manifest.products.length)
-    throw new Error('Hay SKU duplicados en el manifiesto.');
+  const manifest = catalogImportManifestSchema.parse(
+    JSON.parse(await fs.readFile(manifestPath, 'utf8')),
+  );
   const apply = args.includes('--apply');
   const summary = {
-    families: new Set(manifest.products.map((p) => p.catalog_group)).size,
+    families: new Set(manifest.products.map((p) => p.catalog_group).filter(Boolean)).size,
     variants: manifest.products.length,
+    storeVariants: manifest.products.filter((p) => p.kind === 'store').length,
+    preorderVariants: manifest.products.filter((p) => p.kind === 'preorder').length,
+    plannedPublishedVariants: manifest.products.filter((p) => p.publish).length,
+    plannedDraftVariants: manifest.products.filter((p) => !p.publish).length,
     images: new Set(manifest.products.flatMap((p) => p.images)).size,
     initialStock: 0,
   };
@@ -94,7 +50,11 @@ async function main() {
   const origin = new URL(process.env.APP_URL || '').origin;
   if (!origin.startsWith('https://') || !process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD)
     throw new Error('Configura APP_URL HTTPS, ADMIN_EMAIL y ADMIN_PASSWORD en el entorno privado.');
-  const journalPath = path.resolve(argument('--state', '.data/zeromulligan-import/journal.json'));
+  const defaultJournal =
+    manifest.source === 'https://zeromulligan.cl/catalogo/'
+      ? '.data/zeromulligan-import/journal.json'
+      : '.data/selected-tcg-import/journal.json';
+  const journalPath = path.resolve(argument('--state', defaultJournal));
   await fs.mkdir(path.dirname(journalPath), { recursive: true });
   let journal: Journal = { origin, source: manifest.source, images: {}, products: {} };
   try {
@@ -109,7 +69,12 @@ async function main() {
     await fs.rename(journalPath + '.tmp', journalPath);
   };
   let cookie = '';
-  const api = async (route: string, method = 'GET', body?: unknown): Promise<any> => {
+  const api = async (
+    route: string,
+    method = 'GET',
+    body?: unknown,
+    expectedStatus?: number,
+  ): Promise<any> => {
     const form = body instanceof FormData;
     let response: Response;
     try {
@@ -132,7 +97,11 @@ async function main() {
     if (response.headers.get('set-cookie'))
       cookie = response.headers.get('set-cookie')!.split(';')[0];
     const data = await response.json();
-    if (!response.ok)
+    if (expectedStatus !== undefined && response.status !== expectedStatus)
+      throw new Error(
+        `${method} ${route}: se esperaba HTTP ${expectedStatus}, se recibió ${response.status}.`,
+      );
+    if (!response.ok && response.status !== expectedStatus)
       throw new Error(
         `${method} ${route}: HTTP ${response.status}. ${data.error || 'Solicitud rechazada.'}`,
       );
@@ -146,7 +115,7 @@ async function main() {
   const download = async (initial: string) => {
     let target = initial;
     for (let redirect = 0; redirect < 4; redirect++) {
-      sourceImage.parse(target);
+      catalogImageUrl.parse(target);
       const response = await fetch(target, {
         redirect: 'manual',
         signal: AbortSignal.timeout(30000),
@@ -154,7 +123,7 @@ async function main() {
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get('location');
         if (!location) throw new Error('Redirección de imagen sin destino.');
-        target = new URL(location, target).toString();
+        target = resolveCatalogImageRedirect(target, location);
         continue;
       }
       if (!response.ok)
@@ -191,7 +160,7 @@ async function main() {
     if (journal.images[source]) return journal.images[source];
     const bytes = await download(source);
     const form = new FormData();
-    form.set('file', new File([new Uint8Array(bytes)], 'catalogo-zero-mulligan.webp'));
+    form.set('file', new File([new Uint8Array(bytes)], 'catalogo.webp'));
     const result = await api('admin/uploads', 'POST', form);
     if (typeof result.url !== 'string') throw new Error('La carga no devolvió URL.');
     journal.images[source] = result.url;
@@ -216,6 +185,7 @@ async function main() {
       existing &&
       previous &&
       (previous.phase === 'published' ||
+        previous.phase === 'draft' ||
         previous.phase === 'preserved' ||
         (previous.id && previous.id !== existing.id) ||
         existing.status !== 'draft' ||
@@ -254,12 +224,12 @@ async function main() {
         images,
         stock: 0,
         discount_percent: 0,
-        kind: 'store',
+        kind: product.kind,
         status: 'draft',
-        opens_at: null,
-        closes_at: null,
-        max_per_customer: null,
-        delivery_terms: '',
+        opens_at: product.opens_at,
+        closes_at: product.closes_at,
+        max_per_customer: product.max_per_customer,
+        delivery_terms: product.delivery_terms,
       });
       current.push(existing);
       created++;
@@ -278,6 +248,39 @@ async function main() {
     }
     journal.products[product.sku] = { id: existing.id, version: expectedVersion, phase: 'created' };
     await persist();
+    if (!product.publish) {
+      for (let read = 0; read < 2; read++) {
+        const saved = await api(`admin/products/${existing.id}`);
+        if (
+          saved.id !== existing.id ||
+          saved.kind !== product.kind ||
+          saved.status !== 'draft' ||
+          saved.version !== expectedVersion ||
+          saved.catalog_group !== product.catalog_group ||
+          !saved.images.length
+        )
+          throw new Error(
+            `La lectura administrativa del borrador cambió para ${product.sku}. Se conserva sin publicar.`,
+          );
+        await api('products/' + encodeURIComponent(existing.slug), 'GET', undefined, 404);
+      }
+      journal.products[product.sku] = {
+        id: existing.id,
+        version: existing.version,
+        phase: 'draft',
+      };
+      await persist();
+      console.log(
+        JSON.stringify({
+          progress: `${index + 1}/${manifest.products.length}`,
+          sku: product.sku,
+          result: 'draft',
+          kind: existing.kind,
+          stock: existing.stock,
+        }),
+      );
+      continue;
+    }
     if (existing.status === 'draft') {
       existing = await api(`admin/products/${existing.id}/publish`, 'POST', {
         expected_version: expectedVersion,
@@ -319,6 +322,9 @@ async function main() {
     published,
     preserved,
     storedVariants: imported.length,
+    storeVariants: imported.filter((p) => p.kind === 'store').length,
+    preorderVariants: imported.filter((p) => p.kind === 'preorder').length,
+    draftVariants: imported.filter((p) => p.status === 'draft').length,
     publishedVariants: imported.filter((p) => p.status === 'published').length,
     stockUnits: imported.reduce((n, p) => n + p.stock, 0),
     allImagesStored: imported.every((p) =>
