@@ -1609,6 +1609,11 @@ function Cart({
   async function checkout(e: FormEvent) {
     e.preventDefault();
     setError('');
+    if (step !== 'checkout') {
+      if (!unavailable) setStep('checkout');
+      return;
+    }
+    if (busy) return;
     if (!user) {
       setError('Inicia sesión para continuar con la compra.');
       return;
@@ -1985,10 +1990,14 @@ function Cart({
             )}
             {step === 'cart' ? (
               <button
+                key="review-delivery"
                 type="button"
                 className="store-button store-full"
                 disabled={unavailable}
-                onClick={() => setStep('checkout')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setStep('checkout');
+                }}
               >
                 Continuar con la compra <ArrowRight size={17} />
               </button>
@@ -2012,6 +2021,8 @@ function Cart({
               </>
             ) : (
               <button
+                key="submit-payment"
+                type="submit"
                 className="store-button store-full"
                 disabled={busy || unavailable || (delivery.method === 'shipping' && !carrier)}
               >
