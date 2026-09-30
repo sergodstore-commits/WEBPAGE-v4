@@ -90,3 +90,11 @@ El [lote adicional de 16 artículos](SELECTED-TCG.md) quedó guardado en producc
 La reanudación conservó tres artículos ya publicados después de resolver una redirección oficial de imágenes. Una repetición posterior creó/publicó cero y preservó los 16. El navegador confirmó formatos, imágenes, precios, SKU y persistencia tras recarga. Los borradores requieren datos comerciales del propietario antes de publicarse; los tres Yu-Gi-Oh! oficiales también requieren precio. No se copiaron existencias de los comercios fuente.
 
 El [despliegue f1c0e0d](https://vercel.com/sergod-store/sergod-store-v4/G3Ut5VVXMd14E4zU1BQBwiQB3S8B) terminó correctamente y [GitHub Actions](https://github.com/sergodstore-commits/WEBPAGE-v4/actions/runs/36346595302) aprobó tipos, **64/64 resultados de servidor**, compilación y **9/9 recorridos de navegador**. El lote no necesitó migraciones ni cambios en la interfaz, Flow o sus credenciales.
+
+## Configuración comercial de entregas — 30/09/2026
+
+Por instrucción del propietario se habilitaron dos modalidades de **Starken**: entrega a domicilio y retiro en agencia, ambas con flete **por pagar al recibir**. Los identificadores son `starken-domicilio` y `starken-agencia`; las dos configuraciones usan `collect=true` y `price=0`. El flete se cobra por separado del pago de productos en Flow, sin prometer una tarifa ni un plazo de transporte.
+
+Se confirmó retiro en **Los Carrera 5142, Copiapó**, con la instrucción «Retiro en tienda: Los Carrera 5142, Copiapó.». Se conservaron el horario existente de 10:00 a 22:00, contacto, plazo de reserva y demás ajustes. La escritura pasó por la API administrativa y dos lecturas públicas independientes a las 04:04:27 UTC confirmaron persistencia y Flow en producción. El respaldo previo y el informe permanecen en `.data`, excluido de Git. No se modificaron productos ni se crearon pagos.
+
+La lectura previa a las 04:01:26 UTC confirmó 83 presentaciones publicadas sin existencias, cinco preventas en borrador y cero pedidos comerciales. El propietario indicó que ingresará stock y precios desde el panel. La carga de inventario, los datos pendientes de preventa y el recorrido comercial final siguen separados de esta configuración. No se implementaron las recomendaciones del panel ni la etapa visual.
