@@ -69,13 +69,14 @@ export async function checkout(user: any, input: unknown) {
   if (!appUrl().startsWith('https://'))
     fail(503, 'Flow necesita una dirección HTTPS pública para recibir la confirmación del pago.');
   const o = await reserveOrder(user, input);
-  if (o.payment_status !== 'pending') return { order: publicOrder(o), payment_url: '' };
+  if (o.payment_status !== 'pending' || o.reservation_released_at)
+    return { order: publicOrder(o), payment_url: '' };
   if (o.payment_url?.startsWith('https://'))
     return { order: publicOrder(o), payment_url: o.payment_url };
   // Claim payment creation atomically. An ambiguous request must never be blindly repeated.
   const db = await getDb();
   const claim = await db.query(
-    "UPDATE orders SET payment_url='creating' WHERE id=$1 AND payment_url IS NULL AND payment_status='pending' AND expires_at>now() RETURNING id",
+    "UPDATE orders SET payment_url='creating' WHERE id=$1 AND payment_url IS NULL AND payment_status='pending' AND reservation_released_at IS NULL AND expires_at>now() RETURNING id",
     [o.id],
   );
   if (!claim.rows.length)
@@ -96,6 +97,7 @@ export async function checkout(user: any, input: unknown) {
         urlConfirmation: `${appUrl()}/api/flow/confirmation`,
         urlReturn: `${appUrl()}/api/flow/return`,
         timeout: seconds,
+        checkout_timeout: seconds,
       },
       'POST',
     );

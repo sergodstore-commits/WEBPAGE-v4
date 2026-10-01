@@ -428,6 +428,102 @@ test('SERGOD STORE · integración con base PostgreSQL local real', async (t) =>
     },
   );
 
+  await t.test(
+    'checkout limita vigencia y selección de medio al plazo restante sin duplicar la reserva',
+    async () => {
+      const flow = await import('../lib/server/flow');
+      const originalFetch = globalThis.fetch;
+      const saved = {
+        APP_URL: process.env.APP_URL,
+        FLOW_API_KEY: process.env.FLOW_API_KEY,
+        FLOW_SECRET_KEY: process.env.FLOW_SECRET_KEY,
+      };
+      const p = await product({ stock: 3, price: 2990 });
+      const request = input([{ product_id: p.id, quantity: 1 }]);
+      const reserved = await commerce.reserveOrder(customer, request);
+      // Simulate resuming a reservation with less time left than the configured 15 minutes.
+      await db.query("UPDATE orders SET expires_at=now()+interval '2 minutes' WHERE id=$1", [
+        reserved.id,
+      ]);
+      const expiresAt = new Date((await order(reserved.id)).expires_at).getTime();
+      const before = Date.now();
+      const token = `checkout-test-${randomUUID()}`;
+      const flowOrder = ++sequence + 30000;
+      let calls = 0;
+      Object.assign(process.env, {
+        APP_URL: 'https://shop.example.test',
+        FLOW_API_KEY: 'test-api',
+        FLOW_SECRET_KEY: 'test-secret',
+      });
+      globalThis.fetch = async (resource, init) => {
+        calls++;
+        const sentAt = Date.now();
+        assert.equal(String(resource), 'https://sandbox.flow.cl/api/payment/create');
+        assert.equal(init?.method, 'POST');
+        const form = new URLSearchParams(String(init?.body));
+        assert.equal(form.get('commerceOrder'), reserved.id);
+        assert.equal(form.get('amount'), '2990');
+        assert.equal(form.get('currency'), 'CLP');
+        const timeout = Number(form.get('timeout'));
+        assert.ok(Number.isInteger(timeout) && timeout > 0);
+        assert.equal(form.get('checkout_timeout'), form.get('timeout'));
+        assert.ok(timeout <= Math.floor((expiresAt - before) / 1000));
+        assert.ok(timeout >= Math.floor((expiresAt - sentAt) / 1000));
+        return Response.json({
+          url: 'https://sandbox.flow.cl/app/web/pay.php',
+          token,
+          flowOrder,
+        });
+      };
+      try {
+        const first = await flow.checkout(customer, request);
+        const repeated = await flow.checkout(customer, request);
+        assert.equal(calls, 1);
+        assert.equal(first.order.id, reserved.id);
+        assert.equal(repeated.order.id, reserved.id);
+        assert.equal(repeated.payment_url, first.payment_url);
+        assert.equal(new URL(first.payment_url).searchParams.get('token'), token);
+        assert.deepEqual(await stock(p.id), { stock: 3, reserved: 1 });
+        assert.equal(await count('orders', reserved.id), 1);
+        assert.equal(await count('inventory_movements', reserved.id), 0);
+        await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [
+          reserved.id,
+        ]);
+        const released = await commerce.applyPayment(token, {
+          commerceOrder: reserved.id,
+          flowOrder,
+          amount: 2990,
+          currency: 'CLP',
+          status: 1,
+        });
+        assert.equal(released.payment_status, 'pending');
+        assert.ok(released.reservation_released_at);
+        assert.equal(released.payment_url, undefined);
+        assert.equal(released.can_refresh_payment, true);
+        const afterRelease = await flow.checkout(customer, request);
+        assert.equal(afterRelease.order.id, reserved.id);
+        assert.equal(afterRelease.payment_url, '');
+        assert.equal(afterRelease.order.payment_url, undefined);
+        assert.equal(calls, 1, 'Un reintento no crea ni devuelve un enlace de pago liberado');
+        assert.deepEqual(await stock(p.id), { stock: 3, reserved: 0 });
+        await commerce.applyPayment(token, {
+          commerceOrder: reserved.id,
+          flowOrder,
+          amount: 2990,
+          currency: 'CLP',
+          status: 4,
+        });
+        assert.deepEqual(await stock(p.id), { stock: 3, reserved: 0 });
+      } finally {
+        globalThis.fetch = originalFetch;
+        for (const [key, value] of Object.entries(saved)) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      }
+    },
+  );
+
   await t.test('reserva exige correo verificado y cantidades enteras positivas', async () => {
     const p = await product();
     await assert.rejects(() =>
@@ -550,6 +646,226 @@ test('SERGOD STORE · integración con base PostgreSQL local real', async (t) =>
     assert.deepEqual(await stock(p.id), { stock: 3, reserved: 0 });
   });
 
+  await t.test(
+    'Flow pendiente respeta plazo y gracia, luego libera una sola vez sin cancelar el pago',
+    async () => {
+      const p = await product({ stock: 3 });
+      const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 2 }]));
+      const verified = await payment(o, 1);
+      await commerce.applyPayment(verified.token, verified.result);
+      assert.equal((await order(o.id)).reservation_released_at, null);
+      await db.query("UPDATE orders SET expires_at=now()-interval '30 seconds' WHERE id=$1", [
+        o.id,
+      ]);
+      await commerce.applyPayment(verified.token, verified.result);
+      assert.equal((await order(o.id)).reservation_released_at, null);
+      assert.deepEqual(await stock(p.id), { stock: 3, reserved: 2 });
+      const eventsBefore = await count('order_events', o.id);
+      await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [o.id]);
+      await Promise.all(
+        Array.from({ length: 10 }, () => commerce.applyPayment(verified.token, verified.result)),
+      );
+      const released = await order(o.id);
+      assert.ok(released.reservation_released_at);
+      assert.equal(released.payment_status, 'pending');
+      assert.equal(released.fulfillment_status, 'received');
+      assert.deepEqual(await stock(p.id), { stock: 3, reserved: 0 });
+      assert.equal(await count('order_events', o.id), eventsBefore + 1);
+      assert.equal(await count('inventory_movements', o.id), 0);
+      assert.equal(
+        (
+          await db.query('SELECT count(*)::int AS n FROM mail_outbox WHERE dedupe_key=$1', [
+            `order:${o.id}:reservation-expired`,
+          ])
+        ).rows[0].n,
+        1,
+      );
+      await assert.rejects(() => commerce.updateDelivery(o.id, { fulfillment_status: 'ready' }), {
+        status: 409,
+      });
+    },
+  );
+
+  await t.test(
+    'rechazo o anulación posteriores no liberan dos veces una reserva ya vencida',
+    async () => {
+      for (const status of [3, 4]) {
+        const p = await product({ stock: 2 });
+        const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }]));
+        const verified = await payment(o, 1);
+        await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [
+          o.id,
+        ]);
+        await commerce.applyPayment(verified.token, verified.result);
+        const releasedAt = new Date((await order(o.id)).reservation_released_at).getTime();
+        const eventsBefore = await count('order_events', o.id);
+        await Promise.all(
+          Array.from({ length: 10 }, () =>
+            commerce.applyPayment(verified.token, { ...verified.result, status }),
+          ),
+        );
+        const saved = await order(o.id);
+        assert.equal(saved.payment_status, status === 3 ? 'rejected' : 'expired');
+        assert.equal(new Date(saved.reservation_released_at).getTime(), releasedAt);
+        assert.deepEqual(await stock(p.id), { stock: 2, reserved: 0 });
+        assert.equal(await count('order_events', o.id), eventsBefore + 1);
+        assert.equal(await count('inventory_movements', o.id), 0);
+      }
+    },
+  );
+
+  await t.test(
+    'un error de Flow, identidad inválida u otro ambiente no libera una reserva vencida',
+    async () => {
+      const flow = await import('../lib/server/flow');
+      const originalFetch = globalThis.fetch;
+      const saved = {
+        FLOW_API_KEY: process.env.FLOW_API_KEY,
+        FLOW_SECRET_KEY: process.env.FLOW_SECRET_KEY,
+        FLOW_ENV: process.env.FLOW_ENV,
+      };
+      Object.assign(process.env, { FLOW_API_KEY: 'test-api', FLOW_SECRET_KEY: 'test-secret' });
+      const p = await product({ stock: 2 });
+      const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }]));
+      const verified = await payment(o, 1);
+      await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [o.id]);
+      let requests = 0;
+      try {
+        globalThis.fetch = async () => {
+          requests++;
+          throw new Error('Interrupción de red simulada');
+        };
+        await assert.rejects(() => flow.refreshPayment(o.id), { status: 502 });
+        for (const mismatch of [
+          { amount: 1 },
+          { currency: 'USD' },
+          { commerceOrder: randomUUID() },
+          { flowOrder: 999999999 },
+          { status: 9 },
+        ]) {
+          globalThis.fetch = async () => {
+            requests++;
+            return Response.json({ ...verified.result, ...mismatch });
+          };
+          await assert.rejects(() => flow.refreshPayment(o.id));
+        }
+        await assert.rejects(() => commerce.applyPayment('wrong-token', verified.result), {
+          status: 409,
+        });
+        process.env.FLOW_ENV = 'production';
+        const beforeMismatch = requests;
+        await assert.rejects(() => flow.refreshPayment(o.id), { status: 409 });
+        assert.equal(requests, beforeMismatch);
+        assert.equal((await order(o.id)).payment_status, 'pending');
+        assert.equal((await order(o.id)).reservation_released_at, null);
+        assert.deepEqual(await stock(p.id), { stock: 2, reserved: 1 });
+        assert.equal(await count('order_events', o.id), 1);
+      } finally {
+        globalThis.fetch = originalFetch;
+        for (const [key, value] of Object.entries(saved)) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    'pago tardío consume solo unidades libres y conserva reservas de otro pedido',
+    async () => {
+      const p = await product({ stock: 3 });
+      const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }]));
+      const verified = await payment(o, 1);
+      await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [o.id]);
+      await commerce.applyPayment(verified.token, verified.result);
+      await commerce.reserveOrder(await user(), input([{ product_id: p.id, quantity: 2 }]));
+      const result = { ...verified.result, status: 2 };
+      await Promise.all(
+        Array.from({ length: 10 }, () => commerce.applyPayment(verified.token, result)),
+      );
+      assert.equal((await order(o.id)).payment_status, 'approved');
+      assert.deepEqual(await stock(p.id), { stock: 2, reserved: 2 });
+      assert.equal(await count('inventory_movements', o.id), 1);
+      await commerce.applyPayment(verified.token, verified.result);
+      assert.deepEqual(await stock(p.id), { stock: 2, reserved: 2 });
+    },
+  );
+
+  await t.test('pago tardío con stock ya reservado por otro pedido queda en revisión', async () => {
+    const p = await product({ stock: 1 });
+    const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }]));
+    const verified = await payment(o, 1);
+    await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [o.id]);
+    await commerce.applyPayment(verified.token, verified.result);
+    await commerce.reserveOrder(await user(), input([{ product_id: p.id, quantity: 1 }]));
+    await commerce.applyPayment(verified.token, { ...verified.result, status: 2 });
+    await commerce.applyPayment(verified.token, { ...verified.result, status: 2 });
+    assert.equal((await order(o.id)).payment_status, 'review');
+    assert.deepEqual(await stock(p.id), { stock: 1, reserved: 1 });
+    assert.equal(await count('inventory_movements', o.id), 0);
+    assert.equal(
+      (
+        await db.query('SELECT count(*)::int AS n FROM mail_outbox WHERE dedupe_key=$1', [
+          `order:${o.id}:review`,
+        ])
+      ).rows[0].n,
+      1,
+    );
+  });
+
+  await t.test(
+    'una preventa liberada permite reintentar y el pago tardío respeta el máximo por cliente',
+    async () => {
+      const p = await product({
+        stock: 10,
+        kind: 'preorder',
+        opens_at: new Date(Date.now() - 3600000).toISOString(),
+        closes_at: new Date(Date.now() + 86400000).toISOString(),
+        max_per_customer: 1,
+        delivery_terms: 'Entrega de prueba después del lanzamiento.',
+      });
+      const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }]));
+      const verified = await payment(o, 1);
+      await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [o.id]);
+      await commerce.applyPayment(verified.token, verified.result);
+      const retry = await commerce.reserveOrder(
+        customer,
+        input([{ product_id: p.id, quantity: 1 }]),
+      );
+      await commerce.applyPayment(verified.token, { ...verified.result, status: 2 });
+      assert.equal((await order(o.id)).payment_status, 'review');
+      assert.equal((await order(retry.id)).payment_status, 'pending');
+      assert.deepEqual(await stock(p.id), { stock: 10, reserved: 1 });
+      assert.equal(await count('inventory_movements', o.id), 0);
+      await commerce.releaseOrder(retry.id, 'rejected', 'Fin del reintento de prueba.');
+      await assert.rejects(
+        () => commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }])),
+        { status: 409 },
+      );
+      assert.deepEqual(await stock(p.id), { stock: 10, reserved: 0 });
+    },
+  );
+
+  await t.test('consulta pendiente y aprobación concurrentes producen una sola venta', async () => {
+    for (const statuses of [
+      [1, 2],
+      [2, 1],
+    ]) {
+      const p = await product({ stock: 1 });
+      const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }]));
+      const verified = await payment(o, 1);
+      await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [o.id]);
+      await Promise.all(
+        statuses.map((status) =>
+          commerce.applyPayment(verified.token, { ...verified.result, status }),
+        ),
+      );
+      assert.equal((await order(o.id)).payment_status, 'approved');
+      assert.deepEqual(await stock(p.id), { stock: 0, reserved: 0 });
+      assert.equal(await count('inventory_movements', o.id), 1);
+    }
+  });
+
   await t.test('vencimiento local conserva reservas con creación incierta o en curso', async () => {
     for (const state of ['creating', 'uncertain']) {
       const p = await product({ stock: 2 });
@@ -607,6 +923,8 @@ test('SERGOD STORE · integración con base PostgreSQL local real', async (t) =>
       const o = await commerce.reserveOrder(customer, input([{ product_id: p.id, quantity: 1 }]));
       const verified = await payment(o);
       await commerce.releaseOrder(o.id, 'expired', 'Expiración de prueba.');
+      // A terminal order created before migration 006 has no marker, but no reservation either.
+      await db.query('UPDATE orders SET reservation_released_at=NULL WHERE id=$1', [o.id]);
       await commerce.completePos(
         admin,
         input([{ product_id: p.id, quantity: 1 }], {

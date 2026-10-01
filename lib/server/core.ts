@@ -97,7 +97,7 @@ export const publicOrder = (o: any) => {
   const { flow_token, flow_order, idempotency_key, request_hash, ...safe } = o;
   safe.can_refresh_payment = o.source === 'web' && o.payment_environment === flowEnvironment();
   safe.can_manage_delivery = o.payment_environment !== 'sandbox' || flowEnvironment() === 'sandbox';
-  if (!safe.can_refresh_payment) delete safe.payment_url;
+  if (!safe.can_refresh_payment || o.reservation_released_at) delete safe.payment_url;
   if (safe.payment_url && !safe.payment_url.startsWith('https://')) delete safe.payment_url;
   safe.number = Number(safe.number);
   return safe;

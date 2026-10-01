@@ -46,6 +46,27 @@ async function existing(tx: Db, key: string, fingerprint: string) {
     fail(409, 'Este intento de compra ya fue usado con otro carrito. Vuelve a revisar tu pedido.');
   return old;
 }
+async function preorderUsed(
+  tx: Db,
+  userId: string,
+  productId: string,
+  excludeOrderId: string | null = null,
+) {
+  return Number(
+    (
+      await tx.query(
+        `SELECT COALESCE(sum((item->>'quantity')::integer),0) AS total
+         FROM orders o CROSS JOIN LATERAL jsonb_array_elements(o.items) item
+         WHERE o.user_id=$1 AND (o.payment_status IN ('approved','review')
+           OR (o.payment_status='pending' AND o.reservation_released_at IS NULL))
+         AND item->>'product_id'=$2
+         AND (o.payment_environment IS NULL OR o.payment_environment=$3)
+         AND o.id IS DISTINCT FROM $4::uuid`,
+        [userId, productId, flowEnvironment(), excludeOrderId],
+      )
+    ).rows[0].total,
+  );
+}
 async function buildItems(
   tx: Db,
   items: { product_id: string; quantity: number }[],
@@ -72,14 +93,7 @@ async function buildItems(
         new Date(p.closes_at) <= new Date()
       )
         fail(409, `La preventa de ${p.name} no está abierta.`);
-      const used = Number(
-        (
-          await tx.query(
-            `SELECT COALESCE(sum((item->>'quantity')::integer),0) AS total FROM orders o CROSS JOIN LATERAL jsonb_array_elements(o.items) item WHERE o.user_id=$1 AND o.payment_status IN ('pending','approved','review') AND item->>'product_id'=$2 AND (o.payment_environment IS NULL OR o.payment_environment=$3)`,
-            [user.id, p.id, flowEnvironment()],
-          )
-        ).rows[0].total,
-      );
+      const used = await preorderUsed(tx, user.id, p.id);
       if (used + i.quantity > p.max_per_customer)
         fail(
           409,
@@ -251,13 +265,21 @@ export async function completePos(user: any, input: unknown) {
     return publicOrder(order);
   });
 }
-async function releaseLocked(tx: Db, o: any, status: 'rejected' | 'expired', message: string) {
-  if (o.payment_status !== 'pending') return;
+const hasReservation = (o: any) => o.payment_status === 'pending' && !o.reservation_released_at;
+async function releaseReservationLocked(tx: Db, o: any) {
+  if (!hasReservation(o)) return;
   for (const i of [...o.items].sort((a, b) => a.product_id.localeCompare(b.product_id)))
     await tx.query('UPDATE products SET reserved=reserved-$2,updated_at=now() WHERE id=$1', [
       i.product_id,
       i.quantity,
     ]);
+  await tx.query('UPDATE orders SET reservation_released_at=now(),updated_at=now() WHERE id=$1', [
+    o.id,
+  ]);
+}
+async function releaseLocked(tx: Db, o: any, status: 'rejected' | 'expired', message: string) {
+  if (o.payment_status !== 'pending') return;
+  await releaseReservationLocked(tx, o);
   await tx.query(
     'UPDATE orders SET payment_status=$2,fulfillment_status=$3,updated_at=now() WHERE id=$1',
     [o.id, status, 'cancelled'],
@@ -288,7 +310,7 @@ export async function releaseUnstartedOrders() {
   return (await getDb()).transaction(async (tx) => {
     const rows = (
       await tx.query(
-        "SELECT * FROM orders WHERE payment_status='pending' AND expires_at<now() AND flow_token IS NULL AND payment_url IS NULL FOR UPDATE SKIP LOCKED LIMIT 50",
+        "SELECT * FROM orders WHERE payment_status='pending' AND reservation_released_at IS NULL AND expires_at<now() AND flow_token IS NULL AND payment_url IS NULL FOR UPDATE SKIP LOCKED LIMIT 50",
       )
     ).rows;
     for (const o of rows)
@@ -313,6 +335,11 @@ export async function applyPayment(flowToken: string, verified: any) {
     .passthrough()
     .parse(verified);
   return (await getDb()).transaction(async (tx) => {
+    // Match checkout's user → order → product lock order when rechecking preorder limits.
+    await tx.query(
+      "SELECT id FROM users WHERE id=(SELECT user_id FROM orders WHERE id::text=$1 AND source='web') FOR UPDATE",
+      [d.commerceOrder],
+    );
     const o = (
       await tx.query('SELECT * FROM orders WHERE id::text=$1 AND source=$2 FOR UPDATE', [
         d.commerceOrder,
@@ -337,7 +364,33 @@ export async function applyPayment(flowToken: string, verified: any) {
       [o.id, flowToken.startsWith('recovered:') ? null : flowToken, String(d.flowOrder)],
     );
     if (o.payment_status === 'approved' || o.payment_status === 'review') return publicOrder(o);
-    if (d.status === 1) return publicOrder(o);
+    if (d.status === 1) {
+      // Flow can keep an abandoned link pending after its timeout. End only the inventory
+      // hold, after a verified response and a 60-second grace; keep reconciling the payment.
+      const elapsed =
+        hasReservation(o) &&
+        (
+          await tx.query(
+            "SELECT 1 FROM orders WHERE id=$1 AND expires_at+interval '60 seconds'<now()",
+            [o.id],
+          )
+        ).rows.length;
+      if (elapsed) {
+        await releaseReservationLocked(tx, o);
+        const message =
+          'Venció el plazo de reserva y las unidades volvieron a estar disponibles. Flow aún informa el pago pendiente; seguiremos verificándolo. Si ya pagaste, no vuelvas a pagar.';
+        await event(tx, o.id, message);
+        await enqueueMail(
+          tx,
+          `order:${o.id}:reservation-expired`,
+          o.customer_email,
+          `Pedido #${o.number}: reserva vencida, pago por verificar`,
+          `${message}\nConsulta tu pedido: ${appUrl()}/cuenta/pedidos/${o.id}`,
+        );
+        return publicOrder((await tx.query('SELECT * FROM orders WHERE id=$1', [o.id])).rows[0]);
+      }
+      return publicOrder(o);
+    }
     if (d.status === 3 || d.status === 4) {
       await releaseLocked(
         tx,
@@ -350,17 +403,23 @@ export async function applyPayment(flowToken: string, verified: any) {
       return publicOrder((await tx.query('SELECT * FROM orders WHERE id=$1', [o.id])).rows[0]);
     }
     const ordered = [...o.items].sort((a, b) => a.product_id.localeCompare(b.product_id));
+    const reserved = hasReservation(o);
     let canFulfill = true;
     for (const i of ordered) {
       const p = (await tx.query('SELECT * FROM products WHERE id=$1 FOR UPDATE', [i.product_id]))
         .rows[0];
-      if (
-        !p ||
-        (o.payment_status === 'pending'
-          ? p.reserved < i.quantity
-          : p.stock - p.reserved < i.quantity)
-      )
+      if (!p || (reserved ? p.reserved < i.quantity : p.stock - p.reserved < i.quantity))
         canFulfill = false;
+      if (!reserved && p && i.kind === 'preorder') {
+        // A freed hold no longer uses the customer's quota. A late payment cannot
+        // reclaim units already reserved or purchased by a newer order.
+        if (
+          !o.user_id ||
+          !p.max_per_customer ||
+          (await preorderUsed(tx, o.user_id, p.id, o.id)) + i.quantity > p.max_per_customer
+        )
+          canFulfill = false;
+      }
     }
     if (!canFulfill) {
       await tx.query("UPDATE orders SET payment_status='review',updated_at=now() WHERE id=$1", [
@@ -369,20 +428,20 @@ export async function applyPayment(flowToken: string, verified: any) {
       await event(
         tx,
         o.id,
-        'Pago verificado por Flow. Requiere revisión porque no hay unidades suficientes para completar la entrega.',
+        'Pago verificado por Flow. La tienda debe revisar la disponibilidad o el límite de preventa antes de confirmar la entrega.',
       );
       await enqueueMail(
         tx,
         `order:${o.id}:review`,
         o.customer_email,
         `Pedido #${o.number}: pago en revisión`,
-        'Tu pago fue recibido. La tienda debe revisar la disponibilidad antes de confirmar la entrega.',
+        'Tu pago fue recibido. La tienda debe revisar la disponibilidad y las condiciones del pedido antes de confirmar la entrega.',
       );
     } else {
       for (const i of ordered) {
         await tx.query(
           'UPDATE products SET stock=stock-$2,reserved=reserved-$3,updated_at=now() WHERE id=$1',
-          [i.product_id, i.quantity, o.payment_status === 'pending' ? i.quantity : 0],
+          [i.product_id, i.quantity, reserved ? i.quantity : 0],
         );
         await tx.query(
           'INSERT INTO inventory_movements(id,product_id,order_id,delta,reason) VALUES($1,$2,$3,$4,$5)',

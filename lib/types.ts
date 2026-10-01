@@ -107,6 +107,7 @@ export type Order = {
   carrier: string;
   tracking: string;
   expires_at: string | null;
+  reservation_released_at: string | null;
   created_at: string;
   updated_at: string;
   events?: { id: string; message: string; created_at: string }[];

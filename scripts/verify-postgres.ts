@@ -282,6 +282,119 @@ async function main() {
     assert.deepEqual(await stock(preorder.id), { stock: 10, reserved: 2 });
     record('Seis reservas simultáneas de un cliente respetan su máximo de dos');
 
+    const overdue = async (buyer: any, item: any) => {
+      const result = await flow.checkout(buyer, input(item.id));
+      const token = new URL(result.payment_url).searchParams.get('token')!;
+      await db.query("UPDATE orders SET expires_at=now()-interval '2 minutes' WHERE id=$1", [
+        result.order.id,
+      ]);
+      return { id: result.order.id, token, verified: payments.get(token)! };
+    };
+    for (let round = 0; round < 4; round++) {
+      const item = await product();
+      const late = await overdue(buyers[7 + round], item);
+      const pending = () => commerce.applyPayment(late.token, { ...late.verified, status: 1 });
+      const approved = () => commerce.applyPayment(late.token, { ...late.verified, status: 2 });
+      const callbacks = Array.from({ length: 8 }, (_, i) =>
+        (i + round) % 2 ? approved() : pending(),
+      );
+      await Promise.all(callbacks);
+      assert.deepEqual(await stock(item.id), { stock: 0, reserved: 0 });
+      const order = await commerce.getOrder(late.id, buyers[7 + round], true);
+      assert.equal(order.payment_status, 'approved');
+      assert.equal(
+        (
+          await db.query('SELECT count(*)::int AS n FROM inventory_movements WHERE order_id=$1', [
+            late.id,
+          ])
+        ).rows[0].n,
+        1,
+      );
+      assert.equal(
+        (
+          await db.query('SELECT count(*)::int AS n FROM mail_outbox WHERE dedupe_key=$1', [
+            `order:${late.id}:approved`,
+          ])
+        ).rows[0].n,
+        1,
+      );
+    }
+    record(
+      'Cuatro carreras de vencimiento/aprobación: respuestas pendientes no deshacen el pago ni duplican inventario',
+    );
+
+    for (let round = 0; round < 4; round++) {
+      const item = await product();
+      const late = await overdue(buyers[11 + round], item);
+      await flow.verifyToken(late.token);
+      assert.deepEqual(await stock(item.id), { stock: 1, reserved: 0 });
+      const pos = () =>
+        commerce.completePos(admin, {
+          ...input(item.id),
+          payment_method: 'cash',
+          cash_received: 10000,
+        });
+      const approved = () => commerce.applyPayment(late.token, { ...late.verified, status: 2 });
+      const results = await Promise.allSettled(
+        round % 2 ? [pos(), approved()] : [approved(), pos()],
+      );
+      for (const result of results)
+        if (result.status === 'rejected') assert.equal(result.reason.status, 409);
+      const order = await commerce.getOrder(late.id, buyers[11 + round], true);
+      assert.ok(['approved', 'review'].includes(order.payment_status));
+      assert.deepEqual(await stock(item.id), { stock: 0, reserved: 0 });
+      assert.equal(
+        (
+          await db.query(
+            'SELECT sum(-delta)::int AS n FROM inventory_movements WHERE product_id=$1 AND delta<0',
+            [item.id],
+          )
+        ).rows[0].n,
+        1,
+      );
+      const posSold = (
+        await db.query(
+          "SELECT count(*)::int AS n FROM inventory_movements m JOIN orders o ON o.id=m.order_id WHERE m.product_id=$1 AND o.source='pos'",
+          [item.id],
+        )
+      ).rows[0].n;
+      assert.equal(order.payment_status, posSold ? 'review' : 'approved');
+    }
+    record(
+      'Cuatro carreras POS/pago tardío tras liberar reserva: una venta o pago en revisión, nunca sobreventa',
+    );
+
+    for (let round = 0; round < 4; round++) {
+      const item = await product({
+        kind: 'preorder',
+        stock: 3,
+        max_per_customer: 1,
+        opens_at: new Date(Date.now() - 60000).toISOString(),
+        closes_at: new Date(Date.now() + 86400000).toISOString(),
+        delivery_terms: 'Preventa temporal de prueba',
+      });
+      const buyer = buyers[15 + round];
+      const late = await overdue(buyer, item);
+      await flow.verifyToken(late.token);
+      const approved = () => commerce.applyPayment(late.token, { ...late.verified, status: 2 });
+      const next = () => flow.checkout(buyer, input(item.id));
+      const results = await Promise.allSettled(
+        round % 2 ? [next(), approved()] : [approved(), next()],
+      );
+      for (const result of results)
+        if (result.status === 'rejected') assert.equal(result.reason.status, 409);
+      const order = await commerce.getOrder(late.id, buyer, true);
+      if (order.payment_status === 'approved') {
+        assert.deepEqual(await stock(item.id), { stock: 2, reserved: 0 });
+        assert.equal(results.filter((result) => result.status === 'rejected').length, 1);
+      } else {
+        assert.equal(order.payment_status, 'review');
+        assert.deepEqual(await stock(item.id), { stock: 3, reserved: 1 });
+        assert.ok(results.every((result) => result.status === 'fulfilled'));
+      }
+    }
+    record('Cuatro carreras de preventa/pago tardío de un cliente respetan el cupo máximo');
+
     const cash = await product({ stock: 4, discount_percent: 15 });
     const ticket = {
       ...input(cash.id),

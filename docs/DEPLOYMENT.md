@@ -121,7 +121,9 @@ Vercel debe tener configurado `CRON_SECRET` para proteger las invocaciones. Veri
 
 Cada ejecución reclama hasta seis pedidos, consulta Flow en grupos de tres y procesa un lote acotado de correos. Revisa errores y acumulación si aumenta el volumen. Una respuesta HTTP exitosa con `failed > 0` significa que hubo consultas que no se completaron: debe investigarse, no interpretarse como conciliación completa.
 
-La expiración local no presume que un pago posiblemente creado en Flow fue rechazado. Si no se puede confirmar el resultado con el proveedor, la reserva puede permanecer pendiente para evitar vender una unidad ya pagada. La operación necesita revisar pedidos retenidos y restablecer la comunicación; no debe liberar existencias manualmente basándose solo en el reloj.
+La expiración de la reserva y el estado del pago son independientes. La migración `006_reservation_release.sql` agrega `reservation_released_at`, sin reinterpretar pedidos históricos. Después del plazo configurado, un margen de 60 segundos y una consulta válida que aún informe pago pendiente, el sistema libera las unidades una sola vez y mantiene el pago pendiente de conciliación. La liberación ocurre en la siguiente ejecución del cron, no exactamente al segundo del vencimiento. Se oculta el enlace para continuar pagando desde la tienda y se informa por correo y en la cuenta que terminó la reserva.
+
+Si Flow no responde, informa un error o los datos no coinciden con el pedido, no se libera inventario por el reloj. Un pago aprobado después de liberar la reserva vuelve a comprobar stock y máximo de preventa por cliente; si no puede cumplirse, queda en revisión para atención de la tienda, sin descontar unidades inexistentes ni confirmar una entrega. La reserva liberada no cancela una operación que ya esté en trámite en el proveedor. El cron sigue consultando el pago hasta obtener un resultado definitivo.
 
 ## Variables de entorno
 

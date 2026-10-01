@@ -2043,8 +2043,9 @@ function Cart({
               <span>El pedido se confirma después de que Flow verifique el pago.</span>
             </div>
             <p className="store-summary-note">
-              Las unidades se reservan durante {settings.reservation_minutes} minutos mientras
-              completas el pago.
+              Las unidades se reservan durante {settings.reservation_minutes} minutos. Al terminar
+              ese plazo verificamos el pago con Flow antes de liberar las unidades. Si el pago se
+              confirma después de liberar la reserva, la tienda revisará la disponibilidad.
             </p>
           </aside>
         </form>
@@ -2488,10 +2489,14 @@ function AccountDashboard({ user, refreshUser }: { user: User; refreshUser: () =
                       </div>
                       <div>
                         <span className={`store-pill store-payment-${o.payment_status}`}>
-                          {paymentLabels[o.payment_status] || o.payment_status}
+                          {o.payment_status === 'pending' && o.reservation_released_at
+                            ? 'Pago por verificar'
+                            : paymentLabels[o.payment_status] || o.payment_status}
                         </span>
                         <small>
-                          {deliveryLabels[o.fulfillment_status] || o.fulfillment_status}
+                          {o.payment_status === 'pending' && o.reservation_released_at
+                            ? 'Reserva liberada'
+                            : deliveryLabels[o.fulfillment_status] || o.fulfillment_status}
                         </small>
                       </div>
                       <strong>{money(o.total)}</strong>
@@ -2696,6 +2701,7 @@ function OrderDetail({
   const o = remote.data;
   if (!o) return null;
   const delivery = o.delivery;
+  const releasedPending = o.payment_status === 'pending' && Boolean(o.reservation_released_at);
   return (
     <div className="store-page">
       <Link href="/cuenta" className="store-text-link">
@@ -2715,13 +2721,15 @@ function OrderDetail({
       <div className="store-order-status">
         <div>
           <span className={`store-pill store-payment-${o.payment_status}`}>
-            {paymentLabels[o.payment_status]}
+            {releasedPending ? 'Pago por verificar' : paymentLabels[o.payment_status]}
           </span>
           <h2>
             {o.payment_status === 'approved'
               ? 'Tu pago está confirmado'
               : o.payment_status === 'pending'
-                ? 'Estamos esperando la confirmación del pago'
+                ? releasedPending
+                  ? 'La reserva terminó; estamos verificando el pago'
+                  : 'Estamos esperando la confirmación del pago'
                 : o.payment_status === 'expired'
                   ? 'El plazo de reserva terminó'
                   : o.payment_status === 'rejected'
@@ -2732,7 +2740,9 @@ function OrderDetail({
             {o.payment_status === 'approved'
               ? 'Puedes seguir la preparación y entrega de tu pedido en esta página.'
               : o.payment_status === 'pending'
-                ? `Confirmaremos tu pedido cuando Flow verifique el pago.${o.expires_at ? ' Las unidades se reservan hasta ' + date(o.expires_at) + '.' : ''}`
+                ? releasedPending
+                  ? 'Las unidades fueron liberadas al terminar la reserva. Si ya pagaste o tu pago está en trámite, espera la confirmación antes de volver a comprar. Si el pago se aprueba, revisaremos la disponibilidad para completar tu pedido.'
+                  : `Confirmaremos tu pedido cuando Flow verifique el pago.${o.expires_at ? ' El plazo de reserva termina el ' + date(o.expires_at) + '; después consultamos el pago antes de liberar las unidades.' : ''}`
                 : o.payment_status === 'expired'
                   ? 'Las unidades reservadas fueron liberadas. Puedes volver a comprar según disponibilidad.'
                   : o.payment_status === 'rejected'
@@ -2749,7 +2759,7 @@ function OrderDetail({
             >
               {busy ? 'Consultando…' : 'Actualizar pago'}
             </button>
-            {o.payment_url && (
+            {o.payment_url && !releasedPending && (
               <a className="store-button" href={o.payment_url}>
                 Continuar pago <ArrowRight size={16} />
               </a>

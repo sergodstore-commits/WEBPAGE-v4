@@ -1610,7 +1610,16 @@ function OrderTable({ orders }: { orders: Order[] }) {
               </td>
               <td>{money(o.total)}</td>
               <td>
-                <Tag good={o.payment_status === 'approved'}>{paymentLabels[o.payment_status]}</Tag>
+                <Tag good={o.payment_status === 'approved'}>
+                  {o.payment_status === 'pending' && o.reservation_released_at
+                    ? 'Pago por verificar'
+                    : paymentLabels[o.payment_status]}
+                </Tag>
+                {o.payment_status === 'pending' && o.reservation_released_at && (
+                  <small className="admin-muted">
+                    Reserva liberada: {date(o.reservation_released_at)}
+                  </small>
+                )}
                 {o.payment_environment === 'sandbox' && <Tag>Prueba sandbox</Tag>}
               </td>
               <td>{deliveryLabels[o.fulfillment_status]}</td>
@@ -1737,6 +1746,7 @@ function OrderPage({ id }: { id: string }) {
   }
   if (!r.data) return <Loading error={r.error} retry={r.load} />;
   const o = r.data;
+  const releasedPending = o.payment_status === 'pending' && Boolean(o.reservation_released_at);
   const deliveryNames: Record<string, string> = {
     type: 'Modalidad',
     method: 'Modalidad',
@@ -1768,7 +1778,9 @@ function OrderPage({ id }: { id: string }) {
         title={`Pedido #${o.number}`}
         description={`${date(o.created_at)} · ${o.source === 'pos' ? 'Venta en el local' : 'Compra en la web'}${o.payment_environment === 'sandbox' ? ' · Prueba sandbox, sin cobro real' : ''}`}
       >
-        <Tag good={o.payment_status === 'approved'}>{paymentLabels[o.payment_status]}</Tag>
+        <Tag good={o.payment_status === 'approved'}>
+          {releasedPending ? 'Pago por verificar' : paymentLabels[o.payment_status]}
+        </Tag>
       </Heading>
       <Feedback notice={notice} />
       <div className="admin-order-layout">
@@ -1949,7 +1961,7 @@ function OrderPage({ id }: { id: string }) {
               </p>
             )}
             <p>
-              {paymentLabels[o.payment_status]} ·{' '}
+              {releasedPending ? 'Pago por verificar' : paymentLabels[o.payment_status]} ·{' '}
               {o.payment_method === 'flow'
                 ? 'Flow'
                 : (
@@ -1961,8 +1973,20 @@ function OrderPage({ id }: { id: string }) {
                     } as Record<string, string>
                   )[o.payment_method] || o.payment_method}
             </p>
-            {o.expires_at && o.payment_status === 'pending' && (
-              <p className="admin-help">Unidades reservadas hasta {date(o.expires_at)}.</p>
+            {releasedPending ? (
+              <p className="admin-help">
+                Reserva liberada el {date(o.reservation_released_at)}. Este pedido ya no retiene
+                unidades. El pago sigue por verificar; si se aprueba, se comprobará la
+                disponibilidad antes de confirmar el pedido.
+              </p>
+            ) : (
+              o.expires_at &&
+              o.payment_status === 'pending' && (
+                <p className="admin-help">
+                  Plazo de reserva: {date(o.expires_at)}. Al terminar, el sistema consulta el pago
+                  antes de liberar las unidades.
+                </p>
+              )
             )}
             {o.can_refresh_payment && (
               <button className="admin-button secondary full" disabled={busy} onClick={refresh}>
@@ -2529,7 +2553,7 @@ function SettingsPage() {
             <div className="admin-form-grid">
               <Field
                 label="Tiempo de reserva (minutos)"
-                hint="Las unidades de una compra pendiente se reservan durante este plazo y se liberan si no se completa."
+                hint="Al terminar este plazo, el sistema consulta el pago con Flow antes de liberar las unidades. Los pagos confirmados después de la liberación requieren comprobar la disponibilidad."
               >
                 <input
                   type="number"
