@@ -117,6 +117,8 @@ test('solo las URL HTTPS de hosts observados son válidas y no aceptan credencia
     'casamyl.cl',
     'elreinodelosduelos.cl',
     'www.yugioh-card.com',
+    'goldsilver.cl',
+    'www.empiregames.es',
     'cdnx.jumpseller.com',
     'dojiw2m9tvv09.cloudfront.net',
   ]) {

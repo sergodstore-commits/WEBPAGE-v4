@@ -9,6 +9,8 @@ const catalogHosts = new Set([
   'casamyl.cl',
   'elreinodelosduelos.cl',
   'www.yugioh-card.com',
+  'goldsilver.cl',
+  'www.empiregames.es',
   'cdnx.jumpseller.com',
   'dojiw2m9tvv09.cloudfront.net',
 ]);
@@ -126,7 +128,11 @@ export const catalogImportProductSchema = z
 export const catalogImportManifestSchema = z
   .object({
     version: z.literal(1),
-    source: z.enum(['https://zeromulligan.cl/catalogo/', 'sergod-selected-tcg-20260927']),
+    source: z.enum([
+      'https://zeromulligan.cl/catalogo/',
+      'sergod-selected-tcg-20260927',
+      'sergod-ygo-languages-20261001',
+    ]),
     collected_at: z.iso.datetime(),
     warnings: z
       .array(

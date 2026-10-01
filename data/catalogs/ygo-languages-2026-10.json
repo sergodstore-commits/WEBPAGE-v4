@@ -1,0 +1,708 @@
+{
+  "version": 1,
+  "source": "sergod-ygo-languages-20261001",
+  "collected_at": "2026-10-01T07:23:37.950Z",
+  "warnings": [
+    "Variantes por formato e idioma solicitadas por el propietario. Cada SKU conserva precio, stock, reservas y límite por cliente independientes.",
+    "Todos los artículos nuevos se crean en borrador, con precio pendiente y stock cero. El propietario completa precios, cupos y condiciones antes de publicar.",
+    "Beyond the Brave conserva sus tres formatos en Tienda; sus nuevas versiones en español también son de Tienda. Las cajas Glorious Victors e Immortal Phoenix y los mazos Seto Kaiba/Yugi Muto son Preventas.",
+    "Las tres fichas anteriores sin idioma se identifican, conservando ID y SKU: Magnificent Maestros caja español; Glorious Victors e Immortal Phoenix sobre inglés. Se preservan todos sus datos comerciales.",
+    "Las fotos de Glorious Victors display y de algunos sobres son referencias del envase inglés. La imagen de Empiregames de una caja japonesa de 30 sobres no se usa para el display TCG de 24; se usa la referencia oficial de sus sobres con aclaración.",
+    "No se convierten precios EUR a CLP ni fechas regionales de lanzamiento en plazos de entrega de SERGOD.",
+    "Preparar una variante no confirma disponibilidad del proveedor. Cada idioma permanece en borrador hasta que el propietario lo habilite."
+  ],
+  "products": [
+    {
+      "sku": "SG-YGO-BTBR-DISPLAY24-ES",
+      "name": "Yu-Gi-Oh! Beyond the Brave · Display de 24 sobres · Español",
+      "description": "Display sellado de Yu-Gi-Oh! TCG Beyond the Brave con 24 sobres en español. La expansión incorpora nuevas cartas para estrategias como Red-Eyes y Destiny HERO. El contenido de cada sobre es aleatorio.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-beyond-the-brave",
+      "catalog_name": "Yu-Gi-Oh! Beyond the Brave",
+      "options": {
+        "Formato": "Display de 24 sobres",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Beyond the Brave", "Display", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 display sellado de 24 sobres"
+        },
+        {
+          "label": "Expansión",
+          "value": "Beyond the Brave"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/beyond-the-brave/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/06/BETB-Display-01-SP.webp"
+      ],
+      "kind": "store",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-BTBR-TOKEN-ES",
+      "name": "Yu-Gi-Oh! Beyond the Brave · Token Box · Español",
+      "description": "Token Box de Yu-Gi-Oh! TCG Beyond the Brave en español. Presentación de colección independiente del display y del sobre individual.\nFotografía referencial del producto; el envase de la imagen puede mostrar otro idioma.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-beyond-the-brave",
+      "catalog_name": "Yu-Gi-Oh! Beyond the Brave",
+      "options": {
+        "Formato": "Token Box",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Beyond the Brave", "Token Box", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 Token Box"
+        },
+        {
+          "label": "Expansión",
+          "value": "Beyond the Brave"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.geekers.cl/yu-gi-oh-beyond-the-brave-token-box?variant_id=120767754",
+      "images": ["https://cdnx.jumpseller.com/geekers1/image/78296109/thumb/719/719?1782691291"],
+      "kind": "store",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-BTBR-SOBRE-ES",
+      "name": "Yu-Gi-Oh! Beyond the Brave · Sobre · Español",
+      "description": "Sobre sellado de Yu-Gi-Oh! TCG Beyond the Brave en español, con 9 cartas. La expansión incorpora nuevas cartas inspiradas en las estrategias de Joey Wheeler. El contenido es aleatorio.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-beyond-the-brave",
+      "catalog_name": "Yu-Gi-Oh! Beyond the Brave",
+      "options": {
+        "Formato": "Sobre",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Beyond the Brave", "Sobre", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 sobre sellado"
+        },
+        {
+          "label": "Contenido",
+          "value": "9 cartas por sobre"
+        },
+        {
+          "label": "Expansión",
+          "value": "Beyond the Brave"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/beyond-the-brave/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/06/BETB-Foil-Single-SP.webp"
+      ],
+      "kind": "store",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-MAMS-CAJA-EN",
+      "name": "Yu-Gi-Oh! Magnificent Maestros · Caja · Inglés",
+      "description": "Caja de Yu-Gi-Oh! TCG con tres sobres de cinco cartas y tres cartas Secret Rare adicionales, que pueden aparecer en rareza Starlight. Incluye nuevas cartas inspiradas en rivales del anime y soporte para Toon, Artibruja y Desencadenada. Nombre, presentación y contenido sujetos a cambios del fabricante.\nLas fechas oficiales indicadas son de lanzamiento regional y no constituyen una fecha de entrega en Chile.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-magnificent-maestros",
+      "catalog_name": "Yu-Gi-Oh! Magnificent Maestros",
+      "options": {
+        "Formato": "Caja",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Caja", "Magnificent Maestros", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "Caja"
+        },
+        {
+          "label": "Contenido por caja",
+          "value": "3 sobres de 5 cartas y 3 cartas Secret Rare adicionales con posibilidad de Starlight Rare"
+        },
+        {
+          "label": "Colección",
+          "value": "125 cartas según la ficha oficial de Norteamérica"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "12 de noviembre de 2026"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "13 de noviembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/product/magnificent-maestros/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/07/MAMS-Tuckbox-03-EN.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/07/MAMS-Tuckbox-02-EN.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/07/MAMS-Tuckbox-01-EN.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-GLVI-SOBRE-ES",
+      "name": "Yu-Gi-Oh! Glorious Victors · Sobre · Español",
+      "description": "Sobre de Yu-Gi-Oh! TCG con siete cartas: una foil y seis Rare. La colección reúne 60 cartas e introduce las estrategias Zenet, Raise Moon y Trirealm Rift. Algunas cartas también cuentan con versiones Collector's Rare y Starlight Rare. Nombre, presentación y contenido sujetos a cambios del fabricante.\nLas fechas oficiales indicadas son de lanzamiento regional y no constituyen una fecha de entrega en Chile.\nFotografía referencial del producto; el envase de la imagen puede mostrar otro idioma.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-glorious-victors",
+      "catalog_name": "Yu-Gi-Oh! Glorious Victors",
+      "options": {
+        "Formato": "Sobre",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Sobre", "Glorious Victors", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación confirmada",
+          "value": "Sobre"
+        },
+        {
+          "label": "Contenido por sobre",
+          "value": "7 cartas: 1 foil y 6 Rare"
+        },
+        {
+          "label": "Colección",
+          "value": "60 cartas: 3 Secret Rare, 10 Ultra Rare, 10 Super Rare y 37 Rare"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "15 cartas también en Collector's Rare y 10 en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "3 de diciembre de 2026"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "4 de diciembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/glorious-victors/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/08/GLVI-Foil-Single-US.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/08/GLVI-Foil-Stack-US-1.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-IMPH-SOBRE-ES",
+      "name": "Yu-Gi-Oh! Immortal Phoenix · Sobre · Español",
+      "description": "Expansión de Yu-Gi-Oh! TCG con nuevas cartas Sun God inspiradas en Marik, además de novedades para Salamangreat, Winter Raven y Celestigard. La colección reúne 100 cartas e incluye versiones de arte extendido y Starlight Rare. Nombre, presentación y contenido sujetos a cambios del fabricante.\nLas fechas oficiales indicadas son de lanzamiento regional y no constituyen una fecha de entrega en Chile.\nFotografía referencial del producto; el envase de la imagen puede mostrar otro idioma.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-immortal-phoenix",
+      "catalog_name": "Yu-Gi-Oh! Immortal Phoenix",
+      "options": {
+        "Formato": "Sobre",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Sobre", "Immortal Phoenix", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación confirmada",
+          "value": "Sobre (Booster Pack)"
+        },
+        {
+          "label": "Colección",
+          "value": "100 cartas: 10 Secret Rare, 14 Ultra Rare, 26 Super Rare y 50 comunes"
+        },
+        {
+          "label": "Arte extendido",
+          "value": "5 cartas también en Ultra Rare y Starlight Rare con arte extendido"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "20 cartas adicionales también disponibles en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "28 de enero de 2027"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "29 de enero de 2027"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/immortal-phoenix/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/IMPH-Foil-Single-US.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/IMPH-Foil-Stack-US.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-GLVI-DISPLAY24-ES",
+      "name": "Yu-Gi-Oh! Glorious Victors · Display de 24 sobres · Español",
+      "description": "Display de Yu-Gi-Oh! TCG Glorious Victors con 24 sobres en español. El contenido de los sobres es aleatorio.\nFotografía referencial del producto; el envase de la imagen puede mostrar otro idioma.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-glorious-victors",
+      "catalog_name": "Yu-Gi-Oh! Glorious Victors",
+      "options": {
+        "Formato": "Display de 24 sobres",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Glorious Victors", "Display", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 display de 24 sobres"
+        },
+        {
+          "label": "Contenido por sobre",
+          "value": "7 cartas: 1 foil y 6 Rare"
+        },
+        {
+          "label": "Colección",
+          "value": "60 cartas: 3 Secret Rare, 10 Ultra Rare, 10 Super Rare y 37 Rare"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "15 cartas también en Collector's Rare y 10 en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "3 de diciembre de 2026"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "4 de diciembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://goldsilver.cl/products/preventa-yu-gi-oh-glorious-victors-booster-box-espanol-ingles",
+      "images": ["https://goldsilver.cl/cdn/shop/files/images_18.jpg?v=1790061225&width=1920"],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-GLVI-DISPLAY24-EN",
+      "name": "Yu-Gi-Oh! Glorious Victors · Display de 24 sobres · Inglés",
+      "description": "Display de Yu-Gi-Oh! TCG Glorious Victors con 24 sobres en inglés. El contenido de los sobres es aleatorio.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-glorious-victors",
+      "catalog_name": "Yu-Gi-Oh! Glorious Victors",
+      "options": {
+        "Formato": "Display de 24 sobres",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Glorious Victors", "Display", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 display de 24 sobres"
+        },
+        {
+          "label": "Contenido por sobre",
+          "value": "7 cartas: 1 foil y 6 Rare"
+        },
+        {
+          "label": "Colección",
+          "value": "60 cartas: 3 Secret Rare, 10 Ultra Rare, 10 Super Rare y 37 Rare"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "15 cartas también en Collector's Rare y 10 en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "3 de diciembre de 2026"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "4 de diciembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        }
+      ],
+      "source_url": "https://goldsilver.cl/products/preventa-yu-gi-oh-glorious-victors-booster-box-espanol-ingles",
+      "images": ["https://goldsilver.cl/cdn/shop/files/images_18.jpg?v=1790061225&width=1920"],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-IMPH-DISPLAY24-ES",
+      "name": "Yu-Gi-Oh! Immortal Phoenix · Display de 24 sobres · Español",
+      "description": "Display de Yu-Gi-Oh! TCG Immortal Phoenix con 24 sobres en español. El contenido de los sobres es aleatorio.\nImagen referencial de los sobres de la colección; esta presentación corresponde a un display de 24 sobres. El envase de la imagen puede mostrar otro idioma.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-immortal-phoenix",
+      "catalog_name": "Yu-Gi-Oh! Immortal Phoenix",
+      "options": {
+        "Formato": "Display de 24 sobres",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Immortal Phoenix", "Display", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 display de 24 sobres"
+        },
+        {
+          "label": "Colección",
+          "value": "100 cartas: 10 Secret Rare, 14 Ultra Rare, 26 Super Rare y 50 comunes"
+        },
+        {
+          "label": "Arte extendido",
+          "value": "5 cartas también en Ultra Rare y Starlight Rare con arte extendido"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "20 cartas adicionales también disponibles en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "28 de enero de 2027"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "29 de enero de 2027"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.empiregames.es/producto/pre-venta-28-01-2027-yu-gi-oh-immortal-phoenix-booster-box-24x-boosters-espanol",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/IMPH-Foil-Stack-US.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "sku": "SG-YGO-IMPH-DISPLAY24-EN",
+      "name": "Yu-Gi-Oh! Immortal Phoenix · Display de 24 sobres · Inglés",
+      "description": "Display de Yu-Gi-Oh! TCG Immortal Phoenix con 24 sobres en inglés. El contenido de los sobres es aleatorio.\nImagen referencial de los sobres de la colección; esta presentación corresponde a un display de 24 sobres. El envase de la imagen puede mostrar otro idioma.",
+      "price": 0,
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-immortal-phoenix",
+      "catalog_name": "Yu-Gi-Oh! Immortal Phoenix",
+      "options": {
+        "Formato": "Display de 24 sobres",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Immortal Phoenix", "Display", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 display de 24 sobres"
+        },
+        {
+          "label": "Colección",
+          "value": "100 cartas: 10 Secret Rare, 14 Ultra Rare, 26 Super Rare y 50 comunes"
+        },
+        {
+          "label": "Arte extendido",
+          "value": "5 cartas también en Ultra Rare y Starlight Rare con arte extendido"
+        },
+        {
+          "label": "Rarezas alternativas",
+          "value": "20 cartas adicionales también disponibles en Starlight Rare"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "28 de enero de 2027"
+        },
+        {
+          "label": "Lanzamiento de referencia — Norteamérica",
+          "value": "29 de enero de 2027"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        }
+      ],
+      "source_url": "https://www.empiregames.es/producto/pre-venta-28-01-2027-yu-gi-oh-immortal-phoenix-booster-box-24x-boosters-espanol",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/IMPH-Foil-Stack-US.webp"
+      ],
+      "kind": "preorder",
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "name": "Yu-Gi-Oh! Structure Deck Seto Kaiba · Mazo de estructura · Español",
+      "description": "Mazo de estructura de Yu-Gi-Oh! TCG inspirado en Seto Kaiba, en español. Contiene 45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare. Incluye libro de reglas, tapete de juego y guía de duelo. La fecha de lanzamiento de referencia corresponde a Europa y no determina la entrega en Chile.",
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-structure-deck-seto-kaiba",
+      "catalog_name": "Yu-Gi-Oh! Structure Deck Seto Kaiba",
+      "options": {
+        "Formato": "Mazo de estructura",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Structure Deck", "Seto Kaiba", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 mazo de estructura"
+        },
+        {
+          "label": "Contenido",
+          "value": "45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare"
+        },
+        {
+          "label": "Accesorios",
+          "value": "Libro de reglas, tapete de juego y guía de duelo"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "10 de diciembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/structure-deck-seto-kaiba/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDKS-Tuck-01-SP.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDKS-Tuck-02-SP.webp"
+      ],
+      "kind": "preorder",
+      "sku": "SG-YGO-SDKS-MAZO-ES",
+      "price": 0,
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "name": "Yu-Gi-Oh! Structure Deck Seto Kaiba · Mazo de estructura · Inglés",
+      "description": "Mazo de estructura de Yu-Gi-Oh! TCG inspirado en Seto Kaiba, en inglés. Contiene 45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare. Incluye libro de reglas, tapete de juego y guía de duelo. La fecha de lanzamiento de referencia corresponde a Europa y no determina la entrega en Chile.",
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-structure-deck-seto-kaiba",
+      "catalog_name": "Yu-Gi-Oh! Structure Deck Seto Kaiba",
+      "options": {
+        "Formato": "Mazo de estructura",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Structure Deck", "Seto Kaiba", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 mazo de estructura"
+        },
+        {
+          "label": "Contenido",
+          "value": "45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare"
+        },
+        {
+          "label": "Accesorios",
+          "value": "Libro de reglas, tapete de juego y guía de duelo"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "10 de diciembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/product/structure-deck-seto-kaiba/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDKS-Tuck-01-EN.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDKS-Tuck-02-EN.webp"
+      ],
+      "kind": "preorder",
+      "sku": "SG-YGO-SDKS-MAZO-EN",
+      "price": 0,
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "name": "Yu-Gi-Oh! Structure Deck Yugi Muto · Mazo de estructura · Español",
+      "description": "Mazo de estructura de Yu-Gi-Oh! TCG inspirado en Yugi Muto, en español. Contiene 45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare. Incluye libro de reglas, tapete de juego y guía de duelo. La fecha de lanzamiento de referencia corresponde a Europa y no determina la entrega en Chile.",
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-structure-deck-yugi-muto",
+      "catalog_name": "Yu-Gi-Oh! Structure Deck Yugi Muto",
+      "options": {
+        "Formato": "Mazo de estructura",
+        "Idioma": "Español"
+      },
+      "tags": ["Yu-Gi-Oh!", "Structure Deck", "Yugi Muto", "Español"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 mazo de estructura"
+        },
+        {
+          "label": "Contenido",
+          "value": "45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare"
+        },
+        {
+          "label": "Accesorios",
+          "value": "Libro de reglas, tapete de juego y guía de duelo"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "10 de diciembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Español"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/es/product/structure-deck-yugi-muto/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDMY-Tuck-01-SP.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDMY-Tuck-02-SP.webp"
+      ],
+      "kind": "preorder",
+      "sku": "SG-YGO-SDMY-MAZO-ES",
+      "price": 0,
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    },
+    {
+      "name": "Yu-Gi-Oh! Structure Deck Yugi Muto · Mazo de estructura · Inglés",
+      "description": "Mazo de estructura de Yu-Gi-Oh! TCG inspirado en Yugi Muto, en inglés. Contiene 45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare. Incluye libro de reglas, tapete de juego y guía de duelo. La fecha de lanzamiento de referencia corresponde a Europa y no determina la entrega en Chile.",
+      "category": "Yu-Gi-Oh!",
+      "brand": "Konami",
+      "catalog_group": "ygo-structure-deck-yugi-muto",
+      "catalog_name": "Yu-Gi-Oh! Structure Deck Yugi Muto",
+      "options": {
+        "Formato": "Mazo de estructura",
+        "Idioma": "Inglés"
+      },
+      "tags": ["Yu-Gi-Oh!", "Structure Deck", "Yugi Muto", "Inglés"],
+      "specifications": [
+        {
+          "label": "Presentación",
+          "value": "1 mazo de estructura"
+        },
+        {
+          "label": "Contenido",
+          "value": "45 cartas: 40 comunes, 2 Ultra Rare y 3 Super Rare"
+        },
+        {
+          "label": "Accesorios",
+          "value": "Libro de reglas, tapete de juego y guía de duelo"
+        },
+        {
+          "label": "Lanzamiento de referencia — Europa",
+          "value": "10 de diciembre de 2026"
+        },
+        {
+          "label": "Idioma",
+          "value": "Inglés"
+        }
+      ],
+      "source_url": "https://www.yugioh-card.com/eu/product/structure-deck-yugi-muto/",
+      "images": [
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDMY-Tuck-01-EN.webp",
+        "https://www.yugioh-card.com/eu/wp-content/uploads/2026/09/SDMY-Tuck-02-EN.webp"
+      ],
+      "kind": "preorder",
+      "sku": "SG-YGO-SDMY-MAZO-EN",
+      "price": 0,
+      "publish": false,
+      "opens_at": null,
+      "closes_at": null,
+      "max_per_customer": null,
+      "delivery_terms": ""
+    }
+  ]
+}
