@@ -10,7 +10,11 @@ import {
   type ReactNode,
 } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { StoreHeader } from '@/components/store/StoreHeader';
+import { StoreFooter } from '@/components/store/StoreFooter';
+import HomeSections from '@/components/store/home/HomeSections';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,11 +22,9 @@ import {
   Check,
   ChevronDown,
   Clock3,
-  CreditCard,
   HeartHandshake,
   ImageIcon,
   MapPin,
-  Menu,
   Minus,
   Newspaper,
   Package,
@@ -41,6 +43,9 @@ import {
 import { api, date, deliveryLabels, money, paymentLabels, price } from '@/lib/client';
 import type { CartItem, Order, Post, Product, Settings, User } from '@/lib/types';
 import './store.css';
+import '@/styles/store-foundation.css';
+
+const HomeHero = dynamic(() => import('@/components/store/home/HomeHero'));
 
 const CART_KEY = 'sergod-store-cart-v1';
 const CHECKOUT_KEY = 'sergod-store-checkout-v1';
@@ -55,13 +60,6 @@ const emptySettings: Settings = {
   reservation_minutes: 20,
   carriers: [],
 };
-const sections = [
-  { href: '/tienda', label: 'Tienda' },
-  { href: '/preventas', label: 'Preventas' },
-  { href: '/comunidad', label: 'Comunidad' },
-  { href: '/noticias', label: 'Noticias' },
-  { href: '/torneos', label: 'Torneos' },
-];
 type Remote<T> = { data: T | null; loading: boolean; error: string; reload: () => void };
 
 function useRemote<T>(path: string | null): Remote<T> {
@@ -330,7 +328,6 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
     [authReady, setAuthReady] = useState(false),
     [cart, setCart] = useState<CartItem[]>([]),
     [cartReady, setCartReady] = useState(false),
-    [menu, setMenu] = useState(false),
     [toast, setToast] = useState('');
   const refreshUser = useCallback(async () => {
     try {
@@ -369,9 +366,6 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
   useEffect(() => {
     if (cartReady) localStorage.setItem(CART_KEY, JSON.stringify(cart));
   }, [cart, cartReady]);
-  useEffect(() => {
-    setMenu(false);
-  }, [pathname]);
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(''), 4500);
@@ -457,134 +451,20 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
     );
   return (
     <div className="store-app">
-      <div className="store-topbar">
-        <span>Cartas coleccionables · Copiapó, Chile</span>
-        <span>
-          <MapPin size={12} /> Tu comunidad, tu tienda
-        </span>
-      </div>
-      <header className="store-header">
-        {settings.payment_mode === 'sandbox' && (
-          <div className="store-sandbox-notice" role="status">
-            Versión de prueba · pagos de sandbox · sin cobros reales
-          </div>
-        )}
-        <div className="store-header-inner">
-          <Link href="/" className="store-brand" aria-label="SERGOD STORE, inicio">
-            <span className="store-brand-mark">
-              S<span>↗</span>
-            </span>
-            <span>
-              SERGOD<span className="store-brand-store">STORE</span>
-            </span>
-          </Link>
-          <nav className="store-nav" aria-label="Navegación principal">
-            {sections.map((s) => (
-              <Link key={s.href} href={s.href} className={pathname === s.href ? 'is-active' : ''}>
-                {s.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="store-header-actions">
-            <Link
-              href="/cuenta"
-              className="store-icon-button store-account-link"
-              aria-label="Mi cuenta"
-            >
-              <UserRound size={20} />
-              <span>{user ? 'Mi cuenta' : 'Ingresar'}</span>
-            </Link>
-            <Link
-              href="/carrito"
-              className="store-icon-button store-cart-link"
-              aria-label={`Carrito, ${count} artículos`}
-            >
-              <ShoppingBag size={21} />
-              {count > 0 && <span className="store-cart-count">{count}</span>}
-            </Link>
-            <button
-              className="store-icon-button store-menu-toggle"
-              aria-label={menu ? 'Cerrar menú' : 'Abrir menú'}
-              aria-expanded={menu}
-              onClick={() => setMenu(!menu)}
-            >
-              {menu ? <X /> : <Menu />}
-            </button>
-          </div>
-        </div>
-        {menu && (
-          <nav className="store-mobile-nav" aria-label="Navegación móvil">
-            {sections.map((s) => (
-              <Link key={s.href} href={s.href}>
-                {s.label}
-                <ArrowRight size={16} />
-              </Link>
-            ))}
-            {user?.role === 'admin' && (
-              <Link href="/admin">
-                Administrar tienda <ArrowRight size={16} />
-              </Link>
-            )}
-          </nav>
-        )}
-      </header>
-      <main className="store-main" id="contenido">
+      <StoreHeader
+        pathname={pathname}
+        user={user}
+        count={count}
+        paymentMode={settings.payment_mode}
+      />
+      <main
+        className={pathname === '/' ? 'store-main store-home-main' : 'store-main'}
+        id="contenido"
+        tabIndex={-1}
+      >
         {content}
       </main>
-      <footer className="store-footer">
-        <div className="store-footer-main">
-          <div>
-            <Link href="/" className="store-footer-brand">
-              SERGOD STORE<span>Cartas & comunidad.</span>
-            </Link>
-            <p>
-              Una tienda de cartas coleccionables
-              <br />
-              en Copiapó, Chile.
-            </p>
-            {settings.email && <a href={`mailto:${settings.email}`}>{settings.email}</a>}
-          </div>
-          <div>
-            <h3>Explora</h3>
-            {sections.map((s) => (
-              <Link key={s.href} href={s.href}>
-                {s.label}
-              </Link>
-            ))}
-          </div>
-          <div>
-            <h3>Tu compra</h3>
-            <Link href="/cuenta">Mi cuenta y pedidos</Link>
-            <Link href="/carrito">Carrito de compras</Link>
-            <p>
-              Retiro en local y envío con
-              <br />
-              los transportistas habilitados.
-            </p>
-          </div>
-          <div>
-            <h3>Visítanos</h3>
-            {settings.address ? (
-              <p>{settings.address}</p>
-            ) : (
-              <p>
-                Copiapó, Región de Atacama
-                <br />
-                Chile
-              </p>
-            )}
-            {settings.hours && <p className="store-preline">{settings.hours}</p>}
-            {settings.phone && <a href={`tel:${settings.phone}`}>{settings.phone}</a>}
-          </div>
-        </div>
-        <div className="store-footer-bottom">
-          <span>© {new Date().getFullYear()} SERGOD STORE</span>
-          <span>Precios en pesos chilenos (CLP)</span>
-          <Link href="/admin">
-            Administración <ArrowRight size={13} />
-          </Link>
-        </div>
-      </footer>
+      <StoreFooter settings={settings} />
       {toast && (
         <div className="store-toast" role="status">
           <Check size={18} />
@@ -602,216 +482,56 @@ function Home({ settings, add }: { settings: Settings; add: (p: Product, n?: num
   const products = useRemote<Product[]>('/products?kind=store'),
     preorders = useRemote<Product[]>('/products?kind=preorder'),
     posts = useRemote<Post[]>('/posts');
+  function renderCatalog(remote: Remote<Product[]>, kind: 'store' | 'preorder') {
+    if (remote.loading) return <Loading />;
+    if (remote.error) return <RemoteError error={remote.error} reload={remote.reload} />;
+    if (!remote.data?.length)
+      return (
+        <Empty
+          title={
+            kind === 'store'
+              ? 'El catálogo se está preparando'
+              : 'Las próximas preventas estarán aquí'
+          }
+          body={
+            kind === 'store'
+              ? 'Aquí encontrarás los artículos cuando la tienda los publique.'
+              : 'Te mostraremos cada reserva cuando la tienda publique sus fechas, cupos y condiciones.'
+          }
+        />
+      );
+    return (
+      <div className="store-product-grid">
+        {productFamilies(remote.data)
+          .slice(0, 4)
+          .map((family) => (
+            <ProductCard
+              key={family[0].id}
+              product={representative(family)}
+              variants={family}
+              add={add}
+            />
+          ))}
+      </div>
+    );
+  }
   return (
     <>
-      <section className="store-hero">
-        <div className="store-hero-copy">
-          <div className="store-eyebrow">
-            <span className="store-square" /> SERGOD STORE · COPIAPÓ
-          </div>
-          <h1>
-            Tu próxima partida
-            <br />
-            empieza aquí<span>.</span>
-          </h1>
-          <p>
-            {settings.description ||
-              'Un espacio para las cartas coleccionables y la comunidad. Encuentra artículos, conoce las preventas y mantente al día con la tienda.'}
-          </p>
-          <div className="store-button-row">
-            <Link href="/tienda" className="store-button">
-              Explorar la tienda <ArrowRight size={18} />
-            </Link>
-            <Link href="/comunidad" className="store-button store-button-secondary">
-              Nuestra comunidad
-            </Link>
-          </div>
-          <div className="store-hero-note">
-            <MapPin size={15} /> Desde Copiapó, para tu colección.
-          </div>
-        </div>
-        <div className="store-hero-directory">
-          <div className="store-eyebrow">EXPLORA LA TIENDA</div>
-          <Link href="/tienda">
-            <ShoppingBag size={21} />
-            <span>
-              <strong>Tienda</strong>
-              <small>Catálogo, precios y disponibilidad</small>
-            </span>
-            <ArrowRight size={18} />
-          </Link>
-          <Link href="/preventas">
-            <Clock3 size={21} />
-            <span>
-              <strong>Preventas</strong>
-              <small>Fechas, cupos y condiciones de reserva</small>
-            </span>
-            <ArrowRight size={18} />
-          </Link>
-          <Link href="/comunidad">
-            <HeartHandshake size={21} />
-            <span>
-              <strong>Comunidad</strong>
-              <small>Encuentros y publicaciones de la tienda</small>
-            </span>
-            <ArrowRight size={18} />
-          </Link>
-          <Link href="/noticias">
-            <Newspaper size={21} />
-            <span>
-              <strong>Noticias</strong>
-              <small>Anuncios para estar al día</small>
-            </span>
-            <ArrowRight size={18} />
-          </Link>
-          <Link href="/torneos">
-            <Trophy size={21} />
-            <span>
-              <strong>Torneos</strong>
-              <small>Formatos y próximas fechas publicadas</small>
-            </span>
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-      </section>
-      <div className="store-service-row">
-        <div>
-          <Store size={21} />
-          <span>
-            <strong>Retiro en local</strong>
-            <small>Encuéntranos en Copiapó</small>
-          </span>
-        </div>
-        <div>
-          <Truck size={21} />
-          <span>
-            <strong>Envíos dentro de Chile</strong>
-            <small>Opciones al finalizar tu compra</small>
-          </span>
-        </div>
-        <div>
-          <CreditCard size={21} />
-          <span>
-            <strong>Pago online con Flow</strong>
-            <small>Revisa el total antes de pagar</small>
-          </span>
-        </div>
-      </div>
-      <section className="store-section">
-        <div className="store-section-heading">
-          <div>
-            <div className="store-eyebrow">PARA TU COLECCIÓN</div>
-            <h2>En la tienda</h2>
-          </div>
-          <Link href="/tienda" className="store-text-link">
-            Ver catálogo <ArrowRight size={17} />
-          </Link>
-        </div>
-        {products.loading ? (
-          <Loading />
-        ) : products.error ? (
-          <RemoteError error={products.error} reload={products.reload} />
-        ) : products.data?.length ? (
-          <div className="store-product-grid">
-            {productFamilies(products.data)
-              .slice(0, 4)
-              .map((family) => (
-                <ProductCard
-                  key={family[0].id}
-                  product={representative(family)}
-                  variants={family}
-                  add={add}
-                />
-              ))}
-          </div>
-        ) : (
-          <Empty
-            title="El catálogo se está preparando"
-            body="Aquí encontrarás los artículos cuando la tienda los publique."
-          />
-        )}
-      </section>
-      <section className="store-preorder-banner">
-        <div className="store-banner-icon">
-          <Clock3 size={37} strokeWidth={1.25} />
-        </div>
-        <div>
-          <div className="store-eyebrow">RESERVA TU PRÓXIMA COLECCIÓN</div>
-          <h2>Adelántate con nuestras preventas.</h2>
-          <p>
-            {preorders.data?.length
-              ? `${preorders.data.length} ${preorders.data.length === 1 ? 'artículo publicado' : 'artículos publicados'}. Consulta fechas, cupos y condiciones de entrega.`
-              : 'Consulta aquí las próximas reservas que publique la tienda.'}
-          </p>
-        </div>
-        <Link href="/preventas" className="store-button store-button-light">
-          Ver preventas <ArrowRight size={18} />
-        </Link>
-      </section>
-      <section className="store-section">
-        <div className="store-section-heading">
-          <div>
-            <div className="store-eyebrow">MÁS QUE CARTAS</div>
-            <h2>Lo que nos reúne</h2>
-          </div>
-        </div>
-        <div className="store-community-links">
-          <Link href="/comunidad">
-            <HeartHandshake size={25} />
-            <div>
-              <h3>Comunidad</h3>
-              <p>Novedades y encuentros de la tienda.</p>
-            </div>
-            <ArrowRight size={20} />
-          </Link>
-          <Link href="/noticias">
-            <Newspaper size={25} />
-            <div>
-              <h3>Noticias</h3>
-              <p>Todo lo que necesitas saber.</p>
-            </div>
-            <ArrowRight size={20} />
-          </Link>
-          <Link href="/torneos">
-            <Trophy size={25} />
-            <div>
-              <h3>Torneos</h3>
-              <p>Fechas, formatos y cómo participar.</p>
-            </div>
-            <ArrowRight size={20} />
-          </Link>
-        </div>
-        {posts.error ? (
-          <RemoteError error={posts.error} reload={posts.reload} />
-        ) : posts.data && posts.data.length > 0 ? (
-          <div className="store-post-grid store-home-posts">
-            {posts.data.slice(0, 3).map((p) => (
-              <PostCard key={p.id} post={p} />
-            ))}
-          </div>
-        ) : null}
-      </section>
-      {settings.address && (
-        <section className="store-visit">
-          <div>
-            <span className="store-eyebrow">NOS VEMOS EN LA TIENDA</span>
-            <h2>Tu punto de encuentro en Copiapó.</h2>
-          </div>
-          <div>
-            <p>
-              <MapPin size={18} />
-              {settings.address}
-            </p>
-            {settings.hours && (
-              <p>
-                <Clock3 size={18} />
-                <span className="store-preline">{settings.hours}</span>
-              </p>
-            )}
-            {settings.pickup_instructions && <small>{settings.pickup_instructions}</small>}
-          </div>
-        </section>
-      )}
+      <HomeHero description={settings.description} />
+      <HomeSections
+        settings={settings}
+        products={renderCatalog(products, 'store')}
+        preorders={renderCatalog(preorders, 'preorder')}
+        posts={posts.data || []}
+        postsState={
+          posts.loading ? (
+            <Loading />
+          ) : posts.error ? (
+            <RemoteError error={posts.error} reload={posts.reload} />
+          ) : null
+        }
+        renderPost={(post) => <PostCard key={post.id} post={post} />}
+      />
     </>
   );
 }
@@ -823,9 +543,11 @@ function Catalog({
   kind: 'store' | 'preorder';
   add: (p: Product, n?: number) => void;
 }) {
+  const query = useSearchParams();
+  const requestedCategory = query.get('categoria') || '';
   const products = useRemote<Product[]>(`/products?kind=${kind}`),
     [search, setSearch] = useState(''),
-    [category, setCategory] = useState(''),
+    [category, setCategory] = useState(requestedCategory),
     [brand, setBrand] = useState(''),
     [tag, setTag] = useState(''),
     [minimumPrice, setMinimumPrice] = useState(''),
@@ -834,6 +556,9 @@ function Catalog({
     [available, setAvailable] = useState(false),
     [page, setPage] = useState(1),
     [quickProduct, setQuickProduct] = useState<Product | null>(null);
+  useEffect(() => {
+    setCategory(requestedCategory);
+  }, [requestedCategory]);
   const categories = useMemo(
     () => [...new Set((products.data || []).map((p) => p.category).filter(Boolean))].sort(),
     [products.data],

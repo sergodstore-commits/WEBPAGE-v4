@@ -128,3 +128,16 @@ La corrección separa la liberación de inventario del resultado financiero medi
 Validación previa al despliegue: **72/72 resultados de servidor**, **10/10 recorridos de navegador** en compilación de producción local, TypeScript y formato correctos. La verificación remota aprobó **12/12 comprobaciones PostgreSQL**, incluidas carreras de vencimiento/aprobación, POS/pago tardío y cupo de preventa/pago tardío del mismo cliente, con tres conexiones simultáneas. Usó un esquema temporal propio, 37 solicitudes Flow simuladas, cero solicitudes reales a Flow y cero correos enviados; la limpieza del esquema quedó verificada. La migración 006 se aplicó de forma idempotente en la base de la tienda y una lectura posterior confirmó la conservación de los pedidos existentes.
 
 El [despliegue de `b9508da`](https://vercel.com/sergod-store/sergod-store-v4/BFBZDPJSg1nv56NxNMKTxdbcphUR) quedó disponible y [GitHub Actions](https://github.com/sergodstore-commits/WEBPAGE-v4/actions/runs/36794927639) volvió a aprobar tipos, construcción, **72/72 resultados de servidor** y **10/10 recorridos de navegador**. Una lectura de solo lectura en producción confirmó que el cron liberó la reserva abandonada y envió un único aviso; el pago aprobado, su historial y su movimiento de inventario se conservaron. No se abrió el enlace de Flow ni se forzó la consulta del pedido antes de observar la liberación. Después se comprobó la cuenta: explica la reserva liberada, mantiene la opción de consultar el pago y ya no ofrece continuar pagando ese intento.
+
+## Base visual y Home — 3 de octubre de 2026
+
+Primera etapa visual: logo oficial y favicon, Inter/Barlow locales, cabecera/pie adaptables y Home con cartas reales, Anime.js, control de movimiento y contenido publicado. Sin cambios de datos comerciales, pagos ni esquema.
+
+- TypeScript: correcto.
+- `npm test`: 72/72 casos aprobados, PostgreSQL local real y Flow simulado; ningún cobro ni correo externo nuevo.
+- `npm run test:e2e`: 14/14 recorridos aprobados en compilación de producción aislada, incluido el trazado del servidor.
+- Cuatro recorridos nuevos: Hero y CTA en 320/375/768/1440; menú con teclado/Escape; pausa persistente y movimiento reducido en vivo; lectura de contenido, torneos futuros y filtros por juego conservados al recargar.
+- La regresión cubrió cuenta, carrito/revisión de compra, variantes, publicación/relectura/edición/retirada, POS y 18 rutas públicas/administrativas a 1440/375.
+- Revisión visual del Hero en escritorio 1440 y móvil375: capas, tipografía, botones y proporciones de cartas correctas. Las capturas y reportes locales permanecen en `test-results`/`playwright-report`, excluidos de Git.
+
+El alcance y mantenimiento quedan en [DISENO-VISUAL.md](DISENO-VISUAL.md). La siguiente fase visual espera la revisión del propietario.

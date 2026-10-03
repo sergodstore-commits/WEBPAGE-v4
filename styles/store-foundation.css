@@ -1,0 +1,82 @@
+.store-app {
+  --ink: var(--sg-ink);
+  --muted: var(--sg-muted);
+  --line: var(--sg-line);
+  --paper: var(--sg-paper);
+  --soft: #edf2f6;
+  font-family: var(--sg-font-body);
+  background: var(--sg-white);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+.store-app h1,
+.store-app h2 {
+  font-family: var(--sg-font-display);
+  letter-spacing: -0.025em;
+}
+
+.store-app ::selection {
+  color: var(--sg-black);
+  background: var(--sg-cyan);
+}
+
+.store-app :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--sg-link);
+  outline-offset: 4px;
+}
+
+.store-app .store-button {
+  min-height: 44px;
+  border-radius: var(--sg-radius-control);
+  background: var(--sg-ink);
+  border-color: var(--sg-ink);
+  transition:
+    background var(--sg-motion-fast) var(--sg-ease-standard),
+    border-color var(--sg-motion-fast) var(--sg-ease-standard);
+}
+
+.store-app .store-button:hover:not(:disabled) {
+  background: var(--sg-elevated);
+  border-color: var(--sg-elevated);
+}
+
+.store-app .store-button-secondary {
+  background: transparent;
+  color: var(--sg-ink) !important;
+  border-color: #a8b6c3;
+}
+
+.store-app .store-button-secondary:hover:not(:disabled) {
+  background: var(--sg-paper);
+  border-color: var(--sg-muted);
+}
+
+.store-app .store-button-light {
+  color: var(--sg-ink) !important;
+  background: var(--sg-white);
+  border-color: var(--sg-white);
+}
+
+.store-app .store-button-light:hover:not(:disabled) {
+  background: var(--sg-paper);
+  border-color: var(--sg-paper);
+}
+
+.store-app :is(input:not([type='checkbox']):not([type='radio']), select) {
+  min-height: 44px;
+}
+
+.store-app .store-main:focus {
+  outline: none;
+}
+
+.store-app .store-main {
+  scroll-margin-top: 96px;
+}
+.store-app .store-main.store-home-main {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}

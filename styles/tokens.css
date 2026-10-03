@@ -1,0 +1,24 @@
+:root {
+  --sg-black: #080a0d;
+  --sg-graphite: #151c24;
+  --sg-elevated: #202c3a;
+  --sg-silver: #cbd5e1;
+  --sg-paper: #f4f7fa;
+  --sg-white: #ffffff;
+  --sg-cyan: #30e0ff;
+  --sg-ice: #bcefff;
+  --sg-link: #006482;
+  --sg-ink: #17212b;
+  --sg-muted: #526170;
+  --sg-line: #dce3ea;
+  --sg-font-body: var(--font-inter), Arial, Helvetica, sans-serif;
+  --sg-font-display: var(--font-barlow), Impact, sans-serif;
+  --sg-radius-control: 6px;
+  --sg-radius-card: 10px;
+  --sg-radius-panel: 14px;
+  --sg-motion-fast: 180ms;
+  --sg-motion-normal: 300ms;
+  --sg-motion-slow: 650ms;
+  --sg-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --sg-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
