@@ -12,12 +12,14 @@ type Props = { running: boolean; reduced: boolean; ready: boolean };
 export default function HeroScene({ running, reduced, ready }: Props) {
   const scene = useRef<HTMLDivElement>(null);
   const controls = useRef<JSAnimation[]>([]);
+  const entrancePlayed = useRef(false);
   const runningRef = useRef(running);
   runningRef.current = running;
 
   useEffect(() => {
     if (!ready || reduced || !scene.current) return;
     const root = scene.current;
+    const surface = root.closest<HTMLElement>('[data-testid="home-hero"]') || root;
     const mobile = window.matchMedia('(max-width: 767px)');
     let alive = true;
     let scope: Scope | undefined;
@@ -28,20 +30,27 @@ export default function HeroScene({ running, reduced, ready }: Props) {
       const build = () => {
         scope?.revert();
         controls.current = [];
-        scope = createScope({ root }).add(() => {
+        const playEntrance = !entrancePlayed.current && runningRef.current;
+        entrancePlayed.current = true;
+        scope = createScope({ root: surface }).add(() => {
           const cards = root.querySelectorAll<HTMLElement>('[data-hero-card]');
           cards.forEach((card, index) => {
             if (mobile.matches && card.dataset.mobile === 'false') return;
             const entrance = card.querySelector<HTMLElement>('[data-card-entrance]')!;
             const ambient = card.querySelector<HTMLElement>('[data-card-ambient]')!;
+            const role = card.dataset.cardRole as keyof typeof motion.depth;
+            if (playEntrance) {
+              controls.current.push(
+                animate(entrance, {
+                  translateY: [24, 0],
+                  duration: motion.entrance.cardDuration,
+                  delay: motion.entrance.cardDelay[role] ?? 0,
+                  ease: motion.ease.enter,
+                  autoplay: false,
+                }),
+              );
+            }
             controls.current.push(
-              animate(entrance, {
-                translateY: [24, 0],
-                duration: motion.duration.hero,
-                delay: index * 75,
-                ease: motion.ease.enter,
-                autoplay: false,
-              }),
               animate(ambient, {
                 translateY: [0, index % 2 === 0 ? -12 : 10],
                 rotateZ: [0, index % 2 === 0 ? 1.5 : -1],
@@ -94,6 +103,23 @@ export default function HeroScene({ running, reduced, ready }: Props) {
               );
             });
           });
+          if (playEntrance) {
+            for (const [stage, timing] of Object.entries(motion.entrance.content)) {
+              const element = surface.querySelector<HTMLElement>(`[data-hero-enter="${stage}"]`);
+              if (!element) continue;
+              controls.current.push(
+                animate(element, {
+                  translateY: [timing.offset, 0],
+                  // Copy and actions stay readable and operable throughout the sequence.
+                  opacity: [0.92, 1],
+                  duration: timing.duration,
+                  delay: timing.delay,
+                  ease: motion.ease.enter,
+                  autoplay: false,
+                }),
+              );
+            }
+          }
         });
         if (runningRef.current) controls.current.forEach((control) => control.resume());
       };
@@ -113,7 +139,10 @@ export default function HeroScene({ running, reduced, ready }: Props) {
   }, [ready, reduced]);
 
   useEffect(() => {
-    controls.current.forEach((control) => (running ? control.resume() : control.pause()));
+    controls.current.forEach((control) => {
+      if (!running) control.pause();
+      else if (!control.completed) control.resume();
+    });
   }, [running]);
 
   useEffect(() => {
@@ -125,7 +154,14 @@ export default function HeroScene({ running, reduced, ready }: Props) {
     const pointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const planes = Array.from(root.querySelectorAll<HTMLElement>('[data-card-parallax]'));
     const scrollPlanes = Array.from(root.querySelectorAll<HTMLElement>('[data-card-scroll]'));
-    const depth = [1, 0.7, 1.3, 0.45];
+    const foilPlanes = Array.from(root.querySelectorAll<HTMLElement>('[data-card-foil-tracking]'));
+    const layerDepth = (plane: HTMLElement) => {
+      const role = plane.closest<HTMLElement>('[data-card-role]')?.dataset.cardRole;
+      return motion.depth[role as keyof typeof motion.depth] ?? motion.depth.companion;
+    };
+    const planeDepths = planes.map(layerDepth);
+    const scrollDepths = scrollPlanes.map(layerDepth);
+    const foilDepths = foilPlanes.map(layerDepth);
     let pointerPosition: { x: number; y: number } | null = null;
     let targetX = 0;
     let targetY = 0;
@@ -163,12 +199,19 @@ export default function HeroScene({ running, reduced, ready }: Props) {
       y += (targetY - y) * motion.pointer.smoothing;
       scroll += (targetScroll - scroll) * motion.scroll.smoothing;
       planes.forEach((plane, index) => {
-        const layerDepth = index < 2 ? 1 : 0.55;
-        // Rotation stays within 3 degrees; front-only base angles are clamped to 45.
-        plane.style.transform = `translate3d(${x * motion.pointer.translation * layerDepth}px, ${y * motion.pointer.translation * layerDepth}px, 0) rotateX(${-y * motion.pointer.rotation}deg) rotateY(${x * motion.pointer.rotation}deg)`;
+        const depth = planeDepths[index];
+        // Role depth is capped at four degrees beyond the safe base card angles.
+        const rotateX = Math.max(-4, Math.min(4, -y * motion.pointer.rotation * depth));
+        const rotateY = Math.max(-4, Math.min(4, x * motion.pointer.rotation * depth));
+        plane.style.transform = `translate3d(${x * motion.pointer.translation * depth}px, ${y * motion.pointer.translation * depth}px, 0) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       });
       scrollPlanes.forEach((plane, index) => {
-        plane.style.transform = `translate3d(0, ${scroll * motion.scroll.translation * (depth[index] ?? 0.7)}px, 0)`;
+        plane.style.transform = `translate3d(0, ${scroll * motion.scroll.translation * scrollDepths[index]}px, 0)`;
+      });
+      foilPlanes.forEach((plane, index) => {
+        // Separate from the slow foil sweep, so input never replaces its animation.
+        const depth = foilDepths[index];
+        plane.style.transform = `translate3d(${-x * 6 * depth}px, ${y * 4 * depth}px, 0) rotate(${-x * 2 * depth}deg)`;
       });
       if (Math.abs(targetX - x) + Math.abs(targetY - y) + Math.abs(targetScroll - scroll) > 0.002) {
         frame = window.requestAnimationFrame(draw);
@@ -188,7 +231,9 @@ export default function HeroScene({ running, reduced, ready }: Props) {
       queue();
     };
     const clearPlanes = () => {
-      [...planes, ...scrollPlanes].forEach((plane) => plane.style.removeProperty('transform'));
+      [...planes, ...scrollPlanes, ...foilPlanes].forEach((plane) =>
+        plane.style.removeProperty('transform'),
+      );
     };
     const onMediaChange = () => {
       pointerPosition = null;

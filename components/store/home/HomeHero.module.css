@@ -312,6 +312,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hero [data-hero-enter] {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
   .hero .primary:hover,
   .hero .secondary:hover {
     transform: none;

@@ -3,7 +3,11 @@ import styles from './hero.module.css';
 
 export function CardEffects({ effect }: { effect: HeroCardEffect }) {
   if (effect === 'foil') {
-    return <span className={styles.foil} data-card-foil aria-hidden="true" />;
+    return (
+      <span className={styles.foilTracking} data-card-foil-tracking aria-hidden="true">
+        <span className={styles.foil} data-card-foil />
+      </span>
+    );
   }
   if (effect === 'energy') {
     return (

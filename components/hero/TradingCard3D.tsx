@@ -17,6 +17,7 @@ export function TradingCard3D({ card }: { card: HeroCard }) {
       className={`${styles.placement} ${styles[card.role]}`}
       style={style}
       data-hero-card={card.id}
+      data-card-role={card.role}
       data-mobile={String(card.mobile)}
       data-has-back={String(hasBack)}
       aria-hidden="true"
@@ -32,6 +33,12 @@ export function TradingCard3D({ card }: { card: HeroCard }) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={card.front}
+                    srcSet={
+                      card.frontSmall
+                        ? `${card.frontSmall} 320w, ${card.front} ${card.game === 'yugioh' ? 368 : 463}w`
+                        : undefined
+                    }
+                    sizes="(max-width: 767px) 144px, (max-width: 1099px) 170px, 250px"
                     alt=""
                     width={card.game === 'yugioh' ? 368 : 463}
                     height={card.game === 'yugioh' ? 543 : 663}
@@ -46,6 +53,12 @@ export function TradingCard3D({ card }: { card: HeroCard }) {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={card.back}
+                      srcSet={
+                        card.backSmall
+                          ? `${card.backSmall} 320w, ${card.back} ${card.game === 'yugioh' ? 371 : 338}w`
+                          : undefined
+                      }
+                      sizes="(max-width: 767px) 144px, (max-width: 1099px) 170px, 250px"
                       alt=""
                       width={card.game === 'yugioh' ? 371 : 338}
                       height={card.game === 'yugioh' ? 539 : 480}

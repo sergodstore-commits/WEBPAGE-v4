@@ -6,7 +6,9 @@ export type HeroCard = {
   id: string;
   game: 'yugioh' | 'mitos';
   front: string;
+  frontSmall?: string;
   back?: string;
+  backSmall?: string;
   role: HeroCardRole;
   effect: HeroCardEffect;
   mobile: boolean;

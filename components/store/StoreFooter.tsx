@@ -16,7 +16,7 @@ export function StoreFooter({ settings }: { settings: Settings }) {
         <div className={styles.footerIdentity}>
           <Link href="/" className={styles.footerBrand} aria-label="SERGOD STORE, inicio">
             <img
-              src="/brand/sergod-logo.webp"
+              src="/brand/sergod-logo-480.webp"
               alt="SERGOD STORE"
               width="1536"
               height="768"

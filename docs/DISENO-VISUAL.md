@@ -13,11 +13,15 @@ Primera entrega del rediseño, octubre de 2026. Alcance: identidad compartida (l
 
 Los efectos se pausan fuera del Hero, al ocultar la pestaña y al pulsar Pausar movimiento. La preferencia de movimiento reducido del sistema se atiende en vivo y muestra una escena estática. El scroll sigue siendo nativo; no hay captura del gesto ni desplazamiento automático.
 
+La entrada se ejecuta una vez por montaje: cartas, título, descripción, acciones y categorías. El texto y los controles permanecen visibles y disponibles durante toda la secuencia. La profundidad del cursor y del scroll usa los roles `near > lead > companion > far`; el reflejo foil sigue la inclinación en una capa independiente del barrido ambiental.
+
 El Hero y sus enlaces se renderizan sin esperar al motor de animación. La Home sigue usando las API existentes y conserva carga, errores recuperables y estados vacíos. Los torneos pasados no aparecen en próximos torneos. Los enlaces por juego usan `?categoria=` y conservan el filtro al recargar.
 
 ## Recursos
 
 El propietario proporcionó el logo y las cuatro imágenes de cartas. Los originales del Hero están en `public/art/hero`; no se redibujaron ni se eliminaron marcas de agua. El logo transparente está en `public/brand/sergod-logo.webp`. `node scripts/brand-icons.mjs` obtiene los iconos de pestaña y Apple a partir de la S del mismo logo.
+
+`node scripts/optimize-brand-assets.mjs` genera derivados WebP de cada carta (tamaño original y 320 px de ancho) y un logo de 480 px para cabecera/pie. Verifica que los originales no cambien. Las cartas usan `srcset` y `sizes` para que el navegador elija según el ancho y la densidad de pantalla. Las cuatro cartas originales suman 1.743.912 bytes; las versiones WebP completas, 293.668 bytes, y las de 320 px, 229.714 bytes. El logo servido pasa de 313.882 a 72.856 bytes.
 
 Inter (variable) y Barlow Condensed (700/800), subconjunto latino con caracteres españoles, se sirven localmente mediante `next/font/local`. Sus archivos y licencias OFL están en `public/fonts`. Fuentes obtenidas de Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`); licencias del repositorio oficial `google/fonts`. No hay solicitudes de fuentes a terceros al visitar la web.
 
@@ -26,3 +30,16 @@ Inter (variable) y Barlow Condensed (700/800), subconjunto latino con caracteres
 Los recorridos nuevos de `tests/e2e/hero.spec.ts` comprueban anchos 320/375/768/1440, recursos, CTA, menú por teclado, pausa persistente y movimiento reducido, carga del Hero solo en Inicio, datos publicados, fechas de torneos, filtros por juego y recarga. Los datos simulados de presentación no se guardan; los demás recorridos usan PostgreSQL local aislado en `.data/e2e`.
 
 Ejecutar `npm run typecheck`, `npm test` y `npm run test:e2e`. Este último compila para producción y valida también el trazado de archivos del servidor. No ejecuta cobros reales ni modifica producción.
+
+Para medir una compilación local de producción ya iniciada: `node scripts/measure-home.mjs http://localhost:3101 .data/home-performance-after`. El script no modifica datos; guarda métricas y capturas con caché de navegador vacía. Usa una muestra de escritorio y tres de móvil emulado (375 px, densidad 2, CPU ×4, red 1,6 Mbps y latencia de 150 ms). Registrar ambos conjuntos antes/después bajo las mismas condiciones. Son mediciones de laboratorio: los intervalos de `requestAnimationFrame` no certifican FPS de GPU, experiencia en un teléfono real ni Core Web Vitals de usuarios reales.
+
+Comprobación del 3 de octubre de 2026: TypeScript, compilación de producción y 14/14 recorridos de navegador correctos. Comparación local contra `00d0339`, con el mismo perfil de medición:
+
+| Medida | Escritorio antes → después | Móvil antes → después |
+| --- | --- | --- |
+| LCP | 2.736 → 1.672 ms | 10.580 → 3.644 ms |
+| Descarga de cartas (incluye cabeceras HTTP) | 1.745.716 → 231.514 bytes | 1.745.716 → 231.514 bytes |
+| CLS | 0,06351 → 0,06351 | 0,02247 → 0,01751 |
+| Intervalo rAF p95 | 33,3 → 17,1 ms | 17,0 → 33,4 ms |
+
+Las cuatro imágenes terminaron de cargar en todas las muestras, con movimiento activo, sin errores JavaScript ni desbordamiento horizontal. La carga principal mejora; la muestra de cadencia móvil presenta más intervalos largos y no permite afirmar una mejora de fluidez ni 60 FPS constantes. Los resultados completos y las capturas quedan en `.data/home-performance-before/` y `.data/home-performance-after/`, fuera del repositorio. Son dos ejecuciones locales secuenciales sobre la base aislada de E2E; el contenido de prueba bajo el Hero no representa el catálogo público.

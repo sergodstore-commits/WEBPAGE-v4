@@ -23,6 +23,70 @@ async function sceneIsStill(scene: Locator) {
   });
 }
 
+async function expectHeroContentAvailable(hero: Locator) {
+  const heading = hero.getByRole('heading', { level: 1 });
+  await expect(heading).toBeVisible();
+  await expect
+    .poll(() =>
+      heading.evaluate((element) => {
+        let opacity = 1;
+        for (let node: Element | null = element; node; node = node.parentElement)
+          opacity *= Number(getComputedStyle(node).opacity);
+        return opacity;
+      }),
+    )
+    .toBeGreaterThan(0);
+  for (const name of ['Explorar la tienda', 'Ver torneos']) {
+    const link = hero.getByRole('link', { name, exact: true });
+    await expect(link).toBeVisible();
+    // Do not wait for animation stability: the live link must already receive
+    // pointer input, including while its entrance transform is changing.
+    await expect
+      .poll(() =>
+        link.evaluate((element) => {
+          const box = element.getBoundingClientRect();
+          const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+          if (!hit || !element.contains(hit)) return false;
+          for (let node: Element | null = element; node; node = node.parentElement) {
+            const style = getComputedStyle(node);
+            if (
+              style.visibility === 'hidden' ||
+              style.display === 'none' ||
+              Number(style.opacity) === 0
+            )
+              return false;
+          }
+          return true;
+        }),
+      )
+      .toBe(true);
+  }
+}
+
+async function expectDepthOrder(scene: Locator, direction: 1 | -1) {
+  await expect
+    .poll(() =>
+      scene.evaluate((element, sign) => {
+        const depths = Object.fromEntries(
+          [...element.querySelectorAll<HTMLElement>('[data-card-role]')].map((card) => {
+            const plane = card.querySelector<HTMLElement>('[data-card-parallax]')!;
+            return [
+              card.dataset.cardRole!,
+              new DOMMatrix(getComputedStyle(plane).transform).m41 * sign,
+            ];
+          }),
+        );
+        return (
+          depths.near > depths.lead &&
+          depths.lead > depths.companion &&
+          depths.companion > depths.far &&
+          depths.far > 0
+        );
+      }, direction),
+    )
+    .toBe(true);
+}
+
 test('Home: cartas reales, acciones utilizables y composición sin desbordes en cuatro anchos', async ({
   page,
 }) => {
@@ -43,6 +107,15 @@ test('Home: cartas reales, acciones utilizables y composición sin desbordes en 
       }),
     )
     .toBe(4);
+  expect(
+    await hero
+      .locator('img[src^="/art/hero/"]')
+      .evaluateAll((images) =>
+        images.every((image) =>
+          new URL((image as HTMLImageElement).currentSrc).pathname.endsWith('.webp'),
+        ),
+      ),
+  ).toBe(true);
 
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -105,12 +178,27 @@ test('Movimiento: carga solo en Home, pausa persistente y preferencia reducida e
   await page.goto('/');
   const hero = page.getByTestId('home-hero');
   await expect(hero).toHaveAttribute('data-motion', 'running');
+  await expectHeroContentAvailable(hero);
+  // Force skips Playwright's animation-stability wait; a real pointer click must
+  // still navigate promptly even if the entrance choreography is in progress.
+  await hero.getByRole('link', { name: 'Ver torneos', exact: true }).click({ force: true });
+  await expect(page).toHaveURL(/\/torneos$/);
+  await page.goto('/');
+  await expect(hero).toHaveAttribute('data-motion', 'running');
   const scene = page.getByTestId('hero-scene');
   await expect(scene.locator('[data-hero-card]')).toHaveCount(4);
   await expect.poll(() => sceneIsStill(scene)).toBe(false);
+  const bounds = await hero.boundingBox();
+  expect(bounds).not.toBeNull();
+  // Test both directions without depending on exact pixels or easing timings.
+  for (const side of [0.85, 0.15]) {
+    await page.mouse.move(bounds!.x + bounds!.width * side, bounds!.y + bounds!.height * 0.45);
+    await expectDepthOrder(scene, side > 0.5 ? 1 : -1);
+  }
   await hero.getByRole('button', { name: 'Pausar movimiento', exact: true }).click();
   await expect(hero).toHaveAttribute('data-motion', 'paused');
   await expect.poll(() => sceneIsStill(scene)).toBe(true);
+  await expectHeroContentAvailable(hero);
   await page.reload();
   await expect(hero).toHaveAttribute('data-motion', 'paused');
   await expect(
@@ -121,6 +209,7 @@ test('Movimiento: carga solo en Home, pausa persistente y preferencia reducida e
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(hero).toHaveAttribute('data-motion', 'reduced');
   await expect.poll(() => sceneIsStill(scene)).toBe(true);
+  await expectHeroContentAvailable(hero);
   await expect(
     hero.getByRole('button', { name: 'Movimiento reducido', exact: true }),
   ).toBeDisabled();

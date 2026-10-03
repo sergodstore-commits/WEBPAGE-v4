@@ -46,17 +46,17 @@ export default function HomeHero({ description }: { description?: string }) {
           <span />
           TU TIENDA TCG EN COPIAPÓ
         </p>
-        <h1 id="home-hero-heading" className={styles.heading}>
+        <h1 id="home-hero-heading" className={styles.heading} data-hero-enter="title">
           <span>Tu próxima partida</span>
           <span>
             empieza <em>aquí.</em>
           </span>
         </h1>
-        <p className={styles.description}>
+        <p className={styles.description} data-hero-enter="description">
           {description?.trim() ||
             'Cartas coleccionables, torneos y comunidad. Comparte tu pasión por el juego con SERGOD STORE.'}
         </p>
-        <div className={styles.actions}>
+        <div className={styles.actions} data-hero-enter="actions">
           <Link href="/tienda" className={styles.primary}>
             Explorar la tienda <ArrowRight size={18} aria-hidden="true" />
           </Link>
@@ -64,7 +64,11 @@ export default function HomeHero({ description }: { description?: string }) {
             Ver torneos <ArrowUpRight size={18} aria-hidden="true" />
           </Link>
         </div>
-        <div className={styles.categories} aria-label="Explorar por juego">
+        <div
+          className={styles.categories}
+          aria-label="Explorar por juego"
+          data-hero-enter="categories"
+        >
           <Link href="/tienda?categoria=Yu-Gi-Oh!">
             Yu-Gi-Oh! <ArrowUpRight size={14} aria-hidden="true" />
           </Link>

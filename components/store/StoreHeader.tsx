@@ -92,7 +92,7 @@ export function StoreHeader({
             onNavigate={() => setMenuOpen(false)}
           >
             <img
-              src="/brand/sergod-logo.webp"
+              src="/brand/sergod-logo-480.webp"
               width="1536"
               height="768"
               alt="SERGOD STORE"

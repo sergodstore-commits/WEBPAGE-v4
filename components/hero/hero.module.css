@@ -85,6 +85,12 @@
   transform: rotateY(180deg) translateZ(0.7px);
 }
 
+.foilTracking {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .foil {
   position: absolute;
   inset: -40%;
@@ -190,6 +196,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .foil,
+  .foilTracking,
   .energy {
     display: none;
   }
