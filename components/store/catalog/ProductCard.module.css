@@ -1,0 +1,203 @@
+:global(.store-app) .card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--sg-white);
+  border: 1px solid var(--sg-line);
+  border-radius: 8px;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+:global(.store-app) .card :global(.store-product-visual) {
+  border-bottom: 1px solid #e8edf1;
+  background: var(--sg-paper);
+}
+:global(.store-app) .card :global(.store-product-image) {
+  aspect-ratio: 1;
+  padding: 18px;
+  background: #f6f8fa;
+}
+:global(.store-app) .card :global(.store-product-image) img {
+  object-fit: contain;
+  transition: transform 220ms ease;
+}
+:global(.store-app) .card :global(.store-product-content) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 18px;
+}
+:global(.store-app) .card :global(.store-product-category) {
+  margin: 0 0 8px;
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.07em;
+  color: var(--sg-muted);
+}
+:global(.store-app) .card :global(.store-product-title) {
+  min-height: 42px;
+  font-family: var(--sg-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  color: var(--sg-ink);
+}
+:global(.store-app) .card :global(.store-product-price) {
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 9px;
+  margin: 14px 0 0;
+}
+:global(.store-app) .card :global(.store-product-price) strong {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.35;
+  color: var(--sg-ink);
+}
+:global(.store-app) .card :global(.store-product-price) del {
+  font-size: 12px;
+  color: var(--sg-muted);
+}
+:global(.store-app) .card :global(.store-product-content) > small {
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--sg-muted);
+}
+:global(.store-app) .card .bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 13px;
+  padding-top: 16px;
+  margin-top: auto;
+  font-size: 11px;
+}
+:global(.store-app) .card .bottom > span {
+  padding: 0;
+  color: var(--sg-muted);
+}
+:global(.store-app) .card :global(.store-stock-dot)::before {
+  background: #07866e;
+  width: 6px;
+  height: 6px;
+}
+:global(.store-app) .card .purchase {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--sg-graphite);
+  border-radius: 5px;
+  color: var(--sg-white);
+  background: var(--sg-graphite);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+:global(.store-app) .card .purchase:disabled {
+  color: #65717c;
+  background: #eef1f4;
+  border-color: #dce3e9;
+  opacity: 1;
+}
+:global(.store-app) .card .purchase:not(:disabled):hover {
+  background: #164355;
+  border-color: #164355;
+}
+:global(.store-app) .card .quick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  width: 100%;
+  margin: 8px 0 -3px;
+  padding: 7px 3px;
+  color: var(--sg-link);
+  font-size: 11px;
+  font-weight: 500;
+}
+:global(.store-app) .card :global(.store-discount) {
+  top: 12px;
+  left: 12px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: var(--sg-graphite);
+  color: var(--sg-white);
+  font-size: 11px;
+  font-weight: 600;
+}
+:global(.store-app) .card :global(.store-no-image) {
+  color: #657989;
+  text-align: center;
+}
+:global(.store-app) .card :is(a, button):focus-visible {
+  outline: 2px solid var(--sg-link);
+  outline-offset: -3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  :global(.store-app) .card:hover {
+    transform: translateY(-3px);
+    border-color: #91b5c2;
+    box-shadow: 0 8px 22px #162d4310;
+  }
+  :global(.store-app) .card:hover :global(.store-product-image) img {
+    transform: scale(1.025);
+  }
+}
+@media (max-width: 700px) {
+  :global(.store-app) .card :global(.store-product-image) {
+    padding: 12px;
+  }
+  :global(.store-app) .card :global(.store-product-content) {
+    padding: 13px 12px;
+  }
+  :global(.store-app) .card :global(.store-product-title) {
+    font-size: 13px;
+    min-height: 39px;
+  }
+  :global(.store-app) .card :global(.store-product-price) strong {
+    font-size: 16px;
+  }
+  :global(.store-app) .card .bottom {
+    padding-top: 14px;
+    gap: 11px;
+    font-size: 11px;
+  }
+  :global(.store-app) .card .purchase {
+    min-height: 44px;
+    font-size: 12px;
+    padding: 9px 6px;
+  }
+  :global(.store-app) .card .quick {
+    min-height: 40px;
+    margin-top: 4px;
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :global(.store-app) .card,
+  :global(.store-app) .card .purchase,
+  :global(.store-app) .card :global(.store-product-image) img {
+    transition: none;
+    transform: none;
+  }
+  :global(.store-app) .card:hover,
+  :global(.store-app) .card:hover :global(.store-product-image) img {
+    transform: none;
+  }
+}

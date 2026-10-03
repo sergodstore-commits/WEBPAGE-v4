@@ -90,9 +90,9 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
     await customer.getByLabel('Precio hasta', { exact: true }).fill('5500');
     await expect(customer.locator('.store-product-card')).toContainText('1 opción');
     await customer.getByLabel('Precio hasta', { exact: true }).fill('');
-    await customer.getByLabel('Solo disponibles').check();
+    await customer.getByRole('checkbox', { name: 'Solo disponibles', exact: true }).check();
     await expect(customer.locator('.store-product-card')).toHaveCount(0);
-    await customer.getByLabel('Solo disponibles').uncheck();
+    await customer.getByRole('checkbox', { name: 'Solo disponibles', exact: true }).uncheck();
 
     const quickButton = customer.getByRole('button', {
       name: `Vista rápida de ${name}`,

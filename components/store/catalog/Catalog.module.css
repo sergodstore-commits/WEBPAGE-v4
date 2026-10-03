@@ -1,0 +1,443 @@
+:global(.store-app) .catalog {
+  max-width: 1280px;
+  padding: 38px 32px 80px;
+  color: var(--sg-ink);
+}
+
+:global(.store-app) .catalog .intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 26px;
+  padding: 34px 40px;
+  overflow: hidden;
+  border: 1px solid #263644;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 100% 100%, #123c4b 0, transparent 55%), var(--sg-graphite);
+  color: var(--sg-white);
+}
+
+:global(.store-app) .catalog .eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--sg-ice);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+}
+
+:global(.store-app) .catalog .intro h1 {
+  margin: 0 0 10px;
+  font-family: var(--sg-font-display);
+  font-size: clamp(46px, 5vw, 64px);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.intro h1 > span {
+  color: var(--sg-cyan);
+}
+
+:global(.store-app) .catalog .intro p {
+  margin: 0;
+  color: var(--sg-silver);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.introNote {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-left: 28px;
+  border-left: 1px solid #466170;
+  font-size: 12px;
+  color: var(--sg-silver);
+  line-height: 1.8;
+}
+.introNote > svg {
+  color: var(--sg-cyan);
+  flex-shrink: 0;
+}
+.introNote strong {
+  color: var(--sg-white);
+  font-weight: 600;
+}
+
+.categories {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 34px;
+}
+
+:global(.store-app) .catalog .categories button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 44px;
+  padding: 10px 17px;
+  border: 1px solid var(--sg-line);
+  border-radius: 6px;
+  color: var(--sg-ink);
+  background: white;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease;
+}
+:global(.store-app) .catalog .categories button:hover {
+  border-color: #7396a4;
+  background: var(--sg-paper);
+}
+:global(.store-app) .catalog .categories button[aria-pressed='true'] {
+  border-color: var(--sg-graphite);
+  color: var(--sg-white);
+  background: var(--sg-graphite);
+}
+:global(.store-app) .catalog .categories button[aria-pressed='true'] > svg {
+  color: var(--sg-cyan);
+}
+
+:global(.store-app) .catalog .layout {
+  display: grid;
+  grid-template-columns: 218px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+:global(.store-app) .catalog .filters {
+  display: block;
+  padding: 0 23px 0 0;
+  border: 0;
+  border-right: 1px solid var(--sg-line);
+}
+:global(.store-app) .catalog .filters h2 {
+  margin: 0 0 24px;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+.filterControls {
+  display: grid;
+  gap: 20px;
+}
+:global(.store-app) .catalog .filters :global(.store-label) {
+  margin: 0;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--sg-ink);
+  font-weight: 600;
+}
+:global(.store-app) .catalog .filters :global(.store-label) select,
+:global(.store-app) .catalog .filters :global(.store-label) input {
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #cbd5df;
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--sg-ink);
+  background: var(--sg-white);
+}
+:global(.store-app) .catalog :global(.store-price-filters) {
+  margin: 0;
+  gap: 8px;
+}
+:global(.store-app) .catalog :global(.store-check) {
+  margin: 0;
+  min-height: 40px;
+  font-size: 12px;
+  color: var(--sg-ink);
+}
+:global(.store-app) .catalog :global(.store-check) input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--sg-link);
+}
+:global(.store-app) .catalog :global(.store-reset) {
+  margin: 0;
+  min-height: 36px;
+  font-size: 12px;
+  color: var(--sg-link);
+  justify-self: start;
+}
+:global(.store-app) .catalog :global(.store-filter-note) {
+  display: block;
+  margin: 6px 0 0;
+  padding-top: 22px;
+  border-color: var(--sg-line);
+}
+:global(.store-app) .catalog :global(.store-filter-note) > svg {
+  color: var(--sg-link);
+  margin-bottom: 12px;
+}
+:global(.store-app) .catalog :global(.store-filter-note) strong {
+  font-size: 12px;
+}
+:global(.store-app) .catalog :global(.store-filter-note) p {
+  margin-bottom: 0;
+  font-size: 12px;
+  color: var(--sg-muted);
+  line-height: 1.75;
+}
+
+.results {
+  min-width: 0;
+}
+:global(.store-app) .catalog :global(.store-catalog-toolbar) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+:global(.store-app) .catalog :global(.store-search) {
+  min-height: 48px;
+  padding: 0 14px;
+  gap: 10px;
+  border: 1px solid #cbd5df;
+  border-radius: 6px;
+  background: var(--sg-white);
+}
+:global(.store-app) .catalog :global(.store-search) input {
+  min-height: 46px;
+  font-size: 14px;
+  color: var(--sg-ink);
+}
+:global(.store-app) .catalog :global(.store-search) > svg {
+  color: var(--sg-link);
+}
+:global(.store-app) .catalog :global(.store-search) button {
+  min-width: 36px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+}
+:global(.store-app) .catalog :global(.store-sort) {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--sg-muted);
+}
+:global(.store-app) .catalog :global(.store-sort) > span {
+  display: block;
+}
+:global(.store-app) .catalog :global(.store-sort) select {
+  min-height: 44px;
+  max-width: 150px;
+  font-size: 13px;
+  padding: 6px 0;
+  color: var(--sg-ink);
+}
+:global(.store-app) .catalog :global(.store-results-count) {
+  margin: 0;
+  padding: 22px 0 18px;
+  font-size: 12px;
+  color: var(--sg-muted);
+}
+:global(.store-app) .catalog :global(.store-catalog-grid) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px 18px;
+}
+
+.activeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+:global(.store-app) .catalog .activeFilters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #c6dce5;
+  border-radius: 5px;
+  background: #eef7fa;
+  color: #205366;
+  font-size: 12px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.activeFilters svg {
+  flex-shrink: 0;
+}
+:global(.store-app) .catalog :global(.store-pagination) {
+  margin: 36px 0 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--sg-line);
+  font-size: 13px;
+  gap: 16px;
+}
+
+:global(.store-app) .catalog :is(button, a, input, select):focus-visible {
+  outline: 2px solid var(--sg-link);
+  outline-offset: 3px;
+}
+:global(.store-app) .catalog :global(.store-search):focus-within {
+  border-color: var(--sg-link);
+  box-shadow: 0 0 0 2px #bcefff66;
+}
+
+@media (max-width: 1100px) {
+  :global(.store-app) .catalog .layout {
+    grid-template-columns: 192px minmax(0, 1fr);
+    gap: 24px;
+  }
+  :global(.store-app) .catalog .filters {
+    padding-right: 18px;
+  }
+  :global(.store-app) .catalog :global(.store-catalog-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  :global(.store-app) .catalog {
+    padding: 28px 24px 60px;
+  }
+  :global(.store-app) .catalog .layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  :global(.store-app) .catalog .filters {
+    padding: 0;
+    border: 1px solid var(--sg-line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  :global(.store-app) .catalog .filterToggle {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: var(--sg-paper);
+    border: 0;
+    color: var(--sg-ink);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .filterToggle > svg:last-child {
+    margin-left: auto;
+  }
+  .filterToggle[aria-expanded='true'] > svg:last-child {
+    transform: rotate(180deg);
+  }
+  .filterBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    border-radius: 5px;
+    background: var(--sg-graphite);
+    color: var(--sg-white);
+    font-size: 11px;
+  }
+  .filterControls {
+    padding: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    border-top: 1px solid var(--sg-line);
+  }
+  :global(.store-app) .catalog :global(.store-filter-note) {
+    display: none;
+  }
+  :global(.store-app) .catalog .filters :global(.store-label) select,
+  :global(.store-app) .catalog .filters :global(.store-label) input {
+    font-size: 16px;
+  }
+  :global(.store-app) .catalog :global(.store-price-filters) {
+    grid-column: 1/-1;
+  }
+  :global(.store-app) .catalog :global(.store-catalog-grid) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 14px;
+  }
+}
+@media (max-width: 700px) {
+  :global(.store-app) .catalog {
+    padding: 22px 20px 48px;
+  }
+  :global(.store-app) .catalog .intro {
+    padding: 25px 23px;
+    margin-bottom: 20px;
+  }
+  :global(.store-app) .catalog .intro p {
+    font-size: 13px;
+    max-width: 290px;
+  }
+  .introNote {
+    display: none;
+  }
+  .categories {
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  :global(.store-app) .catalog .categories button {
+    font-size: 12px;
+    padding: 9px 12px;
+    gap: 9px;
+  }
+  :global(.store-app) .catalog :global(.store-catalog-toolbar) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  :global(.store-app) .catalog :global(.store-search) input {
+    font-size: 16px;
+  }
+  :global(.store-app) .catalog :global(.store-sort) {
+    justify-content: space-between;
+    padding: 0 2px;
+    font-size: 12px;
+  }
+  :global(.store-app) .catalog :global(.store-sort) select {
+    font-size: 16px;
+    max-width: 175px;
+  }
+  :global(.store-app) .catalog :global(.store-results-count) {
+    padding-top: 12px;
+  }
+  :global(.store-app) .catalog :global(.store-catalog-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 12px;
+  }
+  .filterControls {
+    padding: 16px;
+    gap: 16px 12px;
+  }
+  :global(.store-app) .catalog :global(.store-pagination) {
+    gap: 10px;
+    font-size: 12px;
+  }
+  :global(.store-app) .catalog :global(.store-pagination) button {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+}
+@media (max-width: 360px) {
+  :global(.store-app) .catalog {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+  :global(.store-app) .catalog :global(.store-catalog-grid) {
+    grid-template-columns: 1fr;
+  }
+  .filterControls {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :global(.store-app) .catalog .categories button {
+    transition: none;
+  }
+}
