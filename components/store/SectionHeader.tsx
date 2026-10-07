@@ -25,7 +25,9 @@ export function SectionHeader({
         </p>
         <h1>
           {title}
-          <span>.</span>
+          <span aria-hidden={section === 'store' || section === 'preorder' ? true : undefined}>
+            .
+          </span>
         </h1>
         <p className={styles.description}>{description}</p>
       </div>

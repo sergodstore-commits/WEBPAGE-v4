@@ -23,6 +23,10 @@ Entregas del rediseño, octubre de 2026: identidad compartida (logo, favicon, fu
 
 ## Tienda y Producto
 
+Mejora del catálogo (punto 4): búsqueda y orden aparecen antes del bloque de filtros y resultados, también en celular. Los filtros de escritorio tienen una superficie propia y los móviles conservan su control desplegable. Las tarjetas del catálogo usan fondo blanco para la imagen completa, títulos limitados visualmente a dos líneas, resumen de formatos/idiomas obtenidos de las variantes, precios con importes que no se parten y espacio consistente para las acciones. El botón principal usa cian oscuro con texto blanco. No se modifican stock, precios ni agrupación de variantes. Se conserva la búsqueda y los filtros en la URL.
+
+La revisión general posterior al punto 3 detectó dos expectativas de navegación que dependían del punto decorativo del título y una carrera de carga en el campo de hashtag de Instagram. Tienda y Preventas conservan su nombre accesible anterior; el campo de hashtag espera la lectura inicial antes de admitir edición y se bloquea durante el guardado. Ambos recorridos se vuelven a comprobar junto al catálogo y preventas con datos aislados.
+
 - `components/store/shared.tsx`: componentes comunes, lectura de API y funciones de disponibilidad/agrupación extraídas de `StoreApp`, compartidas con las pantallas existentes.
 - `components/store/catalog/Catalog.tsx`: encabezado de Tienda, categorías destacadas obtenidas de datos publicados, búsqueda, orden y filtros. En móvil (hasta 900 px) los filtros se despliegan con un botón accesible; los criterios aplicados se pueden retirar individualmente o limpiar. Búsqueda, categoría, marca, características, precios, disponibilidad, orden y página se conservan en la URL y al recargar. Se usa History API integrada con `useSearchParams`, sin solicitudes de navegación por cada pulsación.
 - `ProductCard.tsx` y `ProductCard.module.css`: imágenes completas, rango de precios por familia, stock, opciones y vista rápida. El diseño nuevo se aplica en Tienda y Preventas; Home mantiene sus estilos. Hover breve sin 3D y transiciones desactivadas con movimiento reducido.

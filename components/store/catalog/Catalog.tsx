@@ -237,6 +237,36 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           ))}
         </nav>
       )}
+      <div className="store-catalog-toolbar">
+        <label className="store-search">
+          <Search size={18} />
+          <input
+            aria-label="Buscar artículos"
+            placeholder="Buscar por nombre o SKU…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button aria-label="Borrar búsqueda" onClick={() => setSearch('')}>
+              <X size={16} />
+            </button>
+          )}
+        </label>
+        <label className="store-sort">
+          <span>Ordenar</span>
+          <select
+            aria-label="Ordenar artículos"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+          >
+            <option value="recent">Más recientes</option>
+            <option value="price-asc">Menor precio</option>
+            <option value="price-desc">Mayor precio</option>
+            <option value="name">Nombre: A–Z</option>
+          </select>
+        </label>
+      </div>
+
       <div className={`store-catalog-layout ${styles.layout}`}>
         <aside className={`store-filters ${styles.filters}`}>
           {mobile ? (
@@ -354,35 +384,6 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           )}
         </aside>
         <div className={`store-catalog-results ${styles.results}`}>
-          <div className="store-catalog-toolbar">
-            <label className="store-search">
-              <Search size={18} />
-              <input
-                aria-label="Buscar artículos"
-                placeholder="Buscar por nombre o SKU…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button aria-label="Borrar búsqueda" onClick={() => setSearch('')}>
-                  <X size={16} />
-                </button>
-              )}
-            </label>
-            <label className="store-sort">
-              <span>Ordenar</span>
-              <select
-                aria-label="Ordenar artículos"
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-              >
-                <option value="recent">Más recientes</option>
-                <option value="price-asc">Menor precio</option>
-                <option value="price-desc">Mayor precio</option>
-                <option value="name">Nombre: A–Z</option>
-              </select>
-            </label>
-          </div>
           {activeFilters.length > 0 && (
             <div className={styles.activeFilters} aria-label="Filtros activos">
               {activeFilters.map((filter) => (

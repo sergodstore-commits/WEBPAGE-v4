@@ -11,7 +11,7 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 0 0 34px;
+  margin: 0 0 24px;
 }
 
 :global(.store-app) .catalog .categories button {
@@ -53,9 +53,10 @@
 
 :global(.store-app) .catalog .filters {
   display: block;
-  padding: 0 23px 0 0;
-  border: 0;
-  border-right: 1px solid var(--sg-line);
+  padding: 20px 16px;
+  border: 1px solid var(--sg-line);
+  border-radius: 8px;
+  background: #f4f7fa;
 }
 :global(.store-app) .catalog .filters h2 {
   margin: 0 0 24px;
@@ -134,12 +135,17 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
   align-items: center;
+  padding: 14px;
+  margin-bottom: 24px;
+  border: 1px solid var(--sg-line);
+  border-radius: 8px;
+  background: #f4f7fa;
 }
 :global(.store-app) .catalog :global(.store-search) {
   min-height: 48px;
   padding: 0 14px;
   gap: 10px;
-  border: 1px solid #cbd5df;
+  border: 1px solid #7396a4;
   border-radius: 6px;
   background: var(--sg-white);
 }
@@ -175,7 +181,7 @@
 }
 :global(.store-app) .catalog :global(.store-results-count) {
   margin: 0;
-  padding: 22px 0 18px;
+  padding: 0 0 18px;
   font-size: 12px;
   color: var(--sg-muted);
 }

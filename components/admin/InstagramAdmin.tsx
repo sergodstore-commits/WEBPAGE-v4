@@ -237,6 +237,7 @@ export function InstagramIntegration() {
         <span>Hashtag para Noticias</span>
         <input
           maxLength={61}
+          disabled={busy || !status}
           value={tag}
           onChange={(e) => setTag(e.target.value)}
           placeholder="SergodWeb"

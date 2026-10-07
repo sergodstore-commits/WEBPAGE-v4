@@ -29,6 +29,19 @@ export function ProductCard({
   );
   const title = options ? familyName(p) : p.name;
   const reservation = catalogStyle && p.kind === 'preorder' ? preorderFamily(variants) : null;
+  const optionValues = (keys: string[]) => [
+    ...new Set(
+      variants.flatMap((variant) =>
+        Object.entries(variant.options || {})
+          .filter(([key]) => keys.includes(key.toLowerCase()))
+          .map(([, value]) => value),
+      ),
+    ),
+  ];
+  const formats = optionValues(['formato', 'tamaño', 'tamano']);
+  const languages = optionValues(['idioma']);
+  const summarize = (values: string[]) =>
+    values.slice(0, 2).join(' / ') + (values.length > 2 ? ` +${values.length - 2}` : '');
   return (
     <article className={`store-product-card ${catalogStyle ? styles.card : ''}`}>
       <Link href={`/producto/${p.slug}`} className="store-product-visual">
@@ -43,13 +56,32 @@ export function ProductCard({
         <Link href={`/producto/${p.slug}`} className="store-product-title">
           {title}
         </Link>
+        {catalogStyle && p.kind === 'store' && (
+          <div className={styles.optionsSummary}>
+            <span title={formats.join(' / ')}>
+              {summarize(formats) || 'Colección y accesorios'}
+            </span>
+            <span title={languages.join(' / ')}>
+              {summarize(languages) ||
+                (options
+                  ? `${variants.length} ${variants.length === 1 ? 'opción' : 'opciones'}`
+                  : 'Artículo individual')}
+            </span>
+          </div>
+        )}
         <div className="store-product-price">
           <strong>
-            {minimum !== maximum ? `${money(minimum)} – ${money(maximum)}` : money(minimum)}
+            <span>{money(minimum)}</span>
+            {minimum !== maximum && (
+              <>
+                {' '}
+                – <span>{money(maximum)}</span>
+              </>
+            )}
           </strong>
           {!options && p.discount_percent > 0 && <del>{money(p.price)}</del>}
         </div>
-        {options && (
+        {options && (!catalogStyle || p.kind !== 'store' || languages.length > 0) && (
           <small className="store-muted">
             {variants.length} {variants.length === 1 ? 'opción' : 'opciones'}
           </small>
