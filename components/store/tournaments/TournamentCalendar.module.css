@@ -141,9 +141,34 @@
   line-height: 1.5;
 }
 .selectedDate {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
   font-weight: 600;
   text-transform: capitalize;
-  margin-bottom: 12px !important;
+}
+.detailsHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.detailsHeading button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #cbd6df;
+  border-radius: 5px;
+  background: #fff;
+  color: #006482;
+  cursor: pointer;
+}
+.detailsHeading button:hover {
+  background: #edf6f9;
 }
 .details ul {
   list-style: none;

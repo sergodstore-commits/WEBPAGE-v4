@@ -197,11 +197,9 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
     await expect(
       page.getByText('Próximas fechas y transmisiones de SERGOD STORE.', { exact: true }),
     ).toHaveCSS('color', 'rgb(187, 201, 214)');
-    await expect(page.getByRole('heading', { level: 3 })).toHaveText([
-      'Liga primero',
-      'Liga segundo',
-      ...videos.slice(0, 6).map((v) => v.title),
-    ]);
+    await expect(page.getByRole('heading', { level: 3 })).toHaveText(
+      videos.slice(0, 6).map((v) => v.title),
+    );
     await expect(page.getByText('Liga pasado', { exact: true })).toHaveCount(0);
     await expect(page.locator('iframe')).toHaveCount(0);
     await expect(page.getByRole('img', { name: 'Transmisión 0', exact: true })).toHaveAttribute(
@@ -286,8 +284,11 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
   await expect(page.locator('.admin-feedback.success')).toContainText('visible para la comunidad');
   await page.reload();
   await visitor.goto('http://localhost:3100/torneos');
+  const calendar = visitor.getByLabel('Calendario de torneos', { exact: true });
+  await calendar.getByRole('button', { name: new RegExp(title) }).click();
   await expect(visitor.getByRole('link', { name: title, exact: true })).toBeVisible();
   await visitor.reload();
+  await calendar.getByRole('button', { name: new RegExp(title) }).click();
   await expect(visitor.getByRole('link', { name: title, exact: true })).toBeVisible();
   await expect(
     visitor

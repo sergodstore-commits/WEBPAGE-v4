@@ -43,12 +43,15 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
   await expect(table.getByRole('columnheader')).toHaveCount(7);
   await expect(table.getByRole('button')).toHaveCount(29);
   await expect(calendar.locator('[aria-current="date"] time')).toHaveText('1');
+  await expect(page.getByText('Próximas fechas por anunciar', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Ver detalles de/ })).toHaveCount(0);
   const day = calendar.getByRole('button', { name: /29 de febrero de 2032:/ });
   await expect(day).toContainText('Liga Yu-Gi-Oh!');
   await expect(day).toContainText('+2 más');
   await expect(day).not.toContainText('Sellado de marzo');
   await day.click();
   await expect(day).toHaveAttribute('aria-pressed', 'true');
+  await expect(calendar.getByRole('region')).toHaveCount(1);
   await expect(calendar.getByRole('link')).toHaveText([
     'Liga Yu-Gi-Oh! →',
     'Liga Mitos Primera Era →',
@@ -65,6 +68,13 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
   expect(bounds!.x + bounds!.width).toBeLessThan(liveBounds!.x);
   expect(Math.abs(bounds!.y - liveBounds!.y)).toBeLessThan(2);
   await page.screenshot({ path: info.outputPath('agenda-desktop.png'), fullPage: true });
+  await calendar.getByRole('button', { name: 'Cerrar detalles del día', exact: true }).click();
+  await expect(day).toBeFocused();
+  await expect(day).toHaveAttribute('aria-pressed', 'false');
+  await expect(calendar.getByRole('region')).toHaveCount(0);
+  await calendar.getByRole('button', { name: /, 2 de febrero de 2032:/ }).click();
+  await expect(calendar.getByText('No hay eventos publicados para este día.')).toBeVisible();
+  await day.click();
 
   await calendar.getByRole('button', { name: 'Mes siguiente', exact: true }).click();
   await expect(calendar.getByText('marzo de 2032', { exact: true })).toBeVisible();
@@ -79,6 +89,7 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
   await expect(
     calendar.getByText('Sin eventos publicados este mes.', { exact: true }),
   ).toBeVisible();
+  await expect(page.getByText('Próximas fechas por anunciar', { exact: true })).toHaveCount(0);
   await calendar.getByRole('button', { name: 'Mes anterior', exact: true }).click();
   await expect(calendar.getByText('diciembre de 2031', { exact: true })).toBeVisible();
   await calendar.getByRole('button', { name: 'Volver al mes actual', exact: true }).click();
@@ -88,12 +99,14 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
     'true',
   );
   await expect(day).toContainText('Sellado de medianoche');
+  await day.click();
   for (const width of [320, 375, 768]) {
     await page.setViewportSize({ width, height: 900 });
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth))
       .toBeLessThanOrEqual(1);
     const mobileCalendar = await calendar.boundingBox();
+    await expect(calendar.getByRole('region')).toBeVisible();
     const mobileLive = await page
       .getByRole('region', { name: 'Transmisión en vivo', exact: true })
       .boundingBox();
@@ -101,6 +114,7 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
     await page.screenshot({ path: info.outputPath(`agenda-${width}.png`), fullPage: true });
   }
   await calendar.getByRole('button', { name: 'Compactar', exact: true }).click();
+  await calendar.getByRole('button', { name: 'Cerrar detalles del día', exact: true }).click();
   await day.focus();
   await page.keyboard.press('Enter');
   await expect(calendar.getByRole('link')).toHaveCount(3);

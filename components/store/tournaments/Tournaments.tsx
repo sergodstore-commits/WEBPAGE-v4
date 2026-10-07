@@ -89,9 +89,6 @@ export function Tournaments() {
     [extra, setExtra] = useState<YouTubeVideo[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
-  const upcoming = (posts.data || [])
-    .filter((p) => p.event_at && Date.parse(p.event_at) >= Date.now())
-    .sort((a, b) => Date.parse(a.event_at!) - Date.parse(b.event_at!));
   const videos = [...(media.data?.videos || []), ...extra];
   async function more() {
     setBusy(true);
@@ -160,42 +157,6 @@ export function Tournaments() {
             )}
           </section>
         </div>
-        {!posts.loading && !posts.error && (
-          <>
-            {upcoming.length ? (
-              <div className={styles.agenda}>
-                {upcoming.map((p) => (
-                  <article key={p.id}>
-                    <time dateTime={p.event_at!}>
-                      {new Intl.DateTimeFormat('es-CL', {
-                        day: '2-digit',
-                        month: 'short',
-                        timeZone: 'America/Santiago',
-                      }).format(new Date(p.event_at!))}
-                    </time>
-                    <div>
-                      <h3>
-                        <Link href={`/publicacion/${p.slug}`}>{p.title}</Link>
-                      </h3>
-                      <p>
-                        {date(p.event_at)}
-                        {p.location ? ` · ${p.location}` : ''}
-                      </p>
-                    </div>
-                    <Link href={`/publicacion/${p.slug}`} aria-label={`Ver detalles de ${p.title}`}>
-                      Ver detalles →
-                    </Link>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <Empty
-                title="Próximas fechas por anunciar"
-                body="Los torneos aparecerán aquí cuando la tienda publique su programación."
-              />
-            )}
-          </>
-        )}
       </section>
       <section className={styles.section} aria-labelledby="archive-heading">
         <div className={styles.sectionHeading}>

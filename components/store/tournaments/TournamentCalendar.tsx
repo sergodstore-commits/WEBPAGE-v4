@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
 import { date } from '@/lib/client';
 import type { Post } from '@/lib/types';
 import styles from './TournamentCalendar.module.css';
@@ -42,6 +42,7 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
   const [month, setMonth] = useState(currentMonth);
   const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const selectedButton = useRef<HTMLButtonElement | null>(null);
   const first = new Date(Date.UTC(Math.floor(month / 12), month % 12, 1));
   const year = first.getUTCFullYear(),
     monthNumber = first.getUTCMonth();
@@ -131,8 +132,12 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
                       className={`${styles.day} ${list.length ? styles.hasEvents : ''}`}
                       aria-label={`${longDayFormat.format(new Date(`${day}T12:00:00Z`))}: ${list.length ? list.map((p) => p.title).join(', ') : 'sin eventos'}`}
                       aria-pressed={selected === day}
+                      aria-controls={selected === day ? 'tournament-day-details' : undefined}
                       aria-current={day === today ? 'date' : undefined}
-                      onClick={() => setSelected(selected === day ? null : day)}
+                      onClick={(event) => {
+                        selectedButton.current = event.currentTarget;
+                        setSelected(selected === day ? null : day);
+                      }}
                     >
                       <time dateTime={day}>{Number(day.slice(-2))}</time>
                       {list.slice(0, limit).map((post) => (
@@ -157,10 +162,27 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
           : 'Sin eventos publicados este mes.'}
       </p>
       {selected && (
-        <div className={styles.details} aria-live="polite">
-          <p className={styles.selectedDate}>
-            {longDayFormat.format(new Date(`${selected}T12:00:00Z`))}
-          </p>
+        <section
+          id="tournament-day-details"
+          className={styles.details}
+          aria-labelledby="tournament-selected-date"
+          aria-live="polite"
+        >
+          <div className={styles.detailsHeading}>
+            <h3 id="tournament-selected-date" className={styles.selectedDate}>
+              {longDayFormat.format(new Date(`${selected}T12:00:00Z`))}
+            </h3>
+            <button
+              type="button"
+              aria-label="Cerrar detalles del día"
+              onClick={() => {
+                setSelected(null);
+                selectedButton.current?.focus();
+              }}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
           {selectedEvents.length ? (
             <ul>
               {selectedEvents.map((post) => (
@@ -178,7 +200,7 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
           ) : (
             <p>No hay eventos publicados para este día.</p>
           )}
-        </div>
+        </section>
       )}
     </div>
   );

@@ -60,42 +60,6 @@
   font-size: 32px;
   margin: 0;
 }
-.agenda {
-  border-top: 1px solid #dbe3e9;
-}
-.agenda article {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 22px 0;
-  border-bottom: 1px solid #dbe3e9;
-}
-.agenda time {
-  flex: 0 0 70px;
-  color: #006482;
-  font-size: 20px;
-  font-family: var(--sg-font-display);
-  text-transform: uppercase;
-}
-.agenda article > div {
-  flex: 1;
-  min-width: 0;
-}
-.agenda h3 {
-  font-size: 18px;
-  margin: 0 0 8px;
-  overflow-wrap: anywhere;
-}
-.agenda p {
-  font-size: 13px;
-  color: #526170;
-  margin: 0;
-}
-.agenda article > a {
-  font-size: 12px;
-  white-space: nowrap;
-  color: #006482;
-}
 .videos {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -322,16 +286,6 @@
   .intro > svg {
     display: none;
   }
-  .agenda article {
-    display: grid;
-    grid-template-columns: 70px minmax(0, 1fr);
-    column-gap: 16px;
-    row-gap: 12px;
-  }
-  .agenda article > a {
-    grid-column: 2;
-    margin-left: 0;
-  }
 }
 @media (max-width: 600px) {
   .page,
@@ -352,19 +306,6 @@
   }
   .dialog {
     padding: 16px;
-  }
-  .agenda time {
-    font-size: 18px;
-    flex-basis: 60px;
-  }
-  .agenda article > a {
-    margin-left: 0;
-  }
-  .agenda article {
-    grid-template-columns: 60px minmax(0, 1fr);
-  }
-  .agenda h3 {
-    font-size: 16px;
   }
   .sectionHeading h2 {
     font-size: 28px;
