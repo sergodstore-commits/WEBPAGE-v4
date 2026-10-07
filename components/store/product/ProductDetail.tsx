@@ -216,7 +216,7 @@ export function ProductDetail({
             {p.kind === 'preorder' ? 'Preventas' : 'Tienda'}
           </Link>
           <span>/</span>
-          <span>{p.name}</span>
+          <span>{familyName(p)}</span>
         </nav>
       )}
       <div className={`store-detail-layout ${styles.layout}`}>
@@ -226,6 +226,11 @@ export function ProductDetail({
             name={p.name}
             className={`store-detail-main-image ${styles.mainImage}`}
           />
+          {p.images.length > 0 && (
+            <p className={styles.galleryCaption} aria-live="polite">
+              Imagen {selected + 1} de {p.images.length}
+            </p>
+          )}
           {p.images.length > 1 && (
             <div
               className={`store-thumbnails ${styles.thumbnails}`}
@@ -251,8 +256,10 @@ export function ProductDetail({
             {p.kind === 'preorder' ? ' · PREVENTA' : ''}
           </span>
           {quick ? <h2>{familyName(p)}</h2> : <h1>{familyName(p)}</h1>}
-          {p.catalog_name && p.catalog_name !== p.name && (
-            <p className={styles.variantName}>{p.name}</p>
+          {Object.values(p.options || {}).filter(Boolean).length > 0 && (
+            <p className={styles.variantName}>
+              {Object.values(p.options).filter(Boolean).join(' · ')}
+            </p>
           )}
           <p className={`store-sku ${styles.sku}`}>SKU: {p.sku}</p>
           <div className={`store-detail-price ${styles.price}`}>
@@ -393,16 +400,13 @@ export function ProductDetail({
         </div>
       </div>
       <div className={styles.details}>
-        <section className={styles.description} aria-label="Descripción del producto">
-          <h2>Sobre este artículo</h2>
+        <details className={styles.description} open>
+          <summary>Sobre este artículo</summary>
           <div className="store-description store-preline">{p.description}</div>
-        </section>
+        </details>
         {Boolean(p.brand || p.specifications?.length || p.tags?.length) && (
-          <section
-            className={`store-specifications ${styles.specifications}`}
-            aria-label="Ficha técnica"
-          >
-            <h2>Ficha técnica</h2>
+          <details className={`store-specifications ${styles.specifications}`}>
+            <summary>Ficha técnica</summary>
             <dl>
               {p.brand && (
                 <div>
@@ -426,7 +430,7 @@ export function ProductDetail({
                 ))}
               </div>
             )}
-          </section>
+          </details>
         )}
       </div>
     </div>

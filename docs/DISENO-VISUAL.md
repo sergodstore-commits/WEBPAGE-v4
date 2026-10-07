@@ -1,5 +1,11 @@
 # Rediseño visual de SERGOD STORE
 
+## Ficha de producto — punto 5
+
+La galería usa fondo blanco y contador de imágenes. El panel de compra reúne nombre, variante, precio, disponibilidad, formato e idioma; mantiene los selectores y el stock independiente de cada opción. La descripción puede plegarse y la ficha técnica comienza cerrada para reducir la longitud inicial. Ambos controles usan elementos nativos accesibles con teclado. Se conserva la información de entrega y reserva de las preventas.
+
+Verificación: tipos correctos y nueve recorridos de navegador aprobados para catálogo, variantes y preventas; incluyen galería, descuentos, stock, carrito, vista rápida y anchos de 320 a 1440 px. La compilación usada en las pruebas es de producción y los datos de prueba están aislados de las ventas reales.
+
 ## Mejora de cabeceras interiores — octubre de 2026
 
 `components/store/SectionHeader.tsx` y su módulo CSS comparten tipografía, espacio, contraste y acento cian entre Tienda, Preventas, Comunidad, Noticias y Torneos. Cada sección conserva una composición distinta: imágenes de artículos publicados, motivos de cartas para la comunidad y los duelos, y fotografía de la noticia más reciente cuando exista. Sin noticias con imagen se usa un motivo editorial con el logo; los adornos no representan productos disponibles ni resultados reales. En celular, el motivo queda en segundo plano y el texto conserva todo el ancho. No hay movimiento, nuevas bibliotecas ni cambios a los datos o a las operaciones comerciales.
