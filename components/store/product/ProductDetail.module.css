@@ -658,3 +658,29 @@
     animation: none !important;
   }
 }
+.product .preorder {
+  border-left: 3px solid #67def5;
+  background: linear-gradient(120deg, #15232c, #11161c);
+  color: #e6edf4;
+  overflow-wrap: anywhere;
+}
+.product.product .preorder h2 {
+  color: #bde9f3;
+}
+.product .preorder dt {
+  color: #b2c2d0;
+}
+.product .preorder dd {
+  color: #e6edf4;
+}
+.product.product .preorder p {
+  color: #d6e1ec;
+}
+.product.product .preorder .preorderState {
+  color: #67def5;
+  font-weight: 700;
+}
+.product.product .preorder .preorderTimezone {
+  font-size: 12px;
+  color: #aebbc8;
+}

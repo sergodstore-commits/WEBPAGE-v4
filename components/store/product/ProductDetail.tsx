@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { date, money, price } from '@/lib/client';
+import { preorderState, preorderLabels } from '@/lib/preorders';
 import type { Product } from '@/lib/types';
 import type { AddToCart } from '../shared';
 import { useRemote, availability, familyName, Loading, RemoteError, ProductImage } from '../shared';
@@ -285,6 +286,7 @@ export function ProductDetail({
                 <CalendarDays size={18} />
                 Información de la preventa
               </h2>
+              <p className={styles.preorderState}>{preorderLabels[preorderState(p)]}</p>
               <dl>
                 <div>
                   <dt>Apertura</dt>
@@ -295,6 +297,10 @@ export function ProductDetail({
                   <dd>{date(p.closes_at)}</dd>
                 </div>
                 <div>
+                  <dt>Cupos disponibles</dt>
+                  <dd>{p.available} unidades de esta opción</dd>
+                </div>
+                <div>
                   <dt>Máximo por cliente</dt>
                   <dd>
                     {p.max_per_customer || 'Sin límite adicional'}
@@ -302,8 +308,14 @@ export function ProductDetail({
                   </dd>
                 </div>
               </dl>
+              <p className={styles.preorderTimezone}>
+                Fechas y horarios de Chile (Santiago). Apertura y cierre corresponden al período de
+                reserva.
+              </p>
               <strong>Condiciones de entrega</strong>
-              <p className="store-preline">{p.delivery_terms}</p>
+              <p className="store-preline">
+                {p.delivery_terms || 'Condiciones de entrega por confirmar.'}
+              </p>
             </div>
           )}
           <div className={`store-purchase-row ${styles.purchase}`}>

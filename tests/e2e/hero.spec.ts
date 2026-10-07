@@ -133,7 +133,7 @@ test('Home: cartas reales, acciones utilizables y composición sin desbordes en 
   await page.goto('/');
   await hero.getByRole('link', { name: 'Ver torneos', exact: true }).click();
   await expect(page).toHaveURL(/\/torneos$/);
-  await expect(page.getByRole('heading', { name: 'Torneos', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /^Torneos\.?$/ })).toBeVisible();
 });
 
 test('Navegación móvil: teclado, Escape, retorno del foco y cambio de página', async ({ page }) => {

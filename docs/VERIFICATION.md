@@ -1,4 +1,21 @@
-# Estado de comprobación — 26 de septiembre de 2026
+# Estado de comprobación
+
+## Entrega final — 7 de octubre de 2026
+
+Las seis fases están integradas: Preventas, Torneos/Twitch, Comunidad/rankings, Noticias/Instagram, Administración y Carrito/Cuenta/Checkout. El propietario autorizó publicarlas y conectar Twitch e Instagram después.
+
+- Servidor: **96/96 pruebas aprobadas**, con persistencia local real y proveedores externos simulados donde corresponde.
+- Navegador: **40 recorridos únicos aprobados** sobre la compilación final de producción. La ejecución completa aprobó 38; se repitieron y aprobaron los dos restantes después de actualizar el selector del encabezado «Torneos.» y limpiar los intentos acumulados del administrador aislado mediante el setup existente. No se redujo la protección de autenticación.
+- TypeScript, construcción y trazado de dependencias correctos. Los recorridos incluyen creación → imagen optimizada → publicación → cliente → recarga → edición → recarga → retiro de artículos y preventas; POS/stock, cuenta, carrito y 23 rutas adaptables. Otros recorridos simulan respuestas de proveedores para revisar estados sin hacer cobros.
+- Migraciones **007–010** aplicadas en Supabase, esquema privado `sergod_store`. Lecturas antes/después conservaron 104 artículos, 117 referencias de imágenes, siete pedidos, dos cuentas, 13 movimientos de inventario, configuración y stock total de 31 unidades, sin reservas activas. Coincidieron las huellas completas de artículos, imágenes, cuentas, movimientos y configuración. La conciliación actualiza timestamps de consulta de pedidos; sus estados financieros se comprobaron por lectura.
+- Todas las tablas de aplicación mantienen RLS; `anon`/`authenticated` carecen de acceso al esquema privado. El cron mostró cinco ejecuciones SQL recientes correctas; esto por sí solo no demuestra el resultado HTTP.
+- El pedido real **#6 permanece aprobado por $2.500**. Esta revisión no generó cobros, pedidos ni correos externos. Las pruebas históricas de Flow y correo se detallan abajo.
+
+La publicación usa GitHub → Vercel, sin reemplazar secretos ni cambiar Flow producción por sandbox. La comprobación pública posterior revisa rutas, APIs, acceso administrativo y modos de pago/integración mediante lectura, conservando los datos comerciales.
+
+Pendientes: existencias y precios definitivos, datos comerciales/publicación de preventas, aplicaciones reales de Twitch/Instagram y pruebas de sus permisos/medios, y contrastar el importador Yu-Gi-Oh! con una exportación real. El contenido público depende de lo que publique el administrador; no se agregan noticias, torneos o rankings ficticios.
+
+## Registro inicial — 26 de septiembre de 2026
 
 La versión revisable está publicada en [www.sergodstore.cl](https://www.sergodstore.cl), con código en [WEBPAGE-v4](https://github.com/sergodstore-commits/WEBPAGE-v4). La nueva tienda reemplazó el contenido de `main` conservando el historial anterior y una etiqueta de respaldo. Supabase, Storage, Resend y Flow sandbox están conectados. Estas pruebas iniciales usaron sandbox. El propietario autorizó posteriormente guardar las claves de producción en Vercel y habilitar pagos reales; la activación se documenta abajo.
 

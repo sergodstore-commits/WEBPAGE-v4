@@ -1,0 +1,361 @@
+.page {
+  max-width: 1280px;
+  padding: 40px 32px 80px;
+  color: var(--sg-ink);
+}
+.intro {
+  position: relative;
+  padding: 40px;
+  border: 1px solid #314856;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at right bottom, #123d4b, transparent 65%), #151c23;
+  color: #fff;
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+.intro > span {
+  color: #bde9f3;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+.intro h1 {
+  font-family: var(--sg-font-display);
+  font-size: clamp(40px, 5vw, 64px);
+  line-height: 1.05;
+  margin: 12px 0;
+}
+.intro h1 span {
+  color: #67def5;
+}
+.page .intro p {
+  color: #bbc9d6;
+  font-size: 14px;
+}
+.intro > svg {
+  position: absolute;
+  right: 40px;
+  top: 30px;
+  width: 90px;
+  height: 90px;
+  color: #67def5;
+  opacity: 0.12;
+}
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #dce3e8;
+  scroll-margin-top: 100px;
+  outline: none;
+}
+.feature:focus-visible {
+  outline: 2px solid #1689a9;
+  outline-offset: 6px;
+}
+.media {
+  min-width: 0;
+}
+.stage {
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111820;
+  border: 1px solid #dce3e8;
+  border-radius: 8px;
+  overflow: hidden;
+  touch-action: pan-y;
+  position: relative;
+}
+.stage > img,
+.stage > video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.stage > img {
+  user-select: none;
+}
+.stage > video {
+  display: block;
+}
+.stage:focus-visible {
+  outline: 2px solid #1689a9;
+  outline-offset: 3px;
+}
+.unavailable {
+  color: #fff;
+  text-align: center;
+  padding: 24px;
+}
+.media .unavailable p {
+  color: #d5e2eb;
+}
+.unavailable a {
+  color: #8ae5fb;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  color: #59707e;
+  font-size: 12px;
+}
+.controls > button {
+  border: 1px solid #ccd7df;
+  border-radius: 6px;
+  background: #fff;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: #213541;
+  cursor: pointer;
+}
+.controls > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: 280px;
+}
+.controls > div button {
+  width: 20px;
+  height: 32px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  position: relative;
+}
+.controls > div button::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8ea5b3;
+  left: 7px;
+  top: 13px;
+}
+.controls > div button[aria-current]::after {
+  background: #1388a6;
+  width: 8px;
+  height: 8px;
+  left: 6px;
+  top: 12px;
+}
+.caption {
+  min-width: 0;
+  padding-top: 8px;
+}
+.caption time,
+.card time {
+  font-size: 12px;
+  color: #637580;
+}
+.caption h2 {
+  font-family: var(--sg-font-display);
+  font-size: 32px;
+  line-height: 1.1;
+  margin: 20px 0;
+}
+.page .caption > p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #344754;
+  margin: 20px 0 28px;
+}
+.links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #176d86;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.archive {
+  margin-top: 48px;
+}
+.heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.heading > div > span {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #657a88;
+}
+.heading h2 {
+  font-family: var(--sg-font-display);
+  font-size: 36px;
+  line-height: 1.1;
+  margin: 8px 0 0;
+}
+.heading > span {
+  font-size: 12px;
+  color: #637580;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dce3e8;
+  border-radius: 8px;
+  padding: 0 0 20px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  min-width: 0;
+  transition: border-color 0.15s;
+}
+.card:hover {
+  border-color: #2594b1;
+}
+.card:focus-visible {
+  outline: 2px solid #1689a9;
+  outline-offset: 3px;
+}
+.thumbnail {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: #edf2f5;
+  margin-bottom: 18px;
+}
+.thumbnail > div {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: unset;
+}
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumbnail > span,
+.thumbnail > small {
+  position: absolute;
+  bottom: 10px;
+  padding: 5px 8px;
+  background: #111b24;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.thumbnail > span {
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.thumbnail > small {
+  right: 10px;
+}
+.card > time,
+.card > p,
+.card > .read {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.page .card > p {
+  color: #344754;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  margin-top: 12px;
+  margin-bottom: 18px;
+}
+.read {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #176d86;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: auto;
+}
+.error {
+  padding: 24px;
+  border: 1px solid #c69f9f;
+  border-radius: 8px;
+}
+@media (max-width: 900px) {
+  .feature {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .page {
+    padding: 24px 20px 56px;
+  }
+  .intro {
+    padding: 28px 24px;
+    margin-bottom: 28px;
+  }
+  .intro > svg {
+    right: 16px;
+  }
+  .feature {
+    gap: 16px;
+    scroll-margin-top: 80px;
+  }
+  .caption {
+    padding: 0;
+  }
+  .page .caption > p {
+    font-size: 14px;
+    margin-top: 14px;
+  }
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .heading h2 {
+    font-size: 30px;
+  }
+  .controls {
+    gap: 8px;
+  }
+  .controls > div {
+    max-width: 180px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

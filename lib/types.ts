@@ -49,6 +49,7 @@ export type Post = {
   body: string;
   image: string;
   event_at: string | null;
+  event_level?: 'normal' | 'featured' | 'major';
   location: string;
   status: 'draft' | 'published' | 'withdrawn';
   created_at: string;
@@ -61,6 +62,22 @@ export type Carrier = {
   mode: 'address' | 'agency';
   collect: boolean;
   price: number;
+};
+export type TwitchVideo = {
+  id: string;
+  video_id: string;
+  channel: string;
+  title: string;
+  recorded_at: string;
+  twitch_thumbnail: string;
+  custom_thumbnail: string;
+  tournament_id: string | null;
+  status?: 'draft' | 'published' | 'withdrawn';
+};
+export type TournamentMedia = {
+  live: { enabled: boolean; channel: string; title: string; tournament_id: string | null } | null;
+  videos: TwitchVideo[];
+  total: number;
 };
 export type Settings = {
   payment_mode?: 'disabled' | 'sandbox' | 'production';

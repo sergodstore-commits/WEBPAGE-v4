@@ -33,7 +33,7 @@ export function appUrl() {
   return value.replace(/\/$/, '');
 }
 export const integer = z.number().int().min(0).max(100000000);
-export async function boundedBytes(request: Request, limit: number) {
+export async function boundedBytes(request: Request | Response, limit: number) {
   if (Number(request.headers.get('content-length') || 0) > limit)
     fail(413, 'El formulario supera el tamaño permitido.');
   const reader = request.body?.getReader();

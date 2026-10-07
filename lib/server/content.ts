@@ -12,6 +12,7 @@ const schema = z.object({
     .union([z.iso.datetime({ offset: true }), z.literal(''), z.null()])
     .optional()
     .transform((v) => v || null),
+  event_level: z.enum(['normal', 'featured', 'major']).optional(),
   location: z.string().max(400).default(''),
 });
 export async function getPosts(admin = false, kind?: string) {
@@ -22,7 +23,31 @@ export async function getPosts(admin = false, kind?: string) {
     params.push(kind);
     sql += ' AND kind=$1';
   }
-  return (await (await getDb()).query(sql + ' ORDER BY created_at DESC LIMIT 500', params)).rows;
+  const db = await getDb();
+  const rows = (await db.query(sql + ' ORDER BY created_at DESC LIMIT 500', params)).rows;
+  if (!admin && (!kind || kind === 'news')) {
+    const news = (
+      await db.query(
+        "SELECT id,caption,assets,recorded_at FROM instagram_news WHERE status='published' ORDER BY recorded_at DESC LIMIT 500",
+      )
+    ).rows.map((n) => ({
+      id: n.id,
+      slug: `instagram-${n.id}`,
+      kind: 'news',
+      title: n.caption.split('\n')[0].slice(0, 100) || 'En SERGOD STORE',
+      body: n.caption,
+      image: n.assets[0]?.type === 'image' ? n.assets[0].url : n.assets[0]?.poster || '',
+      event_at: null,
+      location: '',
+      status: 'published',
+      created_at: n.recorded_at,
+      updated_at: n.recorded_at,
+    }));
+    return [...rows, ...news]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 500);
+  }
+  return rows;
 }
 export async function getPost(slug: string) {
   const p = (
@@ -33,19 +58,22 @@ export async function getPost(slug: string) {
 }
 export async function savePost(input: unknown, id?: string) {
   const d = schema.parse(input);
-  if (d.status === 'published' && (!d.body.trim() || !d.image))
+  if (d.kind !== 'tournament' && d.status === 'published' && (!d.body.trim() || !d.image))
     fail(400, 'Agrega el texto y una imagen antes de publicar.');
-  if (d.kind === 'tournament' && d.status === 'published' && (!d.event_at || !d.location.trim()))
-    fail(400, 'Indica la fecha y el lugar del torneo.');
+  if (d.kind === 'tournament' && d.status === 'published' && !d.event_at)
+    fail(400, 'Indica la fecha y hora del torneo.');
   const db = await getDb();
   const postId = id || uuid();
   return db.transaction(async (tx) => {
     if (d.image) await validateImages(tx, [d.image]);
     const old = id ? (await tx.query('SELECT * FROM posts WHERE id=$1', [id])).rows[0] : null;
     if (id && !old) fail(404, 'Publicación no encontrada.');
+    // Older clients omit this field. Keep an existing tournament's level on edit.
+    const eventLevel =
+      d.kind === 'tournament' ? (d.event_level ?? old?.event_level ?? 'normal') : 'normal';
     return (
       await tx.query(
-        `INSERT INTO posts(id,slug,kind,title,body,image,event_at,location,status) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(id) DO UPDATE SET kind=EXCLUDED.kind,title=EXCLUDED.title,body=EXCLUDED.body,image=EXCLUDED.image,event_at=EXCLUDED.event_at,location=EXCLUDED.location,status=EXCLUDED.status,updated_at=now() RETURNING *`,
+        `INSERT INTO posts(id,slug,kind,title,body,image,event_at,location,status,event_level) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(id) DO UPDATE SET kind=EXCLUDED.kind,title=EXCLUDED.title,body=EXCLUDED.body,image=EXCLUDED.image,event_at=EXCLUDED.event_at,location=EXCLUDED.location,status=EXCLUDED.status,event_level=EXCLUDED.event_level,updated_at=now() RETURNING *`,
         [
           postId,
           old?.slug || `${slugify(d.title)}-${postId.slice(0, 8)}`,
@@ -56,6 +84,7 @@ export async function savePost(input: unknown, id?: string) {
           d.event_at,
           d.location,
           d.status,
+          eventLevel,
         ],
       )
     ).rows[0];

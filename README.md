@@ -1,6 +1,14 @@
 # SERGOD STORE
 
-Tienda web de cartas coleccionables para SERGOD STORE, Copiapó, Chile. Incluye catálogo, preventas, cuenta de clientes, carrito, pedidos, entregas, contenido y un panel administrativo con venta presencial (POS). La interfaz es neutra y adaptable; la identidad visual definitiva queda para una etapa posterior.
+Tienda web de cartas coleccionables para SERGOD STORE, Copiapó, Chile. Incluye catálogo, preventas, cuenta de clientes, carrito, pedidos, entregas, contenido y un panel administrativo con venta presencial (POS). La entrega final del 7 de octubre incorpora la identidad oficial y las seis fases de interfaz adaptable.
+
+Torneos/Twitch, Comunidad/rankings y Noticias/Instagram forman parte de esta entrega final. Consulta [Twitch](docs/TWITCH.md), [rankings](docs/RANKINGS.md) y [Noticias/Instagram](docs/INSTAGRAM-NOTICIAS.md) para su funcionamiento, variables y comprobaciones pendientes con cuentas reales. Por decisión del propietario, Twitch e Instagram se conectarán después; sin claves permanecen deshabilitados y no importan contenido. Instagram reutiliza captions y medios con hashtag configurable, vista previa y aprobación; no publica automáticamente.
+
+El [panel administrativo rediseñado](docs/ADMIN.md) organiza las herramientas por catálogo, ventas, comunidad y configuración, con navegación móvil accesible y formularios compartidos. [Carrito, Cuenta y Checkout](docs/COMPRA-CUENTA.md) completan la entrega.
+
+La revisión final aprobó 96 pruebas de servidor y 40 recorridos únicos de navegador, además de TypeScript y compilación de producción con trazado seguro. Las migraciones 007–010 ya están aplicadas en `sergod_store`: se conservaron 104 artículos, 117 imágenes registradas, siete pedidos, 31 unidades de stock y la configuración existente. Consulta [el registro de verificación](docs/VERIFICATION.md) para los límites de estas pruebas y las tareas comerciales pendientes.
+
+[Carrito, Cuenta y Checkout](docs/COMPRA-CUENTA.md) comparten el nuevo módulo de compra, con pasos explícitos, importes y entrega separados, perfil e historial adaptables. Su publicación también queda para la revisión final.
 
 La aplicación usa Next.js 16, React, TypeScript y PostgreSQL. En desarrollo funciona sin cuentas externas: PGlite guarda la base de datos en el servidor local, las imágenes se guardan como archivos WebP y los correos quedan en una bandeja privada del administrador. El pago online requiere configurar Flow; no se simulan aprobaciones desde la interfaz.
 

@@ -37,6 +37,8 @@ export default defineConfig({
       SMTP_HOST: '',
       FLOW_API_KEY: '',
       FLOW_SECRET_KEY: '',
+      INSTAGRAM_APP_ID: '',
+      INSTAGRAM_APP_SECRET: '',
       SUPABASE_URL: '',
       SUPABASE_SERVICE_ROLE_KEY: '',
       VERCEL: '',

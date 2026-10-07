@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PGlite } from '@electric-sql/pglite';
 import { Client } from 'pg';
+import { readdir } from 'node:fs/promises';
 import { databasePoolConfig, databaseSchema } from '../lib/server/database-config';
 import { migrate, scopeDatabase, type Db } from '../lib/server/db';
 
@@ -73,9 +74,11 @@ test('el esquema nuevo convive con tablas antiguas: migraciones, aislamiento, ro
   await assert.rejects(() => db.query('SELECT * FROM products'), /does not exist/);
   await migrate(db);
   await migrate(db);
-  assert.equal(
-    (await db.query('SELECT count(*)::int AS count FROM schema_migrations')).rows[0].count,
-    6,
+  assert.deepEqual(
+    (await db.query<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).rows.map(
+      (row) => row.name,
+    ),
+    (await readdir('db/migrations')).filter((name) => name.endsWith('.sql')).sort(),
   );
   assert.equal(
     (await db.query('SELECT current_schema() AS schema')).rows[0].schema,

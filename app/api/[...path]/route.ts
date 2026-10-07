@@ -52,7 +52,45 @@ import {
   verifyToken,
 } from '@/lib/server/flow';
 import { localImage, uploadImage } from '@/lib/server/storage';
+import { localNewsVideo } from '@/lib/server/news-storage';
+import {
+  startInstagram,
+  finishInstagram,
+  instagramStatus,
+  saveInstagramSettings,
+  disconnectInstagram,
+  reviewInstagram,
+  importInstagram,
+  listInstagramNews,
+  editInstagramNews,
+  deleteInstagramNews,
+  publicNews,
+} from '@/lib/server/instagram';
 import { flushMail } from '@/lib/server/mail';
+import {
+  rankingBoardSchema,
+  publicRanking,
+  publicLeagueResults,
+  listLeagueTournaments,
+  reviewTor,
+  previewTor,
+  previewRankingFile,
+  commitRanking,
+  deleteLeagueTournament,
+} from '@/lib/server/rankings';
+import { torStoreId } from '@/lib/server/tor';
+import {
+  startTwitch,
+  finishTwitch,
+  twitchStatus,
+  disconnectTwitch,
+  reviewTwitch,
+  saveLive,
+  saveTwitchVideo,
+  deleteTwitchVideo,
+  listTwitchVideos,
+  publicTournaments,
+} from '@/lib/server/twitch';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -64,6 +102,8 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     const route = path.join('/'),
       method = request.method,
       url = new URL(request.url);
+    if (path[0] === 'news-video' && path.length === 2 && method === 'GET')
+      return localNewsVideo(path[1], request.headers.get('range'));
     if (route.startsWith('media/') && method === 'GET') {
       const bytes = await localImage(path[1]);
       return new Response(new Uint8Array(bytes!), {
@@ -149,6 +189,24 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       return json(await getProduct(path[1]));
     if (route === 'posts' && method === 'GET')
       return json(await getPosts(false, url.searchParams.get('kind') || undefined));
+    if (route === 'news' && method === 'GET') return json(await publicNews());
+    if (route === 'tournaments' && method === 'GET') {
+      const offset = z.coerce
+        .number()
+        .int()
+        .min(0)
+        .max(10000)
+        .parse(url.searchParams.get('offset') || 0);
+      return json(await publicTournaments(offset));
+    }
+    if (route === 'rankings' && method === 'GET')
+      return json(
+        await publicRanking(
+          rankingBoardSchema.parse(url.searchParams.get('board') || 'myl-first-era'),
+        ),
+      );
+    if (path[0] === 'rankings' && path.length === 3 && method === 'GET')
+      return json(await publicLeagueResults(rankingBoardSchema.parse(path[1]), path[2]));
     if (path[0] === 'posts' && path.length === 2 && method === 'GET')
       return json(await getPost(path[1]));
     if (route === 'account' && method === 'PATCH')
@@ -175,6 +233,126 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     if (path[0] === 'admin') {
       const user = await requireUser(request, true);
       const db = await getDb();
+      if (route === 'admin/integrations/instagram' && method === 'GET')
+        return json(await instagramStatus());
+      if (route === 'admin/integrations/instagram' && method === 'PATCH')
+        return json(await saveInstagramSettings(await body(request)));
+      if (route === 'admin/integrations/instagram/connect' && method === 'POST') {
+        await rateLimit(`instagram-connect:${user.id}`, 10, 15);
+        const result = await startInstagram(user.id),
+          response = json({ url: result.url });
+        response.headers.set('Set-Cookie', result.cookie);
+        return response;
+      }
+      if (route === 'admin/integrations/instagram/callback' && method === 'GET') {
+        let outcome = 'connected';
+        try {
+          await finishInstagram(user.id, request);
+        } catch (e) {
+          outcome =
+            e instanceof AppError ? e.message : 'No se pudo completar la conexión de Instagram.';
+        }
+        const response = NextResponse.redirect(
+          `${appUrl()}/admin/integraciones?${new URLSearchParams({ instagram: outcome })}`,
+          303,
+        );
+        response.headers.set(
+          'Set-Cookie',
+          `sergod_instagram_state=; Path=/api/admin/integrations/instagram; HttpOnly; SameSite=Lax; Max-Age=0${appUrl().startsWith('https://') ? '; Secure' : ''}`,
+        );
+        return response;
+      }
+      if (route === 'admin/integrations/instagram/disconnect' && method === 'POST')
+        return json(await disconnectInstagram());
+      if (route === 'admin/integrations/instagram/review' && method === 'POST') {
+        await rateLimit(`instagram-review:${user.id}`, 30, 15);
+        const input = z
+          .object({ cursor: z.string().max(1000).optional() })
+          .parse(await body(request));
+        return json(await reviewInstagram(user.id, input.cursor));
+      }
+      if (route === 'admin/news' && method === 'GET') return json(await listInstagramNews());
+      if (route === 'admin/news' && method === 'POST') {
+        await rateLimit(`instagram-import:${user.id}`, 30, 15);
+        return json(await importInstagram(user.id, await body(request)), 201);
+      }
+      if (path[1] === 'news' && path.length === 3 && method === 'PATCH')
+        return json(await editInstagramNews(path[2], await body(request)));
+      if (path[1] === 'news' && path.length === 3 && method === 'DELETE')
+        return json(await deleteInstagramNews(path[2]));
+      if (route === 'admin/integrations/tor' && method === 'GET')
+        return json({ store_id: torStoreId() });
+      if (route === 'admin/league' && method === 'GET') return json(await listLeagueTournaments());
+      if (route.startsWith('admin/league/') && method === 'POST') {
+        await rateLimit(`league:${user.id}`, 60, 15);
+        const input = await body(request);
+        if (route === 'admin/league/tor/review')
+          return json(
+            await reviewTor(
+              z
+                .number()
+                .int()
+                .min(1)
+                .max(1000)
+                .parse(input.page || 1),
+            ),
+          );
+        if (route === 'admin/league/tor/preview')
+          return json(await previewTor(user.id, input.tournament_id));
+        if (route === 'admin/league/file/preview')
+          return json(await previewRankingFile(user.id, input));
+        if (route === 'admin/league/commit') return json(await commitRanking(user.id, input));
+      }
+      if (path[1] === 'league' && path.length === 3 && method === 'DELETE')
+        return json(await deleteLeagueTournament(path[2]));
+      if (route === 'admin/integrations/twitch' && method === 'GET')
+        return json(await twitchStatus());
+      if (route === 'admin/integrations/twitch/connect' && method === 'POST') {
+        await rateLimit(`twitch-connect:${user.id}`, 10, 15);
+        const result = await startTwitch(user.id);
+        const response = json({ url: result.url });
+        response.headers.set('Set-Cookie', result.cookie);
+        return response;
+      }
+      if (route === 'admin/integrations/twitch/callback' && method === 'GET') {
+        let outcome = 'connected';
+        try {
+          await finishTwitch(user.id, request);
+        } catch (e) {
+          outcome =
+            e instanceof AppError
+              ? e.message
+              : 'No se pudo completar la conexión. Intenta nuevamente.';
+        }
+        const response = NextResponse.redirect(
+          `${appUrl()}/admin/integraciones?${new URLSearchParams({ twitch: outcome })}`,
+          303,
+        );
+        response.headers.set(
+          'Set-Cookie',
+          `sergod_twitch_state=; Path=/api/admin/integrations/twitch; HttpOnly; SameSite=Lax; Max-Age=0${appUrl().startsWith('https://') ? '; Secure' : ''}`,
+        );
+        return response;
+      }
+      if (route === 'admin/integrations/twitch/disconnect' && method === 'POST')
+        return json(await disconnectTwitch());
+      if (route === 'admin/integrations/twitch/review' && method === 'POST') {
+        await rateLimit(`twitch-review:${user.id}`, 30, 15);
+        const input = z
+          .object({ cursor: z.string().max(500).optional() })
+          .parse(await body(request));
+        return json(await reviewTwitch(input.cursor));
+      }
+      if (route === 'admin/integrations/twitch/live' && method === 'PATCH')
+        return json(await saveLive(await body(request)));
+      if (route === 'admin/transmissions' && method === 'GET')
+        return json(await listTwitchVideos());
+      if (route === 'admin/transmissions' && method === 'POST')
+        return json(await saveTwitchVideo(await body(request)), 201);
+      if (path[1] === 'transmissions' && path.length === 3 && method === 'PATCH')
+        return json(await saveTwitchVideo(await body(request), path[2]));
+      if (path[1] === 'transmissions' && path.length === 3 && method === 'DELETE')
+        return json(await deleteTwitchVideo(path[2]));
       if (route === 'admin/dashboard' && method === 'GET') {
         const rows = (
           await db.query(
@@ -241,7 +419,8 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
             publicUser,
           ),
         );
-      if (route === 'admin/posts' && method === 'GET') return json(await getPosts(true));
+      if (route === 'admin/posts' && method === 'GET')
+        return json(await getPosts(true, url.searchParams.get('kind') || undefined));
       if (route === 'admin/posts' && method === 'POST')
         return json(await savePost(await body(request)), 201);
       if (path[1] === 'posts' && path.length === 3 && method === 'PATCH')

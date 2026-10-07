@@ -136,6 +136,15 @@ export function ProductImage({
 }
 export function availability(p: Product) {
   const now = Date.now();
+  if (
+    p.kind === 'preorder' &&
+    (!p.opens_at ||
+      !p.closes_at ||
+      !Number.isFinite(Date.parse(p.opens_at)) ||
+      !Number.isFinite(Date.parse(p.closes_at)) ||
+      Date.parse(p.opens_at) >= Date.parse(p.closes_at))
+  )
+    return 'Fechas por confirmar';
   if (p.kind === 'preorder' && p.opens_at && new Date(p.opens_at).getTime() > now)
     return 'La preventa aún no abre';
   if (p.kind === 'preorder' && p.closes_at && new Date(p.closes_at).getTime() <= now)

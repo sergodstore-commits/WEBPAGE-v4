@@ -1,7 +1,15 @@
 'use client';
-import { useState, useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Package, Search, X, ArrowUpRight, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import {
+  Package,
+  Search,
+  X,
+  ArrowUpRight,
+  SlidersHorizontal,
+  ChevronDown,
+  CalendarDays,
+} from 'lucide-react';
 import { money, price } from '@/lib/client';
 import type { Product } from '@/lib/types';
 import type { AddToCart } from '../shared';
@@ -11,7 +19,6 @@ import {
   productFamilies,
   familyName,
   representative,
-  PageIntro,
   Loading,
   RemoteError,
   Empty,
@@ -73,28 +80,20 @@ function readPage(query: URLSearchParams) {
 }
 export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToCart }) {
   const query = useSearchParams();
-  const modern = kind === 'store';
+  const preorder = kind === 'preorder';
   const queryString = query.toString();
   const products = useRemote<Product[]>(`/products?kind=${kind}`),
-    [filters, setFilters] = useState<Filters>(() =>
-      modern
-        ? readFilters(new URLSearchParams(queryString))
-        : { ...emptyFilters, category: query.get('categoria') || '' },
-    ),
-    [page, setPage] = useState(() => (modern ? readPage(new URLSearchParams(queryString)) : 1)),
+    [filters, setFilters] = useState<Filters>(() => readFilters(new URLSearchParams(queryString))),
+    [page, setPage] = useState(() => readPage(new URLSearchParams(queryString))),
     [mobile, setMobile] = useState(false),
     [filtersOpen, setFiltersOpen] = useState(false),
     [quickProduct, setQuickProduct] = useState<Product | null>(null);
   const { search, category, brand, tag, minimumPrice, maximumPrice, sort, available } = filters;
   useEffect(() => {
     const params = new URLSearchParams(queryString);
-    if (modern) {
-      setFilters(readFilters(params));
-      setPage(readPage(params));
-    } else {
-      setFilters((current) => ({ ...current, category: params.get('categoria') || '' }));
-    }
-  }, [queryString, modern]);
+    setFilters(readFilters(params));
+    setPage(readPage(params));
+  }, [queryString]);
   useEffect(() => {
     const media = window.matchMedia('(max-width: 900px)');
     const sync = () => setMobile(media.matches);
@@ -105,7 +104,6 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   function updateFilters(update: Partial<Filters>) {
     setFilters((current) => ({ ...current, ...update }));
     setPage(1);
-    if (!modern) return;
     const params = new URLSearchParams(window.location.search);
     for (const key of Object.keys(update) as (keyof Filters)[]) {
       const value = update[key];
@@ -123,7 +121,6 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   }
   function changePage(nextPage: number) {
     setPage(nextPage);
-    if (!modern) return;
     const params = new URLSearchParams(window.location.search);
     if (nextPage > 1) params.set('pagina', String(nextPage));
     else params.delete('pagina');
@@ -199,38 +196,48 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   const pages = Math.max(1, Math.ceil(visible.length / 24));
   const currentPage = Math.min(page, pages);
   const pageProducts = visible.slice((currentPage - 1) * 24, currentPage * 24);
-  const FilterControls = modern ? 'div' : Fragment;
   return (
-    <div className={`store-page ${modern ? styles.catalog : ''}`}>
-      {modern ? (
-        <header className={styles.intro}>
-          <div>
-            <span className={styles.eyebrow}>ELIGE TU PRÓXIMA JUGADA</span>
-            <h1>
-              Tienda<span aria-hidden="true">.</span>
-            </h1>
-            <p>Cartas, accesorios y nuevos favoritos para tu colección.</p>
-          </div>
-          <div className={styles.introNote}>
+    <div className={`store-page ${styles.catalog} ${preorder ? styles.preorderCatalog : ''}`}>
+      <header className={`${styles.intro} ${preorder ? styles.preorderIntro : ''}`}>
+        <div>
+          <span className={styles.eyebrow}>
+            {preorder ? 'TU PRÓXIMO LANZAMIENTO' : 'ELIGE TU PRÓXIMA JUGADA'}
+          </span>
+          <h1>
+            {preorder ? 'Preventas' : 'Tienda'}
+            <span aria-hidden="true">.</span>
+          </h1>
+          <p>
+            {preorder
+              ? 'Elige tu formato e idioma. Revisa las fechas, los cupos y la entrega antes de reservar.'
+              : 'Cartas, accesorios y nuevos favoritos para tu colección.'}
+          </p>
+        </div>
+        <div className={styles.introNote}>
+          {preorder ? (
+            <CalendarDays size={25} aria-hidden="true" />
+          ) : (
             <Package size={22} aria-hidden="true" />
-            <span>
-              Desde Copiapó
-              <br />
-              <strong>Para tu próxima partida.</strong>
-            </span>
-          </div>
-        </header>
-      ) : (
-        <PageIntro
-          eyebrow="PRÓXIMOS LANZAMIENTOS"
-          title="Preventas"
-          body="Reserva con información clara: fechas, cupos disponibles y condiciones de entrega."
-        />
+          )}
+          <span>
+            {preorder ? 'Tu reserva' : 'Desde Copiapó'}
+            <br />
+            <strong>
+              {preorder ? 'Se confirma con el pago aprobado.' : 'Para tu próxima partida.'}
+            </strong>
+          </span>
+        </div>
+      </header>
+      {preorder && (
+        <p className={styles.preorderNote}>
+          <CalendarDays size={16} aria-hidden="true" /> Apertura y cierre indican cuándo puedes
+          reservar. La entrega se informa en cada ficha.
+        </p>
       )}
-      {modern && featuredCategories.length > 0 && (
+      {featuredCategories.length > 0 && (
         <nav className={styles.categories} aria-label="Categorías destacadas">
           <button type="button" aria-pressed={!category} onClick={() => setCategory('')}>
-            Todo el catálogo
+            {preorder ? 'Todas las preventas' : 'Todo el catálogo'}
           </button>
           {featuredCategories.map((value) => (
             <button
@@ -245,9 +252,9 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           ))}
         </nav>
       )}
-      <div className={`store-catalog-layout ${modern ? styles.layout : ''}`}>
-        <aside className={`store-filters ${modern ? styles.filters : ''}`}>
-          {modern && mobile ? (
+      <div className={`store-catalog-layout ${styles.layout}`}>
+        <aside className={`store-filters ${styles.filters}`}>
+          {mobile ? (
             <button
               type="button"
               className={styles.filterToggle}
@@ -271,12 +278,8 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           ) : (
             <h2>Filtrar artículos</h2>
           )}
-          {(!modern || !mobile || filtersOpen) && (
-            <FilterControls
-              {...(modern
-                ? { id: 'catalog-filter-controls', className: styles.filterControls }
-                : {})}
-            >
+          {(!mobile || filtersOpen) && (
+            <div id="catalog-filter-controls" className={styles.filterControls}>
               <label className="store-label">
                 Categoría
                 <select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -362,10 +365,10 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
                     : 'La disponibilidad se comparte con las ventas del local y se comprueba al comprar.'}
                 </p>
               </div>
-            </FilterControls>
+            </div>
           )}
         </aside>
-        <div className={`store-catalog-results ${modern ? styles.results : ''}`}>
+        <div className={`store-catalog-results ${styles.results}`}>
           <div className="store-catalog-toolbar">
             <label className="store-search">
               <Search size={18} />
@@ -395,7 +398,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
               </select>
             </label>
           </div>
-          {modern && activeFilters.length > 0 && (
+          {activeFilters.length > 0 && (
             <div className={styles.activeFilters} aria-label="Filtros activos">
               {activeFilters.map((filter) => (
                 <button
@@ -410,11 +413,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
               ))}
             </div>
           )}
-          <div
-            className="store-results-count"
-            role={modern ? 'status' : undefined}
-            aria-live={modern ? 'polite' : undefined}
-          >
+          <div className="store-results-count" role="status" aria-live="polite">
             {products.loading
               ? 'Consultando catálogo…'
               : `${visible.length} ${visible.length === 1 ? 'producto' : 'productos'}`}
@@ -432,7 +431,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
                   variants={family}
                   add={add}
                   quickView={setQuickProduct}
-                  catalogStyle={modern}
+                  catalogStyle
                 />
               ))}
             </div>

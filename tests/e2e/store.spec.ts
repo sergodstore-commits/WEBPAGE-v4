@@ -306,13 +306,15 @@ test('Publicaciones: noticias, comunidad y torneos se guardan, publican, editan 
     await page.getByLabel('Título *', { exact: true }).fill(title);
     await page.getByRole('combobox', { name: 'Sección', exact: true }).selectOption(kind);
     await page
-      .getByLabel('Contenido *', { exact: true })
+      .getByLabel(kind === 'tournament' ? 'Detalles del torneo (opcional)' : 'Contenido *', {
+        exact: true,
+      })
       .fill('Contenido de prueba publicado desde el formulario administrativo.');
     if (kind === 'tournament') {
       await page
         .getByLabel('Fecha y hora del torneo *')
         .fill(datetimeInput(Date.now() + 3 * 86_400_000));
-      await page.getByLabel('Lugar del torneo *').fill('Local de prueba en Copiapó');
+      await page.getByLabel('Lugar del torneo', { exact: true }).fill('Local de prueba en Copiapó');
     }
     await page.getByLabel('Imagen de la publicación').setInputFiles(await testImage());
     await expect(page.locator('.admin-post-preview')).toBeVisible();
@@ -325,6 +327,7 @@ test('Publicaciones: noticias, comunidad y torneos se guardan, publican, editan 
       id: string;
       slug: string;
       title: string;
+      event_level?: string;
     }[];
     const post = posts.find((p) => p.title === title);
     expect(post).toBeTruthy();
@@ -332,11 +335,12 @@ test('Publicaciones: noticias, comunidad y torneos se guardan, publican, editan 
     await expect(publicPage.getByRole('heading', { name: title, exact: true })).toBeVisible();
     await publicPage.reload();
     await expect(publicPage.getByRole('heading', { name: title, exact: true })).toBeVisible();
-    if (kind === 'tournament')
+    if (kind === 'tournament') {
       await publicPage.screenshot({
         path: testInfo.outputPath('torneo-publicado.png'),
         fullPage: true,
       });
+    }
     const changed = title + ' editado';
     await page.getByLabel('Título *', { exact: true }).fill(changed);
     await page.getByRole('button', { name: 'Guardar y publicar', exact: true }).click();
@@ -380,6 +384,11 @@ test('Escritorio y celular: rutas públicas y panel sin desbordamiento horizonta
     '/admin/pedidos',
     '/admin/pos',
     '/admin/publicaciones',
+    '/admin/noticias',
+    '/admin/torneos',
+    '/admin/liga',
+    '/admin/transmisiones',
+    '/admin/integraciones',
     '/admin/clientes',
     '/admin/local',
   ];

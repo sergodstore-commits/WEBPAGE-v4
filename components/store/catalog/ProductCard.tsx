@@ -1,7 +1,8 @@
 'use client';
 import Link from 'next/link';
 import { Plus, ArrowRight, Eye } from 'lucide-react';
-import { money, price } from '@/lib/client';
+import { date, money, price } from '@/lib/client';
+import { preorderFamily } from '@/lib/preorders';
 import type { Product } from '@/lib/types';
 import { ProductImage, availability, familyName } from '../shared';
 import styles from './ProductCard.module.css';
@@ -27,6 +28,7 @@ export function ProductCard({
     0,
   );
   const title = options ? familyName(p) : p.name;
+  const reservation = catalogStyle && p.kind === 'preorder' ? preorderFamily(variants) : null;
   return (
     <article className={`store-product-card ${catalogStyle ? styles.card : ''}`}>
       <Link href={`/producto/${p.slug}`} className="store-product-visual">
@@ -52,11 +54,45 @@ export function ProductCard({
             {variants.length} {variants.length === 1 ? 'opción' : 'opciones'}
           </small>
         )}
+        {reservation && (
+          <div className={styles.reservation}>
+            <span className={styles.reservationState}>{reservation.label}</span>
+            {reservation.opensAt && reservation.closesAt ? (
+              <dl>
+                <div>
+                  <dt>Apertura</dt>
+                  <dd>{date(reservation.opensAt)}</dd>
+                </div>
+                <div>
+                  <dt>Cierre</dt>
+                  <dd>{date(reservation.closesAt)}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p>{options ? 'Fechas según opción. Revisa la ficha.' : 'Fechas por confirmar.'}</p>
+            )}
+            {reservation.state === 'open' && (
+              <p>
+                {reservation.available} cupos para reservar{options ? ' entre las opciones' : ''}.
+              </p>
+            )}
+            <p className={styles.delivery}>
+              {reservation.deliveryTerms || 'Consulta las condiciones de entrega de cada opción.'}
+            </p>
+          </div>
+        )}
         <div className={`store-product-bottom ${catalogStyle ? styles.bottom : ''}`}>
-          <span className={closed ? 'store-muted' : 'store-stock-dot'}>
-            {closed || `${available} disponibles`}
-          </span>
-          {options ? (
+          {!reservation && (
+            <span className={closed ? 'store-muted' : 'store-stock-dot'}>
+              {closed || `${available} disponibles`}
+            </span>
+          )}
+          {reservation ? (
+            <Link href={`/producto/${p.slug}`} className={`store-text-link ${styles.purchase}`}>
+              {options ? 'Elegir reserva' : 'Ver preventa'}{' '}
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          ) : options ? (
             <Link
               href={`/producto/${p.slug}`}
               className={`store-text-link ${catalogStyle ? styles.purchase : ''}`}

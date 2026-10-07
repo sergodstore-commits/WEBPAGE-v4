@@ -12,23 +12,24 @@ import {
   CreditCard,
   ExternalLink,
   ImagePlus,
-  LayoutDashboard,
-  Menu,
   Newspaper,
   Package,
   Plus,
   Search,
-  Settings as SettingsIcon,
   ShoppingBag,
   Store,
   Trash2,
   Truck,
-  Users,
   X,
 } from 'lucide-react';
 import { api, date, deliveryLabels, money, paymentLabels, price } from '@/lib/client';
 import type { Carrier, Dashboard, Order, Post, Product, Settings, User } from '@/lib/types';
 import './admin.css';
+import './admin/AdminTheme.css';
+import { AdminShell } from './admin/AdminShell';
+import { TwitchIntegrations, TwitchTransmissions } from './admin/TwitchAdmin';
+import { LeagueAdmin } from './admin/LeagueAdmin';
+import { InstagramNewsPage } from './admin/InstagramAdmin';
 
 type Notice = { text: string; kind: 'success' | 'error' } | null;
 const productStatus: Record<string, string> = {
@@ -139,23 +140,10 @@ function Field({ label, children, hint }: { label: string; children: ReactNode; 
   );
 }
 
-const navigation = [
-  { href: '/admin', label: 'Resumen', icon: LayoutDashboard },
-  { href: '/admin/articulos', label: 'Artículos', icon: ShoppingBag },
-  { href: '/admin/inventario', label: 'Inventario', icon: Package },
-  { href: '/admin/preventas', label: 'Preventas', icon: ClipboardList },
-  { href: '/admin/pedidos', label: 'Pedidos y entregas', icon: Truck },
-  { href: '/admin/pos', label: 'Venta en el local', icon: CreditCard },
-  { href: '/admin/publicaciones', label: 'Publicaciones', icon: Newspaper },
-  { href: '/admin/clientes', label: 'Clientes', icon: Users },
-  { href: '/admin/local', label: 'Datos del local', icon: SettingsIcon },
-];
-
 export default function AdminApp() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
-  const [menu, setMenu] = useState(false);
   const [authError, setAuthError] = useState('');
   useEffect(() => {
     api<User | null>('/auth/me')
@@ -163,9 +151,6 @@ export default function AdminApp() {
       .catch((e) => setAuthError(errorText(e)))
       .finally(() => setChecking(false));
   }, []);
-  useEffect(() => {
-    setMenu(false);
-  }, [pathname]);
   if (checking)
     return (
       <div className="admin-shell admin-auth">
@@ -209,6 +194,11 @@ export default function AdminApp() {
   else if (pathname === '/admin/pedidos') screen = <OrdersPage />;
   else if (pathname === '/admin/pos') screen = <PosPage />;
   else if (pathname === '/admin/publicaciones') screen = <PostsPage />;
+  else if (pathname === '/admin/noticias') screen = <InstagramNewsPage />;
+  else if (pathname === '/admin/torneos') screen = <PostsPage tournaments />;
+  else if (pathname === '/admin/liga') screen = <LeagueAdmin />;
+  else if (pathname === '/admin/transmisiones') screen = <TwitchTransmissions />;
+  else if (pathname === '/admin/integraciones') screen = <TwitchIntegrations />;
   else if (pathname === '/admin/clientes') screen = <CustomersPage />;
   else if (pathname === '/admin/local') screen = <SettingsPage />;
   else if (pathname === '/admin/correos') screen = <MailPage />;
@@ -219,77 +209,9 @@ export default function AdminApp() {
       </Empty>
     );
   return (
-    <div className="admin-shell">
-      {menu && (
-        <button
-          className="admin-sidebar-overlay"
-          aria-label="Cerrar menú"
-          onClick={() => setMenu(false)}
-        />
-      )}
-      <aside className={`admin-sidebar ${menu ? 'open' : ''}`}>
-        <Link href="/admin" className="admin-brand">
-          <span className="admin-brand-mark">S</span>
-          <span>
-            SERGOD STORE<small>Administración</small>
-          </span>
-        </Link>
-        <Link className="admin-button admin-new" href="/admin/articulos/nuevo">
-          <Plus size={17} />
-          Nuevo artículo
-        </Link>
-        <nav aria-label="Administración">
-          {navigation.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={
-                pathname === href || (href !== '/admin' && pathname.startsWith(href + '/'))
-                  ? 'active'
-                  : ''
-              }
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="admin-sidebar-bottom">
-          <Link href="/" className="admin-store-link">
-            <ExternalLink size={16} />
-            Ver tienda pública
-          </Link>
-          <div className="admin-user">
-            <span className="admin-avatar">{user.name?.charAt(0).toUpperCase() || 'A'}</span>
-            <div>
-              <strong>{user.name || 'Administrador'}</strong>
-              <small>{user.email}</small>
-            </div>
-          </div>
-        </div>
-      </aside>
-      <div className="admin-workspace">
-        <header className="admin-topbar">
-          <button
-            className="admin-icon-button admin-menu"
-            onClick={() => setMenu(!menu)}
-            aria-label="Abrir menú"
-          >
-            <Menu size={22} />
-          </button>
-          <span>
-            Administración <ChevronRight size={14} />{' '}
-            {navigation.find((n) => n.href !== '/admin' && pathname.startsWith(n.href))?.label ||
-              'Resumen'}
-          </span>
-          <Link href="/" className="admin-top-public">
-            Visitar tienda <ExternalLink size={14} />
-          </Link>
-        </header>
-        <main className="admin-main">{screen}</main>
-        <footer className="admin-footer">SERGOD STORE · Copiapó, Chile</footer>
-      </div>
-    </div>
+    <AdminShell user={user} pathname={pathname}>
+      {screen}
+    </AdminShell>
   );
 }
 
@@ -325,8 +247,7 @@ function AdminLogin({
   return (
     <div className="admin-auth-card">
       <Link href="/" className="admin-brand">
-        <span className="admin-brand-mark">S</span>
-        <span>SERGOD STORE</span>
+        <img src="/brand/sergod-logo-480.webp" alt="SERGOD STORE" width="200" height="100" />
       </Link>
       <p className="admin-eyebrow">Administración</p>
       <h1>Ingresa a tu panel</h1>
@@ -415,6 +336,14 @@ function DashboardPage() {
             <h2>Tareas de la tienda</h2>
           </div>
           <div className="admin-shortcuts">
+            <Link href="/admin/pedidos">
+              <Truck size={20} />
+              <span>
+                <strong>Preparar pedidos</strong>
+                <small>Pagos, seguimiento y entregas</small>
+              </span>
+              <ChevronRight size={16} />
+            </Link>
             <Link href="/admin/inventario">
               <Package size={20} />
               <span>
@@ -435,11 +364,19 @@ function DashboardPage() {
               </span>
               <ChevronRight size={16} />
             </Link>
-            <Link href="/admin/publicaciones">
+            <Link href="/admin/preventas">
+              <ClipboardList size={20} />
+              <span>
+                <strong>Revisar preventas</strong>
+                <small>Fechas, cupos y condiciones de entrega</small>
+              </span>
+              <ChevronRight size={16} />
+            </Link>
+            <Link href="/admin/noticias">
               <Newspaper size={20} />
               <span>
                 <strong>Compartir una novedad</strong>
-                <small>Noticias, comunidad y torneos</small>
+                <small>Revisa y publica noticias de Instagram</small>
               </span>
               <ChevronRight size={16} />
             </Link>
@@ -2007,10 +1944,11 @@ const emptyPost = {
   status: 'draft' as Post['status'],
   image: '',
   event_at: '',
+  event_level: 'normal' as NonNullable<Post['event_level']>,
   location: '',
 };
-function PostsPage() {
-  const r = useResource<Post[]>('/admin/posts');
+function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
+  const r = useResource<Post[]>(tournaments ? '/admin/posts?kind=tournament' : '/admin/posts');
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
   const [form, setForm] = useState(emptyPost);
   const [filter, setFilter] = useState('all');
@@ -2029,9 +1967,10 @@ function PostsPage() {
             status: p.status,
             image: p.image,
             event_at: localDate(p.event_at),
+            event_level: p.event_level || 'normal',
             location: p.location,
           }
-        : { ...emptyPost },
+        : { ...emptyPost, kind: tournaments ? 'tournament' : 'news' },
     );
     setNotice(null);
   }
@@ -2093,8 +2032,12 @@ function PostsPage() {
   return (
     <>
       <Heading
-        title="Publicaciones"
-        description="Comparte noticias, información de la comunidad y próximos torneos."
+        title={tournaments ? 'Torneos' : 'Publicaciones'}
+        description={
+          tournaments
+            ? 'Publica las próximas fechas de la tienda.'
+            : 'Comparte noticias, información de la comunidad y próximos torneos.'
+        }
       >
         <button className="admin-button" onClick={() => edit()}>
           <Plus size={17} />
@@ -2127,6 +2070,7 @@ function PostsPage() {
               <Field label="Sección">
                 <select
                   value={form.kind}
+                  disabled={tournaments}
                   onChange={(e) => setForm({ ...form, kind: e.target.value as Post['kind'] })}
                 >
                   <option value="news">Noticias</option>
@@ -2135,12 +2079,16 @@ function PostsPage() {
                 </select>
               </Field>
               <div className="admin-span-all">
-                <Field label="Contenido *">
+                <Field
+                  label={
+                    form.kind === 'tournament' ? 'Detalles del torneo (opcional)' : 'Contenido *'
+                  }
+                >
                   <textarea
                     rows={7}
                     value={form.body}
                     onChange={(e) => setForm({ ...form, body: e.target.value })}
-                    required
+                    required={form.kind !== 'tournament'}
                     placeholder="Escribe los detalles que verá la comunidad."
                   />
                 </Field>
@@ -2159,9 +2107,8 @@ function PostsPage() {
                   required={form.kind === 'tournament'}
                 />
               </Field>
-              <Field label={form.kind === 'tournament' ? 'Lugar del torneo *' : 'Lugar (opcional)'}>
+              <Field label={form.kind === 'tournament' ? 'Lugar del torneo' : 'Lugar (opcional)'}>
                 <input
-                  required={form.kind === 'tournament'}
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
                 />

@@ -201,3 +201,39 @@
     transform: none;
   }
 }
+.reservation {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--sg-border, #30363d);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.reservation p {
+  margin: 0;
+}
+.reservationState {
+  color: #005a73;
+  font-weight: 700;
+}
+.reservation dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.reservation dt {
+  color: #526170;
+}
+.reservation dd {
+  margin: 0;
+  font-weight: 600;
+}
+.delivery {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #526170;
+}
