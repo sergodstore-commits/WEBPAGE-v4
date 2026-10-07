@@ -1,5 +1,13 @@
 # Rediseño visual de SERGOD STORE
 
+## Cuenta, Carrito y Checkout — punto 9
+
+Los pasos de compra quedan en una franja compacta, y el resumen destaca el total con importes sin cortes. En entrega y pago el importe se llama «Total a pagar online»; el flete por pagar mantiene su aviso separado. Las acciones principales usan el mismo cian oscuro de catálogo y preventas.
+
+El historial usa tarjetas que distinguen el estado del pago de la entrega. El detalle identifica la región «Estado del pago» y acompaña el texto con un borde según pago aprobado, pendiente o no completado. Los formularios de cuenta, recuperación, retiro y transportista conservan sus controles, validación y comportamiento. No cambian los pagos, reservas, datos personales ni inventario.
+
+La verificación usa datos aislados e intercepta el pago final: cubre cantidades, descuentos, entrega a domicilio/agencia, flete separado, autenticación y estados del pedido entre 320 y 1440 px, sin realizar cobros reales.
+
 ## Noticias — punto 8
 
 La publicación seleccionada ocupa un panel con fotografía o video, fecha y texto completo. El rótulo distingue la publicación destacada de una seleccionada del archivo. Las tarjetas del archivo separan fecha, título y extracto, usan miniaturas de proporción editorial y mantienen el acceso al visor; el encabezado «Más noticias» sigue siendo correcto al seleccionar una publicación antigua. Se conservan los enlaces a publicaciones, Instagram, torneos y clasificaciones.

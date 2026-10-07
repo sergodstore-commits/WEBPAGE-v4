@@ -475,8 +475,8 @@ export function Cart({
               </Link>
             )}
           </div>
-          <aside className="store-order-summary">
-            <h2>Resumen de la compra</h2>
+          <aside className="store-order-summary" aria-labelledby="cart-summary-title">
+            <h2 id="cart-summary-title">Resumen de la compra</h2>
             <dl>
               <div>
                 <dt>Artículos ({cart.reduce((s, i) => s + i.quantity, 0)})</dt>
@@ -503,9 +503,7 @@ export function Cart({
                 </dd>
               </div>
               <div className="store-total">
-                <dt>
-                  Total{carrier?.collect && delivery.method === 'shipping' ? ' a pagar online' : ''}
-                </dt>
+                <dt>{step === 'checkout' ? 'Total a pagar online' : 'Total'}</dt>
                 <dd>{money(subtotal + shipping)}</dd>
               </div>
             </dl>
@@ -1034,6 +1032,7 @@ function AccountDashboard({ user, refreshUser }: { user: User; refreshUser: () =
                         <small>{date(o.created_at)}</small>
                       </div>
                       <div>
+                        <span className={styles.stateLabel}>Pago</span>
                         <span className={`store-pill store-payment-${o.payment_status}`}>
                           {o.payment_status === 'pending' && o.reservation_released_at
                             ? 'Pago por verificar'
@@ -1042,7 +1041,7 @@ function AccountDashboard({ user, refreshUser }: { user: User; refreshUser: () =
                         <small>
                           {o.payment_status === 'pending' && o.reservation_released_at
                             ? 'Reserva liberada'
-                            : deliveryLabels[o.fulfillment_status] || o.fulfillment_status}
+                            : `Entrega: ${deliveryLabels[o.fulfillment_status] || o.fulfillment_status}`}
                         </small>
                       </div>
                       <strong>{money(o.total)}</strong>
@@ -1264,7 +1263,12 @@ export function OrderDetail({
           Pedido de prueba sandbox · sin cobro real.
         </div>
       )}
-      <div className="store-order-status">
+      <div
+        className="store-order-status"
+        data-payment={o.payment_status}
+        role="region"
+        aria-label="Estado del pago"
+      >
         <div>
           <span className={`store-pill store-payment-${o.payment_status}`}>
             {releasedPending ? 'Pago por verificar' : paymentLabels[o.payment_status]}
