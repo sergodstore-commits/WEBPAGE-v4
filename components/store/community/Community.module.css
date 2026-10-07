@@ -3,44 +3,6 @@
   padding: 40px 32px 80px;
   color: var(--sg-ink);
 }
-.intro {
-  position: relative;
-  overflow: hidden;
-  padding: 40px;
-  border: 1px solid #314856;
-  border-radius: 12px;
-  background: radial-gradient(ellipse at right bottom, #123d4b, transparent 65%), #151c23;
-  color: #fff;
-}
-.intro > span {
-  color: #bde9f3;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-}
-.intro h1 {
-  font-family: var(--sg-font-display);
-  font-size: clamp(40px, 5vw, 64px);
-  line-height: 1.05;
-  margin: 12px 0;
-  overflow-wrap: anywhere;
-}
-.intro h1 span {
-  color: #67def5;
-}
-.page .intro p {
-  color: #bbc9d6;
-  font-size: 14px;
-}
-.intro > svg {
-  position: absolute;
-  right: 40px;
-  top: 30px;
-  width: 90px;
-  height: 90px;
-  color: #67def5;
-  opacity: 0.12;
-}
 .navigation {
   display: flex;
   gap: 36px;
@@ -332,9 +294,6 @@
   outline-offset: 4px;
 }
 @media (max-width: 800px) {
-  .intro > svg {
-    display: none;
-  }
   .posts > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -351,9 +310,6 @@
 @media (max-width: 600px) {
   .page {
     padding: 24px 20px 56px;
-  }
-  .intro {
-    padding: 28px 24px;
   }
   .navigation {
     gap: 24px;

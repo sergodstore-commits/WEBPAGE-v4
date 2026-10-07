@@ -1,5 +1,13 @@
 # Rediseño visual de SERGOD STORE
 
+## Mejora de cabeceras interiores — octubre de 2026
+
+`components/store/SectionHeader.tsx` y su módulo CSS comparten tipografía, espacio, contraste y acento cian entre Tienda, Preventas, Comunidad, Noticias y Torneos. Cada sección conserva una composición distinta: imágenes de artículos publicados, motivos de cartas para la comunidad y los duelos, y fotografía de la noticia más reciente cuando exista. Sin noticias con imagen se usa un motivo editorial con el logo; los adornos no representan productos disponibles ni resultados reales. En celular, el motivo queda en segundo plano y el texto conserva todo el ancho. No hay movimiento, nuevas bibliotecas ni cambios a los datos o a las operaciones comerciales.
+
+La agenda permanece gestionable desde Admin → Torneos. El calendario y YouTube tienen cabeceras coherentes; el directo oculto muestra «Fuera de línea», logo y enlace al canal. Las grabaciones tienen miniatura, fecha y reproducción a demanda, y el archivo vacío ocupa una franja compacta. La conexión vigente de transmisiones se documenta en `YOUTUBE.md`; las referencias a Twitch de las fases originales son históricas.
+
+Verificación del punto 3: tipos, compilación y trazado correctos; 17 recorridos de navegador aprobados para catálogo/producto, comunidad/rankings, noticias y torneos/calendario, incluidos anchos de 320, 375, 768 y 1440 px. Las pruebas de guardado y lectura usan una base local aislada. Stock, precios, publicaciones y pedidos de producción se conservan.
+
 Estado de la entrega final del 7 de octubre: las seis fases de interfaz y la revisión final están completadas. Se integran catálogo/preventas, torneos, comunidad, noticias, administración y compra/cuenta, con 96 pruebas de servidor y 40 recorridos únicos de navegador comprobados. La publicación está autorizada; Twitch e Instagram se conectarán después. Las secciones inferiores registran las verificaciones de cada fase en el momento en que se realizaron; el estado vigente está en `VERIFICATION.md`.
 
 Entregas del rediseño, octubre de 2026: identidad compartida (logo, favicon, fuentes, colores, cabecera y pie), página de inicio, Tienda + Producto y Preventas. El plan vigente avanza una fase a la vez: Preventas; Torneos + Twitch; Comunidad + TOR MyL + ranking Yu-Gi-Oh!; Noticias + Instagram; Admin; Carrito + Cuenta + Checkout; revisión final. El propietario indica cuándo comienza cada fase.

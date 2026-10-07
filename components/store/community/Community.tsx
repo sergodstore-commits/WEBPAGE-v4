@@ -2,11 +2,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Trophy, Medal, Users, ArrowRight } from 'lucide-react';
+import { Trophy, Medal, ArrowRight } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { date } from '@/lib/client';
 import { boards, type RankingBoard, type PublicRanking } from '@/lib/rankings';
 import { useRemote, Loading, Empty, ProductImage } from '../shared';
+import { SectionHeader } from '../SectionHeader';
 import styles from './Community.module.css';
 
 const day = (v: string) =>
@@ -96,14 +97,12 @@ export function Community() {
   );
   return (
     <div className={`store-page ${styles.page}`}>
-      <header className={styles.intro}>
-        <span>NUESTRA COMUNIDAD, EN JUEGO</span>
-        <h1>
-          Comunidad<span>.</span>
-        </h1>
-        <p>Liga y rankings internos de SERGOD STORE.</p>
-        <Users aria-hidden="true" />
-      </header>
+      <SectionHeader
+        section="community"
+        title="Comunidad"
+        eyebrow="NUESTRA COMUNIDAD, EN JUEGO"
+        description="Liga y rankings internos de SERGOD STORE."
+      />
       <nav className={styles.navigation} aria-label="Elegir ranking">
         <div>
           <h2>Mitos y Leyendas</h2>

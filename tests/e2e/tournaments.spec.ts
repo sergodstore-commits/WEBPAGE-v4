@@ -196,7 +196,7 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
     await expect(page.getByRole('heading', { name: 'Torneos.', level: 1 })).toBeVisible();
     await expect(
       page.getByText('Próximas fechas y transmisiones de SERGOD STORE.', { exact: true }),
-    ).toHaveCSS('color', 'rgb(187, 201, 214)');
+    ).toHaveCSS('color', 'rgb(82, 97, 112)');
     await expect(
       page
         .getByRole('region', { name: 'Transmisiones anteriores', exact: true })

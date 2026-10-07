@@ -112,7 +112,7 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
     await expect(page.getByRole('heading', { name: 'Noticias.', exact: true })).toBeVisible();
     await expect(
       page.getByText('Novedades, encuentros y momentos de nuestra tienda.', { exact: true }),
-    ).toHaveCSS('color', 'rgb(187, 201, 214)');
+    ).toHaveCSS('color', 'rgb(82, 97, 112)');
     await expect(page.getByRole('region', { name: 'Noticia seleccionada' })).toContainText(
       'Nuestra última Liga.',
     );

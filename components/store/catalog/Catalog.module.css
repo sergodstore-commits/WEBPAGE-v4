@@ -1,70 +1,10 @@
 :global(.store-app) .catalog {
+  & > header {
+    margin-bottom: 26px;
+  }
   max-width: 1280px;
   padding: 38px 32px 80px;
   color: var(--sg-ink);
-}
-
-:global(.store-app) .catalog .intro {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 28px;
-  margin-bottom: 26px;
-  padding: 34px 40px;
-  overflow: hidden;
-  border: 1px solid #263644;
-  border-radius: 12px;
-  background: radial-gradient(ellipse at 100% 100%, #123c4b 0, transparent 55%), var(--sg-graphite);
-  color: var(--sg-white);
-}
-
-:global(.store-app) .catalog .eyebrow {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--sg-ice);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.14em;
-}
-
-:global(.store-app) .catalog .intro h1 {
-  margin: 0 0 10px;
-  font-family: var(--sg-font-display);
-  font-size: clamp(46px, 5vw, 64px);
-  font-weight: 700;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
-}
-
-.intro h1 > span {
-  color: var(--sg-cyan);
-}
-
-:global(.store-app) .catalog .intro p {
-  margin: 0;
-  color: var(--sg-silver);
-  font-size: 14px;
-  line-height: 1.65;
-}
-
-.introNote {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-left: 28px;
-  border-left: 1px solid #466170;
-  font-size: 12px;
-  color: var(--sg-silver);
-  line-height: 1.8;
-}
-.introNote > svg {
-  color: var(--sg-cyan);
-  flex-shrink: 0;
-}
-.introNote strong {
-  color: var(--sg-white);
-  font-weight: 600;
 }
 
 .categories {
@@ -368,17 +308,6 @@
   :global(.store-app) .catalog {
     padding: 22px 20px 48px;
   }
-  :global(.store-app) .catalog .intro {
-    padding: 25px 23px;
-    margin-bottom: 20px;
-  }
-  :global(.store-app) .catalog .intro p {
-    font-size: 13px;
-    max-width: 290px;
-  }
-  .introNote {
-    display: none;
-  }
   .categories {
     gap: 8px;
     margin-bottom: 24px;
@@ -440,13 +369,6 @@
   :global(.store-app) .catalog .categories button {
     transition: none;
   }
-}
-.preorderIntro {
-  background: linear-gradient(120deg, #15232c, #11161c 65%);
-  border: 1px solid #344c5b;
-  border-left: 3px solid #67def5;
-  padding: clamp(20px, 3vw, 40px);
-  border-radius: 8px;
 }
 .preorderNote {
   display: flex;

@@ -1,45 +1,10 @@
 .page {
+  & > header {
+    margin-bottom: 36px;
+  }
   max-width: 1280px;
   padding: 40px 32px 80px;
   color: var(--sg-ink);
-}
-.intro {
-  position: relative;
-  padding: 40px;
-  border: 1px solid #314856;
-  border-radius: 12px;
-  background: radial-gradient(ellipse at right bottom, #123d4b, transparent 65%), #151c23;
-  color: #fff;
-  margin-bottom: 40px;
-  overflow: hidden;
-}
-.intro > span {
-  color: #bde9f3;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  font-weight: 600;
-}
-.intro h1 {
-  font-family: var(--sg-font-display);
-  font-size: clamp(40px, 5vw, 64px);
-  line-height: 1.05;
-  margin: 12px 0;
-}
-.intro h1 span {
-  color: #67def5;
-}
-.page .intro p {
-  color: #bbc9d6;
-  font-size: 14px;
-}
-.intro > svg {
-  position: absolute;
-  right: 40px;
-  top: 30px;
-  width: 90px;
-  height: 90px;
-  color: #67def5;
-  opacity: 0.12;
 }
 .feature {
   display: grid;
@@ -316,13 +281,6 @@
 @media (max-width: 600px) {
   .page {
     padding: 24px 20px 56px;
-  }
-  .intro {
-    padding: 28px 24px;
-    margin-bottom: 28px;
-  }
-  .intro > svg {
-    right: 16px;
   }
   .feature {
     gap: 16px;

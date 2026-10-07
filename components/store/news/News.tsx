@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Camera, Newspaper, Play } from 'lucide-react';
 import { date } from '@/lib/client';
 import type { NewsAsset, NewsItem } from '@/lib/news';
 import { useRemote, Loading, Empty, ProductImage } from '../shared';
+import { SectionHeader } from '../SectionHeader';
 import styles from './News.module.css';
 
 export function NewsMedia({ assets, permalink = '' }: { assets: NewsAsset[]; permalink?: string }) {
@@ -144,14 +145,16 @@ export function News() {
   const earlier = list.filter((p) => p.id !== selected?.id);
   return (
     <div className={`store-page ${styles.page}`}>
-      <header className={styles.intro}>
-        <span>LA VIDA EN SERGOD STORE</span>
-        <h1>
-          Noticias<span>.</span>
-        </h1>
-        <p>Novedades, encuentros y momentos de nuestra tienda.</p>
-        <Newspaper aria-hidden="true" />
-      </header>
+      <SectionHeader
+        section="news"
+        title="Noticias"
+        eyebrow="LA VIDA EN SERGOD STORE"
+        description="Novedades, encuentros y momentos de nuestra tienda."
+        images={(list[0]?.assets || [])
+          .filter((asset) => asset.type === 'image')
+          .map((asset) => asset.url)
+          .slice(0, 1)}
+      />
       {remote.loading ? (
         <Loading />
       ) : remote.error ? (

@@ -15,6 +15,7 @@ import {
 import { api, date } from '@/lib/client';
 import type { Post, TournamentMedia, YouTubeVideo } from '@/lib/types';
 import { useRemote, Loading, RemoteError, ProductImage } from '../shared';
+import { SectionHeader } from '../SectionHeader';
 import styles from './Tournaments.module.css';
 import { TournamentCalendar } from './TournamentCalendar';
 function Thumbnail({ video }: { video: YouTubeVideo }) {
@@ -117,14 +118,12 @@ export function Tournaments() {
   }
   return (
     <div className={`store-page ${styles.page}`}>
-      <header className={styles.intro}>
-        <span>LA PARTIDA CONTINÚA</span>
-        <h1>
-          Torneos<span>.</span>
-        </h1>
-        <p>Próximas fechas y transmisiones de SERGOD STORE.</p>
-        <Trophy aria-hidden="true" />
-      </header>
+      <SectionHeader
+        section="tournaments"
+        title="Torneos"
+        eyebrow="LA PARTIDA CONTINÚA"
+        description="Próximas fechas y transmisiones de SERGOD STORE."
+      />
       <section className={styles.section} aria-labelledby="upcoming-heading">
         <div className={styles.sectionHeading}>
           <CalendarDays />

@@ -25,6 +25,7 @@ import {
 } from '../shared';
 import { ProductCard } from './ProductCard';
 import { QuickProduct } from '../product/ProductDetail';
+import { SectionHeader } from '../SectionHeader';
 import styles from './Catalog.module.css';
 
 type Filters = {
@@ -198,36 +199,20 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   const pageProducts = visible.slice((currentPage - 1) * 24, currentPage * 24);
   return (
     <div className={`store-page ${styles.catalog} ${preorder ? styles.preorderCatalog : ''}`}>
-      <header className={`${styles.intro} ${preorder ? styles.preorderIntro : ''}`}>
-        <div>
-          <span className={styles.eyebrow}>
-            {preorder ? 'TU PRÓXIMO LANZAMIENTO' : 'ELIGE TU PRÓXIMA JUGADA'}
-          </span>
-          <h1>
-            {preorder ? 'Preventas' : 'Tienda'}
-            <span aria-hidden="true">.</span>
-          </h1>
-          <p>
-            {preorder
-              ? 'Elige tu formato e idioma. Revisa las fechas, los cupos y la entrega antes de reservar.'
-              : 'Cartas, accesorios y nuevos favoritos para tu colección.'}
-          </p>
-        </div>
-        <div className={styles.introNote}>
-          {preorder ? (
-            <CalendarDays size={25} aria-hidden="true" />
-          ) : (
-            <Package size={22} aria-hidden="true" />
-          )}
-          <span>
-            {preorder ? 'Tu reserva' : 'Desde Copiapó'}
-            <br />
-            <strong>
-              {preorder ? 'Se confirma con el pago aprobado.' : 'Para tu próxima partida.'}
-            </strong>
-          </span>
-        </div>
-      </header>
+      <SectionHeader
+        section={preorder ? 'preorder' : 'store'}
+        title={preorder ? 'Preventas' : 'Tienda'}
+        eyebrow={preorder ? 'TU PRÓXIMO LANZAMIENTO' : 'ELIGE TU PRÓXIMA JUGADA'}
+        description={
+          preorder
+            ? 'Elige tu formato e idioma. Revisa las fechas, los cupos y la entrega antes de reservar.'
+            : 'Cartas, accesorios y nuevos favoritos para tu colección.'
+        }
+        images={(products.data || [])
+          .filter((p) => p.status === 'published')
+          .flatMap((p) => p.images.slice(0, 1))
+          .slice(0, 2)}
+      />
       {preorder && (
         <p className={styles.preorderNote}>
           <CalendarDays size={16} aria-hidden="true" /> Apertura y cierre indican cuándo puedes
