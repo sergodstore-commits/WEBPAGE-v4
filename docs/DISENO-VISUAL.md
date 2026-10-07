@@ -1,5 +1,11 @@
 # Rediseño visual de SERGOD STORE
 
+## Ajustes compartidos — punto 10
+
+El podio adapta el número de columnas al ancho disponible para mostrar los empates sin dejar una tarjeta aislada cuando caben cuatro. Se mantienen las filas amplias en celular. Los botones de categoría indican la interacción al pasar el cursor; los iconos de acciones conservan su tamaño y los desplegables ofrecen una altura mínima de 44 px. El historial evita repetir «Pago» junto al estado, y los contadores de torneos y noticias usan el singular cuando corresponde.
+
+Los diez puntos de presentación se documentan en este archivo. El cierre vuelve a comprobar el servidor y los recorridos completos de navegador sobre una compilación de producción con datos aislados. El registro vigente de resultados está en `VERIFICATION.md`; los datos comerciales y las conexiones externas pendientes se gestionan aparte.
+
 ## Cuenta, Carrito y Checkout — punto 9
 
 Los pasos de compra quedan en una franja compacta, y el resumen destaca el total con importes sin cortes. En entrega y pago el importe se llama «Total a pagar online»; el flete por pagar mantiene su aviso separado. Las acciones principales usan el mismo cian oscuro de catálogo y preventas.

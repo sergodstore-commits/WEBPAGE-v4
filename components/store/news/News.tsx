@@ -225,7 +225,9 @@ export function News() {
                   <span>EL ARCHIVO DE LA TIENDA</span>
                   <h2 id="news-archive-heading">Más noticias</h2>
                 </div>
-                <span>{earlier.length} publicaciones</span>
+                <span>
+                  {earlier.length} {earlier.length === 1 ? 'publicación' : 'publicaciones'}
+                </span>
               </div>
               <div className={styles.grid}>
                 {earlier.slice(0, limit).map((p) => (

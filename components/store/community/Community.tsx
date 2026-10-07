@@ -182,7 +182,7 @@ export function Community() {
                     </label>
                     <p>
                       {ranking.data.rows.length} jugadores · {ranking.data.tournaments.length}{' '}
-                      torneos
+                      {ranking.data.tournaments.length === 1 ? 'torneo' : 'torneos'}
                     </p>
                   </div>
                   <table

@@ -1032,7 +1032,6 @@ function AccountDashboard({ user, refreshUser }: { user: User; refreshUser: () =
                         <small>{date(o.created_at)}</small>
                       </div>
                       <div>
-                        <span className={styles.stateLabel}>Pago</span>
                         <span className={`store-pill store-payment-${o.payment_status}`}>
                           {o.payment_status === 'pending' && o.reservation_released_at
                             ? 'Pago por verificar'

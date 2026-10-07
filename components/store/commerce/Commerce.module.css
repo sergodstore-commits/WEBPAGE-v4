@@ -31,7 +31,6 @@
 .steps {
   list-style: none;
   display: flex;
-  padding: 0;
   margin: 0 0 32px;
   gap: 24px;
   align-items: center;
@@ -361,10 +360,6 @@
 .page.page :global(.store-order-row):hover {
   border-color: #91b5c2;
   background: #eef6f9;
-}
-.stateLabel {
-  color: #526170;
-  font-size: 11px;
 }
 .page.page :global(.store-order-row) strong {
   font-size: 15px;

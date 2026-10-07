@@ -39,6 +39,10 @@
   color: #fff;
   border-color: #17212b;
 }
+.navigation a:not([aria-current]):hover {
+  background: #edf5f8;
+  border-color: #91b5c2;
+}
 .ranking {
   border-top: 1px solid #dbe3e9;
   padding-top: 28px;
@@ -75,7 +79,7 @@
 }
 .podium {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 16px;
   margin: 28px 0;
 }

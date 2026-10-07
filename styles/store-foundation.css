@@ -36,6 +36,15 @@
     border-color var(--sg-motion-fast) var(--sg-ease-standard);
 }
 
+.store-app :is(.store-button, .store-text-link, .store-icon-button) > svg {
+  flex-shrink: 0;
+}
+
+.store-app .store-page summary {
+  min-height: 44px;
+  align-content: center;
+}
+
 .store-app .store-button:hover:not(:disabled) {
   background: var(--sg-elevated);
   border-color: var(--sg-elevated);

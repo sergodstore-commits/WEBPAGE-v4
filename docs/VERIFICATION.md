@@ -1,5 +1,15 @@
 # Estado de comprobación
 
+## Cierre de los diez puntos visuales — 7 de octubre de 2026
+
+Los diez puntos de mejora visual están completados: torneos y agenda, presentación de YouTube, cabeceras interiores, catálogo, ficha de producto, preventas, comunidad y rankings, noticias, cuenta/compra y ajustes compartidos. La portada conserva su composición.
+
+- **104/104 pruebas del servidor aprobadas** en una ejecución completa.
+- **43/43 recorridos de navegador aprobados** en una ejecución completa sobre la compilación de producción y una base local aislada. Incluyen administración, persistencia de productos y preventas con imágenes, inventario/POS, cuenta, carrito, entrega, publicaciones, rankings y agenda/YouTube.
+- TypeScript, construcción y trazado de dependencias correctos. Se comprobaron anchos de 320 a 1440 px, navegación con teclado, empates, filtros y selección persistente. El pago final de las pruebas de compra se intercepta; no se generaron cobros reales ni correos externos en este cierre.
+
+Este cierre visual no sustituye los datos comerciales del propietario ni acredita una nueva transmisión real. Continúan aparte la revisión final de stock, precios y condiciones de preventa, Instagram/Meta, OBS y el primer directo real de YouTube, y la comparación con una exportación real de Konami. Noticias y eventos públicos dependen de lo que publique el administrador. Las secciones siguientes registran comprobaciones históricas; sus referencias a Twitch y cifras de pruebas anteriores corresponden a aquellas entregas.
+
 ## Entrega final — 7 de octubre de 2026
 
 Las seis fases están integradas: Preventas, Torneos/Twitch, Comunidad/rankings, Noticias/Instagram, Administración y Carrito/Cuenta/Checkout. El propietario autorizó publicarlas y conectar Twitch e Instagram después.
