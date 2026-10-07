@@ -245,6 +245,7 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
 }) => {
   const anonymous = await browser.newContext();
   const visitor = await anonymous.newPage();
+  await visitor.clock.setFixedTime(new Date('2030-10-01T12:00:00Z'));
   expect(
     (await visitor.request.get('http://localhost:3100/api/admin/integrations/twitch')).status(),
   ).toBe(401);
@@ -278,5 +279,10 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
   await expect(visitor.getByRole('link', { name: title, exact: true })).toBeVisible();
   await visitor.reload();
   await expect(visitor.getByRole('link', { name: title, exact: true })).toBeVisible();
+  await expect(
+    visitor
+      .getByLabel('Calendario de torneos', { exact: true })
+      .getByRole('button', { name: new RegExp(title) }),
+  ).toBeVisible();
   await anonymous.close();
 });

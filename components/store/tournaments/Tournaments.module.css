@@ -149,16 +149,61 @@
   font-size: 12px;
   color: #526170;
 }
+.scheduleLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+.calendarPanel {
+  min-width: 0;
+}
 .live {
-  margin-top: 32px;
-  padding: 24px;
+  min-width: 0;
+  padding: 20px;
   border: 1px solid #dbe3e9;
   border-radius: 8px;
 }
 .live h2 {
   font-family: var(--sg-font-display);
-  font-size: 32px;
-  margin: 12px 0 24px;
+  font-size: 24px;
+  margin: 0 0 16px;
+}
+.liveTitle {
+  font-weight: 600;
+  margin: 12px 0 16px;
+  overflow-wrap: anywhere;
+}
+.offline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  border-radius: 6px;
+  background: #10171e;
+  color: #e8f2f8;
+}
+.page .offline p {
+  color: #e8f2f8;
+  margin: 0;
+  font-size: 14px;
+}
+.offline span {
+  color: #bbc9d6;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.offline a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #67def5;
+  font-size: 12px;
 }
 .liveBadge {
   color: #ae2424;
@@ -268,6 +313,9 @@
   margin-top: 24px;
 }
 @media (max-width: 800px) {
+  .scheduleLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .videos {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

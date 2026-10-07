@@ -6,6 +6,7 @@ import { api, date } from '@/lib/client';
 import type { Post, TournamentMedia, TwitchVideo } from '@/lib/types';
 import { useRemote, Loading, RemoteError, Empty, ProductImage } from '../shared';
 import styles from './Tournaments.module.css';
+import { TournamentCalendar } from './TournamentCalendar';
 function Thumbnail({ video }: { video: TwitchVideo }) {
   const sources = [
     video.custom_thumbnail,
@@ -138,53 +139,84 @@ export function Tournaments() {
         <p>Próximas fechas y transmisiones de SERGOD STORE.</p>
         <Trophy aria-hidden="true" />
       </header>
-      {media.data?.live && (
-        <section className={styles.live} aria-labelledby="live-heading">
-          <span className={styles.liveBadge}>● EN VIVO</span>
-          <h2 id="live-heading">{media.data.live.title}</h2>
-          <Player channel={media.data.live.channel} title={media.data.live.title} />
-        </section>
-      )}
       <section className={styles.section} aria-labelledby="upcoming-heading">
         <div className={styles.sectionHeading}>
           <CalendarDays />
           <h2 id="upcoming-heading">Próximos torneos</h2>
         </div>
-        {posts.loading ? (
-          <Loading />
-        ) : posts.error ? (
-          <RemoteError error={posts.error} reload={posts.reload} />
-        ) : upcoming.length ? (
-          <div className={styles.agenda}>
-            {upcoming.map((p) => (
-              <article key={p.id}>
-                <time dateTime={p.event_at!}>
-                  {new Intl.DateTimeFormat('es-CL', {
-                    day: '2-digit',
-                    month: 'short',
-                    timeZone: 'America/Santiago',
-                  }).format(new Date(p.event_at!))}
-                </time>
-                <div>
-                  <h3>
-                    <Link href={`/publicacion/${p.slug}`}>{p.title}</Link>
-                  </h3>
-                  <p>
-                    {date(p.event_at)}
-                    {p.location ? ` · ${p.location}` : ''}
-                  </p>
-                </div>
-                <Link href={`/publicacion/${p.slug}`} aria-label={`Ver detalles de ${p.title}`}>
-                  Ver detalles →
-                </Link>
-              </article>
-            ))}
+        <div className={styles.scheduleLayout}>
+          <div className={styles.calendarPanel}>
+            {posts.loading ? (
+              <Loading />
+            ) : posts.error ? (
+              <RemoteError error={posts.error} reload={posts.reload} />
+            ) : (
+              <TournamentCalendar posts={posts.data || []} />
+            )}
           </div>
-        ) : (
-          <Empty
-            title="Próximas fechas por anunciar"
-            body="Los torneos aparecerán aquí cuando la tienda publique su programación."
-          />
+          <section className={styles.live} aria-labelledby="live-heading">
+            <h2 id="live-heading">Transmisión en vivo</h2>
+            {media.loading ? (
+              <Loading />
+            ) : media.error ? (
+              <RemoteError error={media.error} reload={media.reload} />
+            ) : media.data?.live ? (
+              <>
+                <span className={styles.liveBadge}>● EN VIVO</span>
+                <p className={styles.liveTitle}>{media.data.live.title}</p>
+                <Player channel={media.data.live.channel} title={media.data.live.title} />
+              </>
+            ) : (
+              <div className={styles.offline}>
+                <Play aria-hidden="true" size={28} />
+                <p>No hay una transmisión en vivo publicada.</p>
+                <span>Cuando la tienda active un directo, podrás verlo aquí.</span>
+                <a
+                  href="https://www.twitch.tv/sergodstore"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Visitar el canal <ExternalLink size={14} />
+                </a>
+              </div>
+            )}
+          </section>
+        </div>
+        {!posts.loading && !posts.error && (
+          <>
+            {upcoming.length ? (
+              <div className={styles.agenda}>
+                {upcoming.map((p) => (
+                  <article key={p.id}>
+                    <time dateTime={p.event_at!}>
+                      {new Intl.DateTimeFormat('es-CL', {
+                        day: '2-digit',
+                        month: 'short',
+                        timeZone: 'America/Santiago',
+                      }).format(new Date(p.event_at!))}
+                    </time>
+                    <div>
+                      <h3>
+                        <Link href={`/publicacion/${p.slug}`}>{p.title}</Link>
+                      </h3>
+                      <p>
+                        {date(p.event_at)}
+                        {p.location ? ` · ${p.location}` : ''}
+                      </p>
+                    </div>
+                    <Link href={`/publicacion/${p.slug}`} aria-label={`Ver detalles de ${p.title}`}>
+                      Ver detalles →
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <Empty
+                title="Próximas fechas por anunciar"
+                body="Los torneos aparecerán aquí cuando la tienda publique su programación."
+              />
+            )}
+          </>
         )}
       </section>
       <section className={styles.section} aria-labelledby="archive-heading">
