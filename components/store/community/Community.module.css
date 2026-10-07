@@ -5,9 +5,13 @@
 }
 .navigation {
   display: flex;
-  gap: 36px;
+  gap: 24px;
   flex-wrap: wrap;
-  margin: 36px 0;
+  margin: 28px 0;
+  padding: 20px;
+  border: 1px solid #dbe3e9;
+  border-radius: 8px;
+  background: #f8fafb;
 }
 .navigation h2 {
   font-size: 13px;
@@ -26,6 +30,9 @@
   border-radius: 6px;
   font-size: 14px;
   min-height: 44px;
+  background: #fff;
+  color: #334858;
+  text-decoration: none;
 }
 .navigation a[aria-current] {
   background: #17212b;
@@ -78,9 +85,11 @@
   padding: 24px;
   background: #f8fafb;
   min-width: 0;
+  border-top: 3px solid #cad7e2;
 }
-.podium article:first-child {
+.podium article[data-position='1'] {
   border-top: 3px solid #006482;
+  background: #eef6f9;
 }
 .podium article > span {
   display: flex;
@@ -113,6 +122,10 @@
   align-items: end;
   gap: 24px;
   margin: 28px 0 16px;
+  padding: 16px;
+  border: 1px solid #dbe3e9;
+  border-radius: 8px;
+  background: #f8fafb;
 }
 .tools label {
   display: grid;
@@ -144,7 +157,7 @@
   background: #f2f6f8;
   font-size: 12px;
   color: #526170;
-  font-weight: 500;
+  font-weight: 600;
   padding: 14px 12px;
 }
 .table td {
@@ -152,6 +165,12 @@
   padding: 18px 12px;
   border-bottom: 1px solid #dbe3e9;
   overflow-wrap: anywhere;
+}
+.table tbody tr:nth-child(even) {
+  background: #f8fafb;
+}
+.table tbody tr:hover {
+  background: #edf5f8;
 }
 .table th:first-child {
   width: 80px;
@@ -187,11 +206,16 @@
   margin: 24px 0;
 }
 .history {
-  margin-top: 36px;
+  margin-top: 24px;
+  padding: 18px 20px;
+  border: 1px solid #dbe3e9;
+  border-radius: 8px;
+  background: #f8fafb;
 }
-.history > h3 {
+.history > summary {
   font-family: var(--sg-font-display);
-  font-size: 26px;
+  font-size: 24px;
+  cursor: pointer;
 }
 .history ul {
   padding: 0;
@@ -293,6 +317,10 @@
   outline: 3px solid #006482;
   outline-offset: 4px;
 }
+.history > summary:focus-visible {
+  outline: 3px solid #006482;
+  outline-offset: 4px;
+}
 @media (max-width: 800px) {
   .posts > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -331,16 +359,31 @@
   }
   .podium {
     gap: 8px;
+    grid-template-columns: minmax(0, 1fr);
   }
   .podium article {
-    padding: 12px 8px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 4px 10px;
+    align-items: center;
+    padding: 14px;
+  }
+  .podium article > span {
+    grid-row: 1 / 3;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 23px;
   }
   .podium h3 {
-    font-size: 13px;
-    margin: 12px 0;
+    grid-column: 2;
+    font-size: 14px;
+    margin: 0;
     letter-spacing: 0;
   }
   .podium strong {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    text-align: right;
     font-size: 22px;
   }
   .podium small {
@@ -348,6 +391,8 @@
     font-size: 11px;
   }
   .podium p {
+    grid-column: 2;
+    margin: 0;
     font-size: 11px;
   }
   .table th {
@@ -378,6 +423,9 @@
   }
   .snapshot {
     padding: 16px 10px;
+  }
+  .history {
+    padding: 16px 12px;
   }
   .snapshot .table th:last-child {
     width: 58px;

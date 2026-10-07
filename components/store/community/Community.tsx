@@ -124,10 +124,6 @@ export function Community() {
           </div>
           <Trophy aria-hidden="true" />
         </div>
-        <p className={styles.rule}>
-          Acumulado de las ligas seleccionadas por la tienda. Cada torneo aporta sus puntos finales
-          una sola vez.
-        </p>
         {board === 'yugioh' && (
           <p className={styles.disclaimer}>
             Ranking interno de SERGOD STORE. No es un ranking oficial de Konami.
@@ -153,21 +149,23 @@ export function Community() {
               ) : (
                 <>
                   <div className={styles.podium} aria-label="Primeros lugares">
-                    {ranking.data.rows.slice(0, 3).map((r, i) => (
-                      <article key={i}>
-                        <span>
-                          <Medal size={18} />
-                          {r.position}°
-                        </span>
-                        <h3>{r.name}</h3>
-                        <strong>
-                          {r.points} <small>puntos</small>
-                        </strong>
-                        <p>
-                          {r.tournaments} {r.tournaments === 1 ? 'torneo' : 'torneos'}
-                        </p>
-                      </article>
-                    ))}
+                    {ranking.data.rows
+                      .filter((r) => r.position <= 3)
+                      .map((r, i) => (
+                        <article key={i} data-position={r.position}>
+                          <span>
+                            <Medal size={18} aria-hidden="true" />
+                            {r.position}°
+                          </span>
+                          <h3>{r.name}</h3>
+                          <strong>
+                            {r.points} <small>puntos</small>
+                          </strong>
+                          <p>
+                            {r.tournaments} {r.tournaments === 1 ? 'torneo' : 'torneos'}
+                          </p>
+                        </article>
+                      ))}
                   </div>
                   <div className={styles.tools}>
                     <label>
@@ -235,8 +233,14 @@ export function Community() {
                 </p>
               )}
               {ranking.data.tournaments.length > 0 && (
-                <section className={styles.history}>
-                  <h3>Torneos que aportan al ranking</h3>
+                <details key={board} className={styles.history}>
+                  <summary>
+                    Torneos que aportan al ranking · {ranking.data.tournaments.length}
+                  </summary>
+                  <p className={styles.rule}>
+                    Acumulado de las ligas seleccionadas por la tienda. Cada torneo aporta sus
+                    puntos finales una sola vez. Solo se suman las ligas de {selectedBoard.name}.
+                  </p>
                   <ul>
                     {ranking.data.tournaments.slice(0, eventsLimit).map((t) => (
                       <li key={t.id}>
@@ -267,7 +271,7 @@ export function Community() {
                   {selected && ranking.data.tournaments.some((t) => t.id === selected) && (
                     <TournamentResults key={`${board}:${selected}`} board={board} id={selected} />
                   )}
-                </section>
+                </details>
               )}
             </>
           )

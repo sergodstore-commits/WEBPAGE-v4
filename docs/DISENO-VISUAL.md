@@ -1,5 +1,13 @@
 # Rediseño visual de SERGOD STORE
 
+## Comunidad y rankings — punto 7
+
+La selección de Primera Era, Primer Bloque y Yu-Gi-Oh! queda reunida en un panel claro; cada clasificación conserva su URL, datos y reglas independientes. El podio incluye a todos los jugadores cuya posición sea primera, segunda o tercera, sin cortar un empate después de tres nombres. Todos los primeros lugares reciben el mismo acento visual. En celular las tarjetas se ordenan en filas para que nombres y puntos tengan espacio.
+
+La búsqueda usa un panel compacto y la tabla alterna fondos suaves para facilitar la lectura. El listado de torneos incluidos y la explicación del cálculo se consultan en un desplegable nativo que comienza cerrado y se reinicia al cambiar de categoría. Se conserva la consulta individual de resultados, la búsqueda y la carga de más jugadores; no cambian la suma de puntos ni las ligas seleccionadas por el administrador.
+
+La prueba de Comunidad incluye cuatro jugadores empatados en primer lugar, comprueba que todos estén en el podio, abre el detalle con teclado y verifica las categorías, resultados y guardado real en la base local aislada.
+
 ## Tarjetas de preventa — punto 6
 
 Las tarjetas muestran los formatos e idiomas reales, precio y un estado con texto y color: reserva abierta, próxima, finalizada, agotada o sin fechas. Apertura y cierre se presentan en filas compactas, sin confundirlas con la entrega. Si las opciones tienen fechas o condiciones distintas, se remite a la ficha en vez de asumir una condición común. El texto de entrega ocupa como máximo dos líneas y señala dónde consultar las condiciones completas; las fichas y vistas rápidas conservan íntegros los datos de cada opción.

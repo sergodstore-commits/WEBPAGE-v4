@@ -8,10 +8,10 @@ import {
 } from '../../lib/rankings';
 const tournament = '98d5a731-15ed-47af-a83a-e4e152f9c839';
 const rows = Array.from({ length: 60 }, (_, i) => ({
-  position: i + 1,
+  position: i < 4 ? 1 : i + 1,
   name: i === 0 ? 'Andrés Competidor' : `Jugador ${String(i).padStart(2, '0')}`,
   tournaments: 2,
-  points: 120 - i,
+  points: i < 4 ? 120 : 120 - i,
 }));
 const fixture = (board: RankingBoard): PublicRanking => ({
   board,
@@ -83,6 +83,10 @@ test('Comunidad: rankings separados, búsqueda, más jugadores y lectura adaptab
     ).toHaveCSS('color', 'rgb(82, 97, 112)');
     const table = page.getByRole('table', { name: 'Clasificación Primera Era' });
     await expect(table.getByRole('row')).toHaveCount(51);
+    const leaders = page.getByLabel('Primeros lugares', { exact: true });
+    await expect(leaders.locator('article')).toHaveCount(4);
+    await expect(leaders.locator('article[data-position="1"]')).toHaveCount(4);
+    await expect(page.getByRole('button', { name: 'Ver resultados', exact: true })).toBeHidden();
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))
       .toBeLessThanOrEqual(1);
@@ -100,6 +104,8 @@ test('Comunidad: rankings separados, búsqueda, más jugadores y lectura adaptab
   await expect(
     page.getByRole('table', { name: 'Clasificación Primera Era' }).getByRole('row'),
   ).toHaveCount(2);
+  await page.getByText('Torneos que aportan al ranking · 1', { exact: true }).press('Enter');
+  await expect(page.getByText(/Solo se suman las ligas de Primera Era/)).toBeVisible();
   await page.getByRole('button', { name: 'Ver resultados', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Resultados de Liga publicada' })).toContainText(
     'Ronda 7',
