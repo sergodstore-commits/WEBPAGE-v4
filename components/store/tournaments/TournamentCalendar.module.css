@@ -1,10 +1,31 @@
 .calendar {
-  margin-bottom: 24px;
   border: 1px solid #dbe3e9;
   border-radius: 8px;
   overflow: hidden;
   background: #fff;
   color: #17212b;
+}
+.panelHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #dbe3e9;
+  background: #f4f7fa;
+}
+.panelHeading svg {
+  color: #006482;
+  flex-shrink: 0;
+}
+.panelHeading h3 {
+  font-family: var(--sg-font-display);
+  font-size: 22px;
+  margin: 0;
+}
+.panelHeading span {
+  margin-left: auto;
+  font-size: 11px;
+  color: #526170;
 }
 .toolbar,
 .navigation,
@@ -205,6 +226,16 @@
   border: 0;
 }
 @media (max-width: 600px) {
+  .panelHeading {
+    padding: 14px 12px;
+    gap: 8px;
+  }
+  .panelHeading h3 {
+    font-size: 20px;
+  }
+  .panelHeading span {
+    font-size: 10px;
+  }
   .toolbar {
     padding: 10px;
     gap: 8px;

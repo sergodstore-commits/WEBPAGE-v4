@@ -75,6 +75,9 @@
   overflow: hidden;
   color: #17212b;
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 .videoCard:focus-visible {
   outline: 3px solid #006482;
@@ -82,6 +85,25 @@
 }
 .videoCard:hover {
   border-color: #006482;
+  box-shadow: 0 6px 18px rgb(15 42 57 / 8%);
+}
+.thumbnail {
+  position: relative;
+}
+.playOverlay {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  background: linear-gradient(transparent 50%, rgb(5 12 20 / 40%));
+}
+.videoCard .playOverlay svg {
+  width: 48px;
+  height: 48px;
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 40%);
+  border-radius: 50%;
+  background: rgb(5 12 20 / 75%);
+  color: #fff;
 }
 .videoCard > div:first-child {
   aspect-ratio: 16/9;
@@ -109,9 +131,27 @@
   margin: 10px 0;
   overflow-wrap: anywhere;
 }
-.videoCard p {
+.videoCard time {
+  display: block;
   font-size: 12px;
   color: #526170;
+}
+.archiveEmpty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid #dbe3e9;
+  border-radius: 8px;
+  background: #f4f7fa;
+  color: #526170;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+.archiveEmpty svg {
+  flex-shrink: 0;
+  color: #006482;
 }
 .scheduleLayout {
   display: grid;
@@ -125,18 +165,38 @@
 }
 .live {
   min-width: 0;
-  padding: 20px;
   border: 1px solid #dbe3e9;
   border-radius: 8px;
+  overflow: hidden;
 }
-.live h2 {
+.panelHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #dbe3e9;
+  background: #f4f7fa;
+}
+.panelHeading > svg {
+  color: #006482;
+  flex-shrink: 0;
+}
+.panelHeading h2 {
   font-family: var(--sg-font-display);
-  font-size: 24px;
-  margin: 0 0 16px;
+  font-size: 22px;
+  margin: 0;
+}
+.panelHeading > span {
+  margin-left: auto;
+  font-size: 11px;
+  color: #526170;
+}
+.live > .player {
+  margin: 0 20px 20px;
 }
 .liveTitle {
   font-weight: 600;
-  margin: 12px 0 16px;
+  margin: 12px 20px 16px;
   overflow-wrap: anywhere;
 }
 .offline {
@@ -144,18 +204,39 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 280px;
+  position: relative;
+  min-height: 300px;
   gap: 12px;
-  padding: 24px;
+  padding: 56px 24px 24px;
+  margin: 20px;
   text-align: center;
   border-radius: 6px;
-  background: #10171e;
+  border: 1px solid #263f4c;
+  background: radial-gradient(ellipse at 50% 15%, #153f50, transparent 70%), #10171e;
   color: #e8f2f8;
 }
 .page .offline p {
   color: #e8f2f8;
   margin: 0;
   font-size: 14px;
+}
+.offline img {
+  width: min(240px, 85%);
+  height: auto;
+  object-fit: contain;
+}
+.offline .offlineBadge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 4px 8px;
+  background: #1f2e39;
+  border: 1px solid #405565;
+  border-radius: 4px;
+  color: #d5dfe7;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .offline span {
   color: #bbc9d6;
@@ -168,8 +249,21 @@
   gap: 6px;
   color: #67def5;
   font-size: 12px;
+  margin-top: 4px;
+  padding: 10px 14px;
+  border: 1px solid #3e6574;
+  border-radius: 5px;
+}
+.offline a:hover {
+  background: #183643;
+}
+.offline a:focus-visible {
+  outline: 3px solid #67def5;
+  outline-offset: 3px;
 }
 .liveBadge {
+  display: inline-flex;
+  margin: 20px 20px 0;
   color: #ae2424;
   font-size: 12px;
   font-weight: 700;
@@ -301,8 +395,22 @@
   .videos {
     grid-template-columns: minmax(0, 1fr);
   }
-  .live {
-    padding: 16px;
+  .panelHeading {
+    padding: 14px 12px;
+    gap: 8px;
+  }
+  .panelHeading h2 {
+    font-size: 20px;
+  }
+  .panelHeading > span {
+    font-size: 10px;
+  }
+  .offline {
+    margin: 12px;
+    min-height: 280px;
+  }
+  .live > .player {
+    margin: 0 12px 12px;
   }
   .dialog {
     padding: 16px;

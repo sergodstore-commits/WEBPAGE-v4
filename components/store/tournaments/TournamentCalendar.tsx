@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X, CalendarDays } from 'lucide-react';
 import { date } from '@/lib/client';
 import type { Post } from '@/lib/types';
 import styles from './TournamentCalendar.module.css';
@@ -74,6 +74,11 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
       className={`${styles.calendar} ${expanded ? styles.expanded : ''}`}
       aria-label="Calendario de torneos"
     >
+      <div className={styles.panelHeading}>
+        <CalendarDays size={20} aria-hidden="true" />
+        <h3>Agenda mensual</h3>
+        <span>Horario de Chile</span>
+      </div>
       <div className={styles.toolbar}>
         <div className={styles.navigation}>
           <button type="button" aria-label="Mes anterior" onClick={() => move(month - 1)}>

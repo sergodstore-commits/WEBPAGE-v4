@@ -1,10 +1,20 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, Play, Trophy, ArrowLeft, MapPin, ExternalLink, X } from 'lucide-react';
+import {
+  CalendarDays,
+  Play,
+  Trophy,
+  ArrowLeft,
+  MapPin,
+  ExternalLink,
+  X,
+  Radio,
+  Video,
+} from 'lucide-react';
 import { api, date } from '@/lib/client';
 import type { Post, TournamentMedia, YouTubeVideo } from '@/lib/types';
-import { useRemote, Loading, RemoteError, Empty, ProductImage } from '../shared';
+import { useRemote, Loading, RemoteError, ProductImage } from '../shared';
 import styles from './Tournaments.module.css';
 import { TournamentCalendar } from './TournamentCalendar';
 function Thumbnail({ video }: { video: YouTubeVideo }) {
@@ -15,13 +25,16 @@ function Thumbnail({ video }: { video: YouTubeVideo }) {
   ].filter(Boolean);
   const [index, setIndex] = useState(0);
   return (
-    <div>
+    <div className={styles.thumbnail}>
       <img
         src={sources[Math.min(index, sources.length - 1)]}
         alt={video.title}
         loading="lazy"
         onError={() => setIndex((i) => Math.min(i + 1, sources.length - 1))}
       />
+      <span className={styles.playOverlay} aria-hidden="true">
+        <Play size={22} fill="currentColor" />
+      </span>
     </div>
   );
 }
@@ -128,7 +141,11 @@ export function Tournaments() {
             )}
           </div>
           <section className={styles.live} aria-labelledby="live-heading">
-            <h2 id="live-heading">Transmisión en vivo</h2>
+            <div className={styles.panelHeading}>
+              <Radio size={20} aria-hidden="true" />
+              <h2 id="live-heading">Transmisión en vivo</h2>
+              <span>YouTube</span>
+            </div>
             {media.loading ? (
               <Loading />
             ) : media.error ? (
@@ -143,9 +160,15 @@ export function Tournaments() {
               </>
             ) : (
               <div className={styles.offline}>
-                <Play aria-hidden="true" size={28} />
-                <p>No hay una transmisión en vivo publicada.</p>
-                <span>Los directos de nuestro canal de YouTube aparecerán aquí.</span>
+                <span className={styles.offlineBadge}>Fuera de línea</span>
+                <img
+                  src="/brand/sergod-logo-480.webp"
+                  alt="SERGOD STORE"
+                  width="480"
+                  height="240"
+                />
+                <p>Nos vemos en la próxima partida.</p>
+                <span>Torneos y encuentros de nuestra comunidad en YouTube.</span>
                 <a
                   href={media.data?.channel_url || 'https://www.youtube.com/@SergodStore'}
                   target="_blank"
@@ -183,7 +206,7 @@ export function Tournaments() {
                       <Play size={15} /> REPLAY
                     </span>
                     <h3>{v.title}</h3>
-                    <p>{date(v.recorded_at)}</p>
+                    <time dateTime={v.recorded_at}>{date(v.recorded_at)}</time>
                   </div>
                 </button>
               ))}
@@ -200,10 +223,10 @@ export function Tournaments() {
             {error && <p role="alert">{error}</p>}
           </>
         ) : (
-          <Empty
-            title="El archivo comienza con la próxima transmisión"
-            body="Aquí encontrarás las transmisiones que SERGOD STORE comparta con la comunidad."
-          />
+          <p className={styles.archiveEmpty}>
+            <Video size={20} aria-hidden="true" />
+            Las grabaciones aparecerán aquí cuando la tienda las publique.
+          </p>
         )}
       </section>
       {selected && <VideoDialog video={selected} close={() => setSelected(null)} />}

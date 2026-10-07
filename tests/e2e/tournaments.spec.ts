@@ -197,9 +197,17 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
     await expect(
       page.getByText('Próximas fechas y transmisiones de SERGOD STORE.', { exact: true }),
     ).toHaveCSS('color', 'rgb(187, 201, 214)');
-    await expect(page.getByRole('heading', { level: 3 })).toHaveText(
-      videos.slice(0, 6).map((v) => v.title),
-    );
+    await expect(
+      page
+        .getByRole('region', { name: 'Transmisiones anteriores', exact: true })
+        .getByRole('heading', { level: 3 }),
+    ).toHaveText(videos.slice(0, 6).map((v) => v.title));
+    await expect(page.getByText('Fuera de línea', { exact: true })).toBeVisible();
+    await expect(
+      page
+        .getByRole('region', { name: 'Transmisión en vivo', exact: true })
+        .getByRole('img', { name: 'SERGOD STORE', exact: true }),
+    ).toBeVisible();
     await expect(page.getByText('Liga pasado', { exact: true })).toHaveCount(0);
     await expect(page.locator('iframe')).toHaveCount(0);
     await expect(page.getByRole('img', { name: 'Transmisión 0', exact: true })).toHaveAttribute(
