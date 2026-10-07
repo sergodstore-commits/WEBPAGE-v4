@@ -249,7 +249,7 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
     (await visitor.request.get('http://localhost:3100/api/admin/integrations/twitch')).status(),
   ).toBe(401);
   await page.goto('/admin');
-  await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e@example.test');
+  await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e-tournaments@example.test');
   await page.getByLabel('Contraseña', { exact: true }).fill('E2e-Prueba-Sergod-2026!');
   await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();

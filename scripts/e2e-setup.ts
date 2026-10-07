@@ -9,14 +9,19 @@ async function setup() {
     throw new Error('Las pruebas solo pueden usar la base local aislada .data/e2e.');
   }
   const db = await getDb();
-  await db.query(
-    `INSERT INTO users(id,email,password_hash,name,role,email_verified)
+  const password = await passwordHash('E2e-Prueba-Sergod-2026!');
+  // The complete suite exceeds one account's login allowance. Give the
+  // tournament journey its own isolated admin without weakening real limits.
+  for (const email of ['e2e@example.test', 'e2e-tournaments@example.test']) {
+    await db.query(
+      `INSERT INTO users(id,email,password_hash,name,role,email_verified)
      VALUES($1,$2,$3,'Administrador E2E','admin',true)
      ON CONFLICT(email) DO UPDATE SET password_hash=EXCLUDED.password_hash,role='admin',email_verified=true`,
-    [uuid(), 'e2e@example.test', await passwordHash('E2e-Prueba-Sergod-2026!')],
-  );
+      [uuid(), email, password],
+    );
+  }
   await db.query(
-    "DELETE FROM rate_limits WHERE key LIKE 'login:e2e@example.test' OR key LIKE 'auth-ip:%'",
+    "DELETE FROM rate_limits WHERE key IN ('login:e2e@example.test', 'login:e2e-tournaments@example.test') OR key LIKE 'auth-ip:%'",
   );
   console.log(
     'Administrador de pruebas listo en .data/e2e. La base principal permanece independiente.',
