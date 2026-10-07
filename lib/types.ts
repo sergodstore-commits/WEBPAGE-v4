@@ -74,9 +74,27 @@ export type TwitchVideo = {
   tournament_id: string | null;
   status?: 'draft' | 'published' | 'withdrawn';
 };
+export type YouTubeVideo = {
+  id: string;
+  video_id: string;
+  title: string;
+  recorded_at: string;
+  youtube_thumbnail: string;
+  custom_thumbnail: string;
+  tournament_id: string | null;
+  status?: 'draft' | 'published' | 'withdrawn';
+};
 export type TournamentMedia = {
-  live: { enabled: boolean; channel: string; title: string; tournament_id: string | null } | null;
-  videos: TwitchVideo[];
+  provider: 'youtube';
+  channel_url: string;
+  live: {
+    enabled: boolean;
+    video_id: string;
+    title: string;
+    stage: 'scheduled' | 'live';
+    tournament_id: string | null;
+  } | null;
+  videos: YouTubeVideo[];
   total: number;
 };
 export type Settings = {

@@ -1,5 +1,7 @@
 # Torneos y Twitch
 
+**Referencia histórica:** desde el 7 de octubre de 2026, la web y el panel usan [YouTube](YOUTUBE.md). Los datos y rutas de Twitch se conservan para compatibilidad, pero no alimentan Torneos. El resto de este documento describe la integración anterior.
+
 La página Torneos informa próximas fechas y ofrece transmisiones. No administra inscripciones, participantes, pagos, premios ni cupos. Los próximos torneos se crean en **Admin → Torneos**; solo título y fecha/hora son obligatorios para publicar. Texto, lugar e imagen son opcionales. Los eventos anteriores no se presentan como próximos.
 
 En Próximos torneos, el calendario mensual ocupa la columna izquierda y el directo de Twitch la derecha; en celular se apilan. El calendario empieza en el mes actual de Chile, muestra de lunes a domingo y agrupa las publicaciones por su fecha en America/Santiago. Permite cambiar de mes, volver a Hoy y ampliar/compactar las celdas. Pulsar un día muestra todos sus eventos ordenados por hora, con ubicación y enlace al detalle. Incluye los eventos publicados anteriores al consultar su mes; el listado de próximas fechas debajo solo contiene los futuros. Los videos anteriores permanecen debajo de la agenda y el directo. No necesita campos nuevos ni migraciones: editar la fecha, publicar o retirar desde Admin actualiza el calendario al recargar.

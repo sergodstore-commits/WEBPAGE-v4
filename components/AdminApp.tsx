@@ -27,7 +27,7 @@ import type { Carrier, Dashboard, Order, Post, Product, Settings, User } from '@
 import './admin.css';
 import './admin/AdminTheme.css';
 import { AdminShell } from './admin/AdminShell';
-import { TwitchIntegrations, TwitchTransmissions } from './admin/TwitchAdmin';
+import { YouTubeIntegrations, YouTubeTransmissions } from './admin/YouTubeAdmin';
 import { LeagueAdmin } from './admin/LeagueAdmin';
 import { InstagramNewsPage } from './admin/InstagramAdmin';
 
@@ -197,8 +197,8 @@ export default function AdminApp() {
   else if (pathname === '/admin/noticias') screen = <InstagramNewsPage />;
   else if (pathname === '/admin/torneos') screen = <PostsPage tournaments />;
   else if (pathname === '/admin/liga') screen = <LeagueAdmin />;
-  else if (pathname === '/admin/transmisiones') screen = <TwitchTransmissions />;
-  else if (pathname === '/admin/integraciones') screen = <TwitchIntegrations />;
+  else if (pathname === '/admin/transmisiones') screen = <YouTubeTransmissions />;
+  else if (pathname === '/admin/integraciones') screen = <YouTubeIntegrations />;
   else if (pathname === '/admin/clientes') screen = <CustomersPage />;
   else if (pathname === '/admin/local') screen = <SettingsPage />;
   else if (pathname === '/admin/correos') screen = <MailPage />;

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import type { Post, TwitchVideo } from '../../lib/types';
+import type { Post, YouTubeVideo } from '../../lib/types';
 const post = (id: string, time: string | null): Post => ({
   id,
   slug: id,
@@ -14,28 +14,28 @@ const post = (id: string, time: string | null): Post => ({
   updated_at: '2026-01-01T10:00:00Z',
 });
 const upcoming = [post('primero', '2030-10-01T20:00:00Z'), post('segundo', '2030-10-02T20:00:00Z')];
-const videos: TwitchVideo[] = Array.from({ length: 8 }, (_, i) => ({
+const videos: YouTubeVideo[] = Array.from({ length: 8 }, (_, i) => ({
   id: `vod-${i}`,
-  video_id: String(123456 + i),
-  channel: 'sergod_test',
+  video_id: `SergodTes0${i}`,
+
   title: `Transmisión ${i}`,
   recorded_at: '2026-10-01T20:00:00Z',
-  twitch_thumbnail: '/art/hero/yugioh-front.webp',
+  youtube_thumbnail: '/art/hero/yugioh-front.webp',
   custom_thumbnail: i === 0 ? '/art/hero/mitos-front.webp' : '',
   tournament_id: null,
 }));
 
-test('Admin Twitch: revisar no importa; previsualizar, publicar, recargar y retirar un VOD', async ({
+test('Admin YouTube: revisar no importa; previsualizar, publicar, recargar y retirar una grabación', async ({
   page,
 }, info) => {
   page.setDefaultTimeout(15_000);
-  let saved: TwitchVideo[] = [];
+  let saved: YouTubeVideo[] = [];
   let writes = 0;
   const candidate = {
     video_id: videos[0].video_id,
     title: videos[0].title,
     recorded_at: videos[0].recorded_at,
-    twitch_thumbnail: '/art/hero/yugioh-front.webp',
+    youtube_thumbnail: '/art/hero/yugioh-front.webp',
     imported: false,
   };
   await page.route('**/api/**', async (r) => {
@@ -52,37 +52,37 @@ test('Admin Twitch: revisar no importa; previsualizar, publicar, recargar y reti
         },
       });
     if (u.pathname === '/api/admin/posts') return r.fulfill({ json: upcoming });
-    if (u.pathname === '/api/admin/integrations/twitch')
+    if (u.pathname === '/api/admin/integrations/youtube')
       return r.fulfill({
         json: {
-          configured: true,
-          connected: true,
-          channel: 'sergod_test',
-          validated_at: '2026-10-07T10:00:00Z',
-          callback_url: 'http://localhost:3100/api/admin/integrations/twitch/callback',
-          live: { enabled: false, channel: '', title: '', tournament_id: null },
+          enabled: false,
+          video_id: '',
+          title: '',
+          stage: 'scheduled',
+          tournament_id: null,
+          channel_url: 'https://www.youtube.com/@SergodStore',
         },
       });
-    if (u.pathname === '/api/admin/integrations/twitch/review')
-      return r.fulfill({ json: { videos: [candidate], cursor: null } });
+    if (u.pathname === '/api/admin/integrations/youtube/review')
+      return r.fulfill({ json: candidate });
     if (u.pathname === '/api/admin/uploads')
       return r.fulfill({ json: { url: '/art/hero/mitos-front.webp' } });
-    if (u.pathname === '/api/admin/transmissions' && req.method() === 'GET')
+    if (u.pathname === '/api/admin/youtube/transmissions' && req.method() === 'GET')
       return r.fulfill({ json: saved });
-    if (u.pathname === '/api/admin/transmissions' && req.method() === 'POST') {
+    if (u.pathname === '/api/admin/youtube/transmissions' && req.method() === 'POST') {
       writes++;
       saved = [
         {
           ...videos[0],
           ...req.postDataJSON(),
           id: 'saved-vod',
-          channel: 'sergod_test',
-          twitch_thumbnail: candidate.twitch_thumbnail,
+
+          youtube_thumbnail: candidate.youtube_thumbnail,
         },
       ];
       return r.fulfill({ json: saved[0] });
     }
-    if (u.pathname === '/api/admin/transmissions/saved-vod' && req.method() === 'PATCH') {
+    if (u.pathname === '/api/admin/youtube/transmissions/saved-vod' && req.method() === 'PATCH') {
       writes++;
       saved = [{ ...saved[0], ...req.postDataJSON() }];
       return r.fulfill({ json: saved[0] });
@@ -97,14 +97,18 @@ test('Admin Twitch: revisar no importa; previsualizar, publicar, recargar y reti
     return r.fulfill({ status: 404, json: { error: 'Fuera de esta prueba de interfaz.' } });
   });
   await page.goto('/admin/integraciones');
-  await expect(page.getByText('Canal: sergod_test', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Revisar Twitch', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'VOD encontrados' })).toBeVisible();
+  await expect(page.getByText('Canal: @SergodStore', { exact: true })).toBeVisible();
+  await page
+    .getByLabel('Enlace del video de YouTube', { exact: true })
+    .fill('https://youtu.be/' + candidate.video_id);
+  await page.getByRole('button', { name: 'Revisar video', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Previsualizar e incorporar transmisión' }),
+  ).toBeVisible();
   expect(writes).toBe(0);
-  await page.getByRole('button', { name: 'Revisar Transmisión 0', exact: true }).click();
   await expect(page.getByRole('img', { name: 'Miniatura de la transmisión' })).toHaveAttribute(
     'src',
-    candidate.twitch_thumbnail,
+    candidate.youtube_thumbnail,
   );
   await page
     .getByLabel(/^Miniatura personalizada \(opcional\)/)
@@ -144,7 +148,7 @@ test('Admin Twitch: revisar no importa; previsualizar, publicar, recargar y reti
   await expect(page.getByRole('heading', { name: 'Liga revisada', exact: true })).toHaveCount(0);
 });
 async function mock(page: Page, live = false) {
-  await page.route('https://player.twitch.tv/**', (r) =>
+  await page.route('https://www.youtube-nocookie.com/**', (r) =>
     r.fulfill({ contentType: 'text/html', body: '<p>Reproductor externo simulado</p>' }),
   );
   await page.route('**/api/**', (r) => {
@@ -166,7 +170,13 @@ async function mock(page: Page, live = false) {
       return r.fulfill({
         json: {
           live: live
-            ? { enabled: true, channel: 'sergod_test', title: 'Liga en vivo', tournament_id: null }
+            ? {
+                enabled: true,
+                video_id: 'SergodLive1',
+                stage: 'live',
+                title: 'Liga en vivo',
+                tournament_id: null,
+              }
             : null,
           videos: videos.slice(offset, offset + 6),
           total: 8,
@@ -212,14 +222,14 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
   await expect(dialog.locator('iframe')).toHaveCount(1);
   await expect(dialog.locator('iframe')).toHaveAttribute(
     'src',
-    /video=v123456.*parent=localhost.*autoplay=false/,
+    /youtube-nocookie.com\/embed\/SergodTes00\?autoplay=0/,
   );
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(open).toBeFocused();
   await expect(page.locator('iframe')).toHaveCount(0);
 });
-test('Directo visible, enlace Twitch en celular y detalle sin inscripción ni pago', async ({
+test('Directo YouTube visible en computador y celular, y detalle sin inscripción ni pago', async ({
   page,
 }) => {
   await mock(page, true);
@@ -227,13 +237,13 @@ test('Directo visible, enlace Twitch en celular y detalle sin inscripción ni pa
   await expect(page.getByText('● EN VIVO', { exact: true })).toBeVisible();
   await expect(page.locator('iframe')).toHaveAttribute(
     'src',
-    /channel=sergod_test.*parent=localhost/,
+    /youtube-nocookie.com\/embed\/SergodLive1/,
   );
   await page.setViewportSize({ width: 375, height: 812 });
-  await expect(page.locator('iframe')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Abrir Twitch', exact: true })).toHaveAttribute(
+  await expect(page.locator('iframe')).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Abrir en YouTube', exact: true })).toHaveAttribute(
     'href',
-    'https://www.twitch.tv/sergod_test',
+    'https://www.youtube.com/watch?v=SergodLive1',
   );
   await page.goto('/publicacion/primero');
   await expect(page.getByRole('heading', { name: 'Liga primero', exact: true })).toBeVisible();
@@ -247,7 +257,7 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
   const visitor = await anonymous.newPage();
   await visitor.clock.setFixedTime(new Date('2030-10-01T12:00:00Z'));
   expect(
-    (await visitor.request.get('http://localhost:3100/api/admin/integrations/twitch')).status(),
+    (await visitor.request.get('http://localhost:3100/api/admin/integrations/youtube')).status(),
   ).toBe(401);
   await page.goto('/admin');
   await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e-tournaments@example.test');
@@ -256,10 +266,10 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
   await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
   await page.goto('/admin/integraciones');
   await expect(page.getByRole('heading', { name: 'Integraciones', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Conectar Twitch', exact: true })).toBeDisabled();
+  await expect(page.getByRole('heading', { name: 'YouTube', exact: true })).toBeVisible();
   expect(
     (
-      await page.request.post('/api/admin/integrations/twitch/connect', {
+      await page.request.post('/api/admin/integrations/youtube/review', {
         headers: { Origin: 'https://evil.example' },
         data: {},
       })

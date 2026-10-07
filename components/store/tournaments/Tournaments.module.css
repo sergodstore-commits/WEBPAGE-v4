@@ -215,7 +215,7 @@
   border: 0;
   width: 100%;
   aspect-ratio: 16/9;
-  min-height: 300px;
+  min-height: 200px;
   background: #10171e;
 }
 .playerFallback {

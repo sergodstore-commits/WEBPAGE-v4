@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays, Play, Trophy, ArrowLeft, MapPin, ExternalLink, X } from 'lucide-react';
 import { api, date } from '@/lib/client';
-import type { Post, TournamentMedia, TwitchVideo } from '@/lib/types';
+import type { Post, TournamentMedia, YouTubeVideo } from '@/lib/types';
 import { useRemote, Loading, RemoteError, Empty, ProductImage } from '../shared';
 import styles from './Tournaments.module.css';
 import { TournamentCalendar } from './TournamentCalendar';
-function Thumbnail({ video }: { video: TwitchVideo }) {
+function Thumbnail({ video }: { video: YouTubeVideo }) {
   const sources = [
     video.custom_thumbnail,
-    video.twitch_thumbnail,
+    video.youtube_thumbnail,
     '/brand/sergod-logo-480.webp',
   ].filter(Boolean);
   const [index, setIndex] = useState(0);
@@ -26,52 +26,28 @@ function Thumbnail({ video }: { video: TwitchVideo }) {
   );
 }
 
-function Player({
-  channel,
-  videoId,
-  title,
-}: {
-  channel?: string;
-  videoId?: string;
-  title: string;
-}) {
-  const [host, setHost] = useState(''),
-    [small, setSmall] = useState(true);
-  const container = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    setHost(window.location.hostname);
-    const observer = new ResizeObserver((entries) => setSmall(entries[0].contentRect.width < 534));
-    if (container.current) observer.observe(container.current);
-    return () => observer.disconnect();
-  }, []);
-  const href = videoId
-    ? `https://www.twitch.tv/videos/${videoId}`
-    : `https://www.twitch.tv/${channel}`;
+function Player({ videoId, title }: { videoId: string; title: string }) {
   return (
-    <div ref={container} className={styles.player}>
-      {host && !small ? (
-        <iframe
-          title={title}
-          src={`https://player.twitch.tv/?${new URLSearchParams({ ...(videoId ? { video: `v${videoId}` } : { channel: channel! }), parent: host, autoplay: 'false', muted: 'true' })}`}
-          allow="fullscreen; autoplay"
-          allowFullScreen
-        />
-      ) : (
-        <div className={styles.playerFallback}>
-          <Play />
-          <p>Ver esta transmisión en Twitch</p>
-          <a href={href} target="_blank" rel="noopener noreferrer">
-            Abrir Twitch <ExternalLink size={15} />
-          </a>
-        </div>
-      )}
-      <a className={styles.externalPlayer} href={href} target="_blank" rel="noopener noreferrer">
-        Si el video no está disponible, abrir en Twitch <ExternalLink size={14} />
+    <div className={styles.player}>
+      <iframe
+        title={title}
+        src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0&playsinline=1`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+      />
+      <a
+        className={styles.externalPlayer}
+        href={`https://www.youtube.com/watch?v=${videoId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Abrir en YouTube <ExternalLink size={14} />
       </a>
     </div>
   );
 }
-function VideoDialog({ video, close }: { video: TwitchVideo; close: () => void }) {
+function VideoDialog({ video, close }: { video: YouTubeVideo; close: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current,
@@ -109,8 +85,8 @@ function VideoDialog({ video, close }: { video: TwitchVideo; close: () => void }
 export function Tournaments() {
   const posts = useRemote<Post[]>('/posts?kind=tournament'),
     media = useRemote<TournamentMedia>('/tournaments');
-  const [selected, setSelected] = useState<TwitchVideo | null>(null),
-    [extra, setExtra] = useState<TwitchVideo[]>([]),
+  const [selected, setSelected] = useState<YouTubeVideo | null>(null),
+    [extra, setExtra] = useState<YouTubeVideo[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   const upcoming = (posts.data || [])
@@ -162,21 +138,23 @@ export function Tournaments() {
               <RemoteError error={media.error} reload={media.reload} />
             ) : media.data?.live ? (
               <>
-                <span className={styles.liveBadge}>● EN VIVO</span>
+                <span className={styles.liveBadge}>
+                  {media.data.live.stage === 'live' ? '● EN VIVO' : 'PRÓXIMA TRANSMISIÓN'}
+                </span>
                 <p className={styles.liveTitle}>{media.data.live.title}</p>
-                <Player channel={media.data.live.channel} title={media.data.live.title} />
+                <Player videoId={media.data.live.video_id} title={media.data.live.title} />
               </>
             ) : (
               <div className={styles.offline}>
                 <Play aria-hidden="true" size={28} />
                 <p>No hay una transmisión en vivo publicada.</p>
-                <span>Cuando la tienda active un directo, podrás verlo aquí.</span>
+                <span>Los directos de nuestro canal de YouTube aparecerán aquí.</span>
                 <a
-                  href="https://www.twitch.tv/sergodstore"
+                  href={media.data?.channel_url || 'https://www.youtube.com/@SergodStore'}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Visitar el canal <ExternalLink size={14} />
+                  Visitar el canal de YouTube <ExternalLink size={14} />
                 </a>
               </div>
             )}

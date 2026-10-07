@@ -90,8 +90,17 @@ import {
   saveTwitchVideo,
   deleteTwitchVideo,
   listTwitchVideos,
-  publicTournaments,
 } from '@/lib/server/twitch';
+import {
+  youtubeSettings,
+  reviewYouTube,
+  saveYouTubeLive,
+  finishYouTubeLive,
+  saveYouTubeVideo,
+  listYouTubeVideos,
+  deleteYouTubeVideo,
+  publicYouTubeTournaments,
+} from '@/lib/server/youtube';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -198,7 +207,7 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         .min(0)
         .max(10000)
         .parse(url.searchParams.get('offset') || 0);
-      return json(await publicTournaments(offset));
+      return json(await publicYouTubeTournaments(offset));
     }
     if (route === 'rankings' && method === 'GET')
       return json(
@@ -312,6 +321,34 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await deleteLeagueTournament(path[2]));
       if (route === 'admin/integrations/twitch' && method === 'GET')
         return json(await twitchStatus());
+      if (route === 'admin/integrations/youtube' && method === 'GET')
+        return json(await youtubeSettings());
+      if (route === 'admin/integrations/youtube/review' && method === 'POST') {
+        await rateLimit(`youtube-review:${user.id}`, 30, 15);
+        return json(await reviewYouTube(await body(request)));
+      }
+      if (route === 'admin/integrations/youtube/live' && method === 'PATCH')
+        return json(await saveYouTubeLive(await body(request)));
+      if (route === 'admin/integrations/youtube/finish' && method === 'POST')
+        return json(await finishYouTubeLive(await body(request)));
+      if (route === 'admin/youtube/transmissions' && method === 'GET')
+        return json(await listYouTubeVideos());
+      if (route === 'admin/youtube/transmissions' && method === 'POST')
+        return json(await saveYouTubeVideo(await body(request)), 201);
+      if (
+        path[1] === 'youtube' &&
+        path[2] === 'transmissions' &&
+        path.length === 4 &&
+        method === 'PATCH'
+      )
+        return json(await saveYouTubeVideo(await body(request), path[3]));
+      if (
+        path[1] === 'youtube' &&
+        path[2] === 'transmissions' &&
+        path.length === 4 &&
+        method === 'DELETE'
+      )
+        return json(await deleteYouTubeVideo(path[3]));
       if (route === 'admin/integrations/twitch/connect' && method === 'POST') {
         await rateLimit(`twitch-connect:${user.id}`, 10, 15);
         const result = await startTwitch(user.id);
