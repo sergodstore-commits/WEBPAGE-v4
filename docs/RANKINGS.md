@@ -6,7 +6,11 @@ Implementación de la fase 3 incluida en la entrega final del 7 de octubre. La m
 
 `/comunidad` presenta tres clasificaciones independientes: Mitos Primera Era, Mitos Primer Bloque y Yu-Gi-Oh! Ranking SERGOD STORE. Muestra posición, nombre, torneos jugados y puntos; incluye búsqueda, primeros tres puestos y resultados de cada torneo guardado. Los anuncios publicados de Comunidad siguen disponibles debajo del ranking.
 
-La clasificación suma el standing final de cada torneo incorporado. No suma rondas ni aplica un desempate oficial: quienes tienen los mismos puntos comparten posición. Abarca todos los torneos guardados en cada clasificación; no hay temporadas configuradas. Los nombres públicos provienen del reporte del torneo. Los identificadores de jugador no se exponen en la API pública.
+La clasificación suma el standing final de las ligas seleccionadas en **Admin → Liga SERGOD STORE → Ligas que suman en el ranking**. Primera Era y Primer Bloque tienen casillas y guardado independientes: el servidor rechaza una liga de otro ranking. No suma rondas ni aplica un desempate oficial: quienes tienen los mismos puntos comparten posición. Los nombres públicos provienen del reporte del torneo; los identificadores de jugador no se exponen en la API pública.
+
+Marca la primera liga y guarda; al terminar otra, marca ambas y guarda para sumar sus puntos. Puedes seleccionar las cuatro ligas de un ciclo. Para empezar otro, pulsa **Desmarcar todas**, marca las nuevas y **Guardar selección**. Una selección vacía muestra un ranking vacío y conserva todos los resultados históricos. La selección queda en PostgreSQL y permanece al recargar o iniciar sesión de nuevo. Cada ranking público lee sumas y ligas contribuyentes en una única consulta coherente.
+
+La migración `011_league_selection.sql` conserva seleccionadas todas las ligas existentes al actualizar. Las nuevas importaciones de TOR MyL quedan sin marcar hasta que el administrador las seleccione; actualizar un standing conserva su selección. La importación Yu-Gi-Oh! conserva su inclusión inicial existente, con selección editable en el mismo panel.
 
 En **Admin → Liga SERGOD STORE**, el administrador revisa una fuente, previsualiza su standing y confirma **Agregar a Liga**. La vista previa vence a los 15 minutos, pertenece a quien la solicitó y solo puede guardarse una vez. Guardar verifica la revisión vigente; una edición concurrente exige revisar otra vez. La interfaz vuelve a leer el registro administrativo y la clasificación pública antes de confirmar el guardado.
 
@@ -28,7 +32,7 @@ Variable nueva: `TOR_STORE_ID=501`. No necesita una clave privada.
 
 No se encontró una fuente pública estable adecuada para obtener el standing completo de los torneos de esta tienda. La documentación oficial de [KCGN](https://www.yugioh-card.com/eu/play/konami-card-game-network-kcgn/) describe consulta de resultados y ranking de participación mediante KONAMI ID. Por ello se implementó la alternativa de archivo autorizada, sin solicitar acceso OTS ni credenciales Konami. Esto no afirma que todos los resultados de eventos de Konami sean privados.
 
-El formato real que entregará el sistema de torneos todavía es desconocido. Queda pendiente validar una exportación real; no se afirma compatibilidad con un reporte oficial específico.
+El propietario confirmó que Konami exporta los resultados en un archivo Excel. Falta recibir una muestra para identificar extensión, hojas, encabezados, puntos e identidad del jugador; todavía no se considera compatible su archivo nativo. El importador actual permite pegar una tabla tabulada copiada de Excel o cargar CSV/TSV con los encabezados admitidos.
 
 Actualmente se admiten CSV, TSV y texto pegado con separador coma, punto y coma o tabulación. Archivo máximo 500 KB y hasta 5.000 jugadores. La plantilla está en `/ranking-yugioh-ejemplo.csv` y se descarga desde el panel.
 
@@ -44,7 +48,7 @@ El administrador ingresa nombre, fecha e identificador del torneo opcional, sube
 
 ## Persistencia y seguridad
 
-Migración versionada: `db/migrations/009_rankings.sql`. Crea `league_tournaments`, `league_results` y `league_previews`, con restricciones, claves únicas, relaciones y RLS. Se aplica con el mecanismo habitual `npm run db:migrate` cuando corresponda al despliegue final. No se aplicó a producción en esta fase.
+Migraciones versionadas: `db/migrations/009_rankings.sql` crea las tablas, restricciones, relaciones y RLS; `011_league_selection.sql` agrega la selección persistente de ligas. Ambas están aplicadas en producción. Para nuevas instalaciones, se aplican con `npm run db:migrate` antes de publicar.
 
 Las escrituras requieren administrador y comprobación de origen; los datos se validan en servidor. La confirmación recibe solo el ID de una vista previa guardada, nunca puntos arbitrarios enviados por el navegador. Los reemplazos y sus resultados se guardan en una transacción; las revisiones y bloqueos evitan duplicar puntos durante solicitudes concurrentes.
 
@@ -59,3 +63,5 @@ Además, el adaptador hizo lecturas reales y anónimas de TOR el 7 de octubre de
 Las pruebas de navegador cubren selección y recarga de cada ranking, búsqueda, paginación, resultados, errores recuperables y lectura adaptable. El recorrido de archivo realiza subida → vista previa → guardado real local → consulta pública → recarga → corrección → eliminación. El flujo visual TOR usa respuestas controladas; su lector externo se comprobó separadamente con TOR real.
 
 Resultado del 7 de octubre: 88/88 pruebas de servidor, TypeScript, compilación de producción y trazado del servidor correctos. Seis recorridos únicos de navegador comprobados, incluidos los cuatro de Comunidad/Liga y regresiones de publicaciones y diseño adaptable. Dos recorridos se repitieron después de precisar selectores de las pruebas. Capturas privadas revisadas en `.data/community-review-20261007`.
+
+Ampliación de selección de ligas: siete pruebas de servidor adicionales comprueban conservación al migrar, separación de rankings, suma de una/dos/cuatro ligas, selección repetida, datos inválidos, cambio de ciclo y reapertura. Cinco recorridos de navegador únicos aprobados: las cuatro regresiones de Comunidad y uno de selección con guardado real local, recarga, pantalla móvil y cambio de ciclo sin borrar resultados. No se importaron resultados de prueba a producción.

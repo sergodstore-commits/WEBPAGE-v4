@@ -77,6 +77,7 @@ import {
   previewRankingFile,
   commitRanking,
   deleteLeagueTournament,
+  selectLeagueTournaments,
 } from '@/lib/server/rankings';
 import { torStoreId } from '@/lib/server/tor';
 import {
@@ -283,6 +284,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       if (route === 'admin/integrations/tor' && method === 'GET')
         return json({ store_id: torStoreId() });
       if (route === 'admin/league' && method === 'GET') return json(await listLeagueTournaments());
+      if (route === 'admin/league/selection' && method === 'PATCH') {
+        await rateLimit(`league:${user.id}`, 60, 15);
+        return json(await selectLeagueTournaments(await body(request)));
+      }
       if (route.startsWith('admin/league/') && method === 'POST') {
         await rateLimit(`league:${user.id}`, 60, 15);
         const input = await body(request);

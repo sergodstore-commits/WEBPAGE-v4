@@ -7,7 +7,7 @@ import type { LeaguePreview, LeagueTournament, RankingBoard, PublicRanking } fro
 export const rankingBoardSchema = z.enum(['myl-first-era', 'myl-first-block', 'yugioh']);
 const tournamentId = z.number().int().positive().max(2147483647);
 type Snapshot = ReturnType<typeof parseRankingFile> | Awaited<ReturnType<typeof torFinal>>;
-const columns = `t.id,t.source,t.external_id,t.board,t.title,t.played_on::text,t.source_url,t.round_id,t.final_round,t.revision,t.updated_at,(SELECT count(*)::int FROM league_results r WHERE r.tournament_id=t.id) players`;
+const columns = `t.id,t.source,t.external_id,t.board,t.title,t.played_on::text,t.source_url,t.round_id,t.final_round,t.revision,t.updated_at,t.included_in_ranking,(SELECT count(*)::int FROM league_results r WHERE r.tournament_id=t.id) players`;
 export async function listLeagueTournaments(): Promise<LeagueTournament[]> {
   return (
     await (
@@ -99,8 +99,8 @@ export async function commitRanking(adminId: string, input: unknown): Promise<Le
     }
     const id = old?.id || uuid();
     await tx.query(
-      `INSERT INTO league_tournaments(id,source,external_id,board,title,played_on,source_url,round_id,final_round,file_hash)
-   VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(id) DO UPDATE SET board=EXCLUDED.board,title=EXCLUDED.title,played_on=EXCLUDED.played_on,source_url=EXCLUDED.source_url,round_id=EXCLUDED.round_id,final_round=EXCLUDED.final_round,file_hash=EXCLUDED.file_hash,revision=league_tournaments.revision+1,updated_at=now()`,
+      `INSERT INTO league_tournaments(id,source,external_id,board,title,played_on,source_url,round_id,final_round,file_hash,included_in_ranking)
+   VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(id) DO UPDATE SET board=EXCLUDED.board,title=EXCLUDED.title,played_on=EXCLUDED.played_on,source_url=EXCLUDED.source_url,round_id=EXCLUDED.round_id,final_round=EXCLUDED.final_round,file_hash=EXCLUDED.file_hash,revision=league_tournaments.revision+1,updated_at=now()`,
       [
         id,
         p.source,
@@ -112,6 +112,7 @@ export async function commitRanking(adminId: string, input: unknown): Promise<Le
         p.round_id,
         p.final_round,
         p.file_hash,
+        p.source === 'file',
       ],
     );
     await tx.query('DELETE FROM league_results WHERE tournament_id=$1', [id]);
@@ -143,28 +144,46 @@ export async function deleteLeagueTournament(id: unknown) {
 }
 export async function publicRanking(board: RankingBoard): Promise<PublicRanking> {
   const db = await getDb();
-  const rows = (
+  // One statement keeps totals and contributing tournaments in one snapshot.
+  const result = (
     await db.query(
-      `WITH players AS (
+      `WITH selected AS (SELECT * FROM league_tournaments WHERE board=$1 AND included_in_ranking), players AS (
   SELECT r.player_key,(array_agg(r.name ORDER BY t.played_on DESC,t.updated_at DESC,t.id))[1] name,
   count(*)::int tournaments,sum(r.points)::int points
-  FROM league_results r JOIN league_tournaments t ON t.id=r.tournament_id WHERE t.board=$1 GROUP BY r.player_key
- ) SELECT dense_rank() OVER(ORDER BY points DESC)::int position,name,tournaments,points FROM players ORDER BY points DESC,lower(name),player_key`,
+  FROM league_results r JOIN selected t ON t.id=r.tournament_id GROUP BY r.player_key
+ ), ranked AS (SELECT dense_rank() OVER(ORDER BY points DESC)::int position,* FROM players)
+ SELECT coalesce((SELECT jsonb_agg(jsonb_build_object('position',position,'name',name,'tournaments',tournaments,'points',points) ORDER BY points DESC,lower(name),player_key) FROM ranked),'[]'::jsonb) rows,
+ coalesce((SELECT jsonb_agg(jsonb_build_object('id',id,'title',title,'played_on',played_on::text,'source_url',source_url,'final_round',final_round) ORDER BY played_on DESC,id) FROM selected),'[]'::jsonb) tournaments,
+ (SELECT max(updated_at) FROM league_tournaments WHERE board=$1) updated_at`,
       [board],
     )
-  ).rows;
-  const tournaments = (
-    await db.query(
-      'SELECT id,title,played_on::text,source_url,final_round FROM league_tournaments WHERE board=$1 ORDER BY played_on DESC,id',
-      [board],
-    )
-  ).rows;
-  const updated = (
-    await db.query('SELECT max(updated_at) updated_at FROM league_tournaments WHERE board=$1', [
-      board,
-    ])
   ).rows[0];
-  return { board, rows, tournaments, updated_at: updated.updated_at };
+  return { board, ...result };
+}
+export async function selectLeagueTournaments(input: unknown) {
+  const d = z
+    .object({ board: rankingBoardSchema, tournament_ids: z.array(z.uuid()).max(5000) })
+    .parse(input);
+  if (new Set(d.tournament_ids).size !== d.tournament_ids.length)
+    fail(400, 'La selección contiene torneos repetidos.');
+  const db = await getDb();
+  await db.transaction(async (tx) => {
+    await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`league-selection:${d.board}`]);
+    const known = (
+      await tx.query('SELECT id FROM league_tournaments WHERE board=$1 ORDER BY id FOR UPDATE', [
+        d.board,
+      ])
+    ).rows;
+    const knownIds = new Set(known.map((t) => t.id));
+    if (d.tournament_ids.some((id) => !knownIds.has(id)))
+      fail(400, 'Hay torneos que ya no existen o pertenecen a otro ranking. Recarga la lista.');
+    await tx.query(
+      `UPDATE league_tournaments SET included_in_ranking=(id=ANY($2::uuid[])),updated_at=now()
+      WHERE board=$1 AND included_in_ranking IS DISTINCT FROM (id=ANY($2::uuid[]))`,
+      [d.board, d.tournament_ids],
+    );
+  });
+  return { board: d.board, tournament_ids: d.tournament_ids };
 }
 export async function publicLeagueResults(board: RankingBoard, id: unknown) {
   const key = z.uuid().parse(id),

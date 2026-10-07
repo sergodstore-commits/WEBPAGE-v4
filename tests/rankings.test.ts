@@ -171,6 +171,7 @@ test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y pe
       assert.equal(preview.results[0].points, 12);
       await assert.rejects(() => league.commitRanking(other, { preview_id: preview.id }), /venció/);
       first = await league.commitRanking(admin, { preview_id: preview.id });
+      assert.equal(first.included_in_ranking, false);
       await assert.rejects(
         () => league.commitRanking(admin, { preview_id: preview.id }),
         /ya se guardó/,
@@ -178,6 +179,10 @@ test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y pe
       const p2 = await league.previewTor(admin, 7002);
       assert.equal(p2.final_round, 7);
       second = await league.commitRanking(admin, { preview_id: p2.id });
+      await league.selectLeagueTournaments({
+        board: 'myl-first-era',
+        tournament_ids: [first.id, second.id],
+      });
       assert.deepEqual(askedRounds, [70013, 70027]);
       const before = calls,
         r = await league.publicRanking('myl-first-era');
@@ -232,7 +237,8 @@ test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y pe
   );
   await t.test('Primera Era, Primer Bloque y Yu-Gi-Oh! separados; IDs nunca públicos', async () => {
     const pb = await league.previewTor(admin, 7003);
-    await league.commitRanking(admin, { preview_id: pb.id });
+    const block = await league.commitRanking(admin, { preview_id: pb.id });
+    await league.selectLeagueTournaments({ board: 'myl-first-block', tournament_ids: [block.id] });
     const f = await league.previewRankingFile(admin, {
       title: 'Liga Yu-Gi-Oh!',
       played_on: '2026-10-07',

@@ -18,8 +18,12 @@ export type LeagueTournament = {
   revision: number;
   updated_at: string;
   players: number;
+  included_in_ranking: boolean;
 };
-export type LeaguePreview = Omit<LeagueTournament, 'id' | 'updated_at' | 'players' | 'revision'> & {
+export type LeaguePreview = Omit<
+  LeagueTournament,
+  'id' | 'updated_at' | 'players' | 'revision' | 'included_in_ranking'
+> & {
   id: string;
   expires_at: string;
   results: LeagueResult[];

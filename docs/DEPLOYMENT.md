@@ -1,6 +1,6 @@
 # Despliegue y operación
 
-Entrega final del 7 de octubre de 2026: migraciones 001–010 aplicadas en `sergod_store`; mantener `AUTO_MIGRATE=false`. Publicar mediante `main` y la integración Vercel existente, conservando los secretos de producción. Twitch e Instagram se conectarán después por decisión del propietario: no es necesario configurar sus claves para servir catálogo, pedidos y contenido manual. Sus instrucciones están en `TWITCH.md` e `INSTAGRAM-NOTICIAS.md`; para videos importados, preparar el bucket `news-media` antes de conectar Instagram. La lista completa de variables está en `.env.example`.
+Entrega del 7 de octubre de 2026: migraciones 001–011 aplicadas en `sergod_store`; mantener `AUTO_MIGRATE=false`. Publicar mediante `main` y la integración Vercel existente, conservando los secretos de producción. La conexión real de Twitch e Instagram está en preparación: no es necesario configurar sus claves para servir catálogo, pedidos y contenido manual. Sus instrucciones están en `TWITCH.md` e `INSTAGRAM-NOTICIAS.md`; para videos importados, preparar el bucket `news-media` antes de conectar Instagram. La lista completa de variables está en `.env.example`.
 
 Esta guía describe cómo publicar una instancia revisable en Vercel con PostgreSQL y Storage de Supabase. El código no contrata planes ni publica automáticamente la tienda. Las credenciales se guardan en el entorno privado del servidor.
 

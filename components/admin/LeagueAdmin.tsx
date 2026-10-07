@@ -7,12 +7,143 @@ import {
   type LeaguePreview,
   type LeagueTournament,
   type TorCandidate,
+  type RankingBoard,
 } from '@/lib/rankings';
 
 const message = (e: unknown) =>
   e instanceof Error ? e.message : 'No se pudo completar la operación.';
 const day = (value: string) =>
   new Date(value + 'T15:00:00Z').toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
+function RankingSelection({
+  board,
+  tournaments,
+  disabled,
+  reload,
+}: {
+  board: RankingBoard;
+  tournaments: LeagueTournament[];
+  disabled: boolean;
+  reload: () => Promise<LeagueTournament[]>;
+}) {
+  const list = tournaments.filter((t) => t.board === board);
+  const persisted = list
+    .filter((t) => t.included_in_ranking)
+    .map((t) => t.id)
+    .sort()
+    .join(',');
+  const [selected, setSelected] = useState<string[]>([]),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(''),
+    [notice, setNotice] = useState('');
+  useEffect(() => {
+    setSelected(persisted ? persisted.split(',') : []);
+  }, [persisted]);
+  async function save() {
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      await api('/admin/league/selection', {
+        method: 'PATCH',
+        body: JSON.stringify({ board, tournament_ids: selected }),
+      });
+      const saved = await reload();
+      const actual = saved
+        .filter((t) => t.board === board && t.included_in_ranking)
+        .map((t) => t.id)
+        .sort()
+        .join(',');
+      const ranking = await api<{ tournaments: { id: string }[] }>(`/rankings?board=${board}`);
+      if (
+        actual !== [...selected].sort().join(',') ||
+        ranking.tournaments
+          .map((t) => t.id)
+          .sort()
+          .join(',') !== actual
+      )
+        throw Error(
+          'La selección se guardó, pero no se pudo comprobar el ranking. Recarga para revisar.',
+        );
+      setNotice(
+        selected.length
+          ? `Selección guardada: ${selected.length} ligas suman en este ranking. Lectura pública comprobada.`
+          : 'Selección guardada: este ranking comienza de cero. Los resultados anteriores se conservan.',
+      );
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <fieldset className="admin-card admin-card-body" disabled={disabled || busy}>
+      <legend>
+        {boards[board].game} · {boards[board].name}
+      </legend>
+      <p>
+        {selected.length} ligas seleccionadas. Solo suman puntos de {boards[board].name}.
+      </p>
+      {!list.length ? (
+        <p>Todavía no hay ligas guardadas para este ranking.</p>
+      ) : (
+        <>
+          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+            {list.map((t) => (
+              <label
+                key={t.id}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.includes(t.id)}
+                  onChange={(e) => {
+                    setSelected((ids) =>
+                      e.target.checked ? [...ids, t.id] : ids.filter((id) => id !== t.id),
+                    );
+                    setNotice('');
+                  }}
+                />
+                <span>
+                  {t.title} · {day(t.played_on)}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="admin-actions">
+            <button
+              className="admin-button secondary"
+              type="button"
+              onClick={() => {
+                setSelected([]);
+                setNotice('');
+              }}
+            >
+              Desmarcar todas
+            </button>
+            <button
+              className="admin-button"
+              type="button"
+              disabled={[...selected].sort().join(',') === persisted}
+              onClick={() => void save()}
+            >
+              {busy ? 'Guardando…' : 'Guardar selección'}
+            </button>
+          </div>
+        </>
+      )}
+      {error && (
+        <p role="alert" className="admin-feedback error">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="admin-feedback success">
+          {notice}
+        </p>
+      )}
+    </fieldset>
+  );
+}
 export function TorIntegration() {
   const [store, setStore] = useState<number | null>(null),
     [error, setError] = useState('');
@@ -155,7 +286,7 @@ export function LeagueAdmin() {
         'El torneo se guardó, pero no se pudo comprobar la lectura. Recarga antes de reintentar.',
       );
     const ranking = await api<{ tournaments: { id: string }[] }>(`/rankings?board=${result.board}`);
-    if (!ranking.tournaments.some((t) => t.id === result.id))
+    if (result.included_in_ranking !== ranking.tournaments.some((t) => t.id === result.id))
       throw Error('El torneo se guardó, pero no se pudo comprobar su ranking público.');
     setPreview(null);
     setCandidates((old) =>
@@ -166,9 +297,11 @@ export function LeagueAdmin() {
       ),
     );
     setNotice(
-      result.revision > 1
-        ? 'Resultados reemplazados y ranking recalculado. Lectura pública comprobada.'
-        : 'Torneo agregado a la Liga. Guardado y lectura pública comprobados.',
+      !result.included_in_ranking
+        ? `${result.revision > 1 ? 'Resultados reemplazados' : 'Resultados guardados'}. Marca esta liga en su ranking y guarda la selección para sumar sus puntos.`
+        : result.revision > 1
+          ? 'Resultados reemplazados y ranking recalculado. Lectura pública comprobada.'
+          : 'Torneo agregado a la Liga. Guardado y lectura pública comprobados.',
     );
   }
   async function remove(t: LeagueTournament) {
@@ -431,6 +564,24 @@ export function LeagueAdmin() {
           </div>
         </section>
       )}
+      <section className="admin-card admin-card-body">
+        <h2>Ligas que suman en el ranking</h2>
+        <p>
+          Marca las ligas del ciclo actual y guarda la selección de cada ranking. Para comenzar otro
+          ciclo, desmarca las anteriores y marca las nuevas. Desmarcar conserva los resultados
+          guardados.
+        </p>
+        {!loading &&
+          (Object.keys(boards) as RankingBoard[]).map((board) => (
+            <RankingSelection
+              key={board}
+              board={board}
+              tournaments={saved}
+              disabled={busy}
+              reload={load}
+            />
+          ))}
+      </section>
       <section className="admin-card admin-card-body">
         <h2>Torneos guardados</h2>
         {loading ? (

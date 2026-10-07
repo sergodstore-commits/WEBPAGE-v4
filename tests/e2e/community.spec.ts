@@ -284,6 +284,7 @@ test('Liga TOR Admin: revisar, standing final, agregar y actualizar sin importac
           updated_at: '2026-10-07T10:00:00Z',
           players: 1,
           revision: writes,
+          included_in_ranking: false,
         },
       ];
       return r.fulfill({ json: saved[0] });
@@ -291,7 +292,12 @@ test('Liga TOR Admin: revisar, standing final, agregar y actualizar sin importac
     return r.fulfill({ status: 404, json: { error: 'Fuera de la prueba' } });
   });
   await page.route('**/api/rankings?**', (r) =>
-    r.fulfill({ json: { ...fixture('myl-first-era'), tournaments: saved } }),
+    r.fulfill({
+      json: {
+        ...fixture('myl-first-era'),
+        tournaments: saved.filter((t) => t.included_in_ranking),
+      },
+    }),
   );
   await page.goto('/admin/liga');
   await page.getByRole('button', { name: 'Revisar TOR', exact: true }).click();
@@ -304,9 +310,7 @@ test('Liga TOR Admin: revisar, standing final, agregar y actualizar sin importac
     .click();
   await expect(page.getByText(/Última ronda: 7/)).toBeVisible();
   await page.getByRole('button', { name: 'Agregar a Liga', exact: true }).click();
-  await expect(page.locator('.admin-feedback.success')).toContainText(
-    'lectura pública comprobados',
-  );
+  await expect(page.locator('.admin-feedback.success')).toContainText('Resultados guardados');
   expect(writes).toBe(1);
   await page.reload();
   await page

@@ -126,8 +126,8 @@ export function Community() {
           <Trophy aria-hidden="true" />
         </div>
         <p className={styles.rule}>
-          Acumulado de los torneos agregados a la Liga. Cada torneo aporta sus puntos finales una
-          sola vez.
+          Acumulado de las ligas seleccionadas por la tienda. Cada torneo aporta sus puntos finales
+          una sola vez.
         </p>
         {board === 'yugioh' && (
           <p className={styles.disclaimer}>
