@@ -5,6 +5,7 @@ const image = '/art/hero/mitos-front.webp',
   image2 = '/art/hero/yugioh-front.webp';
 const items: NewsItem[] = Array.from({ length: 12 }, (_, i) => ({
   id: i === 0 ? id : `news-${i}`,
+  title: i === 3 ? 'Encuentro de la comunidad' : undefined,
   caption:
     i === 0
       ? 'Nuestra última Liga.\nGracias por compartir en SERGOD STORE.'
@@ -117,6 +118,12 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
       'Nuestra última Liga.',
     );
     await expect(page.locator('video')).toHaveCount(0);
+    const titled = page.getByRole('button', {
+      name: 'Ver noticia: Encuentro de la comunidad',
+      exact: true,
+    });
+    await expect(titled.getByRole('heading', { name: 'Encuentro de la comunidad' })).toBeVisible();
+    await expect(titled).toContainText('Momento de la tienda 3');
     expect(videoRequests).toBe(0);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))

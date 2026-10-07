@@ -1,5 +1,11 @@
 # Rediseño visual de SERGOD STORE
 
+## Noticias — punto 8
+
+La publicación seleccionada ocupa un panel con fotografía o video, fecha y texto completo. El rótulo distingue la publicación destacada de una seleccionada del archivo. Las tarjetas del archivo separan fecha, título y extracto, usan miniaturas de proporción editorial y mantienen el acceso al visor; el encabezado «Más noticias» sigue siendo correcto al seleccionar una publicación antigua. Se conservan los enlaces a publicaciones, Instagram, torneos y clasificaciones.
+
+Sin publicaciones, se muestra un aviso compacto junto al icono de noticias, sin contenido inventado. Se mantienen el carrusel con teclado y gesto táctil, videos sin reproducción automática, recuperación de errores y selección persistente en la URL. Las pruebas cubren tarjetas con título y extracto distintos, celular y escritorio, y los recorridos administrativos locales de publicación y recarga.
+
 ## Comunidad y rankings — punto 7
 
 La selección de Primera Era, Primer Bloque y Yu-Gi-Oh! queda reunida en un panel claro; cada clasificación conserva su URL, datos y reglas independientes. El podio incluye a todos los jugadores cuya posición sea primera, segunda o tercera, sin cortar un empate después de tres nombres. Todos los primeros lugares reciben el mismo acento visual. En celular las tarjetas se ordenan en filas para que nombres y puntos tengan espacio.

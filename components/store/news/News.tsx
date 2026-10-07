@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Camera, Newspaper, Play } from 'lucide-react';
 import { date } from '@/lib/client';
 import type { NewsAsset, NewsItem } from '@/lib/news';
-import { useRemote, Loading, Empty, ProductImage } from '../shared';
+import { useRemote, Loading, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './News.module.css';
 
@@ -165,11 +165,13 @@ export function News() {
           </button>
         </div>
       ) : !selected ? (
-        <Empty
-          icon={<Newspaper size={30} />}
-          title="Pronto tendremos novedades"
-          body="Las noticias de la tienda aparecerán aquí cuando estén publicadas."
-        />
+        <section className={styles.empty} aria-label="Noticias de la tienda">
+          <Newspaper size={26} aria-hidden="true" />
+          <div>
+            <h2>Pronto tendremos novedades</h2>
+            <p>Las noticias de la tienda aparecerán aquí cuando estén publicadas.</p>
+          </div>
+        </section>
       ) : (
         <>
           <section
@@ -180,6 +182,9 @@ export function News() {
           >
             <NewsMedia key={selected.id} assets={selected.assets} permalink={selected.permalink} />
             <div className={styles.caption}>
+              <span className={styles.eyebrow}>
+                {selected.id === list[0]?.id ? 'PUBLICACIÓN DESTACADA' : 'DEL ARCHIVO'}
+              </span>
               <time dateTime={selected.recorded_at}>{date(selected.recorded_at)}</time>
               {selected.title && (
                 <h2>
@@ -218,7 +223,7 @@ export function News() {
               <div className={styles.heading}>
                 <div>
                   <span>EL ARCHIVO DE LA TIENDA</span>
-                  <h2 id="news-archive-heading">Noticias anteriores</h2>
+                  <h2 id="news-archive-heading">Más noticias</h2>
                 </div>
                 <span>{earlier.length} publicaciones</span>
               </div>
@@ -245,8 +250,9 @@ export function News() {
                       {p.assets.length > 1 && <small>{p.assets.length} medios</small>}
                     </div>
                     <time dateTime={p.recorded_at}>{date(p.recorded_at)}</time>
+                    {p.title && <h3>{p.title}</h3>}
                     <p>
-                      {(p.title || p.caption || 'Publicación de Instagram').slice(0, 150)}
+                      {(p.caption || (p.title ? '' : 'Publicación de Instagram')).slice(0, 150)}
                       {p.caption.length > 150 ? '…' : ''}
                     </p>
                     <span className={styles.read}>
