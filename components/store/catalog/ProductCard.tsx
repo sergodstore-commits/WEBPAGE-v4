@@ -56,10 +56,10 @@ export function ProductCard({
         <Link href={`/producto/${p.slug}`} className="store-product-title">
           {title}
         </Link>
-        {catalogStyle && p.kind === 'store' && (
+        {catalogStyle && (p.kind === 'store' || formats.length > 0 || languages.length > 0) && (
           <div className={styles.optionsSummary}>
             <span title={formats.join(' / ')}>
-              {summarize(formats) || 'Colección y accesorios'}
+              {summarize(formats) || (p.kind === 'store' ? 'Colección y accesorios' : '')}
             </span>
             <span title={languages.join(' / ')}>
               {summarize(languages) ||
@@ -81,14 +81,16 @@ export function ProductCard({
           </strong>
           {!options && p.discount_percent > 0 && <del>{money(p.price)}</del>}
         </div>
-        {options && (!catalogStyle || p.kind !== 'store' || languages.length > 0) && (
+        {options && (!catalogStyle || languages.length > 0) && (
           <small className="store-muted">
             {variants.length} {variants.length === 1 ? 'opción' : 'opciones'}
           </small>
         )}
         {reservation && (
           <div className={styles.reservation}>
-            <span className={styles.reservationState}>{reservation.label}</span>
+            <span className={styles.reservationState} data-state={reservation.state || 'mixed'}>
+              {reservation.label}
+            </span>
             {reservation.opensAt && reservation.closesAt ? (
               <dl>
                 <div>
@@ -108,9 +110,10 @@ export function ProductCard({
                 {reservation.available} cupos para reservar{options ? ' entre las opciones' : ''}.
               </p>
             )}
-            <p className={styles.delivery}>
+            <p className={styles.delivery} title={reservation.deliveryTerms || undefined}>
               {reservation.deliveryTerms || 'Consulta las condiciones de entrega de cada opción.'}
             </p>
+            <span className={styles.conditionsHint}>Condiciones completas en la ficha</span>
           </div>
         )}
         <div className={`store-product-bottom ${catalogStyle ? styles.bottom : ''}`}>

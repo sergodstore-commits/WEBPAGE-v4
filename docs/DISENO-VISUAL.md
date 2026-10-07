@@ -1,5 +1,11 @@
 # Rediseño visual de SERGOD STORE
 
+## Tarjetas de preventa — punto 6
+
+Las tarjetas muestran los formatos e idiomas reales, precio y un estado con texto y color: reserva abierta, próxima, finalizada, agotada o sin fechas. Apertura y cierre se presentan en filas compactas, sin confundirlas con la entrega. Si las opciones tienen fechas o condiciones distintas, se remite a la ficha en vez de asumir una condición común. El texto de entrega ocupa como máximo dos líneas y señala dónde consultar las condiciones completas; las fichas y vistas rápidas conservan íntegros los datos de cada opción.
+
+Se mantienen los cupos, límites, condiciones y controles de reserva existentes. La verificación cubre tipos y recorridos de preventas y tienda, incluyendo fechas distintas por idioma, límites, carrito, filtros persistentes, estados vacíos y tamaños de celular y escritorio. No se cambian datos comerciales ni publicaciones.
+
 ## Ficha de producto — punto 5
 
 La galería usa fondo blanco y contador de imágenes. El panel de compra reúne nombre, variante, precio, disponibilidad, formato e idioma; mantiene los selectores y el stock independiente de cada opción. La descripción puede plegarse y la ficha técnica comienza cerrada para reducir la longitud inicial. Ambos controles usan elementos nativos accesibles con teclado. Se conserva la información de entrega y reserva de las preventas.
