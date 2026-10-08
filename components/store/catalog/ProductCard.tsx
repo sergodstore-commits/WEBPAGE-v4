@@ -19,7 +19,7 @@ export function ProductCard({
   quickView?: (p: Product) => void;
   catalogStyle?: boolean;
 }) {
-  const options = Boolean(p.catalog_group) || variants.length > 1;
+  const options = variants.length > 1;
   const closed = variants.every((variant) => availability(variant)) ? availability(p) : '';
   const minimum = Math.min(...variants.map(price));
   const maximum = Math.max(...variants.map(price));

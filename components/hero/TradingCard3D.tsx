@@ -32,16 +32,18 @@ export function TradingCard3D({ card }: { card: HeroCard }) {
                   {/* Exact user-supplied artwork; its dimensions reserve the card plane. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
+                    key={card.front}
+                    className={card.frontWidth ? styles.rotatingArt : undefined}
                     src={card.front}
                     srcSet={
                       card.frontSmall
-                        ? `${card.frontSmall} 320w, ${card.front} ${card.game === 'yugioh' ? 368 : 463}w`
+                        ? `${card.frontSmall} 320w, ${card.front} ${card.frontWidth || (card.game === 'yugioh' ? 368 : 463)}w`
                         : undefined
                     }
                     sizes="(max-width: 767px) 144px, (max-width: 1099px) 170px, 250px"
                     alt=""
-                    width={card.game === 'yugioh' ? 368 : 463}
-                    height={card.game === 'yugioh' ? 543 : 663}
+                    width={card.frontWidth || (card.game === 'yugioh' ? 368 : 463)}
+                    height={card.frontHeight || (card.game === 'yugioh' ? 543 : 663)}
                     decoding="async"
                     fetchPriority={card.mobile ? 'high' : 'low'}
                     draggable={false}

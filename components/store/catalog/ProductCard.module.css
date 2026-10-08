@@ -19,7 +19,7 @@
 :global(.store-app) .card :global(.store-product-image) {
   aspect-ratio: 1;
   padding: 18px;
-  background: #fff;
+  background: var(--sg-paper);
 }
 :global(.store-app) .card :global(.store-product-image) img {
   object-fit: contain;

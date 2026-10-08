@@ -80,22 +80,35 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
 
     await customer.goto('/tienda');
     await customer.getByLabel('Buscar artículos', { exact: true }).fill(name);
-    await expect(customer.locator('.store-product-card')).toHaveCount(1);
-    await expect(customer.locator('.store-product-card')).toContainText('3 opciones');
-    await expect(customer.locator('.store-product-card')).toContainText('Agotado');
+    await expect(customer.locator('.store-product-card')).toHaveCount(3);
+    for (const product of created) {
+      const card = customer
+        .locator('.store-product-card')
+        .filter({ has: customer.getByRole('link', { name: product.name, exact: true }) });
+      await expect(card).toContainText('Agotado');
+      await expect(card.locator('.store-product-price')).toContainText(
+        new Intl.NumberFormat('es-CL', {
+          style: 'currency',
+          currency: 'CLP',
+          maximumFractionDigits: 0,
+        }).format(product.price),
+      );
+      await expect(card.locator('.store-product-price')).not.toContainText('–');
+    }
     await customer.getByRole('combobox', { name: 'Marca', exact: true }).selectOption(brand);
     await customer
       .getByRole('combobox', { name: 'Características', exact: true })
       .selectOption('Garantía 103');
     await customer.getByLabel('Precio hasta', { exact: true }).fill('5500');
-    await expect(customer.locator('.store-product-card')).toContainText('1 opción');
+    await expect(customer.locator('.store-product-card')).toHaveCount(1);
+    await expect(customer.locator('.store-product-card')).toContainText(created[1].name);
     await customer.getByLabel('Precio hasta', { exact: true }).fill('');
     await customer.getByRole('checkbox', { name: 'Solo disponibles', exact: true }).check();
     await expect(customer.locator('.store-product-card')).toHaveCount(0);
     await customer.getByRole('checkbox', { name: 'Solo disponibles', exact: true }).uncheck();
 
     const quickButton = customer.getByRole('button', {
-      name: `Vista rápida de ${name}`,
+      name: `Vista rápida de ${created[1].name}`,
       exact: true,
     });
     await quickButton.click();
@@ -110,7 +123,7 @@ test('Familias: filtros, vista rápida, variantes, stock independiente y edició
     await expect(dialog).toHaveCount(0);
     await expect(quickButton).toBeFocused();
 
-    await customer.getByRole('link', { name: 'Ver opciones', exact: true }).click();
+    await customer.locator('.store-product-title').filter({ hasText: created[1].name }).click();
     await customer.getByRole('combobox', { name: 'Formato', exact: true }).selectOption('Estándar');
     await customer.getByRole('combobox', { name: 'Color', exact: true }).selectOption('Azul');
     await expect(customer).toHaveURL(`/producto/${created[2].slug}`);

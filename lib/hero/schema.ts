@@ -7,6 +7,8 @@ export type HeroCard = {
   game: 'yugioh' | 'mitos';
   front: string;
   frontSmall?: string;
+  frontWidth?: number;
+  frontHeight?: number;
   back?: string;
   backSmall?: string;
   role: HeroCardRole;

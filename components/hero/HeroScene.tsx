@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { JSAnimation, Scope } from 'animejs';
 import { homeHeroCards } from '@/lib/hero/presets';
+import { HERO_ROTATION_MS, rotatingHeroCard } from '@/lib/hero/rotation';
 import { motion } from '@/lib/motion/tokens';
 import { TradingCard3D } from './TradingCard3D';
 import styles from './hero.module.css';
@@ -11,10 +12,40 @@ type Props = { running: boolean; reduced: boolean; ready: boolean };
 
 export default function HeroScene({ running, reduced, ready }: Props) {
   const scene = useRef<HTMLDivElement>(null);
+  const [cycle, setCycle] = useState(0);
   const controls = useRef<JSAnimation[]>([]);
   const entrancePlayed = useRef(false);
   const runningRef = useRef(running);
   runningRef.current = running;
+
+  useEffect(() => {
+    if (!running || reduced) return;
+    let active = true;
+    const timer = window.setTimeout(async () => {
+      const visibleCards = homeHeroCards.filter(
+        (card) => card.mobile || window.matchMedia('(min-width: 768px)').matches,
+      );
+      try {
+        await Promise.all(
+          visibleCards.map(async (card) => {
+            const next = rotatingHeroCard(card, cycle + 1);
+            const image = new Image();
+            image.srcset = `${next.frontSmall} 320w, ${next.front} ${next.frontWidth}w`;
+            image.sizes = '(max-width: 767px) 144px, (max-width: 1099px) 170px, 250px';
+            image.src = next.front;
+            await image.decode();
+          }),
+        );
+        if (active) setCycle((value) => value + 1);
+      } catch {
+        /* Keep the last complete scene if an optional image fails. */
+      }
+    }, HERO_ROTATION_MS);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [running, reduced, cycle]);
 
   useEffect(() => {
     if (!ready || reduced || !scene.current) return;
@@ -266,7 +297,7 @@ export default function HeroScene({ running, reduced, ready }: Props) {
   return (
     <div ref={scene} className={styles.scene} data-testid="hero-scene" aria-hidden="true">
       {homeHeroCards.map((card) => (
-        <TradingCard3D key={card.id} card={card} />
+        <TradingCard3D key={card.id} card={rotatingHeroCard(card, cycle)} />
       ))}
     </div>
   );

@@ -108,7 +108,7 @@ test('Preventas: estados, fechas por opción, filtros persistentes y responsive'
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/preventas');
-    await expect(page.locator('.store-product-card')).toHaveCount(5);
+    await expect(page.locator('.store-product-card')).toHaveCount(6);
     for (const label of [
       'Reserva abierta',
       'Próximamente',
@@ -119,7 +119,7 @@ test('Preventas: estados, fechas por opción, filtros persistentes y responsive'
       await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
     await expect(
       page.getByText('Fechas según opción. Revisa la ficha.', { exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))
       .toBeLessThanOrEqual(1);
@@ -129,9 +129,9 @@ test('Preventas: estados, fechas por opción, filtros persistentes y responsive'
   await page.reload();
   await page.getByRole('button', { name: 'Mostrar filtros', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Solo disponibles', exact: true }).check();
-  await expect(page.locator('.store-product-card')).toHaveCount(1);
+  await expect(page.locator('.store-product-card')).toHaveCount(2);
   await page.reload();
-  await expect(page.locator('.store-product-card')).toHaveCount(1);
+  await expect(page.locator('.store-product-card')).toHaveCount(2);
   await expect(page).toHaveURL(/disponibles=1/);
 });
 test('Reserva: límites e idioma actualizan fechas, precio, condiciones y carrito', async ({
@@ -170,7 +170,7 @@ test('Vista rápida de preventa: condiciones por idioma, límite y foco al cerra
   await mock(page);
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/preventas');
-  const open = page.getByRole('button', { name: `Vista rápida de ${family}`, exact: true });
+  const open = page.getByRole('button', { name: 'Vista rápida de reserva-es', exact: true });
   await open.click();
   const dialog = page.getByRole('dialog', { name: 'Vista rápida', exact: true });
   await expect(dialog).toBeVisible();
@@ -199,5 +199,5 @@ test('Preventas: estados vacíos y recuperación tras error sin escrituras', asy
   await page.unroute('**/api/**');
   await mock(page);
   await page.getByRole('button', { name: 'Volver a intentar', exact: true }).click();
-  await expect(page.locator('.store-product-card')).toHaveCount(5);
+  await expect(page.locator('.store-product-card')).toHaveCount(6);
 });

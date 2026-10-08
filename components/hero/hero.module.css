@@ -81,6 +81,26 @@
 .front {
   transform: translateZ(0.7px);
 }
+
+.rotatingArt {
+  animation: revealArt 650ms ease-out;
+}
+:global([data-motion='paused']) .rotatingArt {
+  animation-play-state: paused;
+}
+@keyframes revealArt {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rotatingArt {
+    animation: none;
+  }
+}
 .back {
   transform: rotateY(180deg) translateZ(0.7px);
 }

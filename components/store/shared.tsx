@@ -153,14 +153,9 @@ export function availability(p: Product) {
   return '';
 }
 export function productFamilies(products: Product[]) {
-  const families = new Map<string, Product[]>();
-  for (const product of products) {
-    const key = `${product.kind}:${product.catalog_group || product.id}`;
-    const family = families.get(key) || [];
-    family.push(product);
-    families.set(key, family);
-  }
-  return [...families.values()];
+  // Each SKU gets its own public card, price and stock. Family metadata stays
+  // available in details without hiding formats or languages in the catalog.
+  return products.map((product) => [product]);
 }
 export function familyName(p: Product) {
   return p.catalog_name || p.name;
