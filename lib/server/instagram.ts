@@ -7,11 +7,27 @@ import { archiveInstagramAsset, instagramCdn } from './news-storage';
 import type { InstagramCandidate, NewsAsset, NewsItem } from '../news';
 
 const callback = () => `${appUrl()}/api/admin/integrations/instagram/callback`;
+const loginMode = () => {
+  const mode = process.env.INSTAGRAM_LOGIN_MODE || 'instagram';
+  if (mode !== 'instagram' && mode !== 'facebook')
+    fail(503, 'La modalidad de Instagram no es válida.');
+  return mode;
+};
+const facebookPage = () => {
+  const id = process.env.INSTAGRAM_FACEBOOK_PAGE_ID || '';
+  if (!/^\d{1,30}$/.test(id))
+    fail(503, 'Configura el identificador de la página de Facebook de la tienda.');
+  return id;
+};
 const configured = () =>
   Boolean(
-    process.env.INSTAGRAM_APP_ID && process.env.INSTAGRAM_APP_SECRET && integrationKeyReady(),
+    process.env.INSTAGRAM_APP_ID &&
+    process.env.INSTAGRAM_APP_SECRET &&
+    integrationKeyReady() &&
+    (loginMode() !== 'facebook' || /^\d{1,30}$/.test(process.env.INSTAGRAM_FACEBOOK_PAGE_ID || '')),
   );
 function config() {
+  if (loginMode() === 'facebook') facebookPage();
   if (!configured())
     fail(
       503,
@@ -52,10 +68,18 @@ async function provider(url: string, init: RequestInit = {}) {
     fail(502, 'Instagram devolvió una respuesta inválida. No se modificaron las noticias.');
   }
 }
-const graph = (resource: string, access: string, params: Record<string, string> = {}) =>
-  provider(`https://graph.instagram.com/${version()}/${resource}?${new URLSearchParams(params)}`, {
-    headers: { Authorization: `Bearer ${access}` },
-  });
+const graph = (
+  resource: string,
+  access: string,
+  params: Record<string, string> = {},
+  mode = loginMode(),
+) =>
+  provider(
+    `https://graph.${mode === 'facebook' ? 'facebook' : 'instagram'}.com/${version()}/${resource}?${new URLSearchParams(params)}`,
+    {
+      headers: { Authorization: `Bearer ${access}` },
+    },
+  );
 const identitySchema = z.object({
   user_id: z
     .string()
@@ -68,7 +92,11 @@ const identitySchema = z.object({
   username: z.string().min(1).max(100),
 });
 async function identity(access: string, expected?: string) {
-  const p = identitySchema.parse(await graph('me', access, { fields: 'user_id,username' }));
+  const p = identitySchema.parse(
+    await graph(loginMode() === 'facebook' ? expected! : 'me', access, {
+      fields: loginMode() === 'facebook' ? 'id,username' : 'user_id,username',
+    }),
+  );
   const id = p.user_id || p.id;
   if (!id || (expected && id !== expected))
     fail(403, 'La autorización no corresponde a la cuenta conectada.');
@@ -78,6 +106,93 @@ const accessSchema = z.object({
   access_token: z.string().min(1).max(4000),
   expires_in: z.number().int().positive().max(100_000_000),
 });
+const stateHash = (raw: string) =>
+  hash(
+    `${loginMode()}:${config().client_id}:${loginMode() === 'facebook' ? facebookPage() : ''}:${raw}`,
+  );
+async function facebookAccount(access: string, expected?: string) {
+  const pageId = facebookPage();
+  let after: string | undefined;
+  let found = false;
+  for (let i = 0; i < 20; i++) {
+    const pages = await graph(
+      'me/accounts',
+      access,
+      { fields: 'id', limit: '100', ...(after ? { after } : {}) },
+      'facebook',
+    );
+    const data = z
+      .array(z.object({ id: z.string().regex(/^\d{1,30}$/) }))
+      .max(100)
+      .parse(pages.data);
+    if (data.some((p) => p.id === pageId)) {
+      found = true;
+      break;
+    }
+    after = pages.paging?.cursors?.after;
+    if (!pages.paging?.next || typeof after !== 'string' || after.length > 1000) break;
+  }
+  if (!found) fail(403, 'Autoriza la página de Facebook de SERGOD STORE para conectar Instagram.');
+  const page = await graph(pageId, access, { fields: 'id,instagram_business_account' }, 'facebook');
+  const account = z
+    .object({
+      id: z.string().regex(/^\d{1,30}$/),
+      instagram_business_account: z.object({ id: z.string().regex(/^\d{1,30}$/) }).optional(),
+    })
+    .parse(page);
+  if (account.id !== pageId || !account.instagram_business_account)
+    fail(409, 'Vincula el Instagram profesional de la tienda a su página de Facebook.');
+  return identity(access, expected || account.instagram_business_account.id).then((person) => {
+    if (person.id !== account.instagram_business_account!.id)
+      fail(403, 'Cambió la cuenta de Instagram vinculada. Vuelve a conectar.');
+    return person;
+  });
+}
+async function exchange(code: string) {
+  const c = config();
+  if (loginMode() === 'facebook') {
+    const endpoint = `https://graph.facebook.com/${version()}/oauth/access_token`;
+    const short = accessSchema.parse(
+      await provider(endpoint, {
+        method: 'POST',
+        body: new URLSearchParams({ ...c, code, redirect_uri: callback() }),
+      }),
+    );
+    const long = accessSchema.parse(
+      await provider(endpoint, {
+        method: 'POST',
+        body: new URLSearchParams({
+          ...c,
+          grant_type: 'fb_exchange_token',
+          fb_exchange_token: short.access_token,
+        }),
+      }),
+    );
+    return { long, person: await facebookAccount(long.access_token) };
+  }
+  const short = await provider('https://api.instagram.com/oauth/access_token', {
+    method: 'POST',
+    body: new URLSearchParams({
+      ...c,
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: callback(),
+    }),
+  });
+  const entry = short.data
+    ? Array.isArray(short.data) && short.data.length === 1 && !short.access_token
+      ? short.data[0]
+      : null
+    : short;
+  if (!entry?.access_token || !entry.user_id)
+    fail(502, 'Instagram no entregó una autorización válida.');
+  const long = accessSchema.parse(
+    await provider(
+      `https://graph.instagram.com/access_token?${new URLSearchParams({ grant_type: 'ig_exchange_token', client_secret: c.client_secret, access_token: entry.access_token })}`,
+    ),
+  );
+  return { long, person: await identity(long.access_token, String(entry.user_id)) };
+}
 export async function startInstagram(adminId: string) {
   const c = config(),
     raw = token(),
@@ -88,18 +203,22 @@ export async function startInstagram(adminId: string) {
     ]);
     await tx.query(
       "INSERT INTO instagram_oauth_states(state_hash,admin_id,expires_at) VALUES($1,$2,now()+interval '10 minutes')",
-      [hash(raw), adminId],
+      [stateHash(raw), adminId],
     );
   });
-  const url = new URL('https://www.instagram.com/oauth/authorize');
+  const url = new URL(
+    loginMode() === 'facebook'
+      ? `https://www.facebook.com/${version()}/dialog/oauth`
+      : 'https://www.instagram.com/oauth/authorize',
+  );
   url.search = new URLSearchParams({
     client_id: c.client_id,
     redirect_uri: callback(),
     response_type: 'code',
-    scope: 'instagram_business_basic',
+    scope:
+      loginMode() === 'facebook' ? 'instagram_basic,pages_show_list' : 'instagram_business_basic',
     state: raw,
-    enable_fb_login: '0',
-    force_authentication: '1',
+    ...(loginMode() === 'instagram' ? { enable_fb_login: '0', force_authentication: '1' } : {}),
   }).toString();
   return {
     url: url.toString(),
@@ -128,36 +247,14 @@ export async function finishInstagram(adminId: string, request: Request) {
   // Consume state in its own transaction: even failed exchanges cannot replay it.
   const consumed = await db.query(
     'DELETE FROM instagram_oauth_states WHERE state_hash=$1 AND admin_id=$2 AND expires_at>now() RETURNING state_hash',
-    [hash(state), adminId],
+    [stateHash(state), adminId],
   );
   if (!consumed.rows.length) fail(400, 'Esta autorización venció o ya se utilizó.');
   if (params.has('error')) fail(400, 'Se canceló la autorización de Instagram.');
   const code = params.get('code');
   if (!code || code.length > 2000)
     fail(400, 'Instagram no entregó un código de autorización válido.');
-  const c = config();
-  const short = await provider('https://api.instagram.com/oauth/access_token', {
-    method: 'POST',
-    body: new URLSearchParams({
-      ...c,
-      code,
-      grant_type: 'authorization_code',
-      redirect_uri: callback(),
-    }),
-  });
-  const entry = short.data
-    ? Array.isArray(short.data) && short.data.length === 1 && !short.access_token
-      ? short.data[0]
-      : null
-    : short;
-  if (!entry?.access_token || !entry.user_id)
-    fail(502, 'Instagram no entregó una autorización válida.');
-  const long = accessSchema.parse(
-    await provider(
-      `https://graph.instagram.com/access_token?${new URLSearchParams({ grant_type: 'ig_exchange_token', client_secret: c.client_secret, access_token: entry.access_token })}`,
-    ),
-  );
-  const person = await identity(long.access_token, String(entry.user_id));
+  const { long, person } = await exchange(code);
   await db.transaction(async (tx) => {
     await tx.query("SELECT pg_advisory_xact_lock(hashtext('instagram-connection'))");
     await tx.query(
@@ -166,7 +263,12 @@ export async function finishInstagram(adminId: string, request: Request) {
       [
         person.id,
         person.username,
-        sealIntegration({ access_token: long.access_token }),
+        sealIntegration({
+          access_token: long.access_token,
+          login_mode: loginMode(),
+          app_id: config().client_id,
+          ...(loginMode() === 'facebook' ? { page_id: facebookPage() } : {}),
+        }),
         new Date(Date.now() + long.expires_in * 1000).toISOString(),
       ],
     );
@@ -182,7 +284,23 @@ async function ready() {
     if (!c) fail(409, 'Conecta Instagram para revisar publicaciones.');
     if (new Date(c.expires_at).getTime() <= Date.now())
       fail(409, 'La conexión de Instagram venció. Vuelve a conectar la cuenta.');
-    let { access_token: access } = openIntegration<{ access_token: string }>(c.credentials);
+    const credentials = openIntegration<{
+      access_token: string;
+      login_mode?: string;
+      app_id?: string;
+      page_id?: string;
+    }>(c.credentials);
+    let access = credentials.access_token;
+    if (
+      (credentials.login_mode || 'instagram') !== loginMode() ||
+      (credentials.app_id && credentials.app_id !== config().client_id) ||
+      (loginMode() === 'facebook' && credentials.page_id !== facebookPage())
+    )
+      fail(409, 'La configuración de conexión cambió. Vuelve a conectar Instagram.');
+    if (loginMode() === 'facebook') {
+      await facebookAccount(access, c.user_id);
+      return { c, access };
+    }
     if (
       new Date(c.expires_at).getTime() < Date.now() + 7 * 86400000 &&
       new Date(c.refreshed_at).getTime() < Date.now() - 86400000
@@ -194,7 +312,7 @@ async function ready() {
       );
       await identity(r.access_token, c.user_id);
       access = r.access_token;
-      c.credentials = sealIntegration({ access_token: access });
+      c.credentials = sealIntegration({ ...credentials, access_token: access });
       await tx.query(
         'UPDATE instagram_connection SET credentials=$1,expires_at=$2,refreshed_at=now(),updated_at=now() WHERE id=1',
         [c.credentials, new Date(Date.now() + r.expires_in * 1000).toISOString()],
@@ -216,6 +334,7 @@ export async function instagramStatus() {
     expired: c ? new Date(c.expires_at).getTime() <= Date.now() : false,
     hashtag: setting.hashtag,
     callback_url: callback(),
+    login_mode: loginMode(),
   };
 }
 export async function saveInstagramSettings(input: unknown) {

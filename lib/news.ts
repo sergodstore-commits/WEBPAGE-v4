@@ -26,6 +26,7 @@ export type InstagramCandidate = {
   expires_at: string;
 };
 export type InstagramStatus = {
+  login_mode?: 'instagram' | 'facebook';
   configured: boolean;
   connected: boolean;
   username: string;

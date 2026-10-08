@@ -36,6 +36,16 @@ En desarrollo local las imágenes usan `/api/media` y los MP4 `/api/news-video`,
 
 ## OAuth y configuración al conectar
 
+### Conexión mediante Facebook (7 de octubre de 2026)
+
+Se añadió una segunda modalidad porque la consola de Meta de la tienda solo ofrece Facebook Login. `INSTAGRAM_LOGIN_MODE=facebook` utiliza el ID y secreto de la aplicación Meta en las variables existentes, y exige `INSTAGRAM_FACEBOOK_PAGE_ID` con la página propia vinculada a Instagram. El callback se conserva. La modalidad predeterminada `instagram` sigue disponible para las aplicaciones que ofrezcan Instagram Login.
+
+El servidor solicita únicamente `instagram_basic,pages_show_list`, conforme a la [guía oficial de lectura de medios](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-facebook-login/get-started) (actualizada el 30 de junio de 2026). No solicita publicación, anuncios, mensajes ni gestión de empresas. Comprueba que la página configurada esté entre las autorizadas y obtiene exclusivamente su `instagram_business_account`; nunca elige automáticamente la primera página. Cada revisión vuelve a comprobar el vínculo y la identidad de Instagram. La paginación utiliza cursores con un límite de 20 páginas y no sigue URLs del proveedor.
+
+Se intercambia el código desde el servidor y después el token corto por un token de usuario de larga duración de Facebook. Ambos intercambios llevan los secretos en el cuerpo; las consultas usan Bearer. Las credenciales cifradas conservan modalidad, aplicación y página, y un cambio de configuración exige reconectar. El estado OAuth queda ligado a esa configuración, al administrador y al navegador. Los tokens Facebook no pasan por el endpoint de renovación de Instagram: al vencer se pide volver a conectar. Ninguna credencial se devuelve al panel. No se requiere una migración porque la estructura cifrada existente admite estos metadatos.
+
+`tests/instagram-facebook.test.ts` comprueba con proveedor simulado y base real aislada: permisos mínimos, intercambio, cifrado, estado de un uso, lectura tras reabrir la base, página ajena, vínculo ausente/cambiado y cambios de configuración. La conexión real y los medios reales aún requieren la autorización de Meta y la cuenta vinculada; estas pruebas no la sustituyen.
+
 La documentación directa de varias referencias Meta devolvió acceso restringido/429 durante esta revisión. Se consultó la colección oficial disponible; el contrato OAuth y de medios está cubierto con respuestas controladas, pero **falta certificarlo con una aplicación y cuenta reales**, incluyendo el ID de perfil, versión y campos devueltos. No se afirma que esté conectado ni verificado en Meta.
 
 1. Preparar la cuenta profesional oficial y una aplicación Meta con **Instagram API with Instagram Login**. Usar el ID/secret del producto Instagram. Comprobar roles de prueba, modo de la aplicación, nivel de acceso y cualquier revisión que Meta exija al caso concreto.

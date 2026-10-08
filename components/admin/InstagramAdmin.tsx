@@ -226,8 +226,15 @@ export function InstagramIntegration() {
       </p>
       {!status?.configured && (
         <p>
-          Conexión pendiente: configura la aplicación de Meta para Instagram Login y la clave de
-          cifrado en el servidor. La cuenta debe ser profesional.
+          Conexión pendiente: configura la aplicación de Meta y la clave de cifrado en el servidor.
+          La cuenta debe ser profesional.
+        </p>
+      )}
+      {status?.login_mode === 'facebook' && (
+        <p>
+          Conexión mediante Facebook. Autoriza solo la página de SERGOD STORE, vinculada al
+          Instagram profesional de la tienda. Se leerán publicaciones; no se publicará ni se
+          accederá a mensajes.
         </p>
       )}
       {status?.callback_url && (
