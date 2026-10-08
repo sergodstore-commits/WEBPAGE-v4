@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Trophy, Medal, ArrowRight } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { date } from '@/lib/client';
-import { duelHouses, duelHouse } from '@/lib/duel-academy';
+import { academyHouses, duelHouse } from '@/lib/duel-academy';
 import { boards, type RankingBoard, type PublicRanking } from '@/lib/rankings';
 import { useRemote, Loading, Empty, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
@@ -176,6 +176,8 @@ export function Community() {
     [eventsLimit, setEventsLimit] = useState(10);
   const [player, setPlayer] = useState<PublicRanking['rows'][number] | null>(null);
   const selectedBoard = boards[board];
+  const limits = ranking.data?.academy;
+  const duelHouses = academyHouses(limits);
   const query = search
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -302,9 +304,11 @@ export function Community() {
                       </p>
                       {duelHouses.map((house) => {
                         const members = ranking.data!.rows.filter(
-                          (r) => duelHouse(r.points) === house.id,
+                          (r) => duelHouse(r.points, limits) === house.id,
                         );
-                        const matches = filtered.filter((r) => duelHouse(r.points) === house.id);
+                        const matches = filtered.filter(
+                          (r) => duelHouse(r.points, limits) === house.id,
+                        );
                         return (
                           <section
                             key={house.id}
@@ -353,7 +357,8 @@ export function Community() {
                   {(board === 'yugioh'
                     ? duelHouses.some(
                         (house) =>
-                          filtered.filter((r) => duelHouse(r.points) === house.id).length > limit,
+                          filtered.filter((r) => duelHouse(r.points, limits) === house.id).length >
+                          limit,
                       )
                     : filtered.length > limit) && (
                     <button

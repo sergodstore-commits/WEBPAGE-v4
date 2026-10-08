@@ -72,7 +72,7 @@ export async function getPosts(admin = false, kind?: string, range?: { from: str
       kind: 'news',
       title: n.caption.split('\n')[0].slice(0, 100) || 'En SERGOD STORE',
       body: n.caption,
-      image: n.assets[0]?.type === 'image' ? n.assets[0].url : n.assets[0]?.poster || '',
+      image: `/api/news/${n.id}/thumbnail`,
       event_at: null,
       location: '',
       status: 'published',

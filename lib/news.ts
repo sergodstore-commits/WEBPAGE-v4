@@ -26,6 +26,7 @@ export type NewsItem = {
   username: string;
   source: 'instagram' | 'manual';
   media_type?: string;
+  thumbnail?: string;
   tournament_id: string | null;
   league_tournament_id: string | null;
   ranking_board: string | null;

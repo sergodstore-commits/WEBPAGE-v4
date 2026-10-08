@@ -45,7 +45,7 @@ test('Academia: casas, límites, puesto general, búsqueda y detalle adaptable',
     await expect(page.getByLabel('Primeros lugares', { exact: true })).toHaveCount(0);
     const slifer = page.getByRole('table', { name: 'Clasificación Slifer', exact: true });
     const ra = page.getByRole('table', { name: 'Clasificación Ra', exact: true });
-    const obelisk = page.getByRole('table', { name: 'Clasificación Obelisco Azul', exact: true });
+    const obelisk = page.getByRole('table', { name: 'Clasificación Obelisk', exact: true });
     await expect(slifer.getByRole('row')).toHaveCount(3);
     await expect(slifer).toContainText('Jugador 149');
     await expect(slifer).toContainText('Jugador 0');

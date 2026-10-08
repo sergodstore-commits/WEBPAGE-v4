@@ -4,6 +4,7 @@ import { getDb } from './db';
 import { appUrl, boundedBytes, fail, hash, token, uuid } from './core';
 import { integrationKeyReady, openIntegration, sealIntegration } from './integration-crypto';
 import type { InstagramCandidate, NewsAsset, NewsItem } from '../news';
+import { instagramCdn } from './news-storage';
 
 const callback = () => `${appUrl()}/api/admin/integrations/instagram/callback`;
 const loginMode = () => {
@@ -555,7 +556,7 @@ export async function publicNews(): Promise<NewsItem[]> {
     await db.query(
       `SELECT n.id,n.caption,n.recorded_at,n.assets,n.permalink,n.username,n.media_type,'instagram' source,n.tournament_id,n.league_tournament_id,l.board ranking_board FROM instagram_news n LEFT JOIN league_tournaments l ON l.id=n.league_tournament_id WHERE n.status='published' ORDER BY n.recorded_at DESC,n.id LIMIT 500`,
     )
-  ).rows;
+  ).rows.map((p) => ({ ...p, thumbnail: `/api/news/${p.id}/thumbnail` }));
   const manual = (
     await db.query(
       "SELECT id,slug,title,body,image,created_at FROM posts WHERE kind='news' AND status='published' ORDER BY created_at DESC LIMIT 500",
@@ -581,4 +582,62 @@ export async function publicNews(): Promise<NewsItem[]> {
         a.id.localeCompare(b.id),
     )
     .slice(0, 500);
+}
+
+// Resolve only published store posts. The browser receives a provider CDN
+// redirect, never media bytes or integration credentials from this server.
+export async function publicNewsThumbnail(id: unknown): Promise<string> {
+  const key = z.uuid().parse(id),
+    db = await getDb();
+  const cached = (
+    await db.query(
+      "SELECT thumbnail_url,thumbnail_checked_at FROM instagram_news WHERE id=$1 AND status='published'",
+      [key],
+    )
+  ).rows[0];
+  if (!cached) fail(404, 'Miniatura no disponible.');
+  const cacheAge = cached.thumbnail_checked_at
+    ? Date.now() - new Date(cached.thumbnail_checked_at).getTime()
+    : Infinity;
+  if (cacheAge < (cached.thumbnail_url ? 3600000 : 300000)) {
+    if (!cached.thumbnail_url)
+      fail(404, 'Instagram no proporcionó una imagen para esta publicación.');
+    return instagramCdn(cached.thumbnail_url);
+  }
+  const { c, access } = await ready();
+  const url = await db.transaction(async (tx) => {
+    await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`news-thumbnail:${key}`]);
+    const post = (
+      await tx.query(
+        "SELECT media_id,user_id,thumbnail_url,thumbnail_checked_at FROM instagram_news WHERE id=$1 AND status='published'",
+        [key],
+      )
+    ).rows[0];
+    if (!post || post.user_id !== c.user_id) fail(404, 'Miniatura no disponible.');
+    const age = post.thumbnail_checked_at
+      ? Date.now() - new Date(post.thumbnail_checked_at).getTime()
+      : Infinity;
+    if (age < (post.thumbnail_url ? 3600000 : 300000)) return post.thumbnail_url;
+    let thumbnail = '';
+    try {
+      const media = await graph(post.media_id, access, {
+        fields: 'id,media_type,media_url,thumbnail_url',
+      });
+      if (media.id !== post.media_id) throw Error('Media mismatch');
+      const candidate = media.media_type === 'VIDEO' ? media.thumbnail_url : media.media_url;
+      if (typeof candidate === 'string') {
+        thumbnail = instagramCdn(candidate);
+        if (new URL(thumbnail).searchParams.has('access_token')) throw Error('Private URL');
+      }
+    } catch {
+      thumbnail = '';
+    }
+    await tx.query(
+      'UPDATE instagram_news SET thumbnail_url=$2,thumbnail_checked_at=now() WHERE id=$1',
+      [key, thumbnail],
+    );
+    return thumbnail;
+  });
+  if (!url) fail(404, 'Instagram no proporcionó una imagen para esta publicación.');
+  return url;
 }

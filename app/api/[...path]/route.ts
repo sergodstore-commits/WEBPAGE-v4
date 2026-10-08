@@ -65,6 +65,7 @@ import {
   editInstagramNews,
   deleteInstagramNews,
   publicNews,
+  publicNewsThumbnail,
 } from '@/lib/server/instagram';
 import { flushMail } from '@/lib/server/mail';
 import {
@@ -82,6 +83,7 @@ import {
   archiveLeagueTournament,
 } from '@/lib/server/rankings';
 import { torStoreId } from '@/lib/server/tor';
+import { getDuelThresholds, saveDuelThresholds } from '@/lib/server/duel-academy';
 import {
   startTwitch,
   finishTwitch,
@@ -210,6 +212,17 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         ),
       );
     if (route === 'news' && method === 'GET') return json(await publicNews());
+    if (path[0] === 'news' && path.length === 3 && path[2] === 'thumbnail' && method === 'GET') {
+      const thumbnail = await publicNewsThumbnail(path[1]);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: thumbnail,
+          'Cache-Control': 'public, max-age=60',
+          'Referrer-Policy': 'no-referrer',
+        },
+      });
+    }
     if (route === 'tournaments' && method === 'GET') {
       const offset = z.coerce
         .number()
@@ -303,6 +316,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       if (route === 'admin/integrations/tor' && method === 'GET')
         return json({ store_id: torStoreId() });
       if (route === 'admin/league' && method === 'GET') return json(await listLeagueTournaments());
+      if (route === 'admin/league/academy' && method === 'GET')
+        return json(await getDuelThresholds());
+      if (route === 'admin/league/academy' && method === 'PATCH')
+        return json(await saveDuelThresholds(await body(request)));
       if (route === 'admin/league/collect' && method === 'POST') {
         await rateLimit(`league-collect:${user.id}`, 300, 15);
         return json(await collectLeagueTournaments(user.id, await body(request)));

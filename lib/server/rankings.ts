@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getDuelThresholds } from './duel-academy';
 import { getDb } from './db';
 import { fail, uuid } from './core';
 import { discoverTor, torFinal } from './tor';
@@ -239,7 +240,11 @@ export async function publicRanking(board: RankingBoard): Promise<PublicRanking>
       [board],
     )
   ).rows[0];
-  return { board, ...result };
+  return {
+    board,
+    ...result,
+    ...(board === 'yugioh' ? { academy: await getDuelThresholds() } : {}),
+  };
 }
 export async function selectLeagueTournaments(input: unknown) {
   const d = z

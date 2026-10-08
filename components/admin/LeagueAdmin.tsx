@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { DuelAcademySettings } from './DuelAcademySettings';
 import { api } from '@/lib/client';
 import styles from './LeagueAdmin.module.css';
 import { obtainKonamiReport } from '@/lib/konami-connector';
@@ -500,6 +501,7 @@ export function LeagueAdmin() {
           {progress}
         </p>
       )}
+      <DuelAcademySettings />
       {collectionErrors.length > 0 && (
         <div role="alert" className="admin-feedback error">
           <strong>Torneos pendientes</strong>

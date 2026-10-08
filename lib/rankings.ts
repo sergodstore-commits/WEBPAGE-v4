@@ -40,6 +40,7 @@ export type PlayerContribution = {
   position: number;
 };
 export type PublicRanking = {
+  academy?: import('./duel-academy').DuelThresholds;
   board: RankingBoard;
   updated_at: string | null;
   rows: {

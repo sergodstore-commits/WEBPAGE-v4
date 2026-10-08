@@ -81,6 +81,20 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
             },
           });
     }
+    if (u.pathname.endsWith('/111')) return Response.json(photo);
+    if (u.pathname.endsWith('/9991'))
+      return Response.json({
+        id: '9991',
+        media_type: 'VIDEO',
+        thumbnail_url: 'https://a.fbcdn.net/reel.jpg',
+      });
+    if (u.pathname.endsWith('/9992')) return Response.json({ id: '9992', media_type: 'VIDEO' });
+    if (u.pathname.endsWith('/9993'))
+      return Response.json({
+        id: '9993',
+        media_type: 'IMAGE',
+        media_url: 'https://evil.example/image.jpg',
+      });
     if (u.hostname.endsWith('.cdninstagram.com')) {
       throw Error('La tienda no debe descargar medios de Instagram');
     }
@@ -189,6 +203,49 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
           }),
         /ya está incorporada/,
       );
+    },
+  );
+  await t.test('Miniatura externa: referencia, caché, renovación y noticia retirada', async () => {
+    assert.equal((await ig.publicNews())[0].thumbnail, `/api/news/${saved.id}/thumbnail`);
+    assert.equal(await ig.publicNewsThumbnail(saved.id), photo.media_url);
+    const before = calls;
+    assert.equal(await ig.publicNewsThumbnail(saved.id), photo.media_url);
+    assert.equal(calls, before);
+    await db.query(
+      "UPDATE instagram_news SET thumbnail_checked_at=now()-interval '2 hours' WHERE id=$1",
+      [saved.id],
+    );
+    assert.equal(await ig.publicNewsThumbnail(saved.id), photo.media_url);
+    assert.ok(calls > before);
+    await db.query("UPDATE instagram_news SET status='withdrawn' WHERE id=$1", [saved.id]);
+    await assert.rejects(() => ig.publicNewsThumbnail(saved.id), /no disponible/);
+    await db.query("UPDATE instagram_news SET status='published' WHERE id=$1", [saved.id]);
+  });
+  await t.test(
+    'Portada de Reel y ausencia o URL externa insegura, sin descargar medios',
+    async () => {
+      for (const [media, expected] of [
+        ['9991', 'https://a.fbcdn.net/reel.jpg'],
+        ['9992', ''],
+        ['9993', ''],
+      ] as const) {
+        const id = randomUUID();
+        await db.query(
+          "INSERT INTO instagram_news(id,media_id,user_id,username,caption,recorded_at,permalink,media_type,assets,import_hashtag,status) VALUES($1,$2,'42','sergod_test','',now(),'https://www.instagram.com/reel/TEST/','VIDEO','[]','', 'published')",
+          [id, media],
+        );
+        try {
+          if (expected) assert.equal(await ig.publicNewsThumbnail(id), expected);
+          else {
+            await assert.rejects(() => ig.publicNewsThumbnail(id), /no proporcionó/);
+            const before = calls;
+            await assert.rejects(() => ig.publicNewsThumbnail(id), /no proporcionó/);
+            assert.equal(calls, before);
+          }
+        } finally {
+          await db.query('DELETE FROM instagram_news WHERE id=$1', [id]);
+        }
+      }
     },
   );
   await t.test('Carrusel mixto guarda enlace y tipo sin copiar fotos ni MP4', async () => {

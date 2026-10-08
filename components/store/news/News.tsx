@@ -257,19 +257,13 @@ export function News() {
                     aria-label={`Ver noticia: ${(p.title || p.caption || 'Publicación de Instagram').slice(0, 90)}`}
                   >
                     <div className={styles.thumbnail}>
-                      {p.source === 'instagram' ? (
-                        <div className={styles.instagramThumbnail}>
-                          <Camera size={32} aria-hidden="true" />
-                          <strong>Instagram</strong>
-                        </div>
-                      ) : (
-                        <ProductImage
-                          src={
-                            p.assets[0]?.type === 'video' ? p.assets[0].poster : p.assets[0]?.url
-                          }
-                          name="Miniatura de noticia"
-                        />
-                      )}
+                      <ProductImage
+                        src={
+                          p.thumbnail ||
+                          (p.assets[0]?.type === 'video' ? p.assets[0].poster : p.assets[0]?.url)
+                        }
+                        name="Miniatura de noticia"
+                      />
                       {(p.media_type === 'VIDEO' || p.assets.some((a) => a.type === 'video')) && (
                         <span>
                           <Play size={15} />
