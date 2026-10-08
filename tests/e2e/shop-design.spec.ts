@@ -174,7 +174,7 @@ test('Tienda y ficha: imágenes, controles y precios caben entre 320 y 1440 píx
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/tienda');
-    await expect(page.locator('.store-product-card')).toHaveCount(3);
+    await expect(page.locator('.store-product-card')).toHaveCount(8);
     await expectNoOverflow(page);
     await expectFitsHorizontally(page.getByLabel('Buscar artículos', { exact: true }), width);
     await expectFitsHorizontally(
@@ -185,7 +185,10 @@ test('Tienda y ficha: imágenes, controles y precios caben entre 320 y 1440 píx
       await expectFitsHorizontally(card, width);
       await expectFitsHorizontally(card.locator('.store-product-price'), width);
     }
-    const quick = page.getByRole('button', { name: `Vista rápida de ${family}`, exact: true });
+    const quick = page.getByRole('button', {
+      name: `Vista rápida de ${variants[0].name}`,
+      exact: true,
+    });
     await quick.click({ trial: true });
 
     await page.goto(`/producto/${variants[0].slug}`);
@@ -219,7 +222,7 @@ test('Filtros móviles: teclado, categoría conservada al recargar y limpieza co
 }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/tienda');
-  await expect(page.locator('.store-product-card')).toHaveCount(3);
+  await expect(page.locator('.store-product-card')).toHaveCount(8);
   const toggle = page.getByRole('button', { name: 'Mostrar filtros', exact: true });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await toggle.focus();
@@ -234,7 +237,7 @@ test('Filtros móviles: teclado, categoría conservada al recargar y limpieza co
   await page.getByLabel('Precio hasta', { exact: true }).fill('6000');
   await page.getByLabel('Solo disponibles', { exact: true }).check();
   await expect(page.locator('.store-product-card')).toHaveCount(1);
-  await expect(page.locator('.store-product-card')).toContainText('1 opción');
+  await expect(page.locator('.store-product-card')).toContainText(variants[0].name);
   await expect(page.locator('.store-product-price strong')).toHaveText('$4.000');
   await expect(page).toHaveURL((url) => url.searchParams.get('categoria') === 'Yu-Gi-Oh!');
   await expectNoOverflow(page);
@@ -248,10 +251,10 @@ test('Filtros móviles: teclado, categoría conservada al recargar y limpieza co
   await expect(category).toHaveValue('');
   await expect(page.getByLabel('Precio hasta', { exact: true })).toHaveValue('');
   await expect(page.getByLabel('Solo disponibles', { exact: true })).not.toBeChecked();
-  await expect(page.locator('.store-product-card')).toHaveCount(3);
+  await expect(page.locator('.store-product-card')).toHaveCount(8);
   await expect(page).toHaveURL((url) => !url.searchParams.has('categoria'));
   await page.reload();
-  await expect(page.locator('.store-product-card')).toHaveCount(3);
+  await expect(page.locator('.store-product-card')).toHaveCount(8);
 });
 
 test('Formatos e idiomas: precio, descuento, stock, galería y artículo añadido corresponden a la variante', async ({
@@ -333,7 +336,10 @@ test('Vista rápida móvil y escritorio: variante agotada, precio actualizado y 
   for (const width of [375, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/tienda');
-    const open = page.getByRole('button', { name: `Vista rápida de ${family}`, exact: true });
+    const open = page.getByRole('button', {
+      name: `Vista rápida de ${variants[0].name}`,
+      exact: true,
+    });
     await open.focus();
     await page.keyboard.press('Enter');
     const dialog = page.getByRole('dialog', { name: 'Vista rápida', exact: true });

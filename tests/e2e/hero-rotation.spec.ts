@@ -17,9 +17,12 @@ test('Portada: cartas alternan, se precargan y respetan pausa y movimiento reduc
   await expect
     .poll(() => lead.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
     .toBe(true);
+  const firstRotated = await lead.getAttribute('src');
   await page.clock.fastForward(8100);
-  const changed = await lead.getAttribute('src');
+  await expect(lead).not.toHaveAttribute('src', firstRotated!);
   await hero.getByRole('button', { name: 'Pausar movimiento', exact: true }).click();
+  await expect(hero).toHaveAttribute('data-motion', 'paused');
+  const changed = await lead.getAttribute('src');
   await page.clock.fastForward(20000);
   await expect(lead).toHaveAttribute('src', changed!);
   await hero.getByRole('button', { name: 'Activar movimiento', exact: true }).click();

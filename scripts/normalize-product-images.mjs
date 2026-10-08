@@ -3,7 +3,9 @@ import path from 'node:path';
 import sharp from 'sharp';
 
 // Input report and original downloads are private and never included in Git.
-const report = JSON.parse(await readFile('.data/product-image-audit.json', 'utf8'));
+const report = JSON.parse(
+  await readFile(process.argv[2] || '.data/product-image-audit.json', 'utf8'),
+);
 const destination = '.data/product-images-normalized';
 await mkdir(destination, { recursive: true });
 const output = [];
@@ -36,6 +38,11 @@ for (const item of report) {
     for (let y = 0; y < height; y++) {
       push(y * width);
       push(y * width + width - 1);
+    }
+    // Optional seeds are reviewed background holes, e.g. a hanger opening.
+    for (const seed of item.backgroundSeeds || []) {
+      if (seed.x >= 0 && seed.x < width && seed.y >= 0 && seed.y < height)
+        push(seed.y * width + seed.x);
     }
     while (head < tail) {
       const index = queue[head++],
