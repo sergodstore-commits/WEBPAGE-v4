@@ -113,7 +113,7 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
     await expect(page.getByRole('heading', { name: 'Noticias.', exact: true })).toBeVisible();
     await expect(
       page.getByText('Novedades, encuentros y momentos de nuestra tienda.', { exact: true }),
-    ).toHaveCSS('color', 'rgb(82, 97, 112)');
+    ).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'Noticia seleccionada' })).toContainText(
       'Nuestra última Liga.',
     );
@@ -324,15 +324,13 @@ test('Instagram integrado: una publicación a la vez, selección y recarga sin m
   page,
 }, info) => {
   let mediaDownloads = 0;
-  const embedded = items
-    .slice(0, 3)
-    .map((n, i) => ({
-      ...n,
-      source: 'instagram',
-      assets: [],
-      permalink: `https://www.instagram.com/${i === 1 ? 'reel' : 'p'}/PUBLIC${i}/`,
-      media_type: i === 1 ? 'VIDEO' : 'IMAGE',
-    }));
+  const embedded = items.slice(0, 3).map((n, i) => ({
+    ...n,
+    source: 'instagram',
+    assets: [],
+    permalink: `https://www.instagram.com/${i === 1 ? 'reel' : 'p'}/PUBLIC${i}/`,
+    media_type: i === 1 ? 'VIDEO' : 'IMAGE',
+  }));
   await publicMock(page);
   await page.route('**/api/news', (r) => r.fulfill({ json: embedded }));
   await page.route('https://www.instagram.com/**', (r) =>

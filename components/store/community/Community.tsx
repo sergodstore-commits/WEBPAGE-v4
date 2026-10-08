@@ -207,12 +207,7 @@ export function Community() {
   );
   return (
     <div className={`store-page ${styles.page}`}>
-      <SectionHeader
-        section="community"
-        title="Comunidad"
-        eyebrow="NUESTRA COMUNIDAD, EN JUEGO"
-        description="Liga y rankings internos de SERGOD STORE."
-      />
+      <SectionHeader section="community" title="Comunidad" />
       <nav className={styles.navigation} aria-label="Elegir ranking">
         <div>
           <h2>Mitos y Leyendas · Puntos de liga</h2>

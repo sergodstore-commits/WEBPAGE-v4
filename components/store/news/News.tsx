@@ -168,8 +168,6 @@ export function News() {
       <SectionHeader
         section="news"
         title="Noticias"
-        eyebrow="LA VIDA EN SERGOD STORE"
-        description="Novedades, encuentros y momentos de nuestra tienda."
         images={(list[0]?.assets || [])
           .filter((asset) => asset.type === 'image')
           .map((asset) => asset.url)

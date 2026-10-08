@@ -241,12 +241,6 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
       <SectionHeader
         section={preorder ? 'preorder' : 'store'}
         title={preorder ? 'Preventas' : 'Tienda'}
-        eyebrow={preorder ? 'TU PRÓXIMO LANZAMIENTO' : 'ELIGE TU PRÓXIMA JUGADA'}
-        description={
-          preorder
-            ? 'Elige tu formato e idioma. Revisa las fechas, los cupos y la entrega antes de reservar.'
-            : 'Cartas, accesorios y nuevos favoritos para tu colección.'
-        }
         images={(products.data || [])
           .filter((p) => p.status === 'published')
           .flatMap((p) => p.images.slice(0, 1))

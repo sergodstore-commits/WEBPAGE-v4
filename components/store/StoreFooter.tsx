@@ -23,11 +23,6 @@ export function StoreFooter({ settings }: { settings: Settings }) {
               loading="lazy"
             />
           </Link>
-          <p>
-            Cartas que coleccionas.
-            <br />
-            Una comunidad que compartes.
-          </p>
           {settings.email && (
             <a className={styles.contactLink} href={`mailto:${settings.email}`}>
               {settings.email}

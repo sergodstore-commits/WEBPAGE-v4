@@ -118,12 +118,7 @@ export function Tournaments() {
   }
   return (
     <div className={`store-page ${styles.page}`}>
-      <SectionHeader
-        section="tournaments"
-        title="Torneos"
-        eyebrow="LA PARTIDA CONTINÚA"
-        description="Próximas fechas y transmisiones de SERGOD STORE."
-      />
+      <SectionHeader section="tournaments" title="Torneos" />
       <section className={styles.section} aria-labelledby="upcoming-heading">
         <div className={styles.sectionHeading}>
           <CalendarDays />

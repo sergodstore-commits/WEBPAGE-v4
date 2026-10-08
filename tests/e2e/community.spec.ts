@@ -197,7 +197,7 @@ test('Comunidad: rankings separados, búsqueda, más jugadores y lectura adaptab
     await expect(page.getByRole('heading', { name: 'Comunidad.', exact: true })).toBeVisible();
     await expect(
       page.getByText('Liga y rankings internos de SERGOD STORE.', { exact: true }),
-    ).toHaveCSS('color', 'rgb(82, 97, 112)');
+    ).toHaveCount(0);
     const table = page.getByRole('table', { name: 'Clasificación Primera Era' });
     await expect(table.getByRole('row')).toHaveCount(51);
     const leaders = page.getByLabel('Primeros lugares', { exact: true });

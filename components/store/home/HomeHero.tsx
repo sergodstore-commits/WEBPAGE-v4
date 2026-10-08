@@ -79,7 +79,6 @@ export default function HomeHero({ description }: { description?: string }) {
         </div>
       </div>
       <div className={styles.bottom}>
-        <span className={styles.caption}>COLECCIONA. JUEGA. COMPARTE.</span>
         <button
           type="button"
           className={styles.pause}

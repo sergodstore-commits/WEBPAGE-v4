@@ -11,25 +11,27 @@ export function SectionHeader({
 }: {
   section: Section;
   title: string;
-  eyebrow: string;
-  description: string;
+  eyebrow?: string;
+  description?: string;
   images?: string[];
 }) {
   const photos = [...new Set(images.filter(Boolean))].slice(0, 2);
   return (
     <header className={`${styles.header} ${styles[section]}`} data-section-header={section}>
       <div className={styles.content}>
-        <p className={styles.eyebrow}>
-          <span aria-hidden="true" />
-          {eyebrow}
-        </p>
+        {eyebrow && (
+          <p className={styles.eyebrow}>
+            <span aria-hidden="true" />
+            {eyebrow}
+          </p>
+        )}
         <h1>
           {title}
           <span aria-hidden={section === 'store' || section === 'preorder' ? true : undefined}>
             .
           </span>
         </h1>
-        <p className={styles.description}>{description}</p>
+        {description && <p className={styles.description}>{description}</p>}
       </div>
       <div className={styles.art} aria-hidden="true">
         <div className={styles.orbit} />

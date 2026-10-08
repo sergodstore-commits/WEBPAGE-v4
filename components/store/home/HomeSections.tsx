@@ -22,21 +22,10 @@ type Props = {
   renderPost: (post: Post) => ReactNode;
 };
 
-function SectionHeading({
-  eyebrow,
-  title,
-  href,
-  action,
-}: {
-  eyebrow: string;
-  title: string;
-  href: string;
-  action: string;
-}) {
+function SectionHeading({ title, href, action }: { title: string; href: string; action: string }) {
   return (
     <div className={styles.sectionHeading}>
       <div>
-        <span className={styles.eyebrow}>{eyebrow}</span>
         <h2>{title}</h2>
       </div>
       <Link className={styles.textLink} href={href}>
@@ -73,7 +62,6 @@ export default function HomeSections({
           <Store size={24} aria-hidden="true" />
           <span>
             <strong>Retiro en tienda</strong>
-            <small>Tu punto de encuentro en Copiapó</small>
           </span>
         </div>
         <div>
@@ -91,25 +79,18 @@ export default function HomeSections({
           <CreditCard size={24} aria-hidden="true" />
           <span>
             <strong>Pago online con Flow</strong>
-            <small>Revisa el total antes de pagar</small>
           </span>
         </div>
       </div>
 
       <section className={styles.section} aria-label="Artículos de la tienda">
-        <SectionHeading
-          eyebrow="Para tu próxima jugada"
-          title="En la tienda"
-          href="/tienda"
-          action="Ver catálogo"
-        />
+        <SectionHeading title="En la tienda" href="/tienda" action="Ver catálogo" />
         <div className={styles.catalog}>{products}</div>
       </section>
 
       <section className={styles.preorders} aria-label="Preventas publicadas">
         <div className={styles.section}>
           <SectionHeading
-            eyebrow="El siguiente capítulo"
             title="Lo que viene a tu colección"
             href="/preventas"
             action="Ver preventas"
@@ -123,14 +104,12 @@ export default function HomeSections({
 
       <section className={`${styles.section} ${styles.tournaments}`} aria-label="Próximos torneos">
         <div className={styles.tournamentIntro}>
-          <span className={styles.eyebrow}>Nos vemos en la mesa</span>
           <Trophy size={36} strokeWidth={1.3} aria-hidden="true" />
           <h2>
             Tu próxima
             <br />
             partida en vivo.
           </h2>
-          <p>Conoce las próximas fechas y los detalles para participar.</p>
           <Link className={styles.textLink} href="/torneos">
             Todos los torneos
             <ArrowRight size={18} aria-hidden="true" />
@@ -197,12 +176,7 @@ export default function HomeSections({
         className={`${styles.section} ${styles.community}`}
         aria-label="Noticias y comunidad"
       >
-        <SectionHeading
-          eyebrow="Más que cartas"
-          title="Lo que nos reúne"
-          href="/comunidad"
-          action="Nuestra comunidad"
-        />
+        <SectionHeading title="Lo que nos reúne" href="/comunidad" action="Nuestra comunidad" />
         {postsState ||
           (editorial.length ? (
             <div className={styles.posts}>{editorial.map(renderPost)}</div>
@@ -222,7 +196,6 @@ export default function HomeSections({
         <section className={styles.visit} aria-label="Visita la tienda">
           <div className={styles.visitInner}>
             <div>
-              <span className={styles.eyebrow}>Desde Copiapó, para tu colección</span>
               <h2>
                 La comunidad
                 <br />
