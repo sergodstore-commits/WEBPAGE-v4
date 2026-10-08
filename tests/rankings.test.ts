@@ -332,6 +332,10 @@ test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y pe
     assert.equal(ygo.rows[0].position, 1);
     assert.equal(ygo.rows[1].position, 1);
     assert.equal(ygo.rows[0].tournaments, 1);
+    assert.deepEqual(
+      ygo.rows[0].contributions?.map((c) => [c.played_on, c.points]),
+      [['2026-10-07', 15]],
+    );
     assert.equal((await league.publicRanking('myl-first-block')).rows[0].points, 9);
     assert.ok(!JSON.stringify(ygo).includes('0000000101'));
     assert.ok(!JSON.stringify(ygo).includes('player_key'));
@@ -368,7 +372,28 @@ test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y pe
         text: 'Jugador,Puntos,Konami ID\nAna Competidora,6,0000000101\nCarla Jugadora,3,0000000102',
       });
       await league.commitRanking(admin, { preview_id: corrected.id, replace: true });
-      assert.equal((await league.publicRanking('yugioh')).rows[0].points, 21);
+      const ranking = await league.publicRanking('yugioh');
+      assert.equal(ranking.rows[0].points, 21);
+      assert.deepEqual(
+        ranking.rows[0].contributions?.map((c) => [c.played_on, c.points]),
+        [
+          ['2026-10-08', 15],
+          ['2026-10-07', 6],
+        ],
+      );
+      assert.equal(
+        ranking.rows[0].contributions?.reduce((sum, c) => sum + c.points, 0),
+        ranking.rows[0].points,
+      );
+      const newest = ranking.tournaments.find((t) => t.played_on === '2026-10-08')!;
+      await league.selectLeagueTournaments({ board: 'yugioh', tournament_ids: [newest.id] });
+      const selected = await league.publicRanking('yugioh');
+      assert.equal(selected.rows[0].points, 15);
+      assert.equal(selected.rows[0].contributions?.length, 1);
+      await league.selectLeagueTournaments({
+        board: 'yugioh',
+        tournament_ids: ranking.tournaments.map((t) => t.id),
+      });
     },
   );
   await t.test(

@@ -31,10 +31,23 @@ export type LeaguePreview = Omit<
   warnings: string[];
   file_hash: string | null;
 };
+export type PlayerContribution = {
+  tournament_id: string;
+  title: string;
+  played_on: string;
+  points: number;
+  position: number;
+};
 export type PublicRanking = {
   board: RankingBoard;
   updated_at: string | null;
-  rows: { position: number; name: string; tournaments: number; points: number }[];
+  rows: {
+    position: number;
+    name: string;
+    tournaments: number;
+    points: number;
+    contributions?: PlayerContribution[];
+  }[];
   tournaments: Pick<
     LeagueTournament,
     'id' | 'title' | 'played_on' | 'source_url' | 'final_round'

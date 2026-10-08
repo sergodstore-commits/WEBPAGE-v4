@@ -265,6 +265,101 @@
   border-radius: 8px;
   margin-top: 24px;
 }
+.positionButton {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 36px;
+  padding: 4px;
+}
+.positionButton:focus-visible {
+  outline: 2px solid #006482;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.playerDialog {
+  width: min(680px, calc(100% - 32px));
+  max-height: calc(100dvh - 48px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  border: 1px solid #b9c9d4;
+  border-radius: 12px;
+  padding: clamp(18px, 4vw, 32px);
+  color: #172532;
+  background: #fff;
+}
+.playerDialog::backdrop {
+  background: rgb(10 24 37 / 65%);
+}
+.playerHeading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.playerHeading > div {
+  min-width: 0;
+}
+.playerHeading h2 {
+  font-size: clamp(21px, 4vw, 28px);
+  overflow-wrap: anywhere;
+  margin: 8px 0 0;
+}
+.playerHeading span {
+  color: #526170;
+  font-size: 12px;
+}
+.playerHeading button {
+  flex-shrink: 0;
+}
+.playerTotal {
+  background: #edf5f8;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 24px 0 12px;
+}
+.playerTotal > strong {
+  font-size: 26px;
+  color: #006482;
+}
+.playerEvents {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+}
+.playerEvents li {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #dbe3e9;
+  padding: 18px 0;
+  align-items: start;
+}
+.playerEvents li > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.playerEvents li > div strong {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.playerEvents span {
+  color: #526170;
+  font-size: 12px;
+}
+.playerEvents li > strong {
+  white-space: nowrap;
+  color: #006482;
+}
+.playerEvents small {
+  font-size: 12px;
+}
 .snapshot h3 {
   font-size: 20px;
   overflow-wrap: anywhere;

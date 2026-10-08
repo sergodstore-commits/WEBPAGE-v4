@@ -149,10 +149,11 @@ export async function publicRanking(board: RankingBoard): Promise<PublicRanking>
     await db.query(
       `WITH selected AS (SELECT * FROM league_tournaments WHERE board=$1 AND included_in_ranking), players AS (
   SELECT r.player_key,(array_agg(r.name ORDER BY t.played_on DESC,t.updated_at DESC,t.id))[1] name,
-  count(*)::int tournaments,sum(r.points)::int points
+  count(*)::int tournaments,sum(r.points)::int points,
+  jsonb_agg(jsonb_build_object('tournament_id',t.id,'title',t.title,'played_on',t.played_on::text,'points',r.points,'position',r.position) ORDER BY t.played_on DESC,t.id) contributions
   FROM league_results r JOIN selected t ON t.id=r.tournament_id GROUP BY r.player_key
  ), ranked AS (SELECT dense_rank() OVER(ORDER BY points DESC)::int position,* FROM players)
- SELECT coalesce((SELECT jsonb_agg(jsonb_build_object('position',position,'name',name,'tournaments',tournaments,'points',points) ORDER BY points DESC,lower(name),player_key) FROM ranked),'[]'::jsonb) rows,
+ SELECT coalesce((SELECT jsonb_agg(jsonb_build_object('position',position,'name',name,'tournaments',tournaments,'points',points) || CASE WHEN $1='yugioh' THEN jsonb_build_object('contributions',contributions) ELSE '{}'::jsonb END ORDER BY points DESC,lower(name),player_key) FROM ranked),'[]'::jsonb) rows,
  coalesce((SELECT jsonb_agg(jsonb_build_object('id',id,'title',title,'played_on',played_on::text,'source_url',source_url,'final_round',final_round) ORDER BY played_on DESC,id) FROM selected),'[]'::jsonb) tournaments,
  (SELECT max(updated_at) FROM league_tournaments WHERE board=$1) updated_at`,
       [board],

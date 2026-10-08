@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Trophy, Medal, ArrowRight } from 'lucide-react';
@@ -56,6 +56,65 @@ function TournamentResults({ board, id }: { board: RankingBoard; id: string }) {
     </section>
   );
 }
+function PlayerPoints({
+  player,
+  close,
+}: {
+  player: PublicRanking['rows'][number];
+  close: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    dialog?.showModal();
+    return () => dialog?.close();
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className={styles.playerDialog}
+      aria-labelledby="player-points-title"
+      onClose={close}
+    >
+      <div className={styles.playerHeading}>
+        <div>
+          <span>Puntos por torneo · Yu-Gi-Oh!</span>
+          <h2 id="player-points-title">{player.name}</h2>
+        </div>
+        <button
+          className="store-button store-button-secondary"
+          onClick={() => ref.current?.close()}
+          autoFocus
+          aria-label="Cerrar detalle del jugador"
+        >
+          Cerrar
+        </button>
+      </div>
+      <p className={styles.playerTotal}>
+        <strong>{player.points}</strong> puntos en {player.tournaments}{' '}
+        {player.tournaments === 1 ? 'torneo' : 'torneos'}
+      </p>
+      <p className={styles.note}>
+        Solo aparecen los torneos seleccionados que suman al ranking actual.
+      </p>
+      <ul className={styles.playerEvents}>
+        {player.contributions?.map((t) => (
+          <li key={t.tournament_id}>
+            <div>
+              <strong>{t.title}</strong>
+              <span>
+                {day(t.played_on)} · Puesto {t.position}° en el torneo
+              </span>
+            </div>
+            <strong>
+              {t.points} <small>{t.points === 1 ? 'punto' : 'puntos'}</small>
+            </strong>
+          </li>
+        ))}
+      </ul>
+    </dialog>
+  );
+}
 export function Community() {
   const params = useSearchParams(),
     key = params.get('ranking') || 'myl-first-era';
@@ -66,6 +125,7 @@ export function Community() {
     [limit, setLimit] = useState(50),
     [selected, setSelected] = useState<string | null>(null),
     [eventsLimit, setEventsLimit] = useState(10);
+  const [player, setPlayer] = useState<PublicRanking['rows'][number] | null>(null);
   const selectedBoard = boards[board];
   const query = search
     .normalize('NFD')
@@ -84,6 +144,7 @@ export function Community() {
     setLimit(50);
     setEventsLimit(10);
     setSelected(null);
+    setPlayer(null);
   }
   const link = (b: RankingBoard) => (
     <Link
@@ -155,7 +216,17 @@ export function Community() {
                         <article key={i} data-position={r.position}>
                           <span>
                             <Medal size={18} aria-hidden="true" />
-                            {r.position}°
+                            {board === 'yugioh' && r.contributions?.length ? (
+                              <button
+                                className={styles.positionButton}
+                                onClick={() => setPlayer(r)}
+                                aria-label={`Ver puntos por torneo de ${r.name}`}
+                              >
+                                {r.position}°
+                              </button>
+                            ) : (
+                              `${r.position}°`
+                            )}
                           </span>
                           <h3>{r.name}</h3>
                           <strong>
@@ -200,7 +271,19 @@ export function Community() {
                     <tbody>
                       {filtered.slice(0, limit).map((r, i) => (
                         <tr key={i}>
-                          <td>{r.position}°</td>
+                          <td>
+                            {board === 'yugioh' && r.contributions?.length ? (
+                              <button
+                                className={styles.positionButton}
+                                onClick={() => setPlayer(r)}
+                                aria-label={`Ver puntos por torneo de ${r.name}`}
+                              >
+                                {r.position}°
+                              </button>
+                            ) : (
+                              `${r.position}°`
+                            )}
+                          </td>
                           <td>{r.name}</td>
                           <td>{r.tournaments}</td>
                           <td>
@@ -222,6 +305,9 @@ export function Community() {
                     </button>
                   )}
                   <p className={styles.note}>
+                    {board === 'yugioh' && (
+                      <>Pulsa el puesto de un jugador para ver sus puntos por torneo. </>
+                    )}
                     Los jugadores con los mismos puntos comparten posición. Se muestran en orden
                     alfabético dentro del empate.
                   </p>
@@ -277,6 +363,9 @@ export function Community() {
           )
         )}
       </section>
+      {board === 'yugioh' && player && (
+        <PlayerPoints player={player} close={() => setPlayer(null)} />
+      )}
       {posts.loading ? (
         <Loading />
       ) : posts.error ? (

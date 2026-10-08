@@ -306,6 +306,15 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
     await client.request.get('http://localhost:3100/api/rankings?board=yugioh')
   ).json();
   expect(JSON.stringify(publicData)).not.toContain('0000123401');
+  await ranking
+    .getByRole('button', { name: 'Ver puntos por torneo de Ana Prueba', exact: true })
+    .click();
+  let playerDetail = client.getByRole('dialog', { name: 'Ana Prueba', exact: true });
+  await expect(playerDetail).toContainText(title);
+  await expect(playerDetail).toContainText('07-10-2026');
+  await expect(playerDetail).toContainText('9 puntos en 1 torneo');
+  await client.keyboard.press('Escape');
+  await expect(playerDetail).toHaveCount(0);
   await page
     .getByRole('button', { name: `Actualizar resultados de ${title}`, exact: true })
     .click();
@@ -321,6 +330,17 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
   await expect(page.locator('.admin-feedback.success')).toContainText('reemplazados');
   await client.reload();
   await expect(ranking.getByRole('row').filter({ hasText: 'Ana Prueba' })).toContainText('3');
+  await client.setViewportSize({ width: 375, height: 900 });
+  await ranking
+    .getByRole('button', { name: 'Ver puntos por torneo de Ana Prueba', exact: true })
+    .click();
+  playerDetail = client.getByRole('dialog', { name: 'Ana Prueba', exact: true });
+  await expect(playerDetail).toContainText('3 puntos en 1 torneo');
+  expect(await playerDetail.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(
+    1,
+  );
+  await client.screenshot({ path: info.outputPath('jugador-puntos-375.png'), fullPage: false });
+  await playerDetail.getByRole('button', { name: 'Cerrar detalle del jugador' }).click();
   await page.setViewportSize({ width: 375, height: 900 });
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))
