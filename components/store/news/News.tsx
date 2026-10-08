@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Camera, Newspaper, Play } from 'lucide-react';
 import { date } from '@/lib/client';
 import type { NewsAsset, NewsItem } from '@/lib/news';
+import { instagramEmbedUrl } from '@/lib/news';
 import { useRemote, Loading, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './News.module.css';
@@ -22,6 +23,25 @@ export function NewsMedia({ assets, permalink = '' }: { assets: NewsAsset[]; per
     setFailed(false);
   };
   const asset = assets[index];
+  const embed = instagramEmbedUrl(permalink);
+  if (embed)
+    return (
+      <div className={styles.embeddedMedia} aria-label="Publicación de Instagram">
+        <iframe
+          key={embed}
+          src={embed}
+          title="Publicación de SERGOD STORE en Instagram"
+          loading="lazy"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+        <a href={permalink} target="_blank" rel="noopener noreferrer">
+          Ver publicación en Instagram
+        </a>
+        <small>Si no se muestra aquí, abre la publicación en Instagram.</small>
+      </div>
+    );
   return (
     <div className={styles.media} aria-label="Medios de la noticia">
       <div
@@ -239,11 +259,20 @@ export function News() {
                     aria-label={`Ver noticia: ${(p.title || p.caption || 'Publicación de Instagram').slice(0, 90)}`}
                   >
                     <div className={styles.thumbnail}>
-                      <ProductImage
-                        src={p.assets[0]?.type === 'video' ? p.assets[0].poster : p.assets[0]?.url}
-                        name="Miniatura de noticia"
-                      />
-                      {p.assets.some((a) => a.type === 'video') && (
+                      {p.source === 'instagram' ? (
+                        <div className={styles.instagramThumbnail}>
+                          <Camera size={32} aria-hidden="true" />
+                          <strong>Instagram</strong>
+                        </div>
+                      ) : (
+                        <ProductImage
+                          src={
+                            p.assets[0]?.type === 'video' ? p.assets[0].poster : p.assets[0]?.url
+                          }
+                          name="Miniatura de noticia"
+                        />
+                      )}
+                      {(p.media_type === 'VIDEO' || p.assets.some((a) => a.type === 'video')) && (
                         <span>
                           <Play size={15} />
                           Video

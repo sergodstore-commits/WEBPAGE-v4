@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import sharp from 'sharp';
 Object.assign(process.env, {
   LOCAL_DATA_DIR: path.resolve('.data', `test-instagram-${randomUUID()}`),
   NODE_ENV: 'test',
@@ -27,15 +26,7 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
     "INSERT INTO users(id,email,password_hash,name,role,email_verified) VALUES($1,$2,'test','Admin','admin',true)",
     [admin, `${admin}@example.test`],
   );
-  const realFetch = globalThis.fetch,
-    image = await sharp({ create: { width: 20, height: 25, channels: 3, background: '#345678' } })
-      .png()
-      .toBuffer();
-  const mp4 = Buffer.concat([
-    Buffer.from([0, 0, 0, 24]),
-    Buffer.from('ftypisom'),
-    Buffer.alloc(24),
-  ]);
+  const realFetch = globalThis.fetch;
   const photo = {
     id: '111',
     caption: 'Nueva Liga\n#SergodWeb #Mitos',
@@ -51,7 +42,6 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
       { ...photo, id: '113', caption: '#sergodweb', media_product_type: 'STORY' },
     ],
     failed = false,
-    brokenAsset = false,
     rotation = 0,
     invalidIdentity = false,
     wrapped = false,
@@ -91,10 +81,7 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
           });
     }
     if (u.hostname.endsWith('.cdninstagram.com')) {
-      assert.equal(init?.redirect, 'error');
-      return brokenAsset
-        ? new Response(null, { status: 404 })
-        : new Response(new Uint8Array(u.pathname.endsWith('.mp4') ? mp4 : image));
+      throw Error('La tienda no debe descargar medios de Instagram');
     }
     throw Error(`Unexpected provider resource ${u.hostname}${u.pathname}`);
   };
@@ -167,17 +154,16 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
     },
   );
   await t.test(
-    'Guardar descarga y optimiza; API pública sin token, recarga y deduplicación',
+    'Guardar solo metadatos sin descargar medios; API pública sin token y deduplicación',
     async () => {
+      const beforeImport = calls;
       saved = await ig.importInstagram(admin, {
         preview_id: candidates[0].preview_id,
         status: 'published',
       });
-      assert.ok(saved.assets[0].url.startsWith('/api/media/'));
-      const local = await (
-        await import('../lib/server/storage')
-      ).localImage(saved.assets[0].url.split('/').at(-1)!);
-      assert.equal((await sharp(local).metadata()).format, 'webp');
+      assert.equal(calls, beforeImport);
+      assert.deepEqual(saved.assets, []);
+      assert.equal(saved.permalink, photo.permalink);
       const before = calls,
         pub = await ig.publicNews();
       assert.equal(calls, before);
@@ -193,53 +179,42 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
       assert.equal((await ig.reviewInstagram(admin)).candidates.length, 0);
     },
   );
-  await t.test(
-    'Carrusel mixto conserva orden y MP4, enlace y caption sin reescritura',
-    async () => {
-      feed = [
-        {
-          ...photo,
-          id: '222',
-          caption: 'Carrusel #SergodWeb',
-          media_type: 'CAROUSEL_ALBUM',
-          children: {
-            data: [
-              { id: '223', media_type: 'IMAGE', media_url: photo.media_url },
-              {
-                id: '224',
-                media_type: 'VIDEO',
-                media_url: 'https://a.cdninstagram.com/video.mp4',
-                thumbnail_url: photo.media_url,
-              },
-            ],
-          },
+  await t.test('Carrusel mixto guarda enlace y tipo sin copiar fotos ni MP4', async () => {
+    feed = [
+      {
+        ...photo,
+        id: '222',
+        caption: 'Carrusel #SergodWeb',
+        media_type: 'CAROUSEL_ALBUM',
+        children: {
+          data: [
+            { id: '223', media_type: 'IMAGE', media_url: photo.media_url },
+            {
+              id: '224',
+              media_type: 'VIDEO',
+              media_url: 'https://a.cdninstagram.com/video.mp4',
+              thumbnail_url: photo.media_url,
+            },
+          ],
         },
-      ];
-      const r = await ig.reviewInstagram(admin),
-        p = await ig.importInstagram(admin, {
-          preview_id: r.candidates[0].preview_id,
-          status: 'draft',
-        });
-      assert.deepEqual(
-        p.assets.map((a: any) => a.type),
-        ['image', 'video'],
-      );
-      assert.ok(p.assets[1].url.startsWith('/api/news-video/'));
-      assert.ok(p.assets[1].poster.startsWith('/api/media/'));
-      const key = p.assets[1].url.split('/').at(-1)!;
-      const range = await storage.localNewsVideo(key, 'bytes=4-7');
-      assert.equal(range.status, 206);
-      assert.equal(await range.text(), 'ftyp');
-      assert.equal((await storage.localNewsVideo(key, 'bytes=999-')).status, 416);
-      assert.equal((await ig.publicNews()).length, 1);
-      await ig.editInstagramNews(p.id, { status: 'published' });
-      assert.equal((await ig.publicNews()).length, 2);
-      await assert.rejects(
-        () => ig.editInstagramNews(p.id, { status: 'published', tournament_id: randomUUID() }),
-        /no existe/,
-      );
-    },
-  );
+      },
+    ];
+    const r = await ig.reviewInstagram(admin),
+      p = await ig.importInstagram(admin, {
+        preview_id: r.candidates[0].preview_id,
+        status: 'draft',
+      });
+    assert.deepEqual(p.assets, []);
+    assert.equal(p.media_type, 'CAROUSEL_ALBUM');
+    assert.equal(p.permalink, photo.permalink);
+    assert.equal((await ig.publicNews()).length, 1);
+    await ig.editInstagramNews(p.id, { status: 'published' });
+    assert.equal((await ig.publicNews()).length, 2);
+    await assert.rejects(
+      () => ig.editInstagramNews(p.id, { status: 'published', tournament_id: randomUUID() }),
+      /no existe/,
+    );
+  });
   await t.test(
     'Errores externos y enlaces peligrosos conservan publicaciones; refresh persiste antes del fallo',
     async () => {
@@ -264,18 +239,6 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
       assert.throws(() => storage.instagramCdn('http://127.0.0.1/x'), /almacenamiento/);
       feed = [{ ...photo, id: '333', media_url: 'http://localhost/secret' }];
       await assert.rejects(() => ig.reviewInstagram(admin), /almacenamiento/);
-      feed = [{ ...photo, id: '334' }];
-      const r = await ig.reviewInstagram(admin);
-      brokenAsset = true;
-      await assert.rejects(
-        () =>
-          ig.importInstagram(admin, {
-            preview_id: r.candidates[0].preview_id,
-            status: 'published',
-          }),
-        /no está disponible/,
-      );
-      brokenAsset = false;
       assert.equal((await ig.publicNews()).length, 2);
     },
   );
@@ -322,12 +285,15 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
     },
   );
   await t.test(
-    'Reabrir base conserva medios y retiro; eliminar no afecta a Instagram',
+    'Reabrir base conserva enlace y retiro; eliminar no afecta a Instagram',
     async () => {
       await closeDb();
       const again = await getDb();
       assert.equal((await ig.publicNews()).length, 1);
       assert.equal((await ig.listInstagramNews()).length, 2);
+      const persisted = (await ig.listInstagramNews()).find((n: any) => n.id === saved.id);
+      assert.equal(persisted.permalink, photo.permalink);
+      assert.deepEqual(persisted.assets, []);
       await ig.deleteInstagramNews(saved.id);
       assert.equal((await ig.listInstagramNews()).length, 1);
       assert.equal((await again.query('SELECT count(*)::int n FROM instagram_news')).rows[0].n, 1);

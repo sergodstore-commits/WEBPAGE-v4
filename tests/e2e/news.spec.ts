@@ -18,9 +18,9 @@ const items: NewsItem[] = Array.from({ length: 12 }, (_, i) => ({
           { type: 'image', url: image, poster: '' },
           ...(i === 0 ? [{ type: 'image' as const, url: image2, poster: '' }] : []),
         ],
-  permalink: 'https://www.instagram.com/p/TEST/',
+  permalink: '',
   username: 'sergod_test',
-  source: 'instagram',
+  source: 'manual',
   tournament_id: null,
   league_tournament_id: null,
   ranking_board: null,
@@ -202,12 +202,15 @@ test('Admin Instagram: hashtag, revisar sin importar, vista previa, publicar, re
     caption: items[0].caption,
     recorded_at: items[0].recorded_at,
     assets: items[0].assets,
-    permalink: items[0].permalink,
+    permalink: 'https://www.instagram.com/p/TEST/',
     media_type: 'CAROUSEL_ALBUM',
     expires_at: '2030-01-01T00:00:00Z',
   };
   let saved: NewsItem[] = [],
     writes = 0;
+  await page.route('https://www.instagram.com/**', (r) =>
+    r.fulfill({ contentType: 'text/html', body: '<p>Publicación de prueba del proveedor</p>' }),
+  );
   await page.route('**/api/**', (r) => {
     const req = r.request(),
       p = new URL(req.url()).pathname,
@@ -242,7 +245,16 @@ test('Admin Instagram: hashtag, revisar sin importar, vista previa, publicar, re
       writes++;
       expect(req.postDataJSON()).not.toHaveProperty('caption');
       expect(req.postDataJSON().preview_id).toBe(id);
-      saved = [{ ...items[0], media_id: candidate.media_id, status: req.postDataJSON().status }];
+      saved = [
+        {
+          ...items[0],
+          source: 'instagram',
+          assets: [],
+          permalink: candidate.permalink,
+          media_id: candidate.media_id,
+          status: req.postDataJSON().status,
+        },
+      ];
       return r.fulfill({ json: saved[0] });
     }
     if (p === `/api/admin/news/${id}` && m === 'PATCH') {
@@ -306,4 +318,61 @@ test('Admin Instagram: hashtag, revisar sin importar, vista previa, publicar, re
   page.once('dialog', (d) => d.accept());
   await page.getByRole('button', { name: 'Borrar noticia 123456', exact: true }).click();
   await expect(page.getByText('Noticia eliminada de SERGOD STORE.', { exact: true })).toBeVisible();
+});
+
+test('Instagram integrado: una publicación a la vez, selección y recarga sin medios propios', async ({
+  page,
+}, info) => {
+  let mediaDownloads = 0;
+  const embedded = items
+    .slice(0, 3)
+    .map((n, i) => ({
+      ...n,
+      source: 'instagram',
+      assets: [],
+      permalink: `https://www.instagram.com/${i === 1 ? 'reel' : 'p'}/PUBLIC${i}/`,
+      media_type: i === 1 ? 'VIDEO' : 'IMAGE',
+    }));
+  await publicMock(page);
+  await page.route('**/api/news', (r) => r.fulfill({ json: embedded }));
+  await page.route('https://www.instagram.com/**', (r) =>
+    r.fulfill({ contentType: 'text/html', body: '<p>Publicación del proveedor simulada</p>' }),
+  );
+  await page.route('**/api/news-video/**', (r) => {
+    mediaDownloads++;
+    return r.abort();
+  });
+  for (const width of [320, 375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/noticias');
+    await expect(page.locator('iframe')).toHaveCount(1);
+    await expect(page.locator('iframe')).toHaveAttribute(
+      'src',
+      'https://www.instagram.com/p/PUBLIC0/embed/',
+    );
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth))
+      .toBeLessThanOrEqual(1);
+    await page.screenshot({
+      path: info.outputPath(`instagram-integrado-${width}.png`),
+      fullPage: true,
+    });
+  }
+  await page
+    .getByRole('button', { name: 'Ver noticia: Momento de la tienda 1', exact: true })
+    .click();
+  await expect(page.locator('iframe')).toHaveAttribute(
+    'src',
+    'https://www.instagram.com/reel/PUBLIC1/embed/',
+  );
+  await page.reload();
+  await expect(page.locator('iframe')).toHaveAttribute(
+    'src',
+    'https://www.instagram.com/reel/PUBLIC1/embed/',
+  );
+  await expect(page.locator('video')).toHaveCount(0);
+  await expect(
+    page.getByRole('link', { name: 'Ver publicación en Instagram', exact: true }),
+  ).toHaveAttribute('href', embedded[1].permalink);
+  expect(mediaDownloads).toBe(0);
 });

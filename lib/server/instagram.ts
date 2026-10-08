@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { getDb } from './db';
 import { appUrl, boundedBytes, fail, hash, token, uuid } from './core';
 import { integrationKeyReady, openIntegration, sealIntegration } from './integration-crypto';
-import { archiveInstagramAsset, instagramCdn } from './news-storage';
+import { instagramCdn } from './news-storage';
 import type { InstagramCandidate, NewsAsset, NewsItem } from '../news';
 
 const callback = () => `${appUrl()}/api/admin/integrations/instagram/callback`;
@@ -532,24 +532,13 @@ export async function importInstagram(adminId: string, input: unknown) {
   ).rows[0];
   if (!preview) fail(410, 'La vista previa venció o ya se guardó. Revisa Instagram nuevamente.');
   const p = preview.payload;
-  // Check the trusted staged snapshot before downloading; source URLs never come from the browser.
+  // Only save metadata and the trusted post link. Media stays on Instagram.
   const c = (await db.query('SELECT user_id FROM instagram_connection WHERE id=1')).rows[0];
   if (!c || c.user_id !== preview.user_id)
     fail(409, 'La cuenta conectada cambió. Revisa nuevamente.');
   if ((await db.query('SELECT id FROM instagram_news WHERE media_id=$1', [p.media_id])).rows.length)
     fail(409, 'Esta publicación ya está incorporada.');
   const assets: NewsAsset[] = [];
-  // Limit concurrency to four files and preserve the carousel's original order.
-  for (let i = 0; i < p.assets.length; i += 4)
-    assets.push(
-      ...(await Promise.all(
-        p.assets.slice(i, i + 4).map(async (a: NewsAsset) => ({
-          type: a.type,
-          url: await archiveInstagramAsset(adminId, a.url, a.type === 'video'),
-          poster: a.poster ? await archiveInstagramAsset(adminId, a.poster) : '',
-        })),
-      )),
-    );
   return db.transaction(async (tx) => {
     await tx.query("SELECT pg_advisory_xact_lock(hashtext('instagram-connection'))");
     await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`instagram-news:${p.media_id}`]);
@@ -621,7 +610,7 @@ export async function publicNews(): Promise<NewsItem[]> {
   const db = await getDb();
   const imported = (
     await db.query(
-      `SELECT n.id,n.caption,n.recorded_at,n.assets,n.permalink,n.username,'instagram' source,n.tournament_id,n.league_tournament_id,l.board ranking_board FROM instagram_news n LEFT JOIN league_tournaments l ON l.id=n.league_tournament_id WHERE n.status='published' ORDER BY n.recorded_at DESC,n.id LIMIT 500`,
+      `SELECT n.id,n.caption,n.recorded_at,n.assets,n.permalink,n.username,n.media_type,'instagram' source,n.tournament_id,n.league_tournament_id,l.board ranking_board FROM instagram_news n LEFT JOIN league_tournaments l ON l.id=n.league_tournament_id WHERE n.status='published' ORDER BY n.recorded_at DESC,n.id LIMIT 500`,
     )
   ).rows;
   const manual = (

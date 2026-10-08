@@ -1,4 +1,22 @@
 export type NewsAsset = { type: 'image' | 'video'; url: string; poster: string };
+// Only canonical public post links can become an embedded frame.
+export function instagramEmbedUrl(value: string) {
+  try {
+    const u = new URL(value);
+    if (
+      u.protocol !== 'https:' ||
+      u.username ||
+      u.password ||
+      u.port ||
+      !['instagram.com', 'www.instagram.com'].includes(u.hostname) ||
+      !/^\/(p|reel)\/[\w-]+\/?$/.test(u.pathname)
+    )
+      return null;
+    return `https://www.instagram.com${u.pathname.replace(/\/$/, '')}/embed/`;
+  } catch {
+    return null;
+  }
+}
 export type NewsItem = {
   id: string;
   caption: string;
@@ -7,6 +25,7 @@ export type NewsItem = {
   permalink: string;
   username: string;
   source: 'instagram' | 'manual';
+  media_type?: string;
   tournament_id: string | null;
   league_tournament_id: string | null;
   ranking_board: string | null;

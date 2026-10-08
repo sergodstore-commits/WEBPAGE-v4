@@ -82,13 +82,13 @@ function NewsEditor({
         {item.caption || 'Publicación sin texto adicional.'}
       </p>
       <p>
-        No necesitas escribir un título ni volver a subir los archivos. Al importar se conserva el
-        contenido seleccionado.
+        Los archivos permanecen en Instagram. Guardamos el enlace, texto y fecha para mostrar la
+        publicación en Noticias. Si se elimina o se vuelve privada, dejará de mostrarse.
       </p>
       {!existing && (
         <p>
-          Vista previa válida durante 15 minutos. Guardar puede tardar mientras se copian los
-          medios.
+          Vista previa válida durante 15 minutos. No se copian fotos ni videos al almacenamiento de
+          la tienda.
         </p>
       )}
       <div className="admin-form-grid">
