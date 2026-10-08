@@ -431,8 +431,9 @@ export function LeagueAdmin() {
         </p>
         <p>
           Importa el CSV de resultados de Konami, un TSV o una tabla con Jugador y Puntos finales.
-          Si el reporte solo trae posiciones, define abajo los puntos de cada puesto. Usa un ID de
-          jugador consistente cuando esté disponible.{' '}
+          También puedes pegar la tabla de Konami con la columna Victoria: cada victoria suma 3
+          puntos; las derrotas y dobles derrotas suman 0. Si el reporte solo trae posiciones, define
+          abajo los puntos de cada puesto. Usa un ID de jugador consistente cuando esté disponible.{' '}
           <a href="/ranking-yugioh-ejemplo.csv" download className="admin-inline-link">
             Descargar encabezados de ejemplo
           </a>
@@ -515,8 +516,8 @@ export function LeagueAdmin() {
               }}
             />
             <small>
-              Define todos los puestos, uno por línea. Puedes asignar 0 puntos. Los valores del
-              ejemplo no se aplican automáticamente.
+              Deja vacío si la tabla incluye Puntos o Victoria. Define todos los puestos, uno por
+              línea. Puedes asignar 0 puntos. Los valores del ejemplo no se aplican automáticamente.
             </small>
           </label>
           <button className="admin-button" disabled={busy}>
@@ -651,7 +652,7 @@ export function LeagueAdmin() {
                                 played_on: t.played_on,
                                 event_id: t.external_id,
                                 text: '',
-                              position_points: '',
+                                position_points: '',
                               });
                               setNotice(
                                 'Selecciona el archivo corregido de este torneo y previsualiza. Se reemplazarán los resultados al confirmar.',

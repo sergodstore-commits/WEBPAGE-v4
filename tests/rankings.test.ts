@@ -84,6 +84,45 @@ test('CSV Konami: preámbulo, Ganador, ceros del ID y puntos definidos explícit
   );
 });
 
+test('Tabla Konami: tres puntos por victoria, pérdidas sin puntos y puestos conservados', async () => {
+  const { parseRankingFile } = await import('../lib/server/ranking-files');
+  const base = {
+    title: 'Tabla Konami',
+    played_on: '2026-10-03',
+    text: 'Rangos\tID de Card Game\tNombre de Acceso\tVictoria\tDerrota\tEmpate\tTie-Breaker\nGanador\t0000000001\tAna\t4\t0\t0\t125625310000\n2\t0000000002\tBruno\t3\t1\t0\t95005310001\n3\t0000000003\tCarla\t3\t1\t0\t93755460004\n4\t0000000004\tDaniel\t0\t4\t0\t4374210030',
+  };
+  const result = parseRankingFile(base);
+  assert.deepEqual(
+    result.results.map((r) => [r.position, r.points]),
+    [
+      [1, 12],
+      [2, 9],
+      [3, 9],
+      [4, 0],
+    ],
+  );
+  assert.match(result.warnings[0], /3 puntos por victoria/);
+  assert.equal(result.warnings.length, 1);
+  assert.throws(
+    () => parseRankingFile({ ...base, position_points: '1=99' }),
+    /ya incluye puntos o victorias/,
+  );
+  assert.throws(
+    () =>
+      parseRankingFile({ ...base, text: base.text.replace('\t3\t1\t0\t950', '\t3\t1\t1\t950') }),
+    /no admite empates/,
+  );
+  for (const value of ['-1', '1.5', '=4', '', '33334'])
+    assert.throws(
+      () =>
+        parseRankingFile({
+          ...base,
+          text: base.text.replace('\t4\t0\t0\t125', `\t${value}\t0\t0\t125`),
+        }),
+      /victorias/,
+    );
+});
+
 test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y persistencia', async (t) => {
   const { getDb, closeDb } = await import('../lib/server/db');
   const league = await import('../lib/server/rankings');

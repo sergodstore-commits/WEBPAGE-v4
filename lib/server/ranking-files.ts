@@ -127,7 +127,11 @@ export function parseRankingFile(input: unknown) {
     'playerid',
     'identificador',
     'eliddecardgame',
+    'iddecardgame',
   ]);
+  const wins = column(headers, ['victoria', 'victorias', 'wins', 'win']);
+  const draws = column(headers, ['empate', 'empates', 'draw', 'draws']);
+  const useWins = points < 0 && wins >= 0;
   const pos = column(headers, [
     'posicion',
     'position',
@@ -143,7 +147,7 @@ export function parseRankingFile(input: unknown) {
       'No se encontraron Jugador/Player y Puntos/Points. Usa el archivo de ejemplo o texto tabulado con esos encabezados.',
     );
   const positionPoints = new Map<number, number>();
-  if (points < 0) {
+  if (points < 0 && !useWins) {
     if (pos < 0 || !d.position_points.trim())
       fail(
         400,
@@ -163,10 +167,17 @@ export function parseRankingFile(input: unknown) {
       positionPoints.set(position, score);
     }
   } else if (d.position_points.trim()) {
-    fail(400, 'El archivo ya incluye puntos. Deja vacía la regla por posición para conservarlos.');
+    fail(
+      400,
+      'El archivo ya incluye puntos o victorias. Deja vacía la regla por posición para conservarlos.',
+    );
   }
   const warnings: string[] = [];
-  if (points < 0)
+  if (useWins)
+    warnings.push(
+      'Puntuación SERGOD STORE: 3 puntos por victoria y 0 por derrota o doble derrota. Se conservan los puestos del reporte.',
+    );
+  else if (points < 0)
     warnings.push(
       'Puntos asignados según la regla por posición ingresada por el administrador; el reporte original no contiene puntos.',
     );
@@ -188,7 +199,19 @@ export function parseRankingFile(input: unknown) {
     if (points >= 0 && !/^\d+$/.test(r[points]))
       fail(400, `Fila ${i + 2}: los puntos deben ser enteros, sin porcentajes ni fórmulas.`);
     const position = pos >= 0 ? (norm(r[pos]) === 'ganador' ? 1 : Number(r[pos])) : i + 1;
-    const score = points >= 0 ? Number(r[points]) : positionPoints.get(position);
+    if (useWins && (!/^\d+$/.test(r[wins]) || Number(r[wins]) > 33333))
+      fail(400, `Fila ${i + 2}: las victorias deben ser enteros de 0 a 33.333.`);
+    if (useWins && draws >= 0 && (!/^\d+$/.test(r[draws]) || Number(r[draws]) !== 0))
+      fail(
+        400,
+        `Fila ${i + 2}: esta regla no admite empates. Revisa el reporte antes de publicar.`,
+      );
+    const score =
+      points >= 0
+        ? Number(r[points])
+        : useWins
+          ? Number(r[wins]) * 3
+          : positionPoints.get(position);
     if (score === undefined)
       fail(400, `Fila ${i + 2}: falta definir los puntos del puesto ${position}.`);
     if (score > 100000 || !Number.isInteger(position) || position < 1 || position > 5000)
