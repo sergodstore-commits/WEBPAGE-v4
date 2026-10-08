@@ -47,14 +47,15 @@ test('Instagram mediante Facebook: página propia, OAuth, persistencia y rechazo
     }
     assert.equal((init?.headers as Record<string, string>).Authorization, 'Bearer fb-long-private');
     if (u.pathname.endsWith('/me/accounts')) {
-      assert.equal(u.searchParams.get('fields'), 'id');
-      return Response.json({ data: [{ id: '999' }, ...(pagePresent ? [{ id: '123' }] : [])] });
+      throw Error('Do not depend on the incomplete business page listing');
     }
     if (u.pathname.endsWith('/123'))
-      return Response.json({
-        id: '123',
-        ...(linked ? { instagram_business_account: { id: linked } } : {}),
-      });
+      return !pagePresent
+        ? new Response(null, { status: 403 })
+        : Response.json({
+            id: '123',
+            ...(linked ? { instagram_business_account: { id: linked } } : {}),
+          });
     if (u.pathname.endsWith('/42')) return Response.json({ id: '42', username: 'sergod_test' });
     if (u.pathname.endsWith('/42/media'))
       return Response.json({
@@ -106,7 +107,7 @@ test('Instagram mediante Facebook: página propia, OAuth, persistencia y rechazo
   const reopened = await getDb();
   assert.equal((await ig.reviewInstagram(admin)).candidates.length, 1);
   pagePresent = false;
-  await assert.rejects(() => ig.reviewInstagram(admin), /página de Facebook/);
+  await assert.rejects(() => ig.reviewInstagram(admin), /consulta/);
   await assert.rejects(() => ig.finishInstagram(admin, authorizationRequestDummy()), /navegador/);
   pagePresent = true;
   linked = '';

@@ -112,27 +112,9 @@ const stateHash = (raw: string) =>
   );
 async function facebookAccount(access: string, expected?: string) {
   const pageId = facebookPage();
-  let after: string | undefined;
-  let found = false;
-  for (let i = 0; i < 20; i++) {
-    const pages = await graph(
-      'me/accounts',
-      access,
-      { fields: 'id', limit: '100', ...(after ? { after } : {}) },
-      'facebook',
-    );
-    const data = z
-      .array(z.object({ id: z.string().regex(/^\d{1,30}$/) }))
-      .max(100)
-      .parse(pages.data);
-    if (data.some((p) => p.id === pageId)) {
-      found = true;
-      break;
-    }
-    after = pages.paging?.cursors?.after;
-    if (!pages.paging?.next || typeof after !== 'string' || after.length > 1000) break;
-  }
-  if (!found) fail(403, 'Autoriza la página de Facebook de SERGOD STORE para conectar Instagram.');
+  // Business-owned pages may be absent from /me/accounts despite an explicit grant.
+  // Ask Meta for this exact configured resource; require its ID and linked Instagram identity.
+  // Meta enforces page access on this request. Never select a different page as a fallback.
   const page = await graph(pageId, access, { fields: 'id,instagram_business_account' }, 'facebook');
   const account = z
     .object({
