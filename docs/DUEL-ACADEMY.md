@@ -12,4 +12,4 @@ Se utilizan los puntos del ranking vigente, calculados con los torneos seleccion
 
 Cada jugador conserva su posición general, incluidos puestos compartidos, y su detalle por torneo. La búsqueda aplica a las tres casas. Los grupos sin jugadores se muestran vacíos, sin datos de ejemplo. MyL conserva su podio y tabla habitual.
 
-No requiere migraciones ni variables de entorno. Pruebas: límites 149/150/250/251, distribución y puestos, búsqueda, detalle, recarga y pantallas de 320, 375 y 1440 px; recorrido real de importación y corrección del ranking existente.
+Requiere la migración 015; no requiere variables de entorno nuevas. Pruebas: límites iniciales 149/150/250/251 y personalizados 79/80/199/200, guardado y reapertura real, validación del servidor, permisos y lectura pública; distribución y puestos, búsqueda, detalle, recarga y pantallas de 320, 375 y 1440 px. La importación y corrección del ranking existente conservan su funcionamiento.
