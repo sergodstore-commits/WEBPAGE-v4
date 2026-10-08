@@ -257,9 +257,27 @@ export function LeagueAdmin() {
     }
     try {
       const text = await file.text();
+      if (text.trimStart().startsWith('<')) {
+        setBusy(true);
+        const result = await api<LeaguePreview>('/admin/league/file/preview', {
+          method: 'POST',
+          body: JSON.stringify({ text }),
+        });
+        setFileForm({
+          text,
+          title: result.title,
+          played_on: result.played_on,
+          event_id: result.external_id,
+          position_points: '',
+        });
+        setPreview(result);
+        return;
+      }
       setFileForm((f) => ({ ...f, text }));
-    } catch {
-      setError('No se pudo leer el archivo. Intenta nuevamente.');
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
     }
   }
   async function stageFile(e: FormEvent) {
@@ -426,6 +444,12 @@ export function LeagueAdmin() {
       <section className="admin-card admin-card-body" id="yugioh-import">
         <h2>Yu-Gi-Oh! · Importar resultados</h2>
         <p>
+          En Konami abre el torneo finalizado y pulsa «Descargar el Archivo KTS». Carga ese archivo
+          aquí: la fecha, el ID y las victorias se leen automáticamente. Revisa la vista previa y
+          confirma para sumarlo al ranking; cargar el mismo torneo permite corregirlo sin
+          duplicarlo.
+        </p>
+        <p>
           Ranking interno de SERGOD STORE. No se conecta una cuenta OTS ni se presenta como ranking
           oficial de Konami.
         </p>
@@ -484,42 +508,48 @@ export function LeagueAdmin() {
               Archivo de resultados
               <input
                 type="file"
-                accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain"
+                disabled={busy}
+                accept=".Tournament,.tournament,.xml,.csv,.tsv,.txt,text/xml,application/xml,text/csv,text/tab-separated-values,text/plain"
                 onChange={(e) => void readFile(e.target.files?.[0])}
               />
             </label>
           </div>
-          <label className="admin-field">
-            Tabla de resultados *
-            <textarea
-              required
-              rows={7}
-              maxLength={500000}
-              value={fileForm.text}
-              placeholder={'Posicion\tJugador\tPuntos\tKonami ID\n'}
-              onChange={(e) => {
-                setPreview(null);
-                setFileForm({ ...fileForm, text: e.target.value });
-              }}
-            />
-          </label>
-          <label className="admin-field">
-            Puntos por posición (solo si el archivo no incluye puntos)
-            <textarea
-              rows={4}
-              maxLength={50000}
-              value={fileForm.position_points}
-              placeholder={'1=10\n2=8\n3=6'}
-              onChange={(e) => {
-                setPreview(null);
-                setFileForm({ ...fileForm, position_points: e.target.value });
-              }}
-            />
-            <small>
-              Deja vacío si la tabla incluye Puntos o Victoria. Define todos los puestos, uno por
-              línea. Puedes asignar 0 puntos. Los valores del ejemplo no se aplican automáticamente.
-            </small>
-          </label>
+          {!fileForm.text.trimStart().startsWith('<') && (
+            <label className="admin-field">
+              Tabla de resultados *
+              <textarea
+                required
+                rows={7}
+                maxLength={500000}
+                value={fileForm.text}
+                placeholder={'Posicion\tJugador\tPuntos\tKonami ID\n'}
+                onChange={(e) => {
+                  setPreview(null);
+                  setFileForm({ ...fileForm, text: e.target.value });
+                }}
+              />
+            </label>
+          )}
+          {!fileForm.text.trimStart().startsWith('<') && (
+            <label className="admin-field">
+              Puntos por posición (solo si el archivo no incluye puntos)
+              <textarea
+                rows={4}
+                maxLength={50000}
+                value={fileForm.position_points}
+                placeholder={'1=10\n2=8\n3=6'}
+                onChange={(e) => {
+                  setPreview(null);
+                  setFileForm({ ...fileForm, position_points: e.target.value });
+                }}
+              />
+              <small>
+                Deja vacío si la tabla incluye Puntos o Victoria. Define todos los puestos, uno por
+                línea. Puedes asignar 0 puntos. Los valores del ejemplo no se aplican
+                automáticamente.
+              </small>
+            </label>
+          )}
           <button className="admin-button" disabled={busy}>
             Previsualizar resultados Yu-Gi-Oh!
           </button>

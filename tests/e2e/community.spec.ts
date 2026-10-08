@@ -6,6 +6,65 @@ import {
   type LeaguePreview,
   type LeagueTournament,
 } from '../../lib/rankings';
+test('KTS Konami: cargar, sumar dos fechas y actualizar sin duplicar', async ({ page }) => {
+  await loginAdmin(page);
+  // Remove only disposable KTS fixtures left by an interrupted local test run.
+  const previous: LeagueTournament[] = await (await page.request.get('/api/admin/league')).json();
+  for (const old of previous.filter((t) => /^KTS-\d+-[12]$/.test(t.external_id))) {
+    expect(
+      (
+        await page.request.delete(`/api/admin/league/${old.id}`, {
+          headers: { Origin: 'http://localhost:3100' },
+        })
+      ).ok(),
+    ).toBe(true);
+  }
+  await page.goto('/admin/liga');
+  const suffix = Date.now();
+  const report = (index: number, wins: number) =>
+    `<Tournament><ID>KTS-${suffix}-${index}</ID><Name>KTS ${suffix} ${index}</Name><Date>2026-10-0${index}</Date><Finalized>True</Finalized><TournamentPlayers><TournPlayer><Player><ID>0000099999</ID><FirstName>Jugador</FirstName><LastName>KTS</LastName></Player><Rank>1</Rank><Wins>${wins}</Wins><Points>999999</Points></TournPlayer></TournamentPlayers></Tournament>`;
+  const upload = async (index: number, wins: number) => {
+    await page.getByLabel('Archivo de resultados', { exact: true }).setInputFiles({
+      name: 'resultado.Tournament',
+      mimeType: 'application/xml',
+      buffer: Buffer.from(report(index, wins)),
+    });
+    await expect(
+      page.getByRole('heading', { name: 'Standing final · Vista previa', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Fecha del torneo *', { exact: true })).toHaveValue(
+      `2026-10-0${index}`,
+    );
+  };
+  await upload(1, 4);
+  await page.getByRole('button', { name: 'Agregar a Liga', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText(
+    'lectura pública comprobados',
+  );
+  await upload(2, 3);
+  await page.getByRole('button', { name: 'Agregar a Liga', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText(
+    'lectura pública comprobados',
+  );
+  await page.reload();
+  const ranking = async () =>
+    (await (await page.request.get('/api/rankings?board=yugioh')).json()).rows.find(
+      (r: { name: string }) => r.name === 'Jugador KTS',
+    );
+  expect((await ranking()).points).toBe(21);
+  await upload(1, 2);
+  await page.getByRole('button', { name: 'Confirmar actualización', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText('reemplazados');
+  await page.reload();
+  expect((await ranking()).points).toBe(15);
+  for (const index of [1, 2]) {
+    page.once('dialog', (dialog) => dialog.accept());
+    await page
+      .getByRole('button', { name: `Eliminar torneo KTS ${suffix} ${index}`, exact: true })
+      .click();
+    await expect(page.locator('.admin-feedback.success')).toContainText('eliminado');
+  }
+});
 const tournament = '98d5a731-15ed-47af-a83a-e4e152f9c839';
 const rows = Array.from({ length: 60 }, (_, i) => ({
   position: i < 4 ? 1 : i + 1,
@@ -170,9 +229,7 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
   await expect(
     page.getByRole('alert').filter({ hasText: 'El archivo no incluye puntos' }),
   ).toBeVisible();
-  await page
-    .getByLabel(/^Puntos por posición/)
-    .fill('1=9\n2=6');
+  await page.getByLabel(/^Puntos por posición/).fill('1=9\n2=6');
   await page
     .getByRole('button', { name: 'Previsualizar resultados Yu-Gi-Oh!', exact: true })
     .click();
@@ -202,9 +259,7 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
   await page
     .getByRole('button', { name: `Actualizar resultados de ${title}`, exact: true })
     .click();
-  await page
-    .getByLabel(/^Puntos por posición/)
-    .fill('');
+  await page.getByLabel(/^Puntos por posición/).fill('');
   await upload(
     'Posicion,Jugador,Puntos,Konami ID\n1,Ana Prueba,3,0000123401\n2,Bruno Prueba,1,0000123402',
     'corregidos.csv',

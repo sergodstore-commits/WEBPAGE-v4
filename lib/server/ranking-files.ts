@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { fail, hash } from './core';
 import type { LeagueResult } from '../rankings';
+import { readKonamiKts } from './ranking-kts';
 const norm = (s: string) =>
   s
     .normalize('NFD')
@@ -86,6 +87,19 @@ function column(headers: string[], aliases: string[]) {
   return candidates[0] ?? -1;
 }
 export function parseRankingFile(input: unknown) {
+  const raw = z
+    .object({ text: z.string().min(1).max(500000) })
+    .passthrough()
+    .parse(input);
+  const isKts = raw.text.trimStart().startsWith('<');
+  if (isKts) {
+    const kts = readKonamiKts(raw.text);
+    if (raw.event_id && raw.event_id !== kts.event_id)
+      fail(400, 'El identificador ingresado no coincide con el archivo KTS.');
+    if (raw.played_on && raw.played_on !== kts.played_on)
+      fail(400, 'La fecha ingresada no coincide con la fecha real del archivo KTS.');
+    input = { ...raw, ...kts, title: raw.title || kts.title };
+  }
   const d = schema.parse(input),
     rows = parseTable(d.text);
   let reportId = '';
@@ -173,6 +187,10 @@ export function parseRankingFile(input: unknown) {
     );
   }
   const warnings: string[] = [];
+  if (isKts)
+    warnings.push(
+      `Fecha real leída del archivo KTS: ${d.played_on}. El nombre del torneo puede contener una fecha distinta; revisa el título antes de confirmar.`,
+    );
   if (useWins)
     warnings.push(
       'Puntuación SERGOD STORE: 3 puntos por victoria y 0 por derrota o doble derrota. Se conservan los puestos del reporte.',
