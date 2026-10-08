@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react';
 import { api, date, deliveryLabels, money, paymentLabels, price } from '@/lib/client';
+import { chileLocal } from '@/lib/tournament-schedule';
 import type { Carrier, Dashboard, Order, Post, Product, Settings, User } from '@/lib/types';
 import './admin.css';
 import './admin/AdminTheme.css';
@@ -1946,6 +1947,12 @@ const emptyPost = {
   event_at: '',
   event_level: 'normal' as NonNullable<Post['event_level']>,
   location: '',
+  entry_price: '',
+  repeat_weekly: false,
+  repeat_until: '',
+  excluded_dates: [] as string[],
+  exception_parent_id: null as string | null,
+  exception_day: null as string | null,
 };
 function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
   const r = useResource<Post[]>(tournaments ? '/admin/posts?kind=tournament' : '/admin/posts');
@@ -1956,6 +1963,7 @@ function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const [exceptionDate, setExceptionDate] = useState('');
   function edit(p?: Post) {
     setEditing(p?.id || null);
     setForm(
@@ -1966,13 +1974,45 @@ function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
             kind: p.kind,
             status: p.status,
             image: p.image,
-            event_at: localDate(p.event_at),
+            event_at:
+              p.kind === 'tournament' && p.event_at
+                ? chileLocal(p.event_at)
+                : localDate(p.event_at),
             event_level: p.event_level || 'normal',
             location: p.location,
+            entry_price: p.entry_price == null ? '' : String(p.entry_price),
+            repeat_weekly: p.repeat_weekly || false,
+            repeat_until: p.repeat_until || '',
+            excluded_dates: p.excluded_dates || [],
+            exception_parent_id: p.exception_parent_id || null,
+            exception_day: p.exception_day || null,
           }
         : { ...emptyPost, kind: tournaments ? 'tournament' : 'news' },
     );
     setNotice(null);
+    setExceptionDate('');
+  }
+  function editOneDate() {
+    const parent = r.data?.find((p) => p.id === editing);
+    if (!parent || !exceptionDate) return;
+    const existing = r.data?.find(
+      (p) => p.exception_parent_id === parent.id && p.exception_day === exceptionDate,
+    );
+    if (existing) return edit(existing);
+    setEditing(null);
+    setForm({
+      ...form,
+      event_at: `${exceptionDate}T${form.event_at.slice(11)}`,
+      repeat_weekly: false,
+      repeat_until: '',
+      excluded_dates: [],
+      exception_parent_id: parent.id,
+      exception_day: exceptionDate,
+    });
+    setNotice({
+      kind: 'success',
+      text: 'Edita solo esta fecha. Al publicar, reemplazará la fecha habitual; el resto de la programación se conserva.',
+    });
   }
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -1984,6 +2024,9 @@ function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
         body: JSON.stringify({
           ...form,
           event_at: form.event_at ? new Date(form.event_at).toISOString() : null,
+          event_local: form.kind === 'tournament' ? form.event_at : undefined,
+          entry_price: form.entry_price === '' ? null : Number(form.entry_price),
+          repeat_until: form.repeat_until || null,
         }),
       });
       setEditing(result.id);
@@ -2041,7 +2084,7 @@ function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
       >
         <button className="admin-button" onClick={() => edit()}>
           <Plus size={17} />
-          Nueva publicación
+          {tournaments ? 'Nuevo evento' : 'Nueva publicación'}
         </button>
       </Heading>
       <Feedback notice={notice} />
@@ -2123,6 +2166,110 @@ function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
                   <option value="withdrawn">Retirado</option>
                 </select>
               </Field>
+              {form.kind === 'tournament' && (
+                <>
+                  <Field label="Inscripción en pesos (opcional)">
+                    <input
+                      type="number"
+                      min="0"
+                      max="10000000"
+                      step="1"
+                      value={form.entry_price}
+                      placeholder="Vacío: no mostrar precio"
+                      onChange={(e) => setForm({ ...form, entry_price: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Programación">
+                    <select
+                      value={form.repeat_weekly ? 'weekly' : 'once'}
+                      disabled={!!form.exception_parent_id}
+                      onChange={(e) =>
+                        setForm({ ...form, repeat_weekly: e.target.value === 'weekly' })
+                      }
+                    >
+                      <option value="once">Solo esta fecha</option>
+                      <option value="weekly">Todas las semanas, el mismo día</option>
+                    </select>
+                  </Field>
+                  {form.repeat_weekly && (
+                    <>
+                      <Field label="Repetir hasta (opcional)">
+                        <input
+                          type="date"
+                          value={form.repeat_until}
+                          min={form.event_at.slice(0, 10)}
+                          onChange={(e) => setForm({ ...form, repeat_until: e.target.value })}
+                        />
+                      </Field>
+                      <div className="admin-span-all">
+                        <p className="admin-muted">
+                          Horario de Chile. Sin fecha de cierre, continúa cada semana. Para pausar
+                          la programación, cambia el estado a Retirado.
+                        </p>
+                        <Field label="Fecha excepcional">
+                          <input
+                            type="date"
+                            value={exceptionDate}
+                            min={form.event_at.slice(0, 10)}
+                            max={form.repeat_until || undefined}
+                            onChange={(e) => setExceptionDate(e.target.value)}
+                          />
+                        </Field>
+                        <div className="admin-actions">
+                          <button
+                            type="button"
+                            className="admin-button secondary"
+                            disabled={!exceptionDate}
+                            onClick={() =>
+                              setForm({
+                                ...form,
+                                excluded_dates: [
+                                  ...new Set([...form.excluded_dates, exceptionDate]),
+                                ],
+                              })
+                            }
+                          >
+                            Omitir esta fecha
+                          </button>
+                          {editing && (
+                            <button
+                              type="button"
+                              className="admin-button secondary"
+                              disabled={!exceptionDate || busy}
+                              onClick={editOneDate}
+                            >
+                              Editar solo esta fecha
+                            </button>
+                          )}
+                        </div>
+                        {form.excluded_dates.map((day) => (
+                          <div key={day} className="admin-actions">
+                            <span>Fecha omitida: {day.split('-').reverse().join('-')}</span>
+                            <button
+                              type="button"
+                              className="admin-button secondary"
+                              disabled={
+                                !!r.data?.some(
+                                  (p) =>
+                                    p.exception_parent_id === editing && p.exception_day === day,
+                                )
+                              }
+                              onClick={() =>
+                                setForm({
+                                  ...form,
+                                  excluded_dates: form.excluded_dates.filter((v) => v !== day),
+                                })
+                              }
+                            >
+                              Restaurar fecha habitual
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
               <div className="admin-field">
                 <span>Imagen</span>
                 <div className="admin-actions">
@@ -2216,6 +2363,15 @@ function PostsPage({ tournaments = false }: { tournaments?: boolean }) {
                     <td>
                       <strong>{p.title}</strong>
                       <small className="admin-muted">{date(p.event_at || p.created_at)}</small>
+                      {p.repeat_weekly && (
+                        <small className="admin-muted">
+                          Cada semana ·{' '}
+                          {p.repeat_until ? `hasta ${p.repeat_until}` : 'sin fecha de cierre'}
+                        </small>
+                      )}
+                      {p.exception_day && (
+                        <small className="admin-muted">Excepción del {p.exception_day}</small>
+                      )}
                     </td>
                     <td>{kindLabel[p.kind]}</td>
                     <td>

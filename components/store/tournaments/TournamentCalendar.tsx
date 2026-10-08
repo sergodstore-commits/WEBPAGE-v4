@@ -1,9 +1,9 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X, CalendarDays } from 'lucide-react';
-import { date } from '@/lib/client';
+import { api, date, money } from '@/lib/client';
 import type { Post } from '@/lib/types';
 import styles from './TournamentCalendar.module.css';
 
@@ -42,19 +42,43 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
   const [month, setMonth] = useState(currentMonth);
   const [expanded, setExpanded] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [monthPosts, setMonthPosts] = useState<{ month: number; posts: Post[] } | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [retry, setRetry] = useState(0);
   const selectedButton = useRef<HTMLButtonElement | null>(null);
   const first = new Date(Date.UTC(Math.floor(month / 12), month % 12, 1));
   const year = first.getUTCFullYear(),
     monthNumber = first.getUTCMonth();
   const prefix = `${year}-${String(monthNumber + 1).padStart(2, '0')}`;
   const count = new Date(Date.UTC(year, monthNumber + 1, 0)).getUTCDate();
+  useEffect(() => {
+    let active = true;
+    setLoadError('');
+    api<Post[]>(
+      `/posts?kind=tournament&from=${prefix}-01&to=${prefix}-${String(count).padStart(2, '0')}`,
+    )
+      .then((posts) => {
+        if (active) setMonthPosts({ month, posts });
+      })
+      .catch((error) => {
+        if (active)
+          setLoadError(error instanceof Error ? error.message : 'No se pudo cargar este mes.');
+      });
+    return () => {
+      active = false;
+    };
+  }, [month, prefix, count, retry]);
   const offset = (first.getUTCDay() + 6) % 7;
   const days = Array.from({ length: Math.ceil((offset + count) / 7) * 7 }, (_, i) => {
     const number = i - offset + 1;
     return number > 0 && number <= count ? `${prefix}-${String(number).padStart(2, '0')}` : null;
   });
   const events = new Map<string, Post[]>();
-  for (const post of posts) {
+  for (const post of monthPosts?.month === month
+    ? monthPosts.posts
+    : month === currentMonth
+      ? posts
+      : []) {
     if (post.status !== 'published' || post.kind !== 'tournament' || !post.event_at) continue;
     const day = localDay(post.event_at);
     if (day?.startsWith(prefix)) events.set(day, [...(events.get(day) || []), post]);
@@ -166,6 +190,15 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
           ? `${total} ${total === 1 ? 'evento publicado' : 'eventos publicados'} este mes. Pulsa un día para ver los detalles.`
           : 'Sin eventos publicados este mes.'}
       </p>
+      {monthPosts?.month !== month && !loadError && <p role="status">Actualizando agenda…</p>}
+      {loadError && (
+        <p role="alert">
+          {loadError}{' '}
+          <button type="button" onClick={() => setRetry((v) => v + 1)}>
+            Reintentar
+          </button>
+        </p>
+      )}
       {selected && (
         <section
           id="tournament-day-details"
@@ -199,6 +232,7 @@ export function TournamentCalendar({ posts }: { posts: Post[] }) {
                     {date(post.event_at)}
                     {post.location ? ` · ${post.location}` : ''}
                   </p>
+                  {post.entry_price != null && <p>Inscripción: {money(post.entry_price)}</p>}
                 </li>
               ))}
             </ul>

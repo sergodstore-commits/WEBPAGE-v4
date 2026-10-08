@@ -283,7 +283,7 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
   ).toBe(403);
   await page.goto('/admin/torneos');
   await expect(page.getByRole('heading', { name: 'Torneos', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Nueva publicación', exact: true }).click();
+  await page.getByRole('button', { name: 'Nuevo evento', exact: true }).click();
   const title = `Liga sencilla ${Date.now()}`;
   await page.getByLabel('Título *', { exact: true }).fill(title);
   await page.getByLabel('Fecha y hora del torneo *', { exact: true }).fill('2030-10-01T18:00');
@@ -304,4 +304,72 @@ test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Ad
       .getByRole('button', { name: new RegExp(title) }),
   ).toBeVisible();
   await anonymous.close();
+});
+
+test('Agenda semanal: publicar desde Admin, cambiar una fecha, recargar y pausar', async ({
+  page,
+  browser,
+}, info) => {
+  test.setTimeout(180_000);
+  page.setDefaultTimeout(15_000);
+  await page.goto('/admin');
+  await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e-tournaments@example.test');
+  await page.getByLabel('Contraseña', { exact: true }).fill('E2e-Prueba-Sergod-2026!');
+  await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  await page.goto('/admin/torneos');
+  await page.getByRole('button', { name: 'Nuevo evento', exact: true }).click();
+  const title = `Agenda semanal ${Date.now()}`;
+  const changedTitle = `Fecha especial ${Date.now()}`;
+  await page.getByLabel('Título *', { exact: true }).fill(title);
+  await page.getByLabel('Fecha y hora del torneo *', { exact: true }).fill('2030-10-01T19:30');
+  await page.getByLabel('Inscripción en pesos (opcional)', { exact: true }).fill('6000');
+  await page.getByRole('combobox', { name: 'Programación', exact: true }).selectOption('weekly');
+  await page.getByRole('combobox', { name: 'Estado', exact: true }).selectOption('published');
+  await page.getByRole('button', { name: 'Guardar y publicar', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText('visible para la comunidad');
+  await page.reload();
+  const row = page.getByRole('row').filter({ hasText: title });
+  await row.getByRole('button', { name: 'Editar', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Programación', exact: true })).toHaveValue(
+    'weekly',
+  );
+  await expect(page.getByLabel('Inscripción en pesos (opcional)', { exact: true })).toHaveValue(
+    '6000',
+  );
+  await page.getByLabel('Fecha excepcional', { exact: true }).fill('2030-10-08');
+  await page.getByRole('button', { name: 'Editar solo esta fecha', exact: true }).click();
+  await page.getByLabel('Título *', { exact: true }).fill(changedTitle);
+  await page.getByLabel('Fecha y hora del torneo *', { exact: true }).fill('2030-10-10T19:30');
+  await page.getByRole('button', { name: 'Guardar y publicar', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText('visible para la comunidad');
+  const context = await browser.newContext();
+  const visitor = await context.newPage();
+  await visitor.clock.setFixedTime(new Date('2030-10-01T12:00:00Z'));
+  await visitor.goto('http://localhost:3100/torneos');
+  const calendar = visitor.getByLabel('Calendario de torneos', { exact: true });
+  await expect(calendar.getByText('Actualizando agenda…')).toHaveCount(0);
+  await expect(calendar.getByRole('button', { name: new RegExp(title) })).toHaveCount(4);
+  await calendar.getByRole('button', { name: new RegExp(changedTitle) }).click();
+  await expect(calendar.getByText('Inscripción: $6.000', { exact: true })).toBeVisible();
+  await calendar.getByRole('link', { name: changedTitle, exact: true }).click();
+  await expect(visitor.getByRole('heading', { name: changedTitle, exact: true })).toBeVisible();
+  await visitor.goto('http://localhost:3100/torneos');
+  await visitor.reload();
+  await expect(calendar.getByRole('button', { name: new RegExp(title) })).toHaveCount(4);
+  await page.reload();
+  await row.getByRole('button', { name: 'Editar', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Estado', exact: true }).selectOption('withdrawn');
+  await page.getByRole('button', { name: 'Guardar publicación', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText('guardada');
+  await visitor.reload();
+  await expect(calendar.getByRole('button', { name: new RegExp(title) })).toHaveCount(0);
+  await visitor.setViewportSize({ width: 375, height: 812 });
+  await calendar.getByRole('button', { name: new RegExp(changedTitle) }).click();
+  await expect(calendar.getByText('Inscripción: $6.000', { exact: true })).toBeVisible();
+  expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+    true,
+  );
+  await visitor.screenshot({ path: info.outputPath('agenda-375.png'), fullPage: true });
+  await context.close();
 });

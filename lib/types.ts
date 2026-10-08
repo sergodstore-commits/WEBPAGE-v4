@@ -50,6 +50,13 @@ export type Post = {
   image: string;
   event_at: string | null;
   event_level?: 'normal' | 'featured' | 'major';
+  entry_price?: number | null;
+  repeat_weekly?: boolean;
+  repeat_until?: string | null;
+  excluded_dates?: string[];
+  exception_parent_id?: string | null;
+  exception_day?: string | null;
+  series_id?: string;
   location: string;
   status: 'draft' | 'published' | 'withdrawn';
   created_at: string;

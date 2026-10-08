@@ -198,7 +198,15 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     if (path[0] === 'products' && path.length === 2 && method === 'GET')
       return json(await getProduct(path[1]));
     if (route === 'posts' && method === 'GET')
-      return json(await getPosts(false, url.searchParams.get('kind') || undefined));
+      return json(
+        await getPosts(
+          false,
+          url.searchParams.get('kind') || undefined,
+          url.searchParams.has('from') || url.searchParams.has('to')
+            ? { from: url.searchParams.get('from') || '', to: url.searchParams.get('to') || '' }
+            : undefined,
+        ),
+      );
     if (route === 'news' && method === 'GET') return json(await publicNews());
     if (route === 'tournaments' && method === 'GET') {
       const offset = z.coerce

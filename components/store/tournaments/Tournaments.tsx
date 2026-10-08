@@ -12,7 +12,7 @@ import {
   Radio,
   Video,
 } from 'lucide-react';
-import { api, date } from '@/lib/client';
+import { api, date, money } from '@/lib/client';
 import type { Post, TournamentMedia, YouTubeVideo } from '@/lib/types';
 import { useRemote, Loading, RemoteError, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
@@ -256,6 +256,7 @@ export function TournamentDetail({ post: p }: { post: Post }) {
           </span>
         )}
       </div>
+      {p.entry_price != null && <p>Inscripción: {money(p.entry_price)}</p>}
       {p.image && <ProductImage className={styles.poster} src={p.image} name={p.title} />}
       <div className={styles.body}>{p.body}</div>
     </article>
