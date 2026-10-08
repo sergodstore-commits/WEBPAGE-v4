@@ -63,10 +63,7 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   background: #101318;
-  box-shadow:
-    0 0 0 1px rgb(221 230 239 / 36%),
-    0 1px 0 2px #4b5056,
-    0 20px 44px rgb(0 0 0 / 55%);
+  box-shadow: 0 20px 44px rgb(0 0 0 / 55%);
   overflow: hidden;
 }
 

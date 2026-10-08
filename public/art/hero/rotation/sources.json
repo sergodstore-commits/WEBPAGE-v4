@@ -2,101 +2,221 @@
   {
     "source": "719 (1).webp",
     "game": "mitos",
-    "file": "mitos-01.webp"
+    "file": "mitos-01.webp",
+    "bounds": {
+      "left": 108,
+      "top": 0,
+      "width": 502,
+      "height": 719
+    }
   },
   {
     "source": "719 (2).webp",
     "game": "mitos",
-    "file": "mitos-02.webp"
+    "file": "mitos-02.webp",
+    "bounds": {
+      "left": 108,
+      "top": 0,
+      "width": 502,
+      "height": 719
+    }
   },
   {
     "source": "719 (3).webp",
     "game": "mitos",
-    "file": "mitos-03.webp"
+    "file": "mitos-03.webp",
+    "bounds": {
+      "left": 108,
+      "top": 0,
+      "width": 502,
+      "height": 719
+    }
   },
   {
     "source": "719 (4).webp",
     "game": "mitos",
-    "file": "mitos-04.webp"
+    "file": "mitos-04.webp",
+    "bounds": {
+      "left": 121,
+      "top": 14,
+      "width": 489,
+      "height": 694
+    }
   },
   {
     "source": "719 (5).webp",
     "game": "mitos",
-    "file": "mitos-05.webp"
+    "file": "mitos-05.webp",
+    "bounds": {
+      "left": 108,
+      "top": 0,
+      "width": 502,
+      "height": 719
+    }
   },
   {
     "source": "719 (6).webp",
     "game": "mitos",
-    "file": "mitos-06.webp"
+    "file": "mitos-06.webp",
+    "bounds": {
+      "left": 108,
+      "top": 0,
+      "width": 502,
+      "height": 719
+    }
   },
   {
     "source": "719 (7).webp",
     "game": "mitos",
-    "file": "mitos-07.webp"
+    "file": "mitos-07.webp",
+    "bounds": {
+      "left": 108,
+      "top": 0,
+      "width": 502,
+      "height": 719
+    }
   },
   {
     "source": "719.webp",
     "game": "mitos",
-    "file": "mitos-08.webp"
+    "file": "mitos-08.webp",
+    "bounds": {
+      "left": 110,
+      "top": 0,
+      "width": 500,
+      "height": 719
+    }
   },
   {
     "source": "1918 (1).webp",
     "game": "yugioh",
-    "file": "yugioh-01.webp"
+    "file": "yugioh-01.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (2).webp",
     "game": "yugioh",
-    "file": "yugioh-02.webp"
+    "file": "yugioh-02.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (3).webp",
     "game": "yugioh",
-    "file": "yugioh-03.webp"
+    "file": "yugioh-03.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (4).webp",
     "game": "yugioh",
-    "file": "yugioh-04.webp"
+    "file": "yugioh-04.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (5).webp",
     "game": "yugioh",
-    "file": "yugioh-05.webp"
+    "file": "yugioh-05.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (6).webp",
     "game": "yugioh",
-    "file": "yugioh-06.webp"
+    "file": "yugioh-06.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (7).webp",
     "game": "yugioh",
-    "file": "yugioh-07.webp"
+    "file": "yugioh-07.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1315,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (8).webp",
     "game": "yugioh",
-    "file": "yugioh-08.webp"
+    "file": "yugioh-08.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "1918 (9).webp",
     "game": "yugioh",
-    "file": "yugioh-09.webp"
+    "file": "yugioh-09.webp",
+    "bounds": {
+      "left": 68,
+      "top": 0,
+      "width": 1302,
+      "height": 1918
+    }
   },
   {
     "source": "1918.webp",
     "game": "yugioh",
-    "file": "yugioh-10.webp"
+    "file": "yugioh-10.webp",
+    "bounds": {
+      "left": 61,
+      "top": 0,
+      "width": 1316,
+      "height": 1918
+    }
   },
   {
     "source": "rn-image_picker_lib_temp_10ad6eeb-36c1-4c87-8314-7d4b667dac62.webp",
     "game": "yugioh",
-    "file": "yugioh-11.webp"
+    "file": "yugioh-11.webp",
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 713,
+      "height": 1044
+    }
   },
   {
     "source": "rn-image_picker_lib_temp_ed416293-475f-479c-b559-b90eaf8b61fb.webp",
     "game": "yugioh",
-    "file": "yugioh-12.webp"
+    "file": "yugioh-12.webp",
+    "bounds": {
+      "left": 0,
+      "top": 0,
+      "width": 713,
+      "height": 1037
+    }
   }
 ]

@@ -4,61 +4,61 @@
       "front": "/art/hero/rotation/yugioh-01.webp",
       "frontSmall": "/art/hero/rotation/yugioh-01-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-02.webp",
       "frontSmall": "/art/hero/rotation/yugioh-02-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-03.webp",
       "frontSmall": "/art/hero/rotation/yugioh-03-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-04.webp",
       "frontSmall": "/art/hero/rotation/yugioh-04-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-05.webp",
       "frontSmall": "/art/hero/rotation/yugioh-05-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-06.webp",
       "frontSmall": "/art/hero/rotation/yugioh-06-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-07.webp",
       "frontSmall": "/art/hero/rotation/yugioh-07-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-08.webp",
       "frontSmall": "/art/hero/rotation/yugioh-08-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-09.webp",
       "frontSmall": "/art/hero/rotation/yugioh-09-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 707
     },
     {
       "front": "/art/hero/rotation/yugioh-10.webp",
       "frontSmall": "/art/hero/rotation/yugioh-10-320.webp",
       "frontWidth": 480,
-      "frontHeight": 640
+      "frontHeight": 700
     },
     {
       "front": "/art/hero/rotation/yugioh-11.webp",
@@ -78,49 +78,49 @@
       "front": "/art/hero/rotation/mitos-01.webp",
       "frontSmall": "/art/hero/rotation/mitos-01-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 687
     },
     {
       "front": "/art/hero/rotation/mitos-02.webp",
       "frontSmall": "/art/hero/rotation/mitos-02-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 687
     },
     {
       "front": "/art/hero/rotation/mitos-03.webp",
       "frontSmall": "/art/hero/rotation/mitos-03-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 687
     },
     {
       "front": "/art/hero/rotation/mitos-04.webp",
       "frontSmall": "/art/hero/rotation/mitos-04-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 681
     },
     {
       "front": "/art/hero/rotation/mitos-05.webp",
       "frontSmall": "/art/hero/rotation/mitos-05-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 687
     },
     {
       "front": "/art/hero/rotation/mitos-06.webp",
       "frontSmall": "/art/hero/rotation/mitos-06-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 687
     },
     {
       "front": "/art/hero/rotation/mitos-07.webp",
       "frontSmall": "/art/hero/rotation/mitos-07-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 687
     },
     {
       "front": "/art/hero/rotation/mitos-08.webp",
       "frontSmall": "/art/hero/rotation/mitos-08-320.webp",
       "frontWidth": 480,
-      "frontHeight": 480
+      "frontHeight": 690
     }
   ]
 }

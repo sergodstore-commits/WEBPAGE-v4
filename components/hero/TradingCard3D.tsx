@@ -6,7 +6,12 @@ import styles from './hero.module.css';
 export function TradingCard3D({ card }: { card: HeroCard }) {
   const hasBack = Boolean(card.back);
   const style = {
-    '--card-ratio': card.game === 'yugioh' ? '368 / 543' : '463 / 663',
+    '--card-ratio':
+      card.frontWidth && card.frontHeight
+        ? `${card.frontWidth} / ${card.frontHeight}`
+        : card.game === 'yugioh'
+          ? '368 / 543'
+          : '463 / 663',
     '--card-x': `${cardRotation(card.rotation.x, hasBack)}deg`,
     '--card-y': `${cardRotation(card.rotation.y, hasBack)}deg`,
     '--card-z': `${card.rotation.z}deg`,
