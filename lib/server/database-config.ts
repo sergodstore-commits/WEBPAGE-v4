@@ -28,11 +28,15 @@ export function databasePoolConfig(env: Environment = process.env): PoolConfig {
   for (const key of [...url.searchParams.keys()])
     if (key.toLowerCase().startsWith('ssl') || key === 'uselibpqcompat')
       url.searchParams.delete(key);
+  // Serverless instances must share backends by transaction. A session pooler
+  // pins one backend per connection and exhausts small Supabase pools quickly.
+  if (env.VERCEL && url.hostname.endsWith('.pooler.supabase.com') && url.port === '5432')
+    url.port = '6543';
   return {
     connectionString: url.toString(),
-    max: 5,
+    max: env.VERCEL ? 2 : 5,
     connectionTimeoutMillis: 8000,
-    idleTimeoutMillis: 20000,
+    idleTimeoutMillis: env.VERCEL ? 5000 : 20000,
     ssl:
       env.DATABASE_SSL === 'false'
         ? false

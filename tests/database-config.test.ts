@@ -6,6 +6,33 @@ import { readdir } from 'node:fs/promises';
 import { databasePoolConfig, databaseSchema } from '../lib/server/database-config';
 import { migrate, scopeDatabase, type Db } from '../lib/server/db';
 
+test('Vercel usa transacciones en Supabase sin alterar conexiones locales o de otros proveedores', () => {
+  const source = 'postgresql://test:password@aws-0-test.pooler.supabase.com:5432/postgres';
+  const config = databasePoolConfig({ DATABASE_URL: source, VERCEL: '1' });
+  assert.equal(new URL(config.connectionString!).port, '6543');
+  assert.equal(config.max, 2);
+  assert.equal(config.idleTimeoutMillis, 5000);
+  assert.equal(
+    new URL(databasePoolConfig({ DATABASE_URL: source }).connectionString!).port,
+    '5432',
+  );
+  assert.equal(
+    new URL(
+      databasePoolConfig({ DATABASE_URL: 'postgresql://test@localhost:5432/test', VERCEL: '1' })
+        .connectionString!,
+    ).port,
+    '5432',
+  );
+  assert.equal(
+    new URL(
+      databasePoolConfig({ DATABASE_URL: source.replace(':5432', ':6543'), VERCEL: '1' })
+        .connectionString!,
+    ).port,
+    '6543',
+  );
+  assert.deepEqual(config.ssl, { rejectUnauthorized: true, ca: undefined });
+});
+
 test('DATABASE_SCHEMA admite esquemas privados y rechaza identificadores peligrosos o reservados', () => {
   assert.equal(databaseSchema({}), 'public');
   assert.equal(databaseSchema({ DATABASE_SCHEMA: 'sergod_store' }), 'sergod_store');
