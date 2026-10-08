@@ -20,6 +20,7 @@ test('KTS Konami: cargar, sumar dos fechas y actualizar sin duplicar', async ({ 
     ).toBe(true);
   }
   await page.goto('/admin/liga');
+  await page.getByText('Cargar archivo o pegar resultados Yu-Gi-Oh!', { exact: true }).click();
   const suffix = Date.now();
   const report = (index: number, wins: number) =>
     `<Tournament><ID>KTS-${suffix}-${index}</ID><Name>KTS ${suffix} ${index}</Name><Date>2026-10-0${index}</Date><Finalized>True</Finalized><TournamentPlayers><TournPlayer><Player><ID>0000099999</ID><FirstName>Jugador</FirstName><LastName>KTS</LastName></Player><Rank>1</Rank><Wins>${wins}</Wins><Points>999999</Points></TournPlayer></TournamentPlayers></Tournament>`;
@@ -57,6 +58,7 @@ test('KTS Konami: cargar, sumar dos fechas y actualizar sin duplicar', async ({ 
   await expect(page.locator('.admin-feedback.success')).toContainText('reemplazados');
   await page.reload();
   expect((await ranking()).points).toBe(15);
+  await openHistory(page);
   for (const index of [1, 2]) {
     page.once('dialog', (dialog) => dialog.accept());
     await page
@@ -65,6 +67,11 @@ test('KTS Konami: cargar, sumar dos fechas y actualizar sin duplicar', async ({ 
     await expect(page.locator('.admin-feedback.success')).toContainText('eliminado');
   }
 });
+async function openHistory(page: Page) {
+  const summary = page.getByText(/^Torneos guardados ·/);
+  if (!(await summary.locator('..').evaluate((el) => el.hasAttribute('open'))))
+    await summary.click();
+}
 const tournament = '98d5a731-15ed-47af-a83a-e4e152f9c839';
 test('Botón Konami: obtener, confirmar y recargar el ranking sin subir archivos', async ({
   page,
@@ -113,6 +120,7 @@ test('Botón Konami: obtener, confirmar y recargar el ranking sin subir archivos
     publicRanking.rows.find((r: { name: string }) => r.name === 'Jugador Conector').points,
   ).toBe(9);
   page.once('dialog', (dialog) => dialog.accept());
+  await openHistory(page);
   await page.getByRole('button', { name: `Eliminar torneo ${title}`, exact: true }).click();
   await expect(page.locator('.admin-feedback.success')).toContainText('eliminado');
 });
@@ -258,6 +266,7 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
     ).status(),
   ).toBe(403);
   await page.goto('/admin/liga');
+  await page.getByText('Cargar archivo o pegar resultados Yu-Gi-Oh!', { exact: true }).click();
   const title = `Liga YGO ${Date.now()}`,
     event = `TEST-${Date.now()}`;
   await page.getByLabel('Nombre del torneo *', { exact: true }).fill(title);
@@ -294,6 +303,7 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
     'lectura pública comprobados',
   );
   await page.reload();
+  await openHistory(page);
   await expect(
     page.getByRole('button', { name: `Actualizar resultados de ${title}`, exact: true }),
   ).toBeVisible();
@@ -456,6 +466,7 @@ test('Liga TOR Admin: revisar, standing final, agregar y actualizar sin importac
   await expect(page.locator('.admin-feedback.success')).toContainText('Resultados guardados');
   expect(writes).toBe(1);
   await page.reload();
+  await openHistory(page);
   await page
     .getByRole('button', { name: 'Actualizar resultados de Liga TOR de prueba', exact: true })
     .click();

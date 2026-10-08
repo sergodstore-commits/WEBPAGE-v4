@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/client';
+import styles from './LeagueAdmin.module.css';
 import { obtainKonamiReport } from '@/lib/konami-connector';
 import {
   boards,
@@ -36,6 +37,13 @@ function RankingSelection({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
+  const [search, setSearch] = useState('');
+  const changed = [...selected].sort().join(',') !== persisted;
+  const visible = list.filter((t) =>
+    `${t.title} ${day(t.played_on)}`
+      .toLocaleLowerCase('es')
+      .includes(search.trim().toLocaleLowerCase('es')),
+  );
   useEffect(() => {
     setSelected(persisted ? persisted.split(',') : []);
   }, [persisted]);
@@ -77,23 +85,35 @@ function RankingSelection({
     }
   }
   return (
-    <fieldset className="admin-card admin-card-body" disabled={disabled || busy}>
+    <fieldset className={styles.selection} disabled={disabled || busy}>
       <legend>
         {boards[board].game} · {boards[board].name}
       </legend>
-      <p>
-        {selected.length} ligas seleccionadas. Solo suman puntos de {boards[board].name}.
-      </p>
+      <div className={styles.selectionStatus}>
+        <strong>
+          {selected.length} de {list.length} torneos seleccionados
+        </strong>
+        <span>{changed ? 'Cambios sin guardar' : 'Selección guardada'}</span>
+        <Link href={`/comunidad?ranking=${board}`} className="admin-inline-link">
+          Ver ranking
+        </Link>
+      </div>
       {!list.length ? (
         <p>Todavía no hay ligas guardadas para este ranking.</p>
       ) : (
         <>
-          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-            {list.map((t) => (
-              <label
-                key={t.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}
-              >
+          <label className="admin-field">
+            Buscar torneo en {boards[board].name}
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Nombre o fecha"
+            />
+          </label>
+          <div className={styles.choices}>
+            {visible.map((t) => (
+              <label key={t.id} className={styles.choice} data-selected={selected.includes(t.id)}>
                 <input
                   type="checkbox"
                   checked={selected.includes(t.id)}
@@ -105,12 +125,27 @@ function RankingSelection({
                   }}
                 />
                 <span>
-                  {t.title} · {day(t.played_on)}
+                  <strong>{t.title}</strong>
+                  <small>
+                    {day(t.played_on)} · {t.players} jugadores
+                  </small>
                 </span>
               </label>
             ))}
           </div>
+          {!visible.length && <p>No hay torneos que coincidan con la búsqueda.</p>}
           <div className="admin-actions">
+            <button
+              className="admin-button secondary"
+              type="button"
+              disabled={!visible.length}
+              onClick={() => {
+                setSelected((ids) => [...new Set([...ids, ...visible.map((t) => t.id)])]);
+                setNotice('');
+              }}
+            >
+              Marcar visibles
+            </button>
             <button
               className="admin-button secondary"
               type="button"
@@ -124,7 +159,7 @@ function RankingSelection({
             <button
               className="admin-button"
               type="button"
-              disabled={[...selected].sort().join(',') === persisted}
+              disabled={!changed}
               onClick={() => void save()}
             >
               {busy ? 'Guardando…' : 'Guardar selección'}
@@ -189,6 +224,8 @@ export function LeagueAdmin() {
     text: '',
     position_points: '',
   });
+  const [manualOpen, setManualOpen] = useState(false),
+    [historyOpen, setHistoryOpen] = useState(false);
   async function load() {
     const list = await api<LeagueTournament[]>('/admin/league');
     setSaved(list);
@@ -411,112 +448,197 @@ export function LeagueAdmin() {
           {notice}
         </p>
       )}
-      <section className="admin-card admin-card-body">
-        <h2>Mitos y Leyendas · TOR</h2>
-        <p>
-          Solo Ligas públicas terminadas o reportadas. Se usa el standing acumulado de la última
-          ronda disponible, sin sumar rondas entre sí.
-        </p>
-        <button
-          className="admin-button"
-          disabled={busy}
-          onClick={() => void action(() => review())}
-        >
-          {busy ? 'Consultando…' : 'Revisar TOR'}
-        </button>
-        {reviewed && (
-          <>
-            <h3>Torneos encontrados</h3>
-            {!candidates.length && <p>No hay Ligas válidas en esta página.</p>}
-            <div className="admin-table-scroll">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Torneo</th>
-                    <th>Juego</th>
-                    <th>Fecha</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
+      <div className={styles.sources}>
+        <section className="admin-card admin-card-body" id="yugioh-import">
+          <h2>Yu-Gi-Oh! · Konami</h2>
+          <p>
+            Abre el torneo finalizado en Konami desde el mismo navegador y obtén su vista previa.
+          </p>
+          <button className="admin-button" disabled={busy} onClick={() => void obtainKonami()}>
+            {busy ? 'Procesando…' : 'Obtener resultados de Konami'}
+          </button>
+          <details>
+            <summary>Conectar el navegador una sola vez</summary>
+            <p>
+              Descarga y descomprime el complemento. En brave://extensions, chrome://extensions o
+              edge://extensions, activa «Modo de desarrollador», pulsa «Cargar descomprimida» y
+              selecciona su carpeta. Después recarga la tienda y Konami. El navegador integrado de
+              Codex no admite este complemento.
+            </p>
+            <p>
+              Solo consulta resultados de Konami cuando pulsas el botón y los entrega a este panel.
+              No guarda contraseñas ni publica resultados sin tu confirmación.
+            </p>
+            <a href="/downloads/sergod-konami-connector.zip" download className="admin-inline-link">
+              Descargar complemento de SERGOD STORE
+            </a>
+          </details>
+        </section>
+        <section className="admin-card admin-card-body">
+          <h2>Mitos y Leyendas · TOR</h2>
+          <p>Consulta los torneos finalizados de Primera Era y Primer Bloque.</p>
+          <button
+            className="admin-button"
+            disabled={busy}
+            onClick={() => void action(() => review())}
+          >
+            {busy ? 'Consultando…' : 'Revisar TOR'}
+          </button>
+        </section>
+      </div>
+      {reviewed && (
+        <>
+          <h3>Torneos encontrados</h3>
+          {!candidates.length && <p>No hay Ligas válidas en esta página.</p>}
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Torneo</th>
+                  <th>Juego</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {candidates.map((t) => (
+                  <tr key={t.external_id}>
+                    <td>{t.title}</td>
+                    <td>{boards[t.board].name}</td>
+                    <td>{day(t.played_on)}</td>
+                    <td>{t.imported ? 'Ya agregado' : t.status}</td>
+                    <td>
+                      <button
+                        className="admin-button secondary"
+                        disabled={busy}
+                        aria-label={`${t.imported ? 'Actualizar resultados' : 'Revisar standing'} de ${t.title}`}
+                        onClick={() => void action(() => chooseTor(t.external_id))}
+                      >
+                        {t.imported ? 'Actualizar resultados' : 'Ver standing final'}
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {candidates.map((t) => (
-                    <tr key={t.external_id}>
-                      <td>{t.title}</td>
-                      <td>{boards[t.board].name}</td>
-                      <td>{day(t.played_on)}</td>
-                      <td>{t.imported ? 'Ya agregado' : t.status}</td>
-                      <td>
-                        <button
-                          className="admin-button secondary"
-                          disabled={busy}
-                          aria-label={`${t.imported ? 'Actualizar resultados' : 'Revisar standing'} de ${t.title}`}
-                          onClick={() => void action(() => chooseTor(t.external_id))}
-                        >
-                          {t.imported ? 'Actualizar resultados' : 'Ver standing final'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {next && (
-              <button
-                className="admin-button secondary"
-                disabled={busy}
-                onClick={() => void action(() => review(next))}
-              >
-                Consultar más torneos
-              </button>
-            )}
-          </>
-        )}
-      </section>
-      <section className="admin-card admin-card-body" id="yugioh-import">
-        <h2>Yu-Gi-Oh! · Importar resultados</h2>
-        <button className="admin-button" disabled={busy} onClick={() => void obtainKonami()}>
-          {busy ? 'Procesando…' : 'Obtener resultados de Konami'}
-        </button>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {next && (
+            <button
+              className="admin-button secondary"
+              disabled={busy}
+              onClick={() => void action(() => review(next))}
+            >
+              Consultar más torneos
+            </button>
+          )}
+        </>
+      )}
+      {preview && (
+        <section
+          id="league-preview"
+          className="admin-card admin-card-body"
+          aria-labelledby="league-preview-heading"
+        >
+          <h2 id="league-preview-heading">Standing final · Vista previa</h2>
+          <h3>{preview.title}</h3>
+          <p>
+            {boards[preview.board].game} · {boards[preview.board].name} · {day(preview.played_on)} ·{' '}
+            {preview.results.length} jugadores
+            {preview.final_round ? ` · Última ronda: ${preview.final_round}` : ''}
+          </p>
+          {preview.base_revision > 0 && (
+            <p className="admin-feedback">
+              Este torneo ya está guardado. Confirmar reemplazará sus resultados; no volverá a sumar
+              los mismos puntos.
+            </p>
+          )}
+          {preview.warnings.map((w) => (
+            <p key={w}>{w}</p>
+          ))}
+          <p>
+            Esta vista previa vence en 15 minutos. Los ID de jugadores no se muestran en el ranking
+            público.
+          </p>
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Posición</th>
+                  <th>Jugador</th>
+                  <th>Puntos finales</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preview.results.map((r) => (
+                  <tr key={r.player_key}>
+                    <td>{r.position}</td>
+                    <td>{r.name}</td>
+                    <td>{r.points}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="admin-actions end">
+            <button
+              className="admin-button secondary"
+              disabled={busy}
+              onClick={() => setPreview(null)}
+            >
+              Descartar vista previa
+            </button>
+            <button className="admin-button" disabled={busy} onClick={() => void action(commit)}>
+              {busy
+                ? 'Guardando…'
+                : preview.base_revision > 0
+                  ? 'Confirmar actualización'
+                  : 'Agregar a Liga'}
+            </button>
+          </div>
+        </section>
+      )}
+      <section className="admin-card admin-card-body">
+        <h2>Ligas que suman en el ranking</h2>
         <p>
-          Abre el torneo finalizado en Konami en el mismo Brave, Chrome o Edge. El botón obtiene el
-          último torneo que visitaste y prepara su vista previa. Confirma para sumarlo al ranking.
+          Marca los torneos del ciclo actual y guarda cada selección. Desmarcar conserva sus
+          resultados.
+        </p>
+        <div className={styles.selections}>
+          {!loading &&
+            (['yugioh', 'myl-first-era', 'myl-first-block'] as RankingBoard[]).map((board) => (
+              <RankingSelection
+                key={board}
+                board={board}
+                tournaments={saved}
+                disabled={busy}
+                reload={load}
+              />
+            ))}
+        </div>
+      </section>
+      <details
+        className={`admin-card admin-card-body ${styles.fold}`}
+        open={manualOpen}
+        onToggle={(e) => setManualOpen(e.currentTarget.open)}
+        id="league-manual"
+      >
+        <summary>Cargar archivo o pegar resultados Yu-Gi-Oh!</summary>
+        <p>
+          Alternativa al botón de Konami. El archivo KTS completa fecha, nombre y victorias. También
+          puedes cargar CSV/TSV o pegar una tabla.
         </p>
         <details>
-          <summary>Conectar el navegador una sola vez</summary>
+          <summary>Formatos y puntos</summary>
           <p>
-            Descarga y descomprime el complemento. En brave://extensions, chrome://extensions o
-            edge://extensions, activa «Modo de desarrollador», pulsa «Cargar descomprimida» y
-            selecciona su carpeta. Después recarga la tienda y Konami. El navegador integrado de
-            Codex no admite este complemento.
+            Cada victoria suma 3 puntos; derrotas y dobles derrotas suman 0. Si el archivo solo
+            contiene puestos, define sus puntos abajo. Un torneo ya guardado se actualiza sin
+            duplicarlo.
           </p>
-          <p>
-            Solo consulta resultados de Konami cuando pulsas el botón y los entrega a este panel. No
-            guarda contraseñas ni publica resultados sin tu confirmación.
-          </p>
-          <a href="/downloads/sergod-konami-connector.zip" download className="admin-inline-link">
-            Descargar complemento de SERGOD STORE
-          </a>
-        </details>
-        <p>
-          En Konami abre el torneo finalizado y pulsa «Descargar el Archivo KTS». Carga ese archivo
-          aquí: la fecha, el ID y las victorias se leen automáticamente. Revisa la vista previa y
-          confirma para sumarlo al ranking; cargar el mismo torneo permite corregirlo sin
-          duplicarlo.
-        </p>
-        <p>
-          Ranking interno de SERGOD STORE. No se conecta una cuenta OTS ni se presenta como ranking
-          oficial de Konami.
-        </p>
-        <p>
-          Importa el CSV de resultados de Konami, un TSV o una tabla con Jugador y Puntos finales.
-          También puedes pegar la tabla de Konami con la columna Victoria: cada victoria suma 3
-          puntos; las derrotas y dobles derrotas suman 0. Si el reporte solo trae posiciones, define
-          abajo los puntos de cada puesto. Usa un ID de jugador consistente cuando esté disponible.{' '}
           <a href="/ranking-yugioh-ejemplo.csv" download className="admin-inline-link">
             Descargar encabezados de ejemplo
           </a>
-        </p>
+        </details>
         <form onSubmit={stageFile}>
           <div className="admin-form-grid">
             <label className="admin-field">
@@ -609,91 +731,13 @@ export function LeagueAdmin() {
             Previsualizar resultados Yu-Gi-Oh!
           </button>
         </form>
-      </section>
-      {preview && (
-        <section
-          id="league-preview"
-          className="admin-card admin-card-body"
-          aria-labelledby="league-preview-heading"
-        >
-          <h2 id="league-preview-heading">Standing final · Vista previa</h2>
-          <h3>{preview.title}</h3>
-          <p>
-            {boards[preview.board].game} · {boards[preview.board].name} · {day(preview.played_on)} ·{' '}
-            {preview.results.length} jugadores
-            {preview.final_round ? ` · Última ronda: ${preview.final_round}` : ''}
-          </p>
-          {preview.base_revision > 0 && (
-            <p className="admin-feedback">
-              Este torneo ya está guardado. Confirmar reemplazará sus resultados; no volverá a sumar
-              los mismos puntos.
-            </p>
-          )}
-          {preview.warnings.map((w) => (
-            <p key={w}>{w}</p>
-          ))}
-          <p>
-            Esta vista previa vence en 15 minutos. Los ID de jugadores no se muestran en el ranking
-            público.
-          </p>
-          <div className="admin-table-scroll">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Posición</th>
-                  <th>Jugador</th>
-                  <th>Puntos finales</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preview.results.map((r) => (
-                  <tr key={r.player_key}>
-                    <td>{r.position}</td>
-                    <td>{r.name}</td>
-                    <td>{r.points}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="admin-actions end">
-            <button
-              className="admin-button secondary"
-              disabled={busy}
-              onClick={() => setPreview(null)}
-            >
-              Descartar vista previa
-            </button>
-            <button className="admin-button" disabled={busy} onClick={() => void action(commit)}>
-              {busy
-                ? 'Guardando…'
-                : preview.base_revision > 0
-                  ? 'Confirmar actualización'
-                  : 'Agregar a Liga'}
-            </button>
-          </div>
-        </section>
-      )}
-      <section className="admin-card admin-card-body">
-        <h2>Ligas que suman en el ranking</h2>
-        <p>
-          Marca las ligas del ciclo actual y guarda la selección de cada ranking. Para comenzar otro
-          ciclo, desmarca las anteriores y marca las nuevas. Desmarcar conserva los resultados
-          guardados.
-        </p>
-        {!loading &&
-          (Object.keys(boards) as RankingBoard[]).map((board) => (
-            <RankingSelection
-              key={board}
-              board={board}
-              tournaments={saved}
-              disabled={busy}
-              reload={load}
-            />
-          ))}
-      </section>
-      <section className="admin-card admin-card-body">
-        <h2>Torneos guardados</h2>
+      </details>
+      <details
+        className={`admin-card admin-card-body ${styles.fold}`}
+        open={historyOpen}
+        onToggle={(e) => setHistoryOpen(e.currentTarget.open)}
+      >
+        <summary>Torneos guardados · {saved.length}</summary>
         {loading ? (
           <p role="status">Cargando torneos…</p>
         ) : !saved.length ? (
@@ -731,6 +775,7 @@ export function LeagueAdmin() {
                           onClick={() => {
                             if (t.source === 'tor') void action(() => chooseTor(t.external_id));
                             else {
+                              setManualOpen(true);
                               setPreview(null);
                               setFileForm({
                                 title: t.title,
@@ -743,7 +788,7 @@ export function LeagueAdmin() {
                                 'Selecciona el archivo corregido de este torneo y previsualiza. Se reemplazarán los resultados al confirmar.',
                               );
                               document
-                                .getElementById('yugioh-import')
+                                .getElementById('league-manual')
                                 ?.scrollIntoView({ block: 'start' });
                             }
                           }}
@@ -766,7 +811,7 @@ export function LeagueAdmin() {
             </table>
           </div>
         )}
-      </section>
+      </details>
     </div>
   );
 }
