@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { getDb } from './db';
 import { appUrl, boundedBytes, fail, hash, token, uuid } from './core';
 import { integrationKeyReady, openIntegration, sealIntegration } from './integration-crypto';
-import { instagramCdn } from './news-storage';
 import type { InstagramCandidate, NewsAsset, NewsItem } from '../news';
 
 const callback = () => `${appUrl()}/api/admin/integrations/instagram/callback`;
@@ -373,24 +372,6 @@ const mediaSchema = z.object({
     z.iso.datetime({ offset: true }),
   ),
   permalink: z.string().url(),
-  media_url: z.string().optional(),
-  thumbnail_url: z.string().optional(),
-  children: z
-    .object({
-      data: z
-        .array(
-          z.object({
-            id: z.string(),
-            media_type: z.enum(['IMAGE', 'VIDEO']),
-            media_url: z.string(),
-            thumbnail_url: z.string().optional(),
-          }),
-        )
-        .min(1)
-        .max(20),
-      paging: z.any().optional(),
-    })
-    .optional(),
 });
 function snapshot(raw: unknown, tag: string) {
   const m = mediaSchema.parse(raw),
@@ -407,14 +388,7 @@ function snapshot(raw: unknown, tag: string) {
   if (m.media_product_type === 'STORY') fail(400, 'Las Stories no se archivan como Noticias.');
   if (!hasImportTag(m.caption, tag))
     fail(400, 'Esta publicación no contiene el hashtag configurado.');
-  if (m.media_type === 'CAROUSEL_ALBUM' && (!m.children || m.children.paging?.next))
-    fail(502, 'No se pudo leer el carrusel completo. Revisa nuevamente.');
-  const children = m.media_type === 'CAROUSEL_ALBUM' ? m.children!.data : [m];
-  const assets: NewsAsset[] = children.map((a) => ({
-    type: a.media_type === 'VIDEO' ? 'video' : 'image',
-    url: instagramCdn(a.media_url || ''),
-    poster: a.thumbnail_url ? instagramCdn(a.thumbnail_url) : '',
-  }));
+  const assets: NewsAsset[] = [];
   return {
     media_id: m.id,
     caption: cleanInstagramCaption(m.caption, tag),
@@ -425,8 +399,7 @@ function snapshot(raw: unknown, tag: string) {
     import_hashtag: tag,
   };
 }
-const mediaFields =
-  'id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp,children.limit(20){id,media_type,media_url,thumbnail_url}';
+const mediaFields = 'id,caption,media_type,media_product_type,permalink,timestamp';
 export async function reviewInstagram(adminId: string, cursor?: string) {
   const after = z
     .string()

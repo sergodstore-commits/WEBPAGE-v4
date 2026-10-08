@@ -67,7 +67,6 @@ test('Instagram mediante Facebook: página propia, OAuth, persistencia y rechazo
             media_product_type: 'FEED',
             timestamp: '2026-10-01T19:00:00+0000',
             permalink: 'https://www.instagram.com/p/TEST/',
-            media_url: 'https://a.cdninstagram.com/photo.jpg',
           },
         ],
       });

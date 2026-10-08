@@ -237,8 +237,8 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
         /almacenamiento/,
       );
       assert.throws(() => storage.instagramCdn('http://127.0.0.1/x'), /almacenamiento/);
-      feed = [{ ...photo, id: '333', media_url: 'http://localhost/secret' }];
-      await assert.rejects(() => ig.reviewInstagram(admin), /almacenamiento/);
+      feed = [{ ...photo, id: '333', permalink: 'http://localhost/secret' }];
+      await assert.rejects(() => ig.reviewInstagram(admin), /enlace/);
       assert.equal((await ig.publicNews()).length, 2);
     },
   );
