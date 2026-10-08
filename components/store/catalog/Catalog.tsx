@@ -12,6 +12,12 @@ import {
 } from 'lucide-react';
 import { money, price } from '@/lib/client';
 import type { Product } from '@/lib/types';
+import {
+  catalogSections,
+  matchesCatalogSection,
+  readCatalogSection,
+  type CatalogSection,
+} from '@/lib/catalog-sections';
 import type { AddToCart } from '../shared';
 import {
   useRemote,
@@ -29,6 +35,7 @@ import { SectionHeader } from '../SectionHeader';
 import styles from './Catalog.module.css';
 
 type Filters = {
+  section: CatalogSection;
   search: string;
   category: string;
   brand: string;
@@ -39,6 +46,7 @@ type Filters = {
   available: boolean;
 };
 const emptyFilters: Filters = {
+  section: '',
   search: '',
   category: '',
   brand: '',
@@ -49,6 +57,7 @@ const emptyFilters: Filters = {
   available: false,
 };
 const filterParams: Record<keyof Filters, string> = {
+  section: 'grupo',
   search: 'busqueda',
   category: 'categoria',
   brand: 'marca',
@@ -65,6 +74,7 @@ function readFilters(query: URLSearchParams): Filters {
     return /^\d+$/.test(value) ? value : '';
   };
   return {
+    section: readCatalogSection(query.get('grupo')),
     search: query.get('busqueda') || '',
     category: query.get('categoria') || '',
     brand: query.get('marca') || '',
@@ -89,7 +99,8 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     [mobile, setMobile] = useState(false),
     [filtersOpen, setFiltersOpen] = useState(false),
     [quickProduct, setQuickProduct] = useState<Product | null>(null);
-  const { search, category, brand, tag, minimumPrice, maximumPrice, sort, available } = filters;
+  const { section, search, category, brand, tag, minimumPrice, maximumPrice, sort, available } =
+    filters;
   useEffect(() => {
     const params = new URLSearchParams(queryString);
     setFilters(readFilters(params));
@@ -141,20 +152,36 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   const setSort = (value: string) => updateFilters({ sort: value });
   const setAvailable = (value: boolean) => updateFilters({ available: value });
   const clearFilters = () => updateFilters({ ...emptyFilters, sort });
+  const sectionProducts = useMemo(
+    () => (products.data || []).filter((p) => matchesCatalogSection(p, section)),
+    [products.data, section],
+  );
+  function chooseSection(next: CatalogSection) {
+    const list = (products.data || []).filter((p) => matchesCatalogSection(p, next));
+    updateFilters({
+      section: next,
+      category: next && list.some((p) => p.category === category) ? category : '',
+      brand: next && list.some((p) => p.brand === brand) ? brand : '',
+      tag: next && list.some((p) => p.tags?.includes(tag)) ? tag : '',
+    });
+  }
   const categories = useMemo(
-    () => [...new Set((products.data || []).map((p) => p.category).filter(Boolean))].sort(),
-    [products.data],
+    () => [...new Set(sectionProducts.map((p) => p.category).filter(Boolean))].sort(),
+    [sectionProducts],
   );
   const brands = useMemo(
-    () => [...new Set((products.data || []).map((p) => p.brand).filter(Boolean))].sort(),
-    [products.data],
+    () => [...new Set(sectionProducts.map((p) => p.brand).filter(Boolean))].sort(),
+    [sectionProducts],
   );
   const tags = useMemo(
-    () => [...new Set((products.data || []).flatMap((p) => p.tags || []))].sort(),
-    [products.data],
+    () => [...new Set(sectionProducts.flatMap((p) => p.tags || []))].sort(),
+    [sectionProducts],
   );
-  const featuredCategories = categories.filter((value) => /yu.?gi.?oh|mitos/i.test(value));
   const activeFilters = [
+    section && {
+      name: catalogSections.find((s) => s.id === section)!.label,
+      clear: () => chooseSection(''),
+    },
     search && { name: `Búsqueda: ${search}`, clear: () => setSearch('') },
     category && { name: category, clear: () => setCategory('') },
     brand && { name: brand, clear: () => setBrand('') },
@@ -173,6 +200,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     const q = search.toLocaleLowerCase('es').trim();
     const matches = (products.data || []).filter(
       (p) =>
+        matchesCatalogSection(p, section) &&
         (!q ||
           `${p.name} ${p.catalog_name || ''} ${p.description} ${p.sku} ${p.brand || ''} ${Object.values(p.options || {}).join(' ')} ${(p.tags || []).join(' ')}`
             .toLocaleLowerCase('es')
@@ -193,7 +221,18 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
             ? familyName(a[0]).localeCompare(familyName(b[0]), 'es')
             : b[0].created_at.localeCompare(a[0].created_at),
     );
-  }, [products.data, search, category, brand, tag, minimumPrice, maximumPrice, sort, available]);
+  }, [
+    products.data,
+    section,
+    search,
+    category,
+    brand,
+    tag,
+    minimumPrice,
+    maximumPrice,
+    sort,
+    available,
+  ]);
   const pages = Math.max(1, Math.ceil(visible.length / 24));
   const currentPage = Math.min(page, pages);
   const pageProducts = visible.slice((currentPage - 1) * 24, currentPage * 24);
@@ -219,24 +258,22 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           reservar. La entrega se informa en cada ficha.
         </p>
       )}
-      {featuredCategories.length > 0 && (
-        <nav className={styles.categories} aria-label="Categorías destacadas">
-          <button type="button" aria-pressed={!category} onClick={() => setCategory('')}>
-            {preorder ? 'Todas las preventas' : 'Todo el catálogo'}
+      <nav className={styles.categories} aria-label="Juegos y accesorios">
+        <button type="button" aria-pressed={!section} onClick={() => chooseSection('')}>
+          {preorder ? 'Todas las preventas' : 'Todo el catálogo'}
+        </button>
+        {catalogSections.map((value) => (
+          <button
+            type="button"
+            key={value.id}
+            aria-pressed={section === value.id}
+            onClick={() => chooseSection(value.id)}
+          >
+            {value.label}
+            <ArrowUpRight size={16} aria-hidden="true" />
           </button>
-          {featuredCategories.map((value) => (
-            <button
-              type="button"
-              key={value}
-              aria-pressed={category === value}
-              onClick={() => setCategory(value)}
-            >
-              {value}
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </button>
-          ))}
-        </nav>
-      )}
+        ))}
+      </nav>
       <div className="store-catalog-toolbar">
         <label className="store-search">
           <Search size={18} />
@@ -358,7 +395,8 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
                 />
                 Solo disponibles
               </label>
-              {(search ||
+              {(section ||
+                search ||
                 category ||
                 brand ||
                 tag ||
@@ -424,16 +462,22 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           ) : (
             <Empty
               title={
-                products.data?.length
-                  ? 'No encontramos coincidencias'
-                  : kind === 'store'
-                    ? 'Aún no hay artículos publicados'
-                    : 'Aún no hay preventas publicadas'
+                section && !sectionProducts.length && products.data?.length
+                  ? preorder
+                    ? 'Sin preventas en este grupo'
+                    : 'Sin artículos en este grupo'
+                  : products.data?.length
+                    ? 'No encontramos coincidencias'
+                    : kind === 'store'
+                      ? 'Aún no hay artículos publicados'
+                      : 'Aún no hay preventas publicadas'
               }
               body={
-                products.data?.length
-                  ? 'Prueba otra búsqueda o cambia los filtros.'
-                  : 'Los artículos aparecerán aquí cuando la tienda los publique.'
+                section && !sectionProducts.length && products.data?.length
+                  ? 'Aparecerán aquí cuando la tienda los publique. Puedes consultar los otros grupos.'
+                  : products.data?.length
+                    ? 'Prueba otra búsqueda o cambia los filtros.'
+                    : 'Los artículos aparecerán aquí cuando la tienda los publique.'
               }
             />
           )}
