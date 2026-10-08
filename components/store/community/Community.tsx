@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Trophy, Medal, ArrowRight } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { date } from '@/lib/client';
+import { duelHouses, duelHouse } from '@/lib/duel-academy';
 import { boards, type RankingBoard, type PublicRanking } from '@/lib/rankings';
 import { useRemote, Loading, Empty, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
@@ -115,6 +116,54 @@ function PlayerPoints({
     </dialog>
   );
 }
+function RankingTable({
+  rows,
+  label,
+  clickable,
+  onPlayer,
+}: {
+  rows: PublicRanking['rows'];
+  label: string;
+  clickable: boolean;
+  onPlayer: (player: PublicRanking['rows'][number]) => void;
+}) {
+  return (
+    <table className={styles.table} aria-label={label}>
+      <thead>
+        <tr>
+          <th>Posición</th>
+          <th>Jugador</th>
+          <th>Torneos jugados</th>
+          <th>Puntos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={i}>
+            <td>
+              {clickable && r.contributions?.length ? (
+                <button
+                  className={styles.positionButton}
+                  onClick={() => onPlayer(r)}
+                  aria-label={`Ver puntos por torneo de ${r.name}`}
+                >
+                  {r.position}°
+                </button>
+              ) : (
+                `${r.position}°`
+              )}
+            </td>
+            <td>{r.name}</td>
+            <td>{r.tournaments}</td>
+            <td>
+              <strong>{r.points}</strong>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 export function Community() {
   const params = useSearchParams(),
     key = params.get('ranking') || 'myl-first-era';
@@ -166,14 +215,14 @@ export function Community() {
       />
       <nav className={styles.navigation} aria-label="Elegir ranking">
         <div>
-          <h2>Mitos y Leyendas</h2>
+          <h2>Mitos y Leyendas · Puntos de liga</h2>
           <div>
             {link('myl-first-era')}
             {link('myl-first-block')}
           </div>
         </div>
         <div>
-          <h2>Yu-Gi-Oh!</h2>
+          <h2>Yu-Gi-Oh! Ranking</h2>
           <div>{link('yugioh')}</div>
         </div>
       </nav>
@@ -181,7 +230,9 @@ export function Community() {
         <div className={styles.heading}>
           <div>
             <span>{selectedBoard.game}</span>
-            <h2 id="ranking-title">{selectedBoard.name}</h2>
+            <h2 id="ranking-title">
+              {board === 'yugioh' ? 'La Academia de Duelos' : selectedBoard.name}
+            </h2>
           </div>
           <Trophy aria-hidden="true" />
         </div>
@@ -209,35 +260,27 @@ export function Community() {
                 </Empty>
               ) : (
                 <>
-                  <div className={styles.podium} aria-label="Primeros lugares">
-                    {ranking.data.rows
-                      .filter((r) => r.position <= 3)
-                      .map((r, i) => (
-                        <article key={i} data-position={r.position}>
-                          <span>
-                            <Medal size={18} aria-hidden="true" />
-                            {board === 'yugioh' && r.contributions?.length ? (
-                              <button
-                                className={styles.positionButton}
-                                onClick={() => setPlayer(r)}
-                                aria-label={`Ver puntos por torneo de ${r.name}`}
-                              >
-                                {r.position}°
-                              </button>
-                            ) : (
-                              `${r.position}°`
-                            )}
-                          </span>
-                          <h3>{r.name}</h3>
-                          <strong>
-                            {r.points} <small>puntos</small>
-                          </strong>
-                          <p>
-                            {r.tournaments} {r.tournaments === 1 ? 'torneo' : 'torneos'}
-                          </p>
-                        </article>
-                      ))}
-                  </div>
+                  {board !== 'yugioh' && (
+                    <div className={styles.podium} aria-label="Primeros lugares">
+                      {ranking.data.rows
+                        .filter((r) => r.position <= 3)
+                        .map((r, i) => (
+                          <article key={i} data-position={r.position}>
+                            <span>
+                              <Medal size={18} aria-hidden="true" />
+                              {r.position}°
+                            </span>
+                            <h3>{r.name}</h3>
+                            <strong>
+                              {r.points} <small>puntos</small>
+                            </strong>
+                            <p>
+                              {r.tournaments} {r.tournaments === 1 ? 'torneo' : 'torneos'}
+                            </p>
+                          </article>
+                        ))}
+                    </div>
+                  )}
                   <div className={styles.tools}>
                     <label>
                       Buscar jugador
@@ -256,47 +299,68 @@ export function Community() {
                       {ranking.data.tournaments.length === 1 ? 'torneo' : 'torneos'}
                     </p>
                   </div>
-                  <table
-                    className={styles.table}
-                    aria-label={`Clasificación ${selectedBoard.name}`}
-                  >
-                    <thead>
-                      <tr>
-                        <th>Posición</th>
-                        <th>Jugador</th>
-                        <th>Torneos jugados</th>
-                        <th>Puntos</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.slice(0, limit).map((r, i) => (
-                        <tr key={i}>
-                          <td>
-                            {board === 'yugioh' && r.contributions?.length ? (
-                              <button
-                                className={styles.positionButton}
-                                onClick={() => setPlayer(r)}
-                                aria-label={`Ver puntos por torneo de ${r.name}`}
-                              >
-                                {r.position}°
-                              </button>
+                  {board === 'yugioh' ? (
+                    <div className={styles.academy}>
+                      <p className={styles.note}>
+                        Tu casa depende de los puntos acumulados en los torneos seleccionados. El
+                        puesto sigue siendo el del ranking general.
+                      </p>
+                      {duelHouses.map((house) => {
+                        const members = ranking.data!.rows.filter(
+                          (r) => duelHouse(r.points) === house.id,
+                        );
+                        const matches = filtered.filter((r) => duelHouse(r.points) === house.id);
+                        return (
+                          <section
+                            key={house.id}
+                            className={styles.house}
+                            data-house={house.id}
+                            aria-labelledby={`house-${house.id}`}
+                          >
+                            <div className={styles.houseHeading}>
+                              <div>
+                                <span>{house.range}</span>
+                                <h3 id={`house-${house.id}`}>{house.name}</h3>
+                              </div>
+                              <p>
+                                {members.length} {members.length === 1 ? 'jugador' : 'jugadores'}
+                              </p>
+                            </div>
+                            {matches.length ? (
+                              <RankingTable
+                                rows={matches.slice(0, limit)}
+                                label={`Clasificación ${house.name}`}
+                                clickable
+                                onPlayer={setPlayer}
+                              />
                             ) : (
-                              `${r.position}°`
+                              <p className={styles.houseEmpty}>
+                                {members.length
+                                  ? 'No hay jugadores que coincidan con esa búsqueda en esta casa.'
+                                  : 'Todavía no hay jugadores en esta casa.'}
+                              </p>
                             )}
-                          </td>
-                          <td>{r.name}</td>
-                          <td>{r.tournaments}</td>
-                          <td>
-                            <strong>{r.points}</strong>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </section>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <RankingTable
+                      rows={filtered.slice(0, limit)}
+                      label={`Clasificación ${selectedBoard.name}`}
+                      clickable={false}
+                      onPlayer={setPlayer}
+                    />
+                  )}
                   {!filtered.length && (
                     <p role="status">No hay jugadores que coincidan con esa búsqueda.</p>
                   )}
-                  {filtered.length > limit && (
+                  {(board === 'yugioh'
+                    ? duelHouses.some(
+                        (house) =>
+                          filtered.filter((r) => duelHouse(r.points) === house.id).length > limit,
+                      )
+                    : filtered.length > limit) && (
                     <button
                       className="store-button store-button-secondary"
                       onClick={() => setLimit((n) => n + 50)}

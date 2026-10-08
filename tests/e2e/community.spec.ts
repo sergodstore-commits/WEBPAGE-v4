@@ -299,7 +299,7 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
   ).toBeVisible();
   await client.goto('http://localhost:3100/comunidad?ranking=yugioh');
   await client.reload();
-  const ranking = client.getByRole('table', { name: 'Clasificación Ranking SERGOD STORE' });
+  const ranking = client.getByRole('table', { name: 'Clasificación Slifer' });
   await expect(ranking).toContainText('Ana Prueba');
   await expect(ranking.getByRole('row').filter({ hasText: 'Ana Prueba' })).toContainText('9');
   const publicData = await (

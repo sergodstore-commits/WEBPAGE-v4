@@ -47,6 +47,49 @@
   border-top: 1px solid #dbe3e9;
   padding-top: 28px;
 }
+.academy {
+  display: grid;
+  gap: 20px;
+}
+.house {
+  --house-color: #9b3636;
+  border: 1px solid #dbe3e9;
+  border-top: 4px solid var(--house-color);
+  border-radius: 8px;
+  padding: clamp(12px, 2vw, 24px);
+  min-width: 0;
+  background: #fff;
+}
+.house[data-house='ra'] {
+  --house-color: #866315;
+}
+.house[data-house='obelisk'] {
+  --house-color: #2164a2;
+}
+.houseHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.houseHeading span,
+.houseHeading p,
+.houseEmpty {
+  color: #526170;
+  font-size: 13px;
+}
+.houseHeading h3 {
+  font-family: var(--sg-font-display);
+  font-size: 30px;
+  color: var(--house-color);
+  margin: 6px 0 0;
+}
+.houseHeading p {
+  flex-shrink: 0;
+}
+.houseEmpty {
+  margin: 20px 0 4px;
+}
 .heading {
   display: flex;
   align-items: center;

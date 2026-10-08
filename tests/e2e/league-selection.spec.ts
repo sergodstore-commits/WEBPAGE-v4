@@ -80,7 +80,7 @@ test('Liga: selección múltiple guardada, recarga, suma pública y nuevo ciclo 
       expect(ranking.rows[0].points).toBe(points);
       expect(ranking.tournaments).toHaveLength(count);
       await expect(
-        client.getByRole('table', { name: 'Clasificación Ranking SERGOD STORE' }),
+        client.getByRole('table', { name: 'Clasificación Slifer' }),
       ).toContainText('Ana Ciclo');
     }
     await page.reload();
