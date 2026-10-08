@@ -143,7 +143,7 @@ function NewsEditor({
         </button>
         <button className="admin-button" disabled={busy} onClick={() => void save()}>
           {busy
-            ? 'Guardando medios…'
+            ? 'Guardando…'
             : existing
               ? 'Guardar cambios'
               : form.status === 'published'
@@ -154,9 +154,11 @@ function NewsEditor({
     </section>
   );
 }
-export function InstagramIntegration() {
+export function InstagramIntegration({
+  news = false,
+  onSaved,
+}: { news?: boolean; onSaved?: () => void } = {}) {
   const [status, setStatus] = useState<InstagramStatus | null>(null),
-    [tag, setTag] = useState('SergodWeb'),
     [candidates, setCandidates] = useState<InstagramCandidate[]>([]),
     [selected, setSelected] = useState<InstagramCandidate | null>(null),
     [next, setNext] = useState<string | null>(null),
@@ -164,10 +166,22 @@ export function InstagramIntegration() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
+  const [known, setKnown] = useState<NewsItem[]>([]),
+    [included, setIncluded] = useState<string[]>([]);
+  const existing = (p: InstagramCandidate) => known.find((n) => n.media_id === p.media_id);
+  const pending = candidates.some(
+    (p) => included.includes(p.media_id) !== (existing(p)?.status === 'published'),
+  );
+  const resetSelection = (items: NewsItem[]) =>
+    setIncluded(
+      items
+        .filter((n) => n.status === 'published')
+        .map((n) => n.media_id!)
+        .filter(Boolean),
+    );
   async function load() {
     const s = await api<InstagramStatus>('/admin/integrations/instagram');
     setStatus(s);
-    setTag(s.hashtag);
   }
   useEffect(() => {
     void load().catch((e) => setError(message(e)));
@@ -192,6 +206,7 @@ export function InstagramIntegration() {
     }
   }
   async function review(cursor?: string) {
+    const stored = await api<NewsItem[]>('/admin/news');
     const r = await api<{
       candidates: InstagramCandidate[];
       next_cursor: string | null;
@@ -206,15 +221,78 @@ export function InstagramIntegration() {
         : r.candidates,
     );
     setNext(r.next_cursor);
+    setKnown(stored);
+    setIncluded((old) =>
+      cursor
+        ? [
+            ...new Set([
+              ...old,
+              ...stored
+                .filter((n) => n.status === 'published')
+                .map((n) => n.media_id!)
+                .filter(Boolean),
+            ]),
+          ]
+        : stored
+            .filter((n) => n.status === 'published')
+            .map((n) => n.media_id!)
+            .filter(Boolean),
+    );
     setReviewed(true);
     setSelected(null);
     setNotice(
-      `Consulta completada: ${r.scanned} publicaciones revisadas en esta página. No se importó ninguna.`,
+      `Lista actualizada: ${r.scanned} publicaciones consultadas. Marca las que quieres mostrar y guarda la selección.`,
     );
+  }
+  async function saveSelection() {
+    let completed = 0;
+    try {
+      for (const p of candidates) {
+        const saved = existing(p),
+          wanted = included.includes(p.media_id);
+        if (wanted === (saved?.status === 'published')) continue;
+        await api(saved ? `/admin/news/${saved.id}` : '/admin/news', {
+          method: saved ? 'PATCH' : 'POST',
+          body: JSON.stringify(
+            saved
+              ? {
+                  status: wanted ? 'published' : 'withdrawn',
+                  tournament_id: saved.tournament_id,
+                  league_tournament_id: saved.league_tournament_id,
+                }
+              : { preview_id: p.preview_id, status: 'published' },
+          ),
+        });
+        completed++;
+      }
+      const stored = await api<NewsItem[]>('/admin/news');
+      setKnown(stored);
+      const publicItems = await api<NewsItem[]>('/news');
+      for (const p of candidates) {
+        const saved = stored.find((n) => n.media_id === p.media_id),
+          wanted = included.includes(p.media_id);
+        if (
+          (saved?.status === 'published') !== wanted ||
+          (saved ? publicItems.some((n) => n.id === saved.id) : false) !== wanted
+        )
+          throw Error('No se pudo comprobar la selección pública. Actualiza para revisar.');
+      }
+      onSaved?.();
+      setNotice('Selección guardada. Lectura y visibilidad en Noticias comprobadas.');
+    } catch (e) {
+      const stored = await api<NewsItem[]>('/admin/news').catch(() => null);
+      if (stored) setKnown(stored);
+      onSaved?.();
+      throw Error(
+        `${completed ? `${completed} cambios guardados. ` : ''}${message(e)} Los cambios restantes siguen pendientes.`,
+      );
+    }
   }
   return (
     <section className="admin-card admin-card-body" aria-labelledby="instagram-integration-heading">
-      <h2 id="instagram-integration-heading">Instagram</h2>
+      <h2 id="instagram-integration-heading">
+        {news ? 'Elegir publicaciones de Instagram' : 'Instagram'}
+      </h2>
       <p>
         Estado:{' '}
         {status?.connected
@@ -224,103 +302,88 @@ export function InstagramIntegration() {
           : 'Desconectado'}
         {status?.username ? ` · @${status.username}` : ''}
       </p>
-      {!status?.configured && (
-        <p>
-          Conexión pendiente: configura la aplicación de Meta y la clave de cifrado en el servidor.
-          La cuenta debe ser profesional.
-        </p>
+      {!news && (
+        <>
+          {!status?.configured && (
+            <p>
+              Conexión pendiente: configura la aplicación de Meta y la clave de cifrado en el
+              servidor. La cuenta debe ser profesional.
+            </p>
+          )}
+          {status?.login_mode === 'facebook' && (
+            <p>
+              Conexión mediante Facebook. Autoriza solo la página de SERGOD STORE, vinculada al
+              Instagram profesional de la tienda. Se leerán publicaciones; no se publicará ni se
+              accederá a mensajes.
+            </p>
+          )}
+          {status?.callback_url && (
+            <p style={{ overflowWrap: 'anywhere' }}>Callback: {status.callback_url}</p>
+          )}
+        </>
       )}
-      {status?.login_mode === 'facebook' && (
-        <p>
-          Conexión mediante Facebook. Autoriza solo la página de SERGOD STORE, vinculada al
-          Instagram profesional de la tienda. Se leerán publicaciones; no se publicará ni se
-          accederá a mensajes.
-        </p>
-      )}
-      {status?.callback_url && (
-        <p style={{ overflowWrap: 'anywhere' }}>Callback: {status.callback_url}</p>
-      )}
-      <label className="admin-field">
-        <span>Hashtag para Noticias</span>
-        <input
-          maxLength={61}
-          disabled={busy || !status}
-          value={tag}
-          onChange={(e) => setTag(e.target.value)}
-          placeholder="SergodWeb"
-        />
-        <small>
-          Solo publicaciones de la cuenta conectada que incluyan este hashtag. No se publican
-          automáticamente.
-        </small>
-      </label>
       <div className="admin-actions">
-        <button
-          className="admin-button secondary"
-          disabled={busy || !status}
-          onClick={() =>
-            void action(async () => {
-              await api('/admin/integrations/instagram', {
-                method: 'PATCH',
-                body: JSON.stringify({ hashtag: tag }),
-              });
-              await load();
-              setCandidates([]);
-              setReviewed(false);
-              setSelected(null);
-              setNotice('Hashtag guardado. Las noticias existentes se conservan.');
-            })
-          }
-        >
-          Guardar hashtag
-        </button>
-        <button
-          className="admin-button"
-          disabled={busy || !status?.configured}
-          onClick={() =>
-            void action(async () => {
-              const r = await api<{ url: string }>('/admin/integrations/instagram/connect', {
-                method: 'POST',
-                body: '{}',
-              });
-              window.location.assign(r.url);
-            })
-          }
-        >
-          {status?.connected ? 'Volver a conectar Instagram' : 'Conectar Instagram'}
-        </button>
-        <button
-          className="admin-button secondary"
-          disabled={busy || !status?.configured || !status.connected || status.expired}
-          onClick={() => void action(() => review())}
-        >
-          {busy ? 'Consultando…' : 'Revisar Instagram'}
-        </button>
-        <button
-          className="admin-button secondary"
-          disabled={busy || !status?.connected}
-          onClick={() => {
-            if (window.confirm('¿Desconectar Instagram? Las noticias guardadas se conservan.'))
+        {!news && (
+          <button
+            className="admin-button"
+            disabled={busy || !status?.configured}
+            onClick={() =>
               void action(async () => {
-                await api('/admin/integrations/instagram/disconnect', {
+                const r = await api<{ url: string }>('/admin/integrations/instagram/connect', {
                   method: 'POST',
                   body: '{}',
                 });
-                await load();
-                setCandidates([]);
-                setSelected(null);
-                setReviewed(false);
-                setNotice('Instagram desconectado. Las noticias publicadas se conservan.');
-              });
-          }}
+                window.location.assign(r.url);
+              })
+            }
+          >
+            {status?.connected ? 'Volver a conectar Instagram' : 'Conectar Instagram'}
+          </button>
+        )}
+        <button
+          className="admin-button secondary"
+          disabled={busy || pending || !status?.configured || !status.connected || status.expired}
+          onClick={() => void action(() => review())}
         >
-          Desconectar Instagram
+          {busy ? 'Consultando…' : 'Actualizar publicaciones'}
         </button>
-        <Link className="admin-button secondary" href="/admin/noticias">
-          Noticias guardadas
-        </Link>
+        {!news && (
+          <>
+            <button
+              className="admin-button secondary"
+              disabled={busy || !status?.connected}
+              onClick={() => {
+                if (window.confirm('¿Desconectar Instagram? Las noticias guardadas se conservan.'))
+                  void action(async () => {
+                    await api('/admin/integrations/instagram/disconnect', {
+                      method: 'POST',
+                      body: '{}',
+                    });
+                    await load();
+                    setCandidates([]);
+                    setSelected(null);
+                    setReviewed(false);
+                    setNotice('Instagram desconectado. Las noticias publicadas se conservan.');
+                  });
+              }}
+            >
+              Desconectar Instagram
+            </button>
+            <Link className="admin-button secondary" href="/admin/noticias">
+              Noticias guardadas
+            </Link>{' '}
+          </>
+        )}
+        {news && (
+          <Link className="admin-button secondary" href="/admin/integraciones">
+            Configurar conexión
+          </Link>
+        )}
       </div>
-      <p>Fotos, carruseles y videos/Reels. Stories no se incorporan a este archivo de Noticias.</p>
+      <p>
+        Fotos, carruseles y Reels de la cuenta conectada, sin filtro por hashtag. Usa «Cargar más»
+        para consultar publicaciones anteriores. Stories no se incluyen.
+      </p>
       {error && (
         <div role="alert" className="admin-feedback error">
           {error}
@@ -340,14 +403,17 @@ export function InstagramIntegration() {
       )}
       {reviewed && (
         <>
-          <h3>Publicaciones candidatas</h3>
-          {!candidates.length && (
-            <p>No hay publicaciones nuevas con #{status?.hashtag} en esta página.</p>
-          )}
+          <h3>Publicaciones de Instagram · {candidates.length}</h3>
+          <p>
+            Marca para mostrar en Noticias. Desmarcar retira de la web y conserva la publicación
+            original. Los cambios se aplican al guardar.
+          </p>
+          {!candidates.length && <p>No hay publicaciones disponibles en esta página.</p>}
           <div className="admin-table-scroll">
             <table className="admin-table">
               <thead>
                 <tr>
+                  <th>Mostrar en Noticias</th>
                   <th>Publicación</th>
                   <th>Fecha</th>
                   <th>Formato</th>
@@ -357,9 +423,35 @@ export function InstagramIntegration() {
               <tbody>
                 {candidates.map((p) => (
                   <tr key={p.media_id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        aria-label={`Mostrar publicación ${p.media_id} en Noticias`}
+                        disabled={busy}
+                        checked={included.includes(p.media_id)}
+                        onChange={(e) => {
+                          setIncluded((ids) =>
+                            e.target.checked
+                              ? [...ids, p.media_id]
+                              : ids.filter((id) => id !== p.media_id),
+                          );
+                          setNotice('');
+                        }}
+                      />
+                    </td>
                     <td>{p.caption.slice(0, 120) || 'Publicación de Instagram'}</td>
                     <td>{date(p.recorded_at)}</td>
-                    <td>{p.media_type}</td>
+                    <td>
+                      {p.media_type}
+                      <br />
+                      <small>
+                        {existing(p)?.status === 'published'
+                          ? 'Visible en la web'
+                          : existing(p)
+                            ? 'Guardada, sin mostrar'
+                            : 'Sin incorporar'}
+                      </small>
+                    </td>
                     <td>
                       <button
                         className="admin-button secondary"
@@ -378,21 +470,49 @@ export function InstagramIntegration() {
           {next && (
             <button
               className="admin-button secondary"
-              disabled={busy}
+              disabled={busy || pending}
               onClick={() => void action(() => review(next))}
             >
-              Revisar más publicaciones
+              Cargar más publicaciones
             </button>
           )}
         </>
       )}
+      {reviewed && candidates.length > 0 && (
+        <div className="admin-actions">
+          <button
+            className="admin-button"
+            disabled={busy || !pending}
+            onClick={() => void action(saveSelection)}
+          >
+            {busy ? 'Guardando…' : 'Guardar selección de Noticias'}
+          </button>
+          <button
+            className="admin-button secondary"
+            disabled={busy || !pending}
+            onClick={() => {
+              resetSelection(known);
+              setNotice('');
+            }}
+          >
+            Descartar cambios
+          </button>
+          <span>{pending ? 'Cambios sin guardar' : 'Selección guardada'}</span>
+        </div>
+      )}
       {selected && (
         <NewsEditor
           key={selected.preview_id}
-          item={selected}
+          item={existing(selected) || selected}
           cancel={() => setSelected(null)}
           done={() => {
-            setCandidates((old) => old.filter((p) => p.media_id !== selected.media_id));
+            void api<NewsItem[]>('/admin/news')
+              .then((items) => {
+                setKnown(items);
+                resetSelection(items);
+              })
+              .catch((e) => setError(message(e)));
+            onSaved?.();
             setSelected(null);
             setNotice('Noticia guardada. Estado público y lectura comprobados.');
           }}
@@ -438,10 +558,13 @@ export function InstagramNewsPage() {
           <h1>Noticias</h1>
           <p>Publicaciones de Instagram incorporadas a SERGOD STORE.</p>
         </div>
-        <Link href="/admin/integraciones" className="admin-button">
-          Revisar Instagram
-        </Link>
       </div>
+      <InstagramIntegration
+        news
+        onSaved={() => {
+          void load().catch((e) => setError(message(e)));
+        }}
+      />
       <p>
         Las publicaciones manuales existentes siguen en{' '}
         <Link style={{ color: '#176d86', textDecoration: 'underline' }} href="/admin/publicaciones">

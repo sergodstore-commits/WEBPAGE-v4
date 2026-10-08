@@ -1,6 +1,6 @@
 # Noticias e Instagram
 
-## Funcionamiento vigente — 7 octubre 2026
+## Funcionamiento vigente — 8 octubre 2026
 
 Por decisión del propietario, las publicaciones de Instagram se muestran integradas desde Instagram. Al incorporar una noticia se guardan el enlace, texto, fecha, tipo, cuenta y relaciones opcionales con torneos; **no se descargan ni suben fotos o videos a Supabase**. La columna de medios queda vacía para las nuevas incorporaciones. Los archivos históricos no se borran.
 
@@ -10,7 +10,7 @@ La reproducción depende de Instagram: una publicación eliminada, privada, con 
 
 ## Panel y seguridad
 
-Admin → Integraciones → Instagram permite configurar el hashtag, conectar, revisar y previsualizar. La revisión consulta únicamente medios de la cuenta conectada, filtra el hashtag exacto y excluye Stories e IDs ya incorporados. Los candidatos duran 15 minutos y pertenecen al administrador. El navegador envía solo el ID de vista previa y estado/relaciones; el servidor comprueba vigencia, cuenta, hashtag, duplicados y torneos. La publicación no es automática. Admin → Noticias permite editar estado/relaciones, retirar y eliminar el registro local sin modificar Instagram.
+Admin → Noticias permite [actualizar y seleccionar todas las publicaciones](INSTAGRAM-SELECTION.md) de la cuenta conectada, sin hashtag. La consulta es paginada e incluye publicaciones ya incorporadas; excluye Stories. Las casillas se aplican al guardar, con lectura pública comprobada. Desmarcar retira de la web y conserva el registro y el original. Las vistas previas de publicaciones nuevas duran 15 minutos y pertenecen al administrador. El servidor valida vigencia, cuenta, duplicados y relaciones; no hay publicación automática. Admin → Integraciones mantiene la conexión de solo lectura.
 
 Producción utiliza Facebook Login: `INSTAGRAM_LOGIN_MODE=facebook`, `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_FACEBOOK_PAGE_ID`, `INSTAGRAM_API_VERSION=v26.0` e `INTEGRATIONS_ENCRYPTION_KEY` privada existente. No usar variables NEXT_PUBLIC. Callback exacto: `https://www.sergodstore.cl/api/admin/integrations/instagram/callback`.
 

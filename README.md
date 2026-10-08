@@ -2,7 +2,7 @@
 
 Tienda web de cartas coleccionables para SERGOD STORE, Copiapó, Chile. Incluye catálogo, preventas, cuenta de clientes, carrito, pedidos, entregas, contenido y un panel administrativo con venta presencial (POS). La entrega final del 7 de octubre incorpora la identidad oficial y las seis fases de interfaz adaptable.
 
-Torneos utiliza [YouTube](docs/YOUTUBE.md) desde el 7 de octubre de 2026: directos y grabaciones del canal @SergodStore se publican desde el panel, sin claves de API. Comunidad/[rankings](docs/RANKINGS.md) y Noticias/[Instagram](docs/INSTAGRAM-NOTICIAS.md) forman parte de la entrega. Instagram continúa pendiente de conexión real; reutiliza captions y medios con hashtag configurable, vista previa y aprobación, sin publicación automática.
+Torneos utiliza [YouTube](docs/YOUTUBE.md) desde el 7 de octubre de 2026: directos y grabaciones del canal @SergodStore se publican desde el panel, sin claves de API. Comunidad/[rankings](docs/RANKINGS.md) y Noticias/[Instagram](docs/INSTAGRAM-NOTICIAS.md) forman parte de la entrega. Instagram está conectado mediante Facebook en modo de lectura. En [Noticias se actualizan y seleccionan publicaciones](docs/INSTAGRAM-SELECTION.md) sin hashtag; los medios permanecen en Instagram y no se publican noticias automáticamente.
 
 El [panel administrativo rediseñado](docs/ADMIN.md) organiza las herramientas por catálogo, ventas, comunidad y configuración, con navegación móvil accesible y formularios compartidos. [Carrito, Cuenta y Checkout](docs/COMPRA-CUENTA.md) completan la entrega.
 

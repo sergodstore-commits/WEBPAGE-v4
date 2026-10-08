@@ -373,7 +373,7 @@ const mediaSchema = z.object({
   ),
   permalink: z.string().url(),
 });
-function snapshot(raw: unknown, tag: string) {
+function snapshot(raw: unknown) {
   const m = mediaSchema.parse(raw),
     u = new URL(m.permalink);
   if (
@@ -386,17 +386,15 @@ function snapshot(raw: unknown, tag: string) {
   )
     fail(502, 'Instagram devolvió un enlace de publicación inválido.');
   if (m.media_product_type === 'STORY') fail(400, 'Las Stories no se archivan como Noticias.');
-  if (!hasImportTag(m.caption, tag))
-    fail(400, 'Esta publicación no contiene el hashtag configurado.');
   const assets: NewsAsset[] = [];
   return {
     media_id: m.id,
-    caption: cleanInstagramCaption(m.caption, tag),
+    caption: m.caption.trim(),
     recorded_at: m.timestamp,
     assets,
     permalink: u.toString(),
     media_type: m.media_type,
-    import_hashtag: tag,
+    import_hashtag: '',
   };
 }
 const mediaFields = 'id,caption,media_type,media_product_type,permalink,timestamp';
@@ -409,7 +407,6 @@ export async function reviewInstagram(adminId: string, cursor?: string) {
     .parse(cursor);
   const { c, access } = await ready(),
     db = await getDb();
-  const tag = (await instagramStatus()).hashtag;
   const data = await graph(`${c.user_id}/media`, access, {
     fields: mediaFields,
     limit: '25',
@@ -417,18 +414,9 @@ export async function reviewInstagram(adminId: string, cursor?: string) {
   });
   if (!Array.isArray(data.data) || data.data.length > 25)
     fail(502, 'Instagram devolvió una lista inválida.');
-  const old = new Set(
-    (await db.query('SELECT media_id FROM instagram_news')).rows.map((r) => r.media_id),
-  );
   const candidates = data.data
-    .filter(
-      (m: any) =>
-        typeof m.caption === 'string' &&
-        hasImportTag(m.caption, tag) &&
-        m.media_product_type !== 'STORY' &&
-        !old.has(m.id),
-    )
-    .map((m: unknown) => snapshot(m, tag));
+    .filter((m: any) => m.media_product_type !== 'STORY')
+    .map((m: unknown) => snapshot(m));
   const next =
     typeof data.paging?.cursors?.after === 'string' && data.paging?.next
       ? data.paging.cursors.after
@@ -442,9 +430,8 @@ export async function reviewInstagram(adminId: string, cursor?: string) {
     await tx.query("SELECT pg_advisory_xact_lock(hashtext('instagram-connection'))");
     const current = (await tx.query('SELECT credentials FROM instagram_connection WHERE id=1'))
       .rows[0];
-    const settings = (await tx.query('SELECT hashtag FROM instagram_settings WHERE id=1')).rows[0];
-    if (!current || current.credentials !== c.credentials || settings.hashtag !== tag)
-      fail(409, 'La conexión o el hashtag cambió. Revisa nuevamente.');
+    if (!current || current.credentials !== c.credentials)
+      fail(409, 'La conexión cambió. Actualiza las publicaciones nuevamente.');
     await tx.query('DELETE FROM instagram_previews WHERE expires_at<now()');
     const rows: InstagramCandidate[] = [];
     for (const p of candidates) {
@@ -506,9 +493,8 @@ export async function importInstagram(adminId: string, input: unknown) {
         [d.preview_id, adminId],
       )
     ).rows[0];
-    const tag = (await tx.query('SELECT hashtag FROM instagram_settings WHERE id=1')).rows[0];
-    if (!fresh || !still || still.user_id !== preview.user_id || tag.hashtag !== p.import_hashtag)
-      fail(409, 'La vista previa, cuenta o hashtag cambió. Revisa nuevamente.');
+    if (!fresh || !still || still.user_id !== preview.user_id)
+      fail(409, 'La vista previa o cuenta cambió. Actualiza las publicaciones nuevamente.');
     if (
       (await tx.query('SELECT id FROM instagram_news WHERE media_id=$1', [p.media_id])).rows.length
     )

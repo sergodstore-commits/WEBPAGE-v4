@@ -41,7 +41,7 @@ async function publicMock(page: Page, kind: 'normal' | 'empty' | 'error' = 'norm
     return r.fulfill({ status: 404, json: { error: 'Fuera de prueba' } });
   });
 }
-test('Instagram local: guardar hashtag, recargar y proteger operaciones sin conectar Meta', async ({
+test('Instagram local: panel sin hashtag y operaciones protegidas sin conectar Meta', async ({
   page,
   browser,
 }) => {
@@ -66,18 +66,14 @@ test('Instagram local: guardar hashtag, recargar y proteger operaciones sin cone
     ).status(),
   ).toBe(403);
   await page.goto('/admin/integraciones');
-  const tag = `SergodPrueba${Date.now()}`;
-  await page.getByLabel(/^Hashtag para Noticias/).fill(tag);
-  await page.getByRole('button', { name: 'Guardar hashtag', exact: true }).click();
-  await expect(
-    page.getByText('Hashtag guardado. Las noticias existentes se conservan.', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByLabel(/^Hashtag para Noticias/)).toHaveCount(0);
   await page.reload();
-  await expect(page.getByLabel(/^Hashtag para Noticias/)).toHaveValue(tag);
   await expect(
     page.getByRole('button', { name: 'Conectar Instagram', exact: true }),
   ).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Revisar Instagram', exact: true })).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'Actualizar publicaciones', exact: true }),
+  ).toBeDisabled();
   const fake = await page.request.post('/api/admin/news', {
     headers: { Origin: 'http://localhost:3100' },
     data: {
@@ -91,11 +87,6 @@ test('Instagram local: guardar hashtag, recargar y proteger operaciones sin cone
   expect((await (await client.request.get('http://localhost:3100/api/news')).json()).length).toBe(
     0,
   );
-  await page.getByLabel(/^Hashtag para Noticias/).fill(original.hashtag);
-  await page.getByRole('button', { name: 'Guardar hashtag', exact: true }).click();
-  await expect(
-    page.getByText('Hashtag guardado. Las noticias existentes se conservan.', { exact: true }),
-  ).toBeVisible();
   await anonymous.close();
 });
 test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recarga adaptable', async ({
@@ -184,7 +175,7 @@ test('Noticias: vacío y recuperación de error conservan acciones utilizables',
     page.getByRole('heading', { name: 'Pronto tendremos novedades', exact: true }),
   ).toBeVisible();
 });
-test('Admin Instagram: hashtag, revisar sin importar, vista previa, publicar, recargar, retirar y borrar', async ({
+test('Admin Instagram: actualizar sin hashtag, vista previa, publicar, recargar, retirar y borrar', async ({
   page,
 }, info) => {
   const status: InstagramStatus = {
@@ -269,13 +260,9 @@ test('Admin Instagram: hashtag, revisar sin importar, vista previa, publicar, re
       return r.fulfill({ json: saved.filter((v) => v.status === 'published') });
     return r.fulfill({ status: 404, json: { error: 'Fuera de la prueba' } });
   });
-  await page.goto('/admin/integraciones');
-  await page.getByLabel(/^Hashtag para Noticias/).fill('SergodWeb');
-  await page.getByRole('button', { name: 'Guardar hashtag', exact: true }).click();
-  await expect(
-    page.getByText('Hashtag guardado. Las noticias existentes se conservan.'),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Revisar Instagram', exact: true }).click();
+  await page.goto('/admin/noticias');
+  await expect(page.getByLabel(/^Hashtag para Noticias/)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Actualizar publicaciones', exact: true }).click();
   await page.getByRole('button', { name: 'Previsualizar publicación 123456', exact: true }).click();
   expect(writes).toBe(0);
   await expect(

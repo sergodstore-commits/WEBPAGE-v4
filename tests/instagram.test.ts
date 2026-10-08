@@ -40,6 +40,7 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
       photo,
       { ...photo, id: '112', caption: '#SergodWebExtra no corresponde' },
       { ...photo, id: '113', caption: '#sergodweb', media_product_type: 'STORY' },
+      { ...photo, id: '114', caption: undefined },
     ],
     failed = false,
     rotation = 0,
@@ -124,14 +125,16 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
   });
   let candidates: any[], saved: any;
   await t.test(
-    'Hashtag exacto, cuenta propia, paginación segura y ninguna publicación automática',
+    'Todas las publicaciones de la cuenta, sin hashtag ni texto; paginación segura y sin publicación automática',
     async () => {
       assert.equal(ig.hasImportTag('#SergodWebExtra', 'SergodWeb'), false);
       assert.equal(ig.hasImportTag('#sergodweb', 'SergodWeb'), true);
       const r = await ig.reviewInstagram(admin);
       candidates = r.candidates;
-      assert.equal(r.candidates.length, 1);
-      assert.equal(r.candidates[0].caption, 'Nueva Liga\n #Mitos');
+      assert.equal(r.candidates.length, 3);
+      assert.equal(r.candidates[0].caption, photo.caption);
+      assert.equal(r.candidates[1].media_id, '112');
+      assert.equal(r.candidates[2].caption, '');
       assert.equal(r.next_cursor, 'NEXT');
       assert.equal((await ig.publicNews()).length, 0);
       await assert.rejects(
@@ -176,7 +179,16 @@ test('Instagram: selección propia, OAuth, archivo persistente, errores y permis
           ig.importInstagram(admin, { preview_id: candidates[0].preview_id, status: 'published' }),
         /venció/,
       );
-      assert.equal((await ig.reviewInstagram(admin)).candidates.length, 0);
+      const reviewed = await ig.reviewInstagram(admin);
+      assert.equal(reviewed.candidates.length, 3);
+      await assert.rejects(
+        () =>
+          ig.importInstagram(admin, {
+            preview_id: reviewed.candidates[0].preview_id,
+            status: 'published',
+          }),
+        /ya está incorporada/,
+      );
     },
   );
   await t.test('Carrusel mixto guarda enlace y tipo sin copiar fotos ni MP4', async () => {
