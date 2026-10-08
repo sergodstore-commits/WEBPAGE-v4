@@ -10,7 +10,7 @@
   min-width: 0;
 }
 .sources > section {
-  margin: 0;
+  margin: 0 !important;
 }
 .sources h2 {
   margin-top: 0;
