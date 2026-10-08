@@ -216,7 +216,9 @@ export async function startInstagram(adminId: string) {
     redirect_uri: callback(),
     response_type: 'code',
     scope:
-      loginMode() === 'facebook' ? 'instagram_basic,pages_show_list' : 'instagram_business_basic',
+      loginMode() === 'facebook'
+        ? 'instagram_basic,pages_show_list,pages_read_engagement'
+        : 'instagram_business_basic',
     state: raw,
     ...(loginMode() === 'instagram' ? { enable_fb_login: '0', force_authentication: '1' } : {}),
   }).toString();

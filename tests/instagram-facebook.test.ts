@@ -81,7 +81,10 @@ test('Instagram mediante Facebook: página propia, OAuth, persistencia y rechazo
       u = new URL(s.url),
       state = u.searchParams.get('state')!;
     assert.equal(u.hostname, 'www.facebook.com');
-    assert.equal(u.searchParams.get('scope'), 'instagram_basic,pages_show_list');
+    assert.equal(
+      u.searchParams.get('scope'),
+      'instagram_basic,pages_show_list,pages_read_engagement',
+    );
     assert.ok(!s.url.includes('fb-private'));
     return new Request(`http://localhost:3000/callback?code=code&state=${state}`, {
       headers: { cookie: `sergod_instagram_state=${state}` },
