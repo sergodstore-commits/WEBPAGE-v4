@@ -161,9 +161,18 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
     await expect(page.getByLabel(/^Tabla de resultados/)).toHaveValue(text);
   };
   await upload(
-    'Posicion,Jugador,Puntos,Konami ID\n1,Ana Prueba,9,0000123401\n2,Bruno Prueba,6,0000123402',
+    `Lista de Resultados del Torneo,${event},\n,,\nRangos,El ID de Card Game,Nombre de Acceso\nGanador,0000123401,Ana Prueba\n2,0000123402,Bruno Prueba`,
     'resultados.csv',
   );
+  await page
+    .getByRole('button', { name: 'Previsualizar resultados Yu-Gi-Oh!', exact: true })
+    .click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'El archivo no incluye puntos' }),
+  ).toBeVisible();
+  await page
+    .getByLabel(/^Puntos por posición/)
+    .fill('1=9\n2=6');
   await page
     .getByRole('button', { name: 'Previsualizar resultados Yu-Gi-Oh!', exact: true })
     .click();
@@ -193,6 +202,9 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
   await page
     .getByRole('button', { name: `Actualizar resultados de ${title}`, exact: true })
     .click();
+  await page
+    .getByLabel(/^Puntos por posición/)
+    .fill('');
   await upload(
     'Posicion,Jugador,Puntos,Konami ID\n1,Ana Prueba,3,0000123401\n2,Bruno Prueba,1,0000123402',
     'corregidos.csv',

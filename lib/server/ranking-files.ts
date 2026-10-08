@@ -24,6 +24,7 @@ const schema = z.object({
     .max(120)
     .regex(/^[a-zA-Z0-9_.:-]*$/)
     .default(''),
+  position_points: z.string().max(50000).default(''),
 });
 
 function parseTable(text: string) {
@@ -68,13 +69,13 @@ function parseTable(text: string) {
     } else if (closedQuote) {
       if (c.trim()) fail(400, 'Hay texto después de cerrar una celda entre comillas.');
     } else cell += c;
-    if (cell.length > 1000 || row.length > 50 || rows.length > 5001)
+    if (cell.length > 1000 || row.length > 50 || rows.length > 5003)
       fail(400, 'El archivo supera el tamaño permitido (5.000 jugadores).');
   }
   if (quoted) fail(400, 'El archivo contiene comillas sin cerrar.');
   row.push(cell.trim());
   if (row.some(Boolean)) rows.push(row);
-  if (rows.length < 2 || rows.length > 5001)
+  if (rows.length < 2 || rows.length > 5003)
     fail(400, 'Agrega encabezados y entre 1 y 5.000 jugadores al archivo.');
   return rows;
 }
@@ -86,8 +87,18 @@ function column(headers: string[], aliases: string[]) {
 }
 export function parseRankingFile(input: unknown) {
   const d = schema.parse(input),
-    rows = parseTable(d.text),
-    headers = rows.shift()!;
+    rows = parseTable(d.text);
+  let reportId = '';
+  if (norm(rows[0][0]) === 'listaderesultadosdeltorneo') {
+    reportId = rows.shift()![1]?.trim() || '';
+    if (!/^[a-zA-Z0-9_.:-]{1,120}$/.test(reportId))
+      fail(400, 'El reporte de Konami no tiene un identificador de torneo válido.');
+    if (d.event_id && d.event_id !== reportId)
+      fail(400, `El identificador ingresado no coincide con el reporte ${reportId}.`);
+  }
+  const headers = rows.shift()!;
+  if (!headers || !rows.length || rows.length > 5000)
+    fail(400, 'Agrega encabezados y entre 1 y 5.000 jugadores al archivo.');
   const name = column(headers, [
     'jugador',
     'nombre',
@@ -96,6 +107,7 @@ export function parseRankingFile(input: unknown) {
     'fullname',
     'nombrecompleto',
     'name',
+    'nombredeacceso',
   ]);
   const first = column(headers, ['firstname', 'nombres']),
     last = column(headers, ['lastname', 'apellidos']);
@@ -114,14 +126,50 @@ export function parseRankingFile(input: unknown) {
     'cardgameid',
     'playerid',
     'identificador',
+    'eliddecardgame',
   ]);
-  const pos = column(headers, ['posicion', 'position', 'pos', 'rank', 'ranking', 'puesto']);
-  if (points < 0 || (name < 0 && (first < 0 || last < 0)))
+  const pos = column(headers, [
+    'posicion',
+    'position',
+    'pos',
+    'rank',
+    'ranking',
+    'puesto',
+    'rangos',
+  ]);
+  if (name < 0 && (first < 0 || last < 0))
     fail(
       400,
       'No se encontraron Jugador/Player y Puntos/Points. Usa el archivo de ejemplo o texto tabulado con esos encabezados.',
     );
+  const positionPoints = new Map<number, number>();
+  if (points < 0) {
+    if (pos < 0 || !d.position_points.trim())
+      fail(
+        400,
+        'El archivo no incluye puntos. Indica los puntos por posición antes de previsualizar; no se deducen de los puestos.',
+      );
+    for (const line of d.position_points.trim().split(/\r?\n/)) {
+      const match = /^\s*(\d+)\s*=\s*(\d+)\s*$/.exec(line);
+      if (!match)
+        fail(400, 'Usa una línea por puesto: 1=10, 2=8, etc. Los puntos deben ser enteros.');
+      const position = Number(match[1]),
+        score = Number(match[2]);
+      if (position < 1 || position > 5000 || score > 100000 || positionPoints.has(position))
+        fail(
+          400,
+          'Revisa los puntos por posición: puestos únicos de 1 a 5.000 y puntos de 0 a 100.000.',
+        );
+      positionPoints.set(position, score);
+    }
+  } else if (d.position_points.trim()) {
+    fail(400, 'El archivo ya incluye puntos. Deja vacía la regla por posición para conservarlos.');
+  }
   const warnings: string[] = [];
+  if (points < 0)
+    warnings.push(
+      'Puntos asignados según la regla por posición ingresada por el administrador; el reporte original no contiene puntos.',
+    );
   if (id < 0)
     warnings.push(
       'Sin ID de jugador: se agrupa por nombre normalizado. Usa nombres consistentes y un ID para distinguir personas con el mismo nombre.',
@@ -137,10 +185,12 @@ export function parseRankingFile(input: unknown) {
     const rawId = id >= 0 ? r[id].trim() : '';
     if (id >= 0 && (!rawId || rawId.length > 120))
       fail(400, `Fila ${i + 2}: falta un ID válido. Mantén el mismo ID en todos los torneos.`);
-    if (!/^\d+$/.test(r[points]))
+    if (points >= 0 && !/^\d+$/.test(r[points]))
       fail(400, `Fila ${i + 2}: los puntos deben ser enteros, sin porcentajes ni fórmulas.`);
-    const score = Number(r[points]),
-      position = pos >= 0 ? Number(r[pos]) : i + 1;
+    const position = pos >= 0 ? (norm(r[pos]) === 'ganador' ? 1 : Number(r[pos])) : i + 1;
+    const score = points >= 0 ? Number(r[points]) : positionPoints.get(position);
+    if (score === undefined)
+      fail(400, `Fila ${i + 2}: falta definir los puntos del puesto ${position}.`);
     if (score > 100000 || !Number.isInteger(position) || position < 1 || position > 5000)
       fail(400, `Fila ${i + 2}: revisa puntos y posición.`);
     return {
@@ -150,13 +200,19 @@ export function parseRankingFile(input: unknown) {
       position,
     };
   });
+  if (results.some((r) => r.name.includes('?')))
+    warnings.push(
+      'Algunos nombres contienen signos ?. Se conserva el texto original; revisa esos nombres antes de publicar.',
+    );
   if (new Set(results.map((r) => r.player_key)).size !== results.length)
     fail(
       400,
       'Hay jugadores repetidos en el archivo. Usa un ID distinto para personas con el mismo nombre.',
     );
   const identity =
-    d.event_id || `local:${hash(`${d.played_on}|${identityName(d.title)}`).slice(0, 32)}`;
+    reportId ||
+    d.event_id ||
+    `local:${hash(`${d.played_on}|${identityName(d.title)}`).slice(0, 32)}`;
   // Identical final tables on different dates are valid separate tournaments.
   const fingerprint = hash(
     d.played_on +

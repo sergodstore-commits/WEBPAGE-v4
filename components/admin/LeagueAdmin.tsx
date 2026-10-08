@@ -181,7 +181,13 @@ export function LeagueAdmin() {
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
     [loading, setLoading] = useState(true);
-  const [fileForm, setFileForm] = useState({ title: '', played_on: '', event_id: '', text: '' });
+  const [fileForm, setFileForm] = useState({
+    title: '',
+    played_on: '',
+    event_id: '',
+    text: '',
+    position_points: '',
+  });
   async function load() {
     const list = await api<LeagueTournament[]>('/admin/league');
     setSaved(list);
@@ -424,8 +430,9 @@ export function LeagueAdmin() {
           oficial de Konami.
         </p>
         <p>
-          Importa CSV, TSV o pega una tabla con Jugador y Puntos finales. Usa un ID de jugador
-          consistente cuando esté disponible.{' '}
+          Importa el CSV de resultados de Konami, un TSV o una tabla con Jugador y Puntos finales.
+          Si el reporte solo trae posiciones, define abajo los puntos de cada puesto. Usa un ID de
+          jugador consistente cuando esté disponible.{' '}
           <a href="/ranking-yugioh-ejemplo.csv" download className="admin-inline-link">
             Descargar encabezados de ejemplo
           </a>
@@ -468,8 +475,8 @@ export function LeagueAdmin() {
                 }}
               />
               <small>
-                ID del reporte/KCGN. Sin ID se genera uno con nombre y fecha. Para corregir usa el
-                torneo guardado de abajo.
+                El CSV de Konami usa el ID incluido en el reporte. Para otros archivos, sin ID se
+                genera uno con nombre y fecha. Para corregir usa el torneo guardado de abajo.
               </small>
             </label>
             <label className="admin-field">
@@ -494,6 +501,23 @@ export function LeagueAdmin() {
                 setFileForm({ ...fileForm, text: e.target.value });
               }}
             />
+          </label>
+          <label className="admin-field">
+            Puntos por posición (solo si el archivo no incluye puntos)
+            <textarea
+              rows={4}
+              maxLength={50000}
+              value={fileForm.position_points}
+              placeholder={'1=10\n2=8\n3=6'}
+              onChange={(e) => {
+                setPreview(null);
+                setFileForm({ ...fileForm, position_points: e.target.value });
+              }}
+            />
+            <small>
+              Define todos los puestos, uno por línea. Puedes asignar 0 puntos. Los valores del
+              ejemplo no se aplican automáticamente.
+            </small>
           </label>
           <button className="admin-button" disabled={busy}>
             Previsualizar resultados Yu-Gi-Oh!
@@ -627,6 +651,7 @@ export function LeagueAdmin() {
                                 played_on: t.played_on,
                                 event_id: t.external_id,
                                 text: '',
+                              position_points: '',
                               });
                               setNotice(
                                 'Selecciona el archivo corregido de este torneo y previsualiza. Se reemplazarán los resultados al confirmar.',

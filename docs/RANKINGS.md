@@ -46,6 +46,14 @@ Se reconocen encabezados españoles e ingleses, incluyendo `Position`, `Player`,
 
 El administrador ingresa nombre, fecha e identificador del torneo opcional, sube o pega la tabla y revisa todos los jugadores antes de guardar. Para corregir, debe abrir **Actualizar resultados** del torneo existente, conservando su identificador. La importación no convierte este ranking interno en un ranking oficial Konami.
 
+### Reporte CSV de Konami (8 octubre 2026)
+
+Se admite el formato «Lista de Resultados del Torneo» con una fila inicial que contiene el ID del evento, una fila vacía y los encabezados `Rangos,El ID de Card Game,Nombre de Acceso`. «Ganador» equivale al puesto 1. El ID del evento se toma del archivo; si se escribe otro ID en el formulario se rechaza la discrepancia para evitar duplicar el torneo. Los IDs de jugador conservan sus ceros iniciales y se almacenan como huellas privadas.
+
+Este reporte contiene posiciones, pero no puntos ni fecha. La fecha se ingresa en el panel. Para asignar puntos, el administrador completa **Puntos por posición**, una línea por puesto, por ejemplo `1=10`. Debe definir todos los puestos presentes, con puntos enteros de 0 a 100.000; el ejemplo no se aplica automáticamente. La vista previa explica que los puntos proceden de esa regla y no del CSV. Si el archivo ya trae puntos, la regla debe quedar vacía para conservarlos. Los nombres con `?` se mantienen y generan una advertencia, sin inventar sus caracteres originales.
+
+El archivo real E26-246530 se leyó localmente: 12 jugadores y puestos 1 a 12. No se guardó en producción: faltan fecha y regla de puntuación del propietario. No se incluye el archivo ni sus IDs en el repositorio.
+
 ## Persistencia y seguridad
 
 Migraciones versionadas: `db/migrations/009_rankings.sql` crea las tablas, restricciones, relaciones y RLS; `011_league_selection.sql` agrega la selección persistente de ligas. Ambas están aplicadas en producción. Para nuevas instalaciones, se aplican con `npm run db:migrate` antes de publicar.
@@ -65,3 +73,5 @@ Las pruebas de navegador cubren selección y recarga de cada ranking, búsqueda,
 Resultado del 7 de octubre: 88/88 pruebas de servidor, TypeScript, compilación de producción y trazado del servidor correctos. Seis recorridos únicos de navegador comprobados, incluidos los cuatro de Comunidad/Liga y regresiones de publicaciones y diseño adaptable. Dos recorridos se repitieron después de precisar selectores de las pruebas. Capturas privadas revisadas en `.data/community-review-20261007`.
 
 Ampliación de selección de ligas: siete pruebas de servidor adicionales comprueban conservación al migrar, separación de rankings, suma de una/dos/cuatro ligas, selección repetida, datos inválidos, cambio de ciclo y reapertura. Cinco recorridos de navegador únicos aprobados: las cuatro regresiones de Comunidad y uno de selección con guardado real local, recarga, pantalla móvil y cambio de ciclo sin borrar resultados. No se importaron resultados de prueba a producción.
+
+Comprobación del formato Konami: 16 pruebas de servidor de rankings/selección aprobadas y un recorrido de navegador con subida CSV → rechazo sin puntos → regla explícita → vista previa → guardado en base real aislada → lectura pública → recarga → corrección → eliminación. Se preservan los ceros de los IDs y no se exponen públicamente. TypeScript y compilación/trazado aprobados. Los datos de navegador son ficticios y no se cargaron en producción.

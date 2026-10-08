@@ -42,6 +42,48 @@ test('Archivos de ranking: CSV/TSV, encabezados, identidades y errores explícit
     assert.throws(() => parseRankingFile({ ...base, text }));
 });
 
+test('CSV Konami: preámbulo, Ganador, ceros del ID y puntos definidos explícitamente', async () => {
+  const { parseRankingFile } = await import('../lib/server/ranking-files');
+  const base = {
+    title: 'Torneo CSV Konami',
+    played_on: '2026-10-07',
+    text: 'Lista de Resultados del Torneo,E26-TEST,\n,,\nRangos,El ID de Card Game,Nombre de Acceso\nGanador,0000000001,Ana P?rez\n2,0000000002,Juan Canto\n',
+  };
+  assert.throws(() => parseRankingFile(base), /no incluye puntos/);
+  assert.throws(() => parseRankingFile({ ...base, position_points: '1=10' }), /puesto 2/);
+  assert.throws(() => parseRankingFile({ ...base, position_points: '1=10\n1=8\n2=0' }), /únicos/);
+  assert.throws(() => parseRankingFile({ ...base, position_points: '1=-1\n2=0' }), /enteros/);
+  assert.throws(
+    () => parseRankingFile({ ...base, event_id: 'OTRO', position_points: '1=10\n2=0' }),
+    /no coincide/,
+  );
+  const parsed = parseRankingFile({ ...base, position_points: '1=10\n2=0' });
+  assert.equal(parsed.external_id, 'E26-TEST');
+  assert.deepEqual(
+    parsed.results.map(({ name, position, points }) => ({ name, position, points })),
+    [
+      { name: 'Ana P?rez', position: 1, points: 10 },
+      { name: 'Juan Canto', position: 2, points: 0 },
+    ],
+  );
+  assert.equal(parsed.warnings.length, 2);
+  const ordinary = parseRankingFile({
+    ...base,
+    text: 'Posicion,Jugador,Puntos,Konami ID\n1,Ana P?rez,10,0000000001\n2,Juan Canto,0,0000000002',
+  });
+  assert.deepEqual(parsed.results, ordinary.results);
+  const withoutZeros = parseRankingFile({
+    ...base,
+    position_points: '1=10\n2=0',
+    text: base.text.replace('0000000001', '1'),
+  });
+  assert.notEqual(parsed.results[0].player_key, withoutZeros.results[0].player_key);
+  assert.throws(
+    () => parseRankingFile({ ...base, text: 'Jugador,Puntos\nAna,8', position_points: '1=10' }),
+    /ya incluye puntos/,
+  );
+});
+
 test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y persistencia', async (t) => {
   const { getDb, closeDb } = await import('../lib/server/db');
   const league = await import('../lib/server/rankings');
