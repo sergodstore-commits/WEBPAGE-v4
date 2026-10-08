@@ -229,6 +229,15 @@ export function LeagueAdmin() {
   useEffect(() => {
     let alive = true;
     load()
+      .then(() => {
+        if (!alive) return;
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('obtenerKonami') === '1') {
+          url.searchParams.delete('obtenerKonami');
+          window.history.replaceState(window.history.state, '', url);
+          void obtainKonami();
+        }
+      })
       .catch((e) => {
         if (alive) setError(message(e));
       })
@@ -282,9 +291,19 @@ export function LeagueAdmin() {
     }
   }
   async function obtainKonami() {
+    // Chromium reports the original document URL to external extensions after SPA navigation.
+    const loaded = performance.getEntriesByType('navigation')[0]?.name;
+    if (loaded && new URL(loaded).pathname !== '/admin/liga') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('obtenerKonami', '1');
+      window.location.assign(url.href);
+      return;
+    }
     await action(async () => {
       setPreview(null);
       const report = await obtainKonamiReport();
+      const existing = saved.find((t) => t.source === 'file' && t.external_id === report.event_id);
+      if (existing) report.title = existing.title;
       const result = await api<LeaguePreview>('/admin/league/file/preview', {
         method: 'POST',
         body: JSON.stringify(report),

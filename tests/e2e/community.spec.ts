@@ -93,7 +93,11 @@ test('Botón Konami: obtener, confirmar y recargar el ranking sin subir archivos
     { title, event: `CONNECTOR-${Date.now()}` },
   );
   await loginAdmin(page);
-  await page.goto('/admin/liga');
+  await page.goto('/admin');
+  await page.getByRole('link', { name: 'Liga SERGOD STORE', exact: true }).click();
+  expect(
+    await page.evaluate(() => new URL(performance.getEntriesByType('navigation')[0].name).pathname),
+  ).toBe('/admin');
   await page.getByRole('button', { name: 'Obtener resultados de Konami', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Standing final · Vista previa', exact: true }),

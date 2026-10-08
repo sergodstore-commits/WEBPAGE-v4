@@ -11,6 +11,11 @@ test('Complemento Konami real: sesión del navegador, páginas completas y vista
     'Chromium descargado no puede iniciarse en este entorno Windows; se prueba el complemento completo en CI Linux.',
   );
   const profile = await mkdtemp(path.join(tmpdir(), 'sergod-konami-test-'));
+  if (
+    path.dirname(path.resolve(profile)) !== path.resolve(tmpdir()) ||
+    !path.basename(profile).startsWith('sergod-konami-test-')
+  )
+    throw Error('El perfil de prueba no está dentro del directorio temporal esperado.');
   const extension = path.resolve('extensions/konami-connector');
   const context = await chromium.launchPersistentContext(profile, {
     ...(process.env.KONAMI_TEST_BROWSER
@@ -73,6 +78,33 @@ test('Complemento Konami real: sesión del navegador, páginas completas y vista
     );
     expect(filtered.ok).toBe(false);
     expect(filtered.error).toContain('retirados');
+    await admin.goto('https://www.sergodstore.cl/');
+    await admin.evaluate(() => history.pushState({}, '', '/admin/liga'));
+    const afterClientNavigation = await admin.evaluate(
+      (id) =>
+        new Promise<any>((resolve) => {
+          (window as any).chrome.runtime.sendMessage(
+            id,
+            { type: 'SERGOD_KONAMI_RESULTS' },
+            resolve,
+          );
+        }),
+      KONAMI_CONNECTOR_ID,
+    );
+    expect(afterClientNavigation.error).toContain('no autorizada');
+    await admin.reload();
+    const afterReload = await admin.evaluate(
+      (id) =>
+        new Promise<any>((resolve) => {
+          (window as any).chrome.runtime.sendMessage(
+            id,
+            { type: 'SERGOD_KONAMI_RESULTS' },
+            resolve,
+          );
+        }),
+      KONAMI_CONNECTOR_ID,
+    );
+    expect(afterReload.error).toContain('retirados');
     const other = await context.newPage();
     await other.goto('https://www.sergodstore.cl/tienda');
     const rejected = await other.evaluate(
