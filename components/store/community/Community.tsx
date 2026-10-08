@@ -121,19 +121,21 @@ function RankingTable({
   label,
   clickable,
   onPlayer,
+  compact = false,
 }: {
   rows: PublicRanking['rows'];
   label: string;
   clickable: boolean;
   onPlayer: (player: PublicRanking['rows'][number]) => void;
+  compact?: boolean;
 }) {
   return (
     <table className={styles.table} aria-label={label}>
       <thead>
         <tr>
-          <th>Posición</th>
+          <th>{compact ? 'Puesto' : 'Posición'}</th>
           <th>Jugador</th>
-          <th>Torneos jugados</th>
+          <th aria-label="Torneos jugados">{compact ? 'Torneos' : 'Torneos jugados'}</th>
           <th>Puntos</th>
         </tr>
       </thead>
@@ -335,6 +337,7 @@ export function Community() {
                                 <RankingTable
                                   rows={matches.slice(0, limit)}
                                   label={`Clasificación ${house.name}`}
+                                  compact
                                   clickable
                                   onPlayer={setPlayer}
                                 />
