@@ -7,7 +7,7 @@ import type { LeaguePreview, LeagueTournament, RankingBoard, PublicRanking } fro
 export const rankingBoardSchema = z.enum(['myl-first-era', 'myl-first-block', 'yugioh']);
 const tournamentId = z.number().int().positive().max(2147483647);
 type Snapshot = ReturnType<typeof parseRankingFile> | Awaited<ReturnType<typeof torFinal>>;
-const columns = `t.id,t.source,t.external_id,t.board,t.title,t.played_on::text,t.source_url,t.round_id,t.final_round,t.revision,t.updated_at,t.included_in_ranking,(SELECT count(*)::int FROM league_results r WHERE r.tournament_id=t.id) players`;
+const columns = `t.id,t.source,t.external_id,t.board,t.title,t.played_on::text,t.source_url,t.round_id,t.final_round,t.revision,t.updated_at,t.included_in_ranking,t.archived,(SELECT count(*)::int FROM league_results r WHERE r.tournament_id=t.id) players`;
 export async function listLeagueTournaments(): Promise<LeagueTournament[]> {
   return (
     await (
@@ -52,7 +52,13 @@ export const previewTor = async (adminId: string, id: unknown) =>
 export const previewRankingFile = async (adminId: string, input: unknown) =>
   stage(adminId, parseRankingFile(input));
 export async function commitRanking(adminId: string, input: unknown): Promise<LeagueTournament> {
-  const d = z.object({ preview_id: z.uuid(), replace: z.boolean().default(false) }).parse(input);
+  const d = z
+    .object({
+      preview_id: z.uuid(),
+      replace: z.boolean().default(false),
+      included_in_ranking: z.boolean().optional(),
+    })
+    .parse(input);
   const db = await getDb();
   return db.transaction(async (tx) => {
     const preview = (
@@ -112,7 +118,7 @@ export async function commitRanking(adminId: string, input: unknown): Promise<Le
         p.round_id,
         p.final_round,
         p.file_hash,
-        p.source === 'file',
+        d.included_in_ranking ?? p.source === 'file',
       ],
     );
     await tx.query('DELETE FROM league_results WHERE tournament_id=$1', [id]);
@@ -142,12 +148,86 @@ export async function deleteLeagueTournament(id: unknown) {
   });
   return { ok: true };
 }
+export async function archiveLeagueTournament(id: unknown, input: unknown) {
+  const key = z.uuid().parse(id),
+    d = z.object({ archived: z.boolean() }).parse(input),
+    db = await getDb();
+  return db.transaction(async (tx) => {
+    const old = (await tx.query('SELECT board FROM league_tournaments WHERE id=$1', [key])).rows[0];
+    if (!old) fail(404, 'Torneo no encontrado.');
+    await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`league-selection:${old.board}`]);
+    const updated = await tx.query(
+      `UPDATE league_tournaments SET archived=$2,included_in_ranking=CASE WHEN $2 THEN false ELSE included_in_ranking END,updated_at=now() WHERE id=$1 RETURNING id,archived`,
+      [key, d.archived],
+    );
+    if (!updated.rows[0]) fail(404, 'Torneo no encontrado.');
+    return updated.rows[0];
+  });
+}
+// Automatic collection adds only missing tournaments. Existing results, selections and archives
+// are deliberately preserved; a correction still uses the explicit preview/replace workflow.
+export async function collectLeagueTournaments(adminId: string, input: unknown) {
+  const d = z
+    .discriminatedUnion('source', [
+      z.object({ source: z.literal('tor'), ids: z.array(tournamentId).min(1).max(5) }),
+      z.object({ source: z.literal('file'), reports: z.array(z.unknown()).min(1).max(5) }),
+    ])
+    .parse(input);
+  const items = d.source === 'tor' ? d.ids : d.reports;
+  const results: {
+    external_id: string;
+    state: 'added' | 'existing' | 'archived' | 'error';
+    error?: string;
+  }[] = [];
+  for (const item of items) {
+    let external_id = d.source === 'tor' ? String(item) : '';
+    try {
+      const parsed = d.source === 'file' ? parseRankingFile(item) : null;
+      external_id = parsed?.external_id ?? external_id;
+      const old = (
+        await (
+          await getDb()
+        ).query('SELECT archived FROM league_tournaments WHERE source=$1 AND external_id=$2', [
+          d.source,
+          external_id,
+        ])
+      ).rows[0];
+      if (old) {
+        results.push({ external_id, state: old.archived ? 'archived' : 'existing' });
+        continue;
+      }
+      const preview = await stage(adminId, parsed ?? (await torFinal(Number(item))));
+      try {
+        await commitRanking(adminId, { preview_id: preview.id, included_in_ranking: false });
+        results.push({ external_id, state: 'added' });
+      } catch (e) {
+        const current = (
+          await (
+            await getDb()
+          ).query('SELECT archived FROM league_tournaments WHERE source=$1 AND external_id=$2', [
+            d.source,
+            external_id,
+          ])
+        ).rows[0];
+        if (!current) throw e;
+        results.push({ external_id, state: current.archived ? 'archived' : 'existing' });
+      }
+    } catch (e) {
+      results.push({
+        external_id,
+        state: 'error',
+        error: e instanceof Error ? e.message : 'No se pudo guardar el torneo.',
+      });
+    }
+  }
+  return { results };
+}
 export async function publicRanking(board: RankingBoard): Promise<PublicRanking> {
   const db = await getDb();
   // One statement keeps totals and contributing tournaments in one snapshot.
   const result = (
     await db.query(
-      `WITH selected AS (SELECT * FROM league_tournaments WHERE board=$1 AND included_in_ranking), players AS (
+      `WITH selected AS (SELECT * FROM league_tournaments WHERE board=$1 AND included_in_ranking AND NOT archived), players AS (
   SELECT r.player_key,(array_agg(r.name ORDER BY t.played_on DESC,t.updated_at DESC,t.id))[1] name,
   count(*)::int tournaments,sum(r.points)::int points,
   jsonb_agg(jsonb_build_object('tournament_id',t.id,'title',t.title,'played_on',t.played_on::text,'points',r.points,'position',r.position) ORDER BY t.played_on DESC,t.id) contributions
@@ -171,9 +251,10 @@ export async function selectLeagueTournaments(input: unknown) {
   await db.transaction(async (tx) => {
     await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`league-selection:${d.board}`]);
     const known = (
-      await tx.query('SELECT id FROM league_tournaments WHERE board=$1 ORDER BY id FOR UPDATE', [
-        d.board,
-      ])
+      await tx.query(
+        'SELECT id FROM league_tournaments WHERE board=$1 AND NOT archived ORDER BY id FOR UPDATE',
+        [d.board],
+      )
     ).rows;
     const knownIds = new Set(known.map((t) => t.id));
     if (d.tournament_ids.some((id) => !knownIds.has(id)))

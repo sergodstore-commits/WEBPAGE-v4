@@ -73,7 +73,7 @@ async function openHistory(page: Page) {
     await summary.click();
 }
 const tournament = '98d5a731-15ed-47af-a83a-e4e152f9c839';
-test('Botón Konami: obtener, confirmar y recargar el ranking sin subir archivos', async ({
+test('Botón Konami: recolectar todos, seleccionar después y recargar sin subir archivos', async ({
   page,
 }) => {
   const title = `Conector prueba ${Date.now()}`;
@@ -86,12 +86,15 @@ test('Botón Konami: obtener, confirmar y recargar el ranking sin subir archivos
             sendMessage: (_id: string, _message: unknown, callback: (r: unknown) => void) =>
               callback({
                 ok: true,
-                report: {
-                  title,
-                  event_id: event,
-                  played_on: '2026-10-08',
-                  text: 'Rangos\tID de Card Game\tNombre de Acceso\tVictoria\tEmpate\nGanador\t0000099998\tJugador Conector\t3\t0',
-                },
+                errors: [],
+                reports: [
+                  {
+                    title,
+                    event_id: event,
+                    played_on: '2026-10-08',
+                    text: 'Rangos\tID de Card Game\tNombre de Acceso\tVictoria\tEmpate\nGanador\t0000099998\tJugador Conector\t3\t0',
+                  },
+                ],
               }),
           },
         },
@@ -106,14 +109,15 @@ test('Botón Konami: obtener, confirmar y recargar el ranking sin subir archivos
     await page.evaluate(() => new URL(performance.getEntriesByType('navigation')[0].name).pathname),
   ).toBe('/admin');
   await page.getByRole('button', { name: 'Obtener resultados de Konami', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText('1 torneos nuevos');
   await expect(
     page.getByRole('heading', { name: 'Standing final · Vista previa', exact: true }),
-  ).toBeVisible();
-  await expect(page.getByLabel('Nombre del torneo *', { exact: true })).toHaveValue(title);
-  await page.getByRole('button', { name: 'Agregar a Liga', exact: true }).click();
-  await expect(page.locator('.admin-feedback.success')).toContainText(
-    'lectura pública comprobados',
-  );
+  ).toHaveCount(0);
+  const group = page.getByRole('group', { name: 'Yu-Gi-Oh! · Ranking SERGOD STORE', exact: true });
+  await group.getByRole('button', { name: 'Desmarcar todas', exact: true }).click();
+  await group.getByRole('checkbox', { name: new RegExp(title) }).check();
+  await group.getByRole('button', { name: 'Guardar selección', exact: true }).click();
+  await expect(group.getByRole('status')).toContainText('Lectura pública comprobada');
   await page.reload();
   const publicRanking = await (await page.request.get('/api/rankings?board=yugioh')).json();
   expect(
@@ -369,7 +373,7 @@ test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir
   ).toBeVisible();
   await visitor.close();
 });
-test('Liga TOR Admin: revisar, standing final, agregar y actualizar sin importación automática', async ({
+test('Liga TOR Admin: recolectar y guardar automáticamente, seleccionar después y corregir', async ({
   page,
 }) => {
   page.setDefaultTimeout(15000);
@@ -422,6 +426,31 @@ test('Liga TOR Admin: revisar, standing final, agregar y actualizar sin importac
           ],
         } satisfies LeaguePreview,
       });
+    if (path === '/api/admin/league/collect') {
+      if (saved.length)
+        return r.fulfill({
+          json: { results: [{ external_id: candidate.external_id, state: 'existing' }] },
+        });
+      writes++;
+      saved = [
+        {
+          ...candidate,
+          id: tournament,
+          source: 'tor',
+          source_url: '',
+          round_id: 987654,
+          final_round: 7,
+          updated_at: '2026-10-07T10:00:00Z',
+          players: 1,
+          revision: 1,
+          included_in_ranking: false,
+          archived: false,
+        },
+      ];
+      return r.fulfill({
+        json: { results: [{ external_id: candidate.external_id, state: 'added' }] },
+      });
+    }
     if (path === '/api/admin/league/commit') {
       writes++;
       const input = r.request().postDataJSON();
@@ -453,18 +482,14 @@ test('Liga TOR Admin: revisar, standing final, agregar y actualizar sin importac
     }),
   );
   await page.goto('/admin/liga');
-  await page.getByRole('button', { name: 'Revisar TOR', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Revisar standing de Liga TOR de prueba', exact: true }),
-  ).toBeVisible();
-  expect(writes).toBe(0);
-  await page
-    .getByRole('button', { name: 'Revisar standing de Liga TOR de prueba', exact: true })
-    .click();
-  await expect(page.getByText(/Última ronda: 7/)).toBeVisible();
-  await page.getByRole('button', { name: 'Agregar a Liga', exact: true }).click();
-  await expect(page.locator('.admin-feedback.success')).toContainText('Resultados guardados');
+  await page.getByRole('button', { name: 'Actualizar torneos de MyL', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText('1 torneos nuevos');
   expect(writes).toBe(1);
+  await expect(
+    page
+      .getByRole('group', { name: 'Mitos y Leyendas · Primera Era', exact: true })
+      .getByRole('checkbox', { name: /Liga TOR de prueba/ }),
+  ).not.toBeChecked();
   await page.reload();
   await openHistory(page);
   await page

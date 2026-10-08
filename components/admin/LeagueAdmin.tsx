@@ -21,13 +21,15 @@ function RankingSelection({
   tournaments,
   disabled,
   reload,
+  archive,
 }: {
   board: RankingBoard;
   tournaments: LeagueTournament[];
   disabled: boolean;
   reload: () => Promise<LeagueTournament[]>;
+  archive: (t: LeagueTournament, archived: boolean) => Promise<void>;
 }) {
-  const list = tournaments.filter((t) => t.board === board);
+  const list = tournaments.filter((t) => t.board === board && !t.archived);
   const persisted = list
     .filter((t) => t.included_in_ranking)
     .map((t) => t.id)
@@ -113,24 +115,35 @@ function RankingSelection({
           </label>
           <div className={styles.choices}>
             {visible.map((t) => (
-              <label key={t.id} className={styles.choice} data-selected={selected.includes(t.id)}>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(t.id)}
-                  onChange={(e) => {
-                    setSelected((ids) =>
-                      e.target.checked ? [...ids, t.id] : ids.filter((id) => id !== t.id),
-                    );
-                    setNotice('');
-                  }}
-                />
-                <span>
-                  <strong>{t.title}</strong>
-                  <small>
-                    {day(t.played_on)} · {t.players} jugadores
-                  </small>
-                </span>
-              </label>
+              <div key={t.id} className={styles.choice} data-selected={selected.includes(t.id)}>
+                <label className={styles.choiceLabel}>
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(t.id)}
+                    onChange={(e) => {
+                      setSelected((ids) =>
+                        e.target.checked ? [...ids, t.id] : ids.filter((id) => id !== t.id),
+                      );
+                      setNotice('');
+                    }}
+                  />
+                  <span>
+                    <strong>{t.title}</strong>
+                    <small>
+                      {day(t.played_on)} · {t.players} jugadores
+                    </small>
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  className="admin-button secondary"
+                  disabled={changed}
+                  aria-label={`Archivar torneo ${t.title}`}
+                  onClick={() => void archive(t, true)}
+                >
+                  Archivar
+                </button>
+              </div>
             ))}
           </div>
           {!visible.length && <p>No hay torneos que coincidan con la búsqueda.</p>}
@@ -193,8 +206,8 @@ export function TorIntegration() {
       <h2>TOR MyL</h2>
       <p>Ligas públicas de SERGOD STORE · Store ID: {store ?? '…'}</p>
       <p>
-        Primera Era y Primer Bloque se guardan por separado. Revisar no importa ni publica
-        resultados automáticamente.
+        Primera Era y Primer Bloque se guardan por separado. Actualizar agrega los torneos nuevos a
+        la lista; tú eliges cuáles suman al ranking.
       </p>
       {error && (
         <p role="alert" className="admin-feedback error">
@@ -202,17 +215,14 @@ export function TorIntegration() {
         </p>
       )}
       <Link className="admin-button" href="/admin/liga?revisar=tor">
-        Revisar TOR
+        Actualizar torneos de MyL
       </Link>
     </section>
   );
 }
 export function LeagueAdmin() {
   const [saved, setSaved] = useState<LeagueTournament[]>([]),
-    [candidates, setCandidates] = useState<TorCandidate[]>([]),
     [preview, setPreview] = useState<LeaguePreview | null>(null),
-    [next, setNext] = useState<number | null>(null),
-    [reviewed, setReviewed] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
@@ -226,6 +236,31 @@ export function LeagueAdmin() {
   });
   const [manualOpen, setManualOpen] = useState(false),
     [historyOpen, setHistoryOpen] = useState(false);
+  const [progress, setProgress] = useState(''),
+    [collectionErrors, setCollectionErrors] = useState<string[]>([]);
+  type Collected = {
+    external_id: string;
+    state: 'added' | 'existing' | 'archived' | 'error';
+    error?: string;
+  };
+  async function collect(input: unknown) {
+    return (
+      await api<{ results: Collected[] }>('/admin/league/collect', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      })
+    ).results;
+  }
+  function collectionNotice(results: Collected[]) {
+    setCollectionErrors(
+      results
+        .filter((r) => r.state === 'error')
+        .map((r) => `${r.external_id || 'Reporte'}: ${r.error}`),
+    );
+    setNotice(
+      `Consulta terminada: ${results.filter((r) => r.state === 'added').length} torneos nuevos, ${results.filter((r) => r.state === 'existing').length} ya guardados y ${results.filter((r) => r.state === 'archived').length} archivados. Marca los que suman y guarda la selección.${results.some((r) => r.state === 'error') ? ' Hay torneos pendientes; puedes reintentar sin duplicar.' : ''}`,
+    );
+  }
   async function load() {
     const list = await api<LeagueTournament[]>('/admin/league');
     setSaved(list);
@@ -238,30 +273,51 @@ export function LeagueAdmin() {
     setBusy(true);
     setError('');
     setNotice('');
+    setCollectionErrors([]);
     try {
       await fn();
     } catch (e) {
       setError(message(e));
     } finally {
+      setProgress('');
       setBusy(false);
     }
   }
   async function review(page = 1) {
-    const result = await api<{ tournaments: TorCandidate[]; next_page: number | null }>(
-      '/admin/league/tor/review',
-      { method: 'POST', body: JSON.stringify({ page }) },
-    );
-    setCandidates((old) =>
-      page === 1
-        ? result.tournaments
-        : [
-            ...old,
-            ...result.tournaments.filter((t) => !old.some((o) => o.external_id === t.external_id)),
-          ],
-    );
-    setNext(result.next_page);
-    setReviewed(true);
-    setNotice('Consulta completada. Revisa un standing antes de agregarlo a la Liga.');
+    const collected: Collected[] = [],
+      seen = new Set<string>(),
+      pages = new Set<number>();
+    try {
+      for (;;) {
+        if (pages.has(page) || pages.size >= 1000)
+          throw Error('TOR repitió una página. Vuelve a intentar la consulta.');
+        pages.add(page);
+        setProgress(`Consultando MyL · página ${page} · ${collected.length} torneos procesados…`);
+        const result = await api<{ tournaments: TorCandidate[]; next_page: number | null }>(
+          '/admin/league/tor/review',
+          { method: 'POST', body: JSON.stringify({ page }) },
+        );
+        const ids = result.tournaments
+          .filter((t) => !seen.has(t.external_id))
+          .map((t) => {
+            seen.add(t.external_id);
+            return Number(t.external_id);
+          });
+        for (let i = 0; i < ids.length; i++) {
+          setProgress(`Guardando MyL · ${collected.length} torneos procesados…`);
+          collected.push(...(await collect({ source: 'tor', ids: [ids[i]] })));
+        }
+        if (!result.next_page) break;
+        page = result.next_page;
+      }
+      await load();
+      collectionNotice(collected);
+    } catch (e) {
+      await load();
+      throw Error(
+        `${collected.filter((r) => r.state === 'added').length} torneos nuevos guardados. ${message(e)} Puedes reintentar sin duplicarlos.`,
+      );
+    }
   }
   useEffect(() => {
     let alive = true;
@@ -338,15 +394,23 @@ export function LeagueAdmin() {
     }
     await action(async () => {
       setPreview(null);
-      const report = await obtainKonamiReport();
-      const existing = saved.find((t) => t.source === 'file' && t.external_id === report.event_id);
-      if (existing) report.title = existing.title;
-      const result = await api<LeaguePreview>('/admin/league/file/preview', {
-        method: 'POST',
-        body: JSON.stringify(report),
-      });
-      setFileForm({ ...report, position_points: '' });
-      setPreview(result);
+      setProgress('Buscando torneos finalizados en Konami…');
+      const batch = await obtainKonamiReport();
+      const results: Collected[] = [];
+      try {
+        for (const report of batch.reports) {
+          setProgress(`Guardando Yu-Gi-Oh! · ${results.length + 1} de ${batch.reports.length}…`);
+          results.push(...(await collect({ source: 'file', reports: [report] })));
+        }
+        await load();
+        collectionNotice(results);
+        setCollectionErrors((old) => [...old, ...batch.errors]);
+      } catch (e) {
+        await load();
+        throw Error(
+          `${results.filter((r) => r.state === 'added').length} torneos guardados. ${message(e)} Puedes reintentar sin duplicarlos.`,
+        );
+      }
     });
   }
   async function stageFile(e: FormEvent) {
@@ -382,13 +446,6 @@ export function LeagueAdmin() {
     if (result.included_in_ranking !== ranking.tournaments.some((t) => t.id === result.id))
       throw Error('El torneo se guardó, pero no se pudo comprobar su ranking público.');
     setPreview(null);
-    setCandidates((old) =>
-      old.map((t) =>
-        t.external_id === result.external_id
-          ? { ...t, imported: true, revision: result.revision }
-          : t,
-      ),
-    );
     setNotice(
       !result.included_in_ranking
         ? `${result.revision > 1 ? 'Resultados reemplazados' : 'Resultados guardados'}. Marca esta liga en su ranking y guarda la selección para sumar sus puntos.`
@@ -396,6 +453,22 @@ export function LeagueAdmin() {
           ? 'Resultados reemplazados y ranking recalculado. Lectura pública comprobada.'
           : 'Torneo agregado a la Liga. Guardado y lectura pública comprobados.',
     );
+  }
+  async function archive(t: LeagueTournament, archived: boolean) {
+    await action(async () => {
+      await api(`/admin/league/${t.id}`, { method: 'PATCH', body: JSON.stringify({ archived }) });
+      const stored = await load();
+      if (stored.find((s) => s.id === t.id)?.archived !== archived)
+        throw Error('No se pudo comprobar el archivo del torneo. Recarga la lista.');
+      const ranking = await api<{ tournaments: { id: string }[] }>(`/rankings?board=${t.board}`);
+      if (archived && ranking.tournaments.some((r) => r.id === t.id))
+        throw Error('No se pudo comprobar que el torneo dejó de sumar.');
+      setNotice(
+        archived
+          ? 'Torneo archivado. Sus resultados se conservan y deja de sumar.'
+          : 'Torneo restaurado. Márcalo y guarda la selección si quieres sumar sus puntos.',
+      );
+    });
   }
   async function remove(t: LeagueTournament) {
     if (
@@ -408,11 +481,6 @@ export function LeagueAdmin() {
       await api(`/admin/league/${t.id}`, { method: 'DELETE' });
       await load();
       setPreview(null);
-      setCandidates((old) =>
-        old.map((c) =>
-          c.external_id === t.external_id ? { ...c, imported: false, revision: 0 } : c,
-        ),
-      );
       setNotice('Torneo eliminado. El ranking se recalculó sin sus resultados.');
     });
   }
@@ -427,6 +495,21 @@ export function LeagueAdmin() {
           Ver rankings públicos
         </Link>
       </div>
+      {progress && (
+        <p role="status" className="admin-feedback">
+          {progress}
+        </p>
+      )}
+      {collectionErrors.length > 0 && (
+        <div role="alert" className="admin-feedback error">
+          <strong>Torneos pendientes</strong>
+          <ul>
+            {collectionErrors.map((e, i) => (
+              <li key={i}>{e}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       {error && (
         <div className="admin-feedback error" role="alert">
           {error}
@@ -452,7 +535,8 @@ export function LeagueAdmin() {
         <section className="admin-card admin-card-body" id="yugioh-import">
           <h2>Yu-Gi-Oh! · Konami</h2>
           <p>
-            Abre el torneo finalizado en Konami desde el mismo navegador y obtén su vista previa.
+            Mantén Konami abierto y conectado en Brave. El botón busca todos los torneos finalizados
+            y guarda los nuevos en la lista.
           </p>
           <button className="admin-button" disabled={busy} onClick={() => void obtainKonami()}>
             {busy ? 'Procesando…' : 'Obtener resultados de Konami'}
@@ -467,7 +551,8 @@ export function LeagueAdmin() {
             </p>
             <p>
               Solo consulta resultados de Konami cuando pulsas el botón y los entrega a este panel.
-              No guarda contraseñas ni publica resultados sin tu confirmación.
+              No guarda contraseñas. Agrega resultados a la lista sin sumarlos al ranking hasta que
+              los selecciones.
             </p>
             <a href="/downloads/sergod-konami-connector.zip" download className="admin-inline-link">
               Descargar complemento de SERGOD STORE
@@ -482,58 +567,10 @@ export function LeagueAdmin() {
             disabled={busy}
             onClick={() => void action(() => review())}
           >
-            {busy ? 'Consultando…' : 'Revisar TOR'}
+            {busy ? 'Consultando…' : 'Actualizar torneos de MyL'}
           </button>
         </section>
       </div>
-      {reviewed && (
-        <>
-          <h3>Torneos encontrados</h3>
-          {!candidates.length && <p>No hay Ligas válidas en esta página.</p>}
-          <div className="admin-table-scroll">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Torneo</th>
-                  <th>Juego</th>
-                  <th>Fecha</th>
-                  <th>Estado</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidates.map((t) => (
-                  <tr key={t.external_id}>
-                    <td>{t.title}</td>
-                    <td>{boards[t.board].name}</td>
-                    <td>{day(t.played_on)}</td>
-                    <td>{t.imported ? 'Ya agregado' : t.status}</td>
-                    <td>
-                      <button
-                        className="admin-button secondary"
-                        disabled={busy}
-                        aria-label={`${t.imported ? 'Actualizar resultados' : 'Revisar standing'} de ${t.title}`}
-                        onClick={() => void action(() => chooseTor(t.external_id))}
-                      >
-                        {t.imported ? 'Actualizar resultados' : 'Ver standing final'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {next && (
-            <button
-              className="admin-button secondary"
-              disabled={busy}
-              onClick={() => void action(() => review(next))}
-            >
-              Consultar más torneos
-            </button>
-          )}
-        </>
-      )}
       {preview && (
         <section
           id="league-preview"
@@ -599,10 +636,10 @@ export function LeagueAdmin() {
         </section>
       )}
       <section className="admin-card admin-card-body">
-        <h2>Ligas que suman en el ranking</h2>
+        <h2>Todos los torneos · Elegir cuáles suman</h2>
         <p>
           Marca los torneos del ciclo actual y guarda cada selección. Desmarcar conserva sus
-          resultados.
+          resultados; archivar los quita de esta lista hasta que decidas restaurarlos.
         </p>
         <div className={styles.selections}>
           {!loading &&
@@ -613,10 +650,35 @@ export function LeagueAdmin() {
                 tournaments={saved}
                 disabled={busy}
                 reload={load}
+                archive={archive}
               />
             ))}
         </div>
       </section>
+      <details className={`admin-card admin-card-body ${styles.fold}`}>
+        <summary>Archivados · {saved.filter((t) => t.archived).length}</summary>
+        {saved
+          .filter((t) => t.archived)
+          .map((t) => (
+            <div key={t.id} className={styles.choice}>
+              <span>
+                <strong>{t.title}</strong>
+                <small>
+                  {boards[t.board].name} · {day(t.played_on)}
+                </small>
+              </span>
+              <button
+                className="admin-button secondary"
+                disabled={busy}
+                aria-label={`Restaurar torneo ${t.title}`}
+                onClick={() => void archive(t, false)}
+              >
+                Restaurar
+              </button>
+            </div>
+          ))}
+        <p>Los torneos archivados no se suman ni vuelven a la lista al actualizar.</p>
+      </details>
       <details
         className={`admin-card admin-card-body ${styles.fold}`}
         open={manualOpen}

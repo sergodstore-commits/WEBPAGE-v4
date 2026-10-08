@@ -19,10 +19,11 @@ export type LeagueTournament = {
   updated_at: string;
   players: number;
   included_in_ranking: boolean;
+  archived?: boolean;
 };
 export type LeaguePreview = Omit<
   LeagueTournament,
-  'id' | 'updated_at' | 'players' | 'revision' | 'included_in_ranking'
+  'id' | 'updated_at' | 'players' | 'revision' | 'included_in_ranking' | 'archived'
 > & {
   id: string;
   expires_at: string;

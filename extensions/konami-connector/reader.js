@@ -16,6 +16,8 @@ async function readKonamiReport(doc, href) {
       .find((row) => norm(row.querySelector('label')?.textContent || '') === norm(label))
       ?.querySelector('div')
       ?.textContent.trim();
+  if (field('Número de Torneo') && field('Número de Torneo') !== match[1])
+    throw Error('La página de resultados todavía está cargando.');
   if (field('Estado') !== 'Torneo Finalizado')
     throw Error('Expande «Detalles del Torneo/Evento» y comprueba que indique Torneo Finalizado.');
   const date = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(
@@ -110,4 +112,78 @@ async function readKonamiReport(doc, href) {
     text: `Lista de Resultados del Torneo\t${match[1]}\t\nRangos\tID de Card Game\tNombre de Acceso\tVictoria\tEmpate\n${collected.map((r) => r.map(cell).join('\t')).join('\n')}`,
   };
 }
-if (typeof module !== 'undefined') module.exports = { readKonamiReport };
+function readKonamiTournamentPage(doc) {
+  const table = [...doc.querySelectorAll('table')].find((t) =>
+    t.querySelector('thead')?.textContent.includes('Número de Torneo'),
+  );
+  if (!table)
+    throw Error(
+      'No se pudo leer la lista de torneos. Inicia sesión en Konami y abre Búsqueda de Torneo/Evento.',
+    );
+  const rows = [...table.querySelectorAll('tbody tr')];
+  const ids = rows.flatMap((row) => {
+    const status = row.querySelector('.tournament-label')?.textContent.trim();
+    const store = row.querySelector('.store-name')?.textContent.trim().toLowerCase();
+    if (status !== 'Torneo Finalizado' || store !== 'sergod store') return [];
+    const id = [...row.querySelectorAll('td div')]
+      .map((el) => el.textContent.trim())
+      .find((t) => /^E\d{2}-[a-zA-Z0-9_.:-]+$/.test(t));
+    if (!id)
+      throw Error('Konami cambió el identificador del torneo. No se obtuvo una lista completa.');
+    return [id];
+  });
+  return { ids, signature: rows.map((r) => r.textContent.trim()).join('\n'), table };
+}
+async function readAllKonamiTournamentIds(doc) {
+  const findButton = (text) =>
+    [...doc.querySelectorAll('button')].find((b) => b.textContent.trim() === text);
+  const clear = findButton('Eliminar Condiciones De Búsqueda'),
+    search = findButton('Buscar');
+  if (!clear || !search) throw Error('Abre la búsqueda de torneos de Konami en español.');
+  clear.click();
+  for (const id of ['search-start-date', 'search-end-date']) {
+    const field = doc.getElementById(id);
+    if (!field) throw Error('Konami cambió sus filtros. No se pudo buscar todo el historial.');
+    field.value = '';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  search.click();
+  const waitReady = async () => {
+    const until = Date.now() + 20000;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    while (Date.now() < until) {
+      if (!search.disabled) return;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    throw Error('Konami tardó demasiado en buscar los torneos.');
+  };
+  await waitReady();
+  let current = readKonamiTournamentPage(doc);
+  const first = doc.querySelector('.pagination-first:not(.disabled) a');
+  if (first) {
+    first.click();
+    await waitReady();
+    current = readKonamiTournamentPage(doc);
+  }
+  const ids = new Set(),
+    pages = new Set();
+  for (let page = 0; page < 5000; page++) {
+    current = readKonamiTournamentPage(doc);
+    if (pages.has(current.signature))
+      throw Error('Konami repitió una página. No se obtuvo una lista completa.');
+    pages.add(current.signature);
+    current.ids.forEach((id) => ids.add(id));
+    if (ids.size > 5000) throw Error('El historial supera los 5.000 torneos permitidos.');
+    const next = doc.querySelector('.pagination-next:not(.disabled) a');
+    if (!next) return [...ids];
+    next.click();
+    await waitReady();
+    const until = Date.now() + 10000;
+    while (readKonamiTournamentPage(doc).signature === current.signature && Date.now() < until)
+      await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw Error('No se completó la consulta de todas las páginas de Konami.');
+}
+if (typeof module !== 'undefined')
+  module.exports = { readKonamiReport, readKonamiTournamentPage, readAllKonamiTournamentIds };

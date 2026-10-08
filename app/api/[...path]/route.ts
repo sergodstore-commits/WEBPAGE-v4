@@ -78,6 +78,8 @@ import {
   commitRanking,
   deleteLeagueTournament,
   selectLeagueTournaments,
+  collectLeagueTournaments,
+  archiveLeagueTournament,
 } from '@/lib/server/rankings';
 import { torStoreId } from '@/lib/server/tor';
 import {
@@ -301,6 +303,17 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       if (route === 'admin/integrations/tor' && method === 'GET')
         return json({ store_id: torStoreId() });
       if (route === 'admin/league' && method === 'GET') return json(await listLeagueTournaments());
+      if (route === 'admin/league/collect' && method === 'POST') {
+        await rateLimit(`league-collect:${user.id}`, 300, 15);
+        return json(await collectLeagueTournaments(user.id, await body(request)));
+      }
+      if (
+        path[1] === 'league' &&
+        path.length === 3 &&
+        path[2] !== 'selection' &&
+        method === 'PATCH'
+      )
+        return json(await archiveLeagueTournament(path[2], await body(request)));
       if (route === 'admin/league/selection' && method === 'PATCH') {
         await rateLimit(`league:${user.id}`, 60, 15);
         return json(await selectLeagueTournaments(await body(request)));
