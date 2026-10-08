@@ -1,9 +1,9 @@
 # Conexión de resultados de Konami
 
-Complemento local gratuito para Chrome y Edge. No requiere un servicio de pago.
+Complemento local gratuito para Brave, Chrome y Edge. No requiere un servicio de pago.
 
 1. Descomprimir el ZIP del panel o usar esta carpeta del repositorio.
-2. Abrir `chrome://extensions` o `edge://extensions`.
+2. Abrir `brave://extensions`, `chrome://extensions` o `edge://extensions`.
 3. Activar Modo de desarrollador → Cargar descomprimida → seleccionar esta carpeta.
 4. Recargar Konami y SERGOD STORE e iniciar sesión personalmente en ambas páginas.
 5. Abrir un torneo finalizado y expandir detalles y resultados. Dejar desmarcado el filtro de jugadores retirados.

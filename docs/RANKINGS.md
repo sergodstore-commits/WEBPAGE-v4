@@ -88,7 +88,7 @@ El servidor valida XML, tamaño, torneo finalizado, fecha, identidades, puestos 
 
 ### Botón Obtener resultados de Konami
 
-Requiere instalar una vez el complemento `extensions/konami-connector` en Chrome o Edge y abrir la tienda y Konami en ese mismo navegador. El ZIP público se distribuye desde `/downloads/sergod-konami-connector.zip`; tras cambiar los archivos del complemento, regenerarlo con `Compress-Archive -Path extensions/konami-connector/* -DestinationPath public/downloads/sergod-konami-connector.zip -Force`. Su clave pública fija identifica la extensión como `ihfaaopckpeaefkmcdpjajdihhgegmop`; no es una credencial de autenticación.
+Requiere instalar una vez el complemento `extensions/konami-connector` en Brave, Chrome o Edge y abrir la tienda y Konami en ese mismo navegador. El ZIP público se distribuye desde `/downloads/sergod-konami-connector.zip`; tras cambiar los archivos del complemento, regenerarlo con `Compress-Archive -Path extensions/konami-connector/* -DestinationPath public/downloads/sergod-konami-connector.zip -Force`. Su clave pública fija identifica la extensión como `ihfaaopckpeaefkmcdpjajdihhgegmop`; no es una credencial de autenticación.
 
 El botón consulta únicamente la última pestaña de torneo finalizado visitada y crea una vista previa; la confirmación conserva el flujo transaccional existente. Se sigue la paginación desde el principio y se rechazan filtros de retirados, páginas repetidas, fallos de carga o cantidades inconsistentes. Solo se entrega la tabla de puestos, nombres, ID, victorias y empates, con metadatos de nombre/fecha/torneo. No se accede a cookies, contraseñas, personal o sanciones. No se modifica Konami ni se publica automáticamente.
 

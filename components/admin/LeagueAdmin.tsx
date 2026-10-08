@@ -460,16 +460,16 @@ export function LeagueAdmin() {
           {busy ? 'Procesando…' : 'Obtener resultados de Konami'}
         </button>
         <p>
-          Abre el torneo finalizado en Konami en el mismo Chrome o Edge. El botón obtiene el último
-          torneo que visitaste y prepara su vista previa. Confirma para sumarlo al ranking.
+          Abre el torneo finalizado en Konami en el mismo Brave, Chrome o Edge. El botón obtiene el
+          último torneo que visitaste y prepara su vista previa. Confirma para sumarlo al ranking.
         </p>
         <details>
           <summary>Conectar el navegador una sola vez</summary>
           <p>
-            Descarga y descomprime el complemento. En chrome://extensions o edge://extensions,
-            activa «Modo de desarrollador», pulsa «Cargar descomprimida» y selecciona su carpeta.
-            Después recarga la tienda y Konami. El navegador integrado de Codex no admite este
-            complemento.
+            Descarga y descomprime el complemento. En brave://extensions, chrome://extensions o
+            edge://extensions, activa «Modo de desarrollador», pulsa «Cargar descomprimida» y
+            selecciona su carpeta. Después recarga la tienda y Konami. El navegador integrado de
+            Codex no admite este complemento.
           </p>
           <p>
             Solo consulta resultados de Konami cuando pulsas el botón y los entrega a este panel. No

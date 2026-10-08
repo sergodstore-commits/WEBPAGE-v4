@@ -7,7 +7,7 @@ type ExtensionRuntime = {
 export function obtainKonamiReport(): Promise<KonamiReport> {
   const runtime = (window as Window & { chrome?: { runtime?: ExtensionRuntime } }).chrome?.runtime;
   const install =
-    'Instala el complemento SERGOD STORE en Chrome o Edge y abre allí la tienda y el torneo finalizado de Konami.';
+    'Instala el complemento SERGOD STORE en Brave, Chrome o Edge y abre allí la tienda y el torneo finalizado de Konami.';
   if (!runtime?.sendMessage) return Promise.reject(new Error(install));
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(

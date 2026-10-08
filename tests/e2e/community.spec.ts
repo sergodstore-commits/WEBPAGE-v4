@@ -66,6 +66,52 @@ test('KTS Konami: cargar, sumar dos fechas y actualizar sin duplicar', async ({ 
   }
 });
 const tournament = '98d5a731-15ed-47af-a83a-e4e152f9c839';
+test('Botón Konami: obtener, confirmar y recargar el ranking sin subir archivos', async ({
+  page,
+}) => {
+  const title = `Conector prueba ${Date.now()}`;
+  await page.addInitScript(
+    ({ title, event }) => {
+      Object.defineProperty(window, 'chrome', {
+        configurable: true,
+        value: {
+          runtime: {
+            sendMessage: (_id: string, _message: unknown, callback: (r: unknown) => void) =>
+              callback({
+                ok: true,
+                report: {
+                  title,
+                  event_id: event,
+                  played_on: '2026-10-08',
+                  text: 'Rangos\tID de Card Game\tNombre de Acceso\tVictoria\tEmpate\nGanador\t0000099998\tJugador Conector\t3\t0',
+                },
+              }),
+          },
+        },
+      });
+    },
+    { title, event: `CONNECTOR-${Date.now()}` },
+  );
+  await loginAdmin(page);
+  await page.goto('/admin/liga');
+  await page.getByRole('button', { name: 'Obtener resultados de Konami', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Standing final · Vista previa', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Nombre del torneo *', { exact: true })).toHaveValue(title);
+  await page.getByRole('button', { name: 'Agregar a Liga', exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText(
+    'lectura pública comprobados',
+  );
+  await page.reload();
+  const publicRanking = await (await page.request.get('/api/rankings?board=yugioh')).json();
+  expect(
+    publicRanking.rows.find((r: { name: string }) => r.name === 'Jugador Conector').points,
+  ).toBe(9);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: `Eliminar torneo ${title}`, exact: true }).click();
+  await expect(page.locator('.admin-feedback.success')).toContainText('eliminado');
+});
 const rows = Array.from({ length: 60 }, (_, i) => ({
   position: i < 4 ? 1 : i + 1,
   name: i === 0 ? 'Andrés Competidor' : `Jugador ${String(i).padStart(2, '0')}`,

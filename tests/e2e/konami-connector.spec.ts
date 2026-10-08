@@ -13,7 +13,9 @@ test('Complemento Konami real: sesión del navegador, páginas completas y vista
   const profile = await mkdtemp(path.join(tmpdir(), 'sergod-konami-test-'));
   const extension = path.resolve('extensions/konami-connector');
   const context = await chromium.launchPersistentContext(profile, {
-    channel: 'chromium',
+    ...(process.env.KONAMI_TEST_BROWSER
+      ? { executablePath: process.env.KONAMI_TEST_BROWSER }
+      : { channel: 'chromium' as const }),
     headless: true,
     ignoreDefaultArgs: ['--disable-extensions'],
     args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
