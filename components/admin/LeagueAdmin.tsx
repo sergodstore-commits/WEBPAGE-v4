@@ -2,6 +2,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/client';
+import { obtainKonamiReport } from '@/lib/konami-connector';
 import {
   boards,
   type LeaguePreview,
@@ -280,6 +281,18 @@ export function LeagueAdmin() {
       setBusy(false);
     }
   }
+  async function obtainKonami() {
+    await action(async () => {
+      setPreview(null);
+      const report = await obtainKonamiReport();
+      const result = await api<LeaguePreview>('/admin/league/file/preview', {
+        method: 'POST',
+        body: JSON.stringify(report),
+      });
+      setFileForm({ ...report, position_points: '' });
+      setPreview(result);
+    });
+  }
   async function stageFile(e: FormEvent) {
     e.preventDefault();
     void action(async () =>
@@ -443,6 +456,29 @@ export function LeagueAdmin() {
       </section>
       <section className="admin-card admin-card-body" id="yugioh-import">
         <h2>Yu-Gi-Oh! · Importar resultados</h2>
+        <button className="admin-button" disabled={busy} onClick={() => void obtainKonami()}>
+          {busy ? 'Procesando…' : 'Obtener resultados de Konami'}
+        </button>
+        <p>
+          Abre el torneo finalizado en Konami en el mismo Chrome o Edge. El botón obtiene el último
+          torneo que visitaste y prepara su vista previa. Confirma para sumarlo al ranking.
+        </p>
+        <details>
+          <summary>Conectar el navegador una sola vez</summary>
+          <p>
+            Descarga y descomprime el complemento. En chrome://extensions o edge://extensions,
+            activa «Modo de desarrollador», pulsa «Cargar descomprimida» y selecciona su carpeta.
+            Después recarga la tienda y Konami. El navegador integrado de Codex no admite este
+            complemento.
+          </p>
+          <p>
+            Solo consulta resultados de Konami cuando pulsas el botón y los entrega a este panel. No
+            guarda contraseñas ni publica resultados sin tu confirmación.
+          </p>
+          <a href="/downloads/sergod-konami-connector.zip" download className="admin-inline-link">
+            Descargar complemento de SERGOD STORE
+          </a>
+        </details>
         <p>
           En Konami abre el torneo finalizado y pulsa «Descargar el Archivo KTS». Carga ese archivo
           aquí: la fecha, el ID y las victorias se leen automáticamente. Revisa la vista previa y

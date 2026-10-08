@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "SERGOD STORE · Resultados de Konami",
+  "version": "1.0.0",
+  "description": "Envía el torneo abierto en Konami a la vista previa del panel de SERGOD STORE, solo cuando lo solicitas.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqyNfRMX1Dy3w3VPsT3Ksg96PvXElG6/H776jJHKhgixs+pfGKLCIxVbjIa23w+3NHiCtctKEn8qYl5CgI3l3fA+8375d8QhIa5n5fSAQT1U4SCfYGOqoJ2BeFcciu1bblirVYU5uPoVZhpzv3GM7VMBh2NBO5fWrie1/7F3h1ItilCZ3yRbczgExpWrCU/RSzaMYyX8rZ9yzynsHAm09XGvNjxqMFQF6fv4Cwg5sMhVbhOUbtpL9rC7MY6PQOC3dJS8bGEblJTIi8d1HyUgsMqpbfe38g+ibl8mOsJc8lrlcNL2goinDkymDg+BhX3yjna1h1LBzQ/U9uHz/0b4JAwIDAQAB",
+  "host_permissions": ["https://shp.cardgame-network.konami.net/mt/home/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://shp.cardgame-network.konami.net/mt/home/*"],
+      "js": ["reader.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "externally_connectable": { "matches": ["https://www.sergodstore.cl/*"] }
+}
