@@ -1,6 +1,7 @@
 import { after, NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
 import { getDb } from '@/lib/server/db';
+import { moveReleasedPreorders } from '@/lib/server/preorder-release';
 import {
   appUrl,
   AppError,
@@ -152,12 +153,13 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       )
         fail(401, 'Acceso no autorizado.');
       const result = await expireOrders();
+      const moved_preorders = await moveReleasedPreorders();
       await flushMail();
       const db = await getDb();
       await db.query('DELETE FROM sessions WHERE expires_at<now()');
       await db.query('DELETE FROM auth_tokens WHERE expires_at<now()');
       await db.query('DELETE FROM rate_limits WHERE expires_at<now()');
-      return json(result);
+      return json({ ...result, moved_preorders });
     }
     if (!['GET', 'HEAD'].includes(method)) sameOrigin(request);
     if (route === 'health' && method === 'GET') {

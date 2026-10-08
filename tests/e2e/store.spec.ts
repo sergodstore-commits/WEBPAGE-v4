@@ -69,6 +69,8 @@ async function createArticle(page: Page, kind: 'store' | 'preorder', label: stri
     await page.getByLabel('Apertura de reservas *').fill(datetimeInput(Date.now() - 86_400_000));
     await page.getByLabel('Cierre de reservas *').fill(datetimeInput(Date.now() + 7 * 86_400_000));
     await page.getByLabel('Máximo de unidades por cliente *').fill('2');
+    await page.getByLabel('Fecha de lanzamiento', { exact: true }).fill('2099-01-01');
+    await page.getByLabel('Pasar el remanente automáticamente a Tienda', { exact: true }).check();
     await page
       .getByLabel('Condiciones y fecha estimada de entrega *')
       .fill('Entrega de prueba en el local después de confirmar la llegada.');
@@ -81,6 +83,14 @@ async function createArticle(page: Page, kind: 'store' | 'preorder', label: stri
   await expect(page).toHaveURL(/\/admin\/articulos\/[a-f0-9-]{36}$/);
   await page.reload();
   await expect(page.getByLabel('Nombre *', { exact: true })).toHaveValue(label);
+  if (kind === 'preorder') {
+    await expect(page.getByLabel('Fecha de lanzamiento', { exact: true })).toHaveValue(
+      '2099-01-01',
+    );
+    await expect(
+      page.getByLabel('Pasar el remanente automáticamente a Tienda', { exact: true }),
+    ).toBeChecked();
+  }
   await expect(page.locator('.admin-image-tile img')).toHaveCount(1);
   await page.getByRole('button', { name: 'Publicar artículo', exact: true }).click();
   await page.getByRole('button', { name: 'Confirmar publicación', exact: true }).click();

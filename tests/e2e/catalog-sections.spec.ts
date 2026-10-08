@@ -86,6 +86,20 @@ test('Tienda y Preventas: accesos por juego y marca, búsqueda, regreso, recarga
     const sections = page.getByRole('navigation', { name: 'Juegos y accesorios', exact: true });
     await expect(sections.getByRole('button')).toHaveCount(5);
     await expect(page.locator('.store-product-card')).toHaveCount(5);
+    const category = page.getByRole('combobox', { name: 'Categoría', exact: true });
+    await expect(category.locator('option')).toHaveText([
+      'Todas las categorías',
+      'Accesorios',
+      'Mitos y Leyendas',
+      'Yu-Gi-Oh!',
+    ]);
+    await category.selectOption('Accesorios');
+    await expect(page.locator('.store-product-card')).toHaveCount(2);
+    await page.reload();
+    await expect(category).toHaveValue('Accesorios');
+    await expect(page.locator('.store-product-card')).toHaveCount(2);
+    await category.selectOption('');
+    await expect(page.locator('.store-product-card')).toHaveCount(5);
     await sections.getByRole('button', { name: 'Yu-Gi-Oh!', exact: true }).click();
     await expect(page.locator('.store-product-title')).toHaveText(['Cartas Yu-Gi-Oh! de prueba']);
     await sections.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();

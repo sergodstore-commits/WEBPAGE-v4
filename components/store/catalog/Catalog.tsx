@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { money, price } from '@/lib/client';
 import type { Product } from '@/lib/types';
+import { catalogCategory, matchesCatalogCategory } from '@/lib/catalog-categories';
 import {
   catalogSections,
   matchesCatalogSection,
@@ -160,13 +161,13 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     const list = (products.data || []).filter((p) => matchesCatalogSection(p, next));
     updateFilters({
       section: next,
-      category: next && list.some((p) => p.category === category) ? category : '',
+      category: next && list.some((p) => matchesCatalogCategory(p, category)) ? category : '',
       brand: next && list.some((p) => p.brand === brand) ? brand : '',
       tag: next && list.some((p) => p.tags?.includes(tag)) ? tag : '',
     });
   }
   const categories = useMemo(
-    () => [...new Set(sectionProducts.map((p) => p.category).filter(Boolean))].sort(),
+    () => [...new Set(sectionProducts.map(catalogCategory))].sort(),
     [sectionProducts],
   );
   const brands = useMemo(
@@ -205,7 +206,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           `${p.name} ${p.catalog_name || ''} ${p.description} ${p.sku} ${p.brand || ''} ${Object.values(p.options || {}).join(' ')} ${(p.tags || []).join(' ')}`
             .toLocaleLowerCase('es')
             .includes(q)) &&
-        (!category || p.category === category) &&
+        matchesCatalogCategory(p, category) &&
         (!brand || p.brand === brand) &&
         (!tag || p.tags?.includes(tag)) &&
         (!minimumPrice || price(p) >= Number(minimumPrice)) &&
@@ -330,6 +331,9 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
                 Categoría
                 <select value={category} onChange={(e) => setCategory(e.target.value)}>
                   <option value="">Todas las categorías</option>
+                  {category && !categories.includes(category) && (
+                    <option value={category}>{category}</option>
+                  )}
                   {categories.map((c) => (
                     <option key={c}>{c}</option>
                   ))}

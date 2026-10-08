@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { getDb, type Db } from './db';
 import { fail, integer, slugify, uuid } from './core';
 import type { Settings, Product } from '../types';
+import { moveReleasedPreorders } from './preorder-release';
 const nullableDate = z
   .union([z.iso.datetime({ offset: true }), z.literal(''), z.null()])
   .optional()
@@ -66,6 +67,11 @@ const productSchema = z.object({
   images: z.array(z.string().max(1000)).max(8).default([]),
   opens_at: nullableDate,
   closes_at: nullableDate,
+  release_date: z
+    .union([z.iso.date(), z.literal(''), z.null()])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v || null)),
+  auto_move_to_store: z.boolean().optional(),
   max_per_customer: z
     .number()
     .int()
@@ -115,7 +121,7 @@ export async function validateImages(tx: Db, images: string[]) {
       fail(400, 'Una imagen no está guardada. Vuelve a cargarla antes de publicar.');
   }
 }
-function validatePublication(p: any) {
+function validatePublication(p: any, existingPublished = false) {
   if (
     !p.name ||
     !p.description.trim() ||
@@ -136,7 +142,7 @@ function validatePublication(p: any) {
       );
     if (new Date(p.closes_at) <= new Date(p.opens_at))
       fail(400, 'El cierre debe ser posterior a la apertura.');
-    if (new Date(p.closes_at) <= new Date())
+    if (!existingPublished && new Date(p.closes_at) <= new Date())
       fail(400, 'El cierre de la preventa debe ser una fecha futura.');
   }
 }
@@ -144,6 +150,7 @@ export async function getProducts(
   admin = false,
   query = new URLSearchParams(),
 ): Promise<Product[]> {
+  await moveReleasedPreorders();
   let sql = 'SELECT *,stock-reserved AS available FROM products WHERE deleted_at IS NULL';
   const params: any[] = [];
   const add = (condition: string, value: any) => {
@@ -165,6 +172,7 @@ export async function getProducts(
   return (await (await getDb()).query<Product>(sql, params)).rows;
 }
 export async function getProduct(slug: string, admin = false): Promise<Product> {
+  await moveReleasedPreorders();
   const sql = admin
     ? 'SELECT *,stock-reserved AS available FROM products WHERE (slug=$1 OR id::text=$1) AND deleted_at IS NULL'
     : "SELECT *,stock-reserved AS available FROM products WHERE slug=$1 AND status='published' AND deleted_at IS NULL";
@@ -203,7 +211,19 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
       tags: d.tags ?? old?.tags ?? [],
       specifications: d.specifications ?? old?.specifications ?? [],
       source_url: d.source_url ?? old?.source_url ?? '',
+      release_date: d.release_date === undefined ? old?.release_date || null : d.release_date,
+      auto_move_to_store: d.auto_move_to_store ?? old?.auto_move_to_store ?? true,
     };
+    if (d.kind === 'preorder' && metadata.release_date && d.closes_at) {
+      const closingDay = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Santiago',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date(d.closes_at));
+      if (metadata.release_date < closingDay)
+        fail(400, 'El lanzamiento no puede ser anterior al día de cierre de reservas.');
+    }
     if (Boolean(metadata.catalog_group) !== Boolean(metadata.catalog_name))
       fail(400, 'Completa el grupo y el nombre de catálogo juntos, o deja ambos vacíos.');
     if (d.stock < (old?.reserved || 0))
@@ -229,7 +249,8 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
         : d.status === 'published'
           ? old?.status || 'draft'
           : d.status;
-    if (status === 'published') validatePublication(d);
+    if (status === 'published')
+      validatePublication(d, old?.status === 'published' && old?.kind === 'preorder');
     const slug = old?.slug || `${slugify(d.name)}-${productId.slice(0, 8)}`;
     await tx.query(
       `INSERT INTO products(id,name,slug,description,sku,price,discount_percent,category,stock,kind,status,images,opens_at,closes_at,max_per_customer,delivery_terms,catalog_group,catalog_name,brand,options,tags,specifications,source_url) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,description=EXCLUDED.description,sku=EXCLUDED.sku,price=EXCLUDED.price,discount_percent=EXCLUDED.discount_percent,category=EXCLUDED.category,stock=EXCLUDED.stock,kind=EXCLUDED.kind,status=EXCLUDED.status,images=EXCLUDED.images,opens_at=EXCLUDED.opens_at,closes_at=EXCLUDED.closes_at,max_per_customer=EXCLUDED.max_per_customer,delivery_terms=EXCLUDED.delivery_terms,catalog_group=EXCLUDED.catalog_group,catalog_name=EXCLUDED.catalog_name,brand=EXCLUDED.brand,options=EXCLUDED.options,tags=EXCLUDED.tags,specifications=EXCLUDED.specifications,source_url=EXCLUDED.source_url,updated_at=now()`,
@@ -260,6 +281,11 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
       ],
     );
     const delta = d.stock - (old?.stock || 0);
+    await tx.query('UPDATE products SET release_date=$1,auto_move_to_store=$2 WHERE id=$3', [
+      metadata.release_date,
+      metadata.auto_move_to_store,
+      productId,
+    ]);
     if (delta)
       await tx.query(
         'INSERT INTO inventory_movements(id,product_id,delta,reason,actor_id) VALUES($1,$2,$3,$4,$5)',

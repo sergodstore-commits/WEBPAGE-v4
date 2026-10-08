@@ -605,6 +605,8 @@ type ProductForm = {
   images: string[];
   opens_at: string;
   closes_at: string;
+  release_date: string;
+  auto_move_to_store: boolean;
   max_per_customer: string;
   delivery_terms: string;
   catalog_group: string;
@@ -627,6 +629,8 @@ const blankProduct: ProductForm = {
   images: [],
   opens_at: '',
   closes_at: '',
+  release_date: '',
+  auto_move_to_store: true,
   max_per_customer: '1',
   delivery_terms: '',
   catalog_group: '',
@@ -655,6 +659,8 @@ function toProductForm(p: Product): ProductForm {
     images: p.images,
     opens_at: localDate(p.opens_at),
     closes_at: localDate(p.closes_at),
+    release_date: p.release_date?.slice(0, 10) || '',
+    auto_move_to_store: p.auto_move_to_store ?? true,
     max_per_customer: String(p.max_per_customer || 1),
     delivery_terms: p.delivery_terms,
     catalog_group: p.catalog_group || '',
@@ -1199,6 +1205,28 @@ function ProductEditor({ productId }: { productId?: string }) {
                       required
                     />
                   </Field>
+                  <Field label="Fecha de lanzamiento">
+                    <input
+                      type="date"
+                      value={form.release_date}
+                      onChange={(e) => update('release_date', e.target.value)}
+                    />
+                  </Field>
+                  <div className="admin-span-all">
+                    <label className="admin-check">
+                      <input
+                        type="checkbox"
+                        checked={form.auto_move_to_store}
+                        onChange={(e) => update('auto_move_to_store', e.target.checked)}
+                      />{' '}
+                      Pasar el remanente automáticamente a Tienda
+                    </label>
+                    <p className="admin-help">
+                      Desde la fecha de lanzamiento, en horario de Chile. Solo pasan artículos
+                      publicados con unidades libres; las reservas y pedidos se conservan. Sin
+                      fecha, permanece en Preventas.
+                    </p>
+                  </div>
                   <p className="admin-help">
                     Las fechas usan la zona horaria de este dispositivo. Los cupos se comprueban al
                     reservar.
@@ -1229,6 +1257,11 @@ function ProductEditor({ productId }: { productId?: string }) {
                 )}
               </div>
               <Tag>{kindLabel[form.kind]}</Tag>
+              {product?.moved_to_store_at && (
+                <p className="admin-help">
+                  Pasó automáticamente a Tienda el {date(product.moved_to_store_at)}.
+                </p>
+              )}
               <h2 className="admin-preview-name">{form.name || 'Nombre del artículo'}</h2>
               <p className="admin-preview-price">
                 {money(

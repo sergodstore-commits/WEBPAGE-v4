@@ -297,51 +297,58 @@ export function Community() {
                     </p>
                   </div>
                   {board === 'yugioh' ? (
-                    <div className={styles.academy}>
+                    <div className={styles.academyWrapper}>
                       <p className={styles.note}>
                         Tu casa depende de los puntos acumulados en los torneos seleccionados. El
                         puesto sigue siendo el del ranking general.
                       </p>
-                      {duelHouses.map((house) => {
-                        const members = ranking.data!.rows.filter(
-                          (r) => duelHouse(r.points, limits) === house.id,
-                        );
-                        const matches = filtered.filter(
-                          (r) => duelHouse(r.points, limits) === house.id,
-                        );
-                        return (
-                          <section
-                            key={house.id}
-                            className={styles.house}
-                            data-house={house.id}
-                            aria-labelledby={`house-${house.id}`}
-                          >
-                            <div className={styles.houseHeading}>
-                              <div>
-                                <span>{house.range}</span>
-                                <h3 id={`house-${house.id}`}>{house.name}</h3>
+                      <div
+                        className={styles.academy}
+                        tabIndex={0}
+                        role="region"
+                        aria-label="Casas Slifer, Ra y Obelisk"
+                      >
+                        {duelHouses.map((house) => {
+                          const members = ranking.data!.rows.filter(
+                            (r) => duelHouse(r.points, limits) === house.id,
+                          );
+                          const matches = filtered.filter(
+                            (r) => duelHouse(r.points, limits) === house.id,
+                          );
+                          return (
+                            <section
+                              key={house.id}
+                              className={styles.house}
+                              data-house={house.id}
+                              aria-labelledby={`house-${house.id}`}
+                            >
+                              <div className={styles.houseHeading}>
+                                <div>
+                                  <span>{house.range}</span>
+                                  <h3 id={`house-${house.id}`}>{house.name}</h3>
+                                </div>
+                                <p>
+                                  {members.length} {members.length === 1 ? 'jugador' : 'jugadores'}
+                                </p>
                               </div>
-                              <p>
-                                {members.length} {members.length === 1 ? 'jugador' : 'jugadores'}
-                              </p>
-                            </div>
-                            {matches.length ? (
-                              <RankingTable
-                                rows={matches.slice(0, limit)}
-                                label={`Clasificación ${house.name}`}
-                                clickable
-                                onPlayer={setPlayer}
-                              />
-                            ) : (
-                              <p className={styles.houseEmpty}>
-                                {members.length
-                                  ? 'No hay jugadores que coincidan con esa búsqueda en esta casa.'
-                                  : 'Todavía no hay jugadores en esta casa.'}
-                              </p>
-                            )}
-                          </section>
-                        );
-                      })}
+                              {matches.length ? (
+                                <RankingTable
+                                  rows={matches.slice(0, limit)}
+                                  label={`Clasificación ${house.name}`}
+                                  clickable
+                                  onPlayer={setPlayer}
+                                />
+                              ) : (
+                                <p className={styles.houseEmpty}>
+                                  {members.length
+                                    ? 'No hay jugadores que coincidan con esa búsqueda en esta casa.'
+                                    : 'Todavía no hay jugadores en esta casa.'}
+                                </p>
+                              )}
+                            </section>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
                     <RankingTable

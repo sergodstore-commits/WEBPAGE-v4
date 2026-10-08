@@ -3,6 +3,7 @@ import { getDb, type Db } from './db';
 import { appUrl, event, fail, flowEnvironment, hash, integer, publicOrder, uuid } from './core';
 import { enqueueMail } from './mail';
 import type { OrderItem, Settings } from '../types';
+import { moveReleasedPreorders } from './preorder-release';
 const itemsSchema = z
   .array(z.object({ product_id: z.uuid(), quantity: z.number().int().min(1).max(100) }))
   .min(1, 'Tu carrito está vacío.')
@@ -74,6 +75,7 @@ async function buildItems(
   pos = false,
 ) {
   const output: OrderItem[] = [];
+  await moveReleasedPreorders(tx);
   for (const i of items) {
     const p = (
       await tx.query('SELECT * FROM products WHERE id=$1 AND deleted_at IS NULL FOR UPDATE', [

@@ -22,6 +22,9 @@ export type Product = {
   images: string[];
   opens_at: string | null;
   closes_at: string | null;
+  release_date?: string | null;
+  auto_move_to_store?: boolean;
+  moved_to_store_at?: string | null;
   max_per_customer: number | null;
   delivery_terms: string;
   created_at: string;
