@@ -341,7 +341,6 @@ export function Community() {
                               <div className={styles.houseContent}>
                                 <div className={styles.houseHeading}>
                                   <div>
-                                    <span>{house.range}</span>
                                     <h3 id={`house-${house.id}`}>{house.name}</h3>
                                   </div>
                                   <p>
