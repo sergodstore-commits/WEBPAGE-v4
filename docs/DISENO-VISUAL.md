@@ -1,5 +1,15 @@
 # Rediseño visual de SERGOD STORE
 
+## Cuenta — punto 8 de la pauta vigente, octubre de 2026
+
+El acceso usa una superficie azul grafito con iluminación estática y bloques discretos para sus beneficios. El formulario comparte esquinas y profundidad con el resto de la tienda. La navegación del perfil tiene estados seleccionados y foco visibles, y permanece compacta en celulares.
+
+El perfil separa dirección y datos de torneo en paneles. El historial destaca importe, pago y entrega; las filas completas siguen abriendo cada pedido. El detalle refina sus paneles y la línea del historial, con un acento verde suave en pagos aprobados. No se modifican autenticación, recuperación, campos, permisos, reglas de pago ni entrega.
+
+No se añaden imágenes, medios, dependencias ni storage. Modelo recomendado Sol 6.1 / Medio; siguiente Carrito con el mismo nivel. Los banners permanecen estáticos.
+
+Verificación: tipos y compilación de producción; dos pruebas de navegador para acceso, registro, recuperación, perfil, historial y detalle de pedidos entre 320 y 1440 px. Cubren contraste, foco, desbordamientos, enlaces inválidos, estados de pago y seguimiento. Datos simulados, sin correos, cobros ni cambios de cuenta reales.
+
 ## Noticias — punto 7 de la pauta vigente, octubre de 2026
 
 La publicación seleccionada usa una superficie azul grafito con profundidad y acento estático discreto. Los medios quedan enmarcados y el texto mantiene una anchura cómoda, con fechas, títulos y enlaces diferenciados. Las publicaciones que no tienen título ni texto muestran el medio centrado y la información debajo, evitando una columna vacía. Se conserva el texto completo de la noticia seleccionada.

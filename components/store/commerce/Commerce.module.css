@@ -254,21 +254,24 @@
 }
 .page.page :global(.store-auth-card) {
   padding: 32px;
-  border-radius: 12px;
+  border-radius: 16px;
   border-color: var(--sg-line);
-  box-shadow: 0 8px 32px #17212b08;
+  box-shadow: 0 12px 36px rgb(0 0 0 / 18%);
 }
 .page.page :global(.store-auth-card) > p {
   font-size: 14px;
 }
 .auth.auth {
   grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
-  gap: 56px;
+  gap: 32px;
   align-items: start;
 }
 .auth.auth :global(.store-auth-copy) {
-  background: var(--sg-graphite);
-  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 0 0, rgb(40 160 192 / 20%), transparent 65%),
+    linear-gradient(145deg, #132b38, #0c141e);
+  border: 1px solid var(--sg-line);
+  border-radius: 16px;
   padding: 40px;
   color: var(--sg-white);
 }
@@ -296,6 +299,18 @@
   font-size: 13px;
   color: #cbd5e1;
 }
+.auth.auth :global(.store-auth-benefit) {
+  padding: 16px;
+  border: 1px solid #314755;
+  border-radius: 10px;
+  background: rgb(13 25 36 / 45%);
+}
+.auth.auth :global(.store-auth-benefit) > svg {
+  flex-shrink: 0;
+}
+.auth.auth :global(.store-auth-copy) > :global(.store-text-link) {
+  margin-top: 24px;
+}
 .page.page :global(.store-auth-tabs) button {
   min-height: 44px;
   font-size: 14px;
@@ -317,24 +332,51 @@
 .page.page :global(.store-account-nav) {
   background: var(--sg-paper);
   border: 1px solid var(--sg-line);
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 10px;
   height: fit-content;
 }
 .page.page :global(.store-account-nav) > button {
   min-height: 48px;
   font-size: 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
 }
 .page.page :global(.store-account-nav) > button:global(.is-active) {
   background: var(--sg-surface-selected);
   color: var(--sg-link);
   border-radius: 7px;
+  border-color: var(--sg-line);
+}
+.page.page :global(.store-account-nav) > button:hover {
+  background: var(--sg-surface-hover);
+}
+.page.page :global(.store-account-nav) > button:focus-visible,
+.page.page :global(.store-account-nav) > a:focus-visible,
+.page.page :global(.store-order-row):focus-visible,
+.auth.auth :global(.store-auth-tabs) button:focus-visible {
+  outline: 3px solid var(--sg-link);
+  outline-offset: 3px;
+}
+.page.page :global(.store-account-content) {
+  border-radius: 16px;
+  box-shadow: 0 10px 32px rgb(0 0 0 / 12%);
 }
 .page.page :global(.store-account-nav) > a {
   font-size: 13px;
 }
 .page.page :global(.store-profile-form) {
   margin-top: 0;
+}
+.page.page :global(.store-profile-form) :global(.store-form-section) {
+  padding: 20px;
+  border: 1px solid var(--sg-line);
+  border-radius: 12px;
+  background: var(--sg-surface-soft);
+}
+.page.page :global(.store-profile-form) :global(.store-form-section) h3 {
+  color: var(--sg-ink);
+  font-weight: 600;
 }
 .page.page :global(.store-form-section) > p {
   font-size: 14px;
@@ -353,12 +395,12 @@
   padding: 18px;
   margin-bottom: 12px;
   border: 1px solid var(--sg-line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--sg-surface-soft);
   text-decoration: none;
 }
 .page.page :global(.store-order-row):hover {
-  border-color: var(--sg-line);
+  border-color: var(--sg-link);
   background: var(--sg-surface-selected);
 }
 .page.page :global(.store-order-row) strong {
@@ -370,15 +412,23 @@
 .page.page :global(.store-order-row) > div:nth-child(2) {
   min-width: 0;
 }
+.page.page :global(.store-order-row) > strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+}
+.page.page :global(.store-order-row) > svg {
+  color: var(--sg-link);
+}
 .page.page :global(.store-order-status) {
   padding: 28px;
-  border-radius: 12px;
+  border-radius: 16px;
   border-color: var(--sg-line);
   background: var(--sg-paper);
   border-left: 4px solid var(--sg-link);
 }
 .page.page :global(.store-order-status)[data-payment='approved'] {
   border-left-color: var(--sg-success-line);
+  background: linear-gradient(115deg, rgb(64 170 131 / 9%), transparent 75%), var(--sg-paper);
 }
 .page.page :global(.store-order-status)[data-payment='rejected'],
 .page.page :global(.store-order-status)[data-payment='expired'] {
@@ -395,6 +445,13 @@
 .page.page :global(.store-order-item) {
   gap: 14px;
 }
+.page.page :global(.store-order-panel) {
+  border-radius: 14px;
+}
+.page.page :global(.store-order-item) > strong,
+.page.page :global(.store-order-totals) dd {
+  font-variant-numeric: tabular-nums;
+}
 .page.page :global(.store-order-item) strong {
   font-size: 14px;
 }
@@ -408,6 +465,16 @@
 }
 .page.page :global(.store-timeline) p {
   font-size: 14px;
+}
+.page.page :global(.store-timeline) > li > span {
+  width: 9px;
+  height: 9px;
+  background: var(--sg-link);
+  box-shadow: 0 0 0 4px var(--sg-surface-selected);
+}
+.page.page :global(.store-timeline) > li:not(:last-child)::before {
+  left: 4px;
+  background: var(--sg-line);
 }
 .page.page :global(.store-order-panel) > p {
   font-size: 14px;
@@ -525,5 +592,8 @@
   }
   .auth.auth :global(.store-auth-copy) {
     padding: 26px;
+  }
+  .page.page :global(.store-profile-form) :global(.store-form-section) {
+    padding: 16px 12px;
   }
 }

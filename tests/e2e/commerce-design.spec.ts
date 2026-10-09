@@ -258,6 +258,7 @@ test('Cuenta: acceso, recuperación, perfil y enlaces inválidos adaptables', as
       await page.screenshot({ path: info.outputPath(`${width}-login.png`), fullPage: true });
     await page.getByRole('button', { name: 'Olvidé mi contraseña' }).click();
     await expect(page.getByRole('heading', { name: 'Recupera tu contraseña' })).toBeVisible();
+    await noOverflow(page);
     await page.getByRole('button', { name: 'Volver a iniciar sesión' }).click();
     await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
     await expect(page.getByLabel('Nombre completo')).toBeVisible();
@@ -269,6 +270,12 @@ test('Cuenta: acceso, recuperación, perfil y enlaces inválidos adaptables', as
     await page.goto('/cuenta');
     await expect(page.getByRole('heading', { name: 'Hola, Cliente' })).toBeVisible();
     await noOverflow(page);
+    const orderLink = page.locator('.store-order-row');
+    await orderLink.focus();
+    await expect(orderLink).toBeFocused();
+    await expect(orderLink).toContainText('Pedido #42');
+    if (width !== 320)
+      await page.screenshot({ path: info.outputPath(`${width}-history.png`), fullPage: true });
     await page.getByRole('button', { name: 'Mis datos', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Mis datos', exact: true })).toHaveAttribute(
       'aria-pressed',
