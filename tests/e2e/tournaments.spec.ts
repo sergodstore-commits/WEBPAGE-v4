@@ -193,7 +193,7 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/torneos');
-    await expect(page.getByRole('heading', { name: 'Torneos.', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Torneos', level: 1 })).toBeVisible();
     await expect(
       page.getByText('Próximas fechas y transmisiones de SERGOD STORE.', { exact: true }),
     ).toHaveCount(0);
