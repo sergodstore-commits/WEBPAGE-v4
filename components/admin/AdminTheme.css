@@ -1,6 +1,7 @@
 /* Shared presentation for the admin. Business forms retain their existing layout rules. */
 .admin-shell {
-  --a-bg: #f3f6f9;
+  --a-bg: #eaf0f5;
+  --a-paper: #fcfdff;
   --a-ink: #17212b;
   --a-muted: #526170;
   --a-line: #dce3ea;
@@ -42,11 +43,42 @@
   color: #006482;
 }
 .admin-shell .admin-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 7px #17212b04;
+  border-radius: 14px;
+  box-shadow: 0 5px 20px #17212b06;
 }
 .admin-shell .admin-card-heading {
-  background: #fafcfd;
+  background: #f3f7fa;
+  flex-wrap: wrap;
+}
+.admin-shell .admin-card-heading > a {
+  color: #006482;
+  min-height: 32px;
+}
+.admin-shell .admin-toolbar {
+  background: #f3f7fa;
+  gap: 12px;
+  border-bottom-color: var(--a-line);
+}
+.admin-shell .admin-toolbar :is(input, select) {
+  min-height: 44px;
+  background-color: var(--a-paper);
+}
+.admin-shell .admin-search {
+  min-height: 44px;
+  border-color: #c7d2de;
+  border-radius: 8px;
+}
+.admin-shell .admin-search:focus-within {
+  outline: 3px solid #007c96;
+  outline-offset: 3px;
+}
+.admin-shell .admin-page-heading {
+  align-items: flex-start;
+  gap: 16px;
+}
+.admin-shell .admin-page-heading h1 {
+  font-size: clamp(26px, 2.8vw, 34px);
+  line-height: 1.2;
 }
 .admin-shell .admin-card-body > p {
   margin: 0 0 16px;
@@ -99,7 +131,29 @@
 }
 .admin-shell .admin-table th {
   color: #526170;
-  background: #f8fafc;
+  background: #f0f5f8;
+}
+.admin-shell .admin-table td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+.admin-shell .admin-table td:first-child {
+  min-width: 110px;
+}
+.admin-shell .admin-table td small {
+  color: var(--a-muted);
+  line-height: 1.6;
+}
+.admin-shell .admin-table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9aabba #edf2f6;
+  overscroll-behavior-x: contain;
+}
+.admin-shell .admin-tag {
+  border-radius: 6px;
+  line-height: 1.5;
 }
 .admin-shell .admin-table tbody tr:hover {
   background: #f6fafc;
@@ -110,11 +164,25 @@
   border-color: #a5dfe9;
 }
 .admin-shell .admin-stat {
-  border-radius: 12px;
+  border-radius: 14px;
   border-top: 3px solid #9fd9e5;
+  background: linear-gradient(150deg, #edf8fb, transparent 65%), var(--a-paper);
 }
 .admin-shell .admin-stat > strong {
   letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+.admin-shell .admin-stat > div {
+  color: var(--a-muted);
+}
+.admin-shell .admin-shortcuts > a {
+  gap: 14px;
+  padding: 18px 10px;
+  border-radius: 8px;
+}
+.admin-shell .admin-shortcuts > a > svg:first-child {
+  color: #006482;
+  flex-shrink: 0;
 }
 .admin-shell .admin-shortcuts a:hover {
   background: #f1f9fc;
@@ -133,7 +201,7 @@
   width: 270px;
   height: 100dvh;
   padding: 18px 16px;
-  background: #111923;
+  background: linear-gradient(170deg, #172b39, #111923 55%);
   color: #e4edf5;
   border: 0;
 }
@@ -183,7 +251,7 @@
 }
 .admin-redesign .admin-sidebar nav a {
   color: #ccd8e3;
-  min-height: 42px;
+  min-height: 44px;
   padding: 9px 12px;
   gap: 10px;
   margin-bottom: 2px;
@@ -272,6 +340,11 @@
   white-space: nowrap;
   font-size: 13px;
   color: #006482;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--a-line);
+  border-radius: 8px;
+  background: #f3f7fa;
 }
 .admin-redesign .admin-menu-close {
   display: none;

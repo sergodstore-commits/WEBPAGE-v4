@@ -14,6 +14,7 @@ Este plan reemplaza las propuestas anteriores que incluían animaciones en los b
 8. Cuenta: acceso con ambientación estática, navegación compacta, perfil agrupado y jerarquía clara en historial y detalle de pedidos.
 9. Carrito: artículos en tarjetas individuales, imágenes completas, controles claros, subtotales y resumen destacados, con avisos de disponibilidad visibles.
 10. Checkout: entrega en un panel coherente, opciones de retiro y envío distinguibles, campos cómodos, avisos del flete por pagar y foco de teclado visibles.
+11. Admin: fondo azul grisáceo, tarjetas y filtros coherentes, tablas con mejor lectura, navegación y accesos visibles, y selección de ligas integrada en paneles.
 
 ## Orden pendiente
 
@@ -21,7 +22,6 @@ Son refinamientos visuales sobre funciones existentes. No implican rehacer la ti
 
 | Punto | Sección         | Trabajo pendiente                                                                                             |
 | ----- | --------------- | ------------------------------------------------------------------------------------------------------------- |
-| 11    | Admin           | Afinar navegación, densidad y acciones principales de catálogo, noticias, torneos y ligas.                    |
 | 12    | Textos e iconos | Retirar redundancias y unificar etiquetas, tamaños, espacios y estados vacíos.                                |
 | 13    | Revisión final  | Comprobar celular, teclado, contraste, desbordamientos y los recorridos de compra y administración afectados. |
 
@@ -39,4 +39,4 @@ La recomendación para Comunidad, Torneos, Noticias, Cuenta, Carrito, Checkout y
 
 Estos niveles son una recomendación práctica según el alcance. OpenAI Docs describe Medio como una opción equilibrada para trabajo de código y planificación: [guía de razonamiento](https://developers.openai.com/api/docs/guides/reasoning). No es una promesa de consumo fijo ni un cambio automático del modelo seleccionado en la aplicación.
 
-Continuar por el punto 11, Admin, únicamente cuando el propietario lo indique. Incluir siempre modelo y razonamiento al indicar el siguiente punto.
+Continuar por el punto 12, Textos e iconos, únicamente cuando el propietario lo indique. Modelo recomendado Luna 6 / Bajo. Incluir siempre modelo y razonamiento al indicar el siguiente punto.

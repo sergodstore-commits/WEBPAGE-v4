@@ -22,7 +22,8 @@
 }
 .selection {
   border: 1px solid #d7e0e7;
-  border-radius: 10px;
+  border-radius: 12px;
+  background: #f3f7fa;
   padding: 20px;
   margin: 0;
 }
@@ -48,6 +49,9 @@
   max-height: 330px;
   overflow-y: auto;
   margin: 12px 0 16px;
+  padding: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: #9aabba #edf2f6;
 }
 .choice {
   display: flex;
@@ -55,7 +59,7 @@
   align-items: center;
   padding: 12px;
   border: 1px solid #d7e0e7;
-  border-radius: 6px;
+  border-radius: 8px;
   margin: 6px 0;
   cursor: pointer;
   background: #fff;

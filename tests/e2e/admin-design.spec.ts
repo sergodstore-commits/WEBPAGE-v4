@@ -11,7 +11,7 @@ async function login(page: Page) {
 test('Admin: tareas agrupadas, ubicación y pantallas de trabajo adaptables', async ({
   page,
 }, info) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   await login(page);
   const navigation = page.getByRole('navigation', { name: 'Administración', exact: true });
   for (const label of ['Catálogo', 'Ventas', 'Comunidad y contenido', 'Configuración']) {
@@ -26,6 +26,9 @@ test('Admin: tareas agrupadas, ubicación y pantallas de trabajo adaptables', as
     for (const path of [
       '/admin',
       '/admin/articulos/nuevo',
+      '/admin/articulos',
+      '/admin/preventas',
+      '/admin/torneos',
       '/admin/integraciones',
       '/admin/liga',
       '/admin/noticias',

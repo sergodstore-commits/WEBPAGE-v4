@@ -1,5 +1,15 @@
 # Rediseño visual de SERGOD STORE
 
+## Admin — punto 11 de la pauta vigente, octubre de 2026
+
+El panel usa un fondo azul grisáceo y tarjetas claras con profundidad discreta. Los encabezados, filtros y tablas comparten superficies y bordes; los importes del resumen usan cifras alineadas. Las celdas tienen espacio regular y la primera columna evita comprimir en exceso los números y fechas. Las tablas conservan su desplazamiento horizontal interno.
+
+La navegación mantiene sus grupos, con áreas de enlace de al menos 44 px. El acceso a la tienda pública y los atajos del resumen se distinguen mejor. Búsquedas con foco visible, controles de filtros más cómodos y paneles de selección de ligas integrados visualmente. No se modifican permisos, rutas, importadores, selección de torneos, stock, precios, ventas ni publicación de contenido.
+
+Sin medios, dependencias, almacenamiento ni animaciones nuevas. Modelo recomendado Sol 6.1 / Medio; siguiente Textos e iconos, Luna 6 / Bajo.
+
+Verificación: tipos y compilación de producción; pruebas de navegador para resumen, catálogo, editor, preventas, torneos, integraciones, noticias y ligas entre 320 y 1440 px. Incluyen desbordamientos, menú móvil, foco y guardado de selecciones con datos locales de prueba, sin editar datos reales.
+
 ## Checkout — punto 10 de la pauta vigente, octubre de 2026
 
 La entrega se presenta en un panel azul grafito con iluminación estática discreta. Retiro y envío tienen tarjetas de selección coherentes, iconos diferenciados y foco visible. Los campos conservan sus etiquetas, autocompletado y validación, con altura cómoda y espacios regulares. La dirección de retiro y el aviso de flete por pagar reciben un acento cian; el resumen conserva separado el pago online del cobro del transportista.
