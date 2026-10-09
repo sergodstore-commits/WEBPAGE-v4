@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test('explorador aislado carga el proveedor solo bajo demanda y funciona en móvil', async ({
-  page,
-}) => {
-  let embeds = 0;
+test('explorador conserva presentaciones y lista externa sin cargar gráficos', async ({ page }) => {
+  const externalRequests: string[] = [];
   const mutations: string[] = [];
   page.on('request', (request) => {
     if (request.url().includes('/api/') && request.method() !== 'GET')
@@ -31,33 +29,29 @@ test('explorador aislado carga el proveedor solo bajo demanda y funciona en móv
       ],
     }),
   );
-  await page.route('https://tcgindex.io/embed/**', (route) => {
-    embeds++;
-    return route.fulfill({ contentType: 'text/html; charset=utf-8', body: '<h1>Gráfico externo de prueba</h1>' });
+  page.on('request', (request) => {
+    if (request.url().startsWith('https://tcgindex.io/')) externalRequests.push(request.url());
   });
   await page.goto('/pruebas/explorador');
   await expect(page.getByRole('button', { name: 'Sobre Inglés' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  expect(embeds).toBe(0);
+  await expect(page.locator('iframe')).toHaveCount(0);
   await page.getByRole('button', { name: 'Display Inglés' }).click();
   await expect(page.getByRole('link', { name: 'Ver este producto' })).toHaveAttribute(
     'href',
     '/producto/beyond-display',
   );
-  await page.getByRole('button', { name: 'Cargar precio e historial' }).click();
-  await expect(
-    page.frameLocator('iframe').getByRole('heading', { name: 'Gráfico externo de prueba' }),
-  ).toBeVisible();
-  expect(embeds).toBe(1);
-  await page.getByRole('button', { name: 'Actualizar', exact: true }).click();
-  await expect.poll(() => embeds).toBe(2);
+  await expect(page.getByRole('link', { name: /Ver cartas de Beyond the Brave/ })).toHaveAttribute(
+    'href',
+    'https://tcgindex.io/yu-gi-oh/set/beyond-the-brave-yugioh',
+  );
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole('heading', { name: 'Dark Time Wizard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '¿Qué cartas puede traer?' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
   expect(mutations).toEqual([]);
+  expect(externalRequests).toEqual([]);
 });
-

@@ -2,23 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, ChartNoAxesCombined, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Layers3 } from 'lucide-react';
 import { api } from '@/lib/client';
 import type { Product } from '@/lib/types';
 import styles from './trial.module.css';
 
-const cardUrl =
-  'https://tcgindex.io/yu-gi-oh/card/yugioh-beyond-the-brave-dark-time-wizard-ultra-rare';
 const setUrl = 'https://tcgindex.io/yu-gi-oh/set/beyond-the-brave-yugioh';
-const embedUrl =
-  'https://tcgindex.io/embed/card/yugioh/yugioh-beyond-the-brave-dark-time-wizard-ultra-rare';
 
 export default function ExplorerTrial() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selected, setSelected] = useState('');
   const [catalogState, setCatalogState] = useState('Cargando presentaciones…');
-  const [opened, setOpened] = useState(false);
-  const [revision, setRevision] = useState(0);
   useEffect(() => {
     let active = true;
     api<Product[]>('/products?kind=store')
@@ -57,9 +51,7 @@ export default function ExplorerTrial() {
             ¿Qué puede salir<span>?</span>
           </h1>
           <h2>Beyond the Brave</h2>
-          <p>
-            Elige una presentación y consulta una referencia de mercado sin salir de esta prueba.
-          </p>
+          <p>Elige una presentación y descubre las cartas que pueden salir en esta edición.</p>
         </section>
         <div className={styles.layout}>
           <section className={styles.products} aria-label="Presentaciones de Beyond the Brave">
@@ -67,7 +59,7 @@ export default function ExplorerTrial() {
               {product?.images[0] ? (
                 <img src={product.images[0]} alt={product.name} />
               ) : (
-                <ChartNoAxesCombined size={70} aria-hidden="true" />
+                <Layers3 size={70} aria-hidden="true" />
               )}
             </div>
             {catalogState && <p role="status">{catalogState}</p>}
@@ -96,56 +88,25 @@ export default function ExplorerTrial() {
               de una Token Box; el contenido aleatorio depende de cada presentación.
             </p>
           </section>
-          <section className={styles.market} aria-label="Referencia de una carta">
+          <section className={styles.contents} aria-label="Cartas de la edición">
             <div className={styles.cardTitle}>
-              <span>SINGLE DE EJEMPLO</span>
-              <h2>Dark Time Wizard</h2>
-              <p>Beyond the Brave · Ultra Rare</p>
+              <span>CONTENIDO DE LA EDICIÓN</span>
+              <h2>¿Qué cartas puede traer?</h2>
+              <p>Beyond the Brave · Yu-Gi-Oh! TCG</p>
             </div>
-            {!opened ? (
-              <div className={styles.placeholder}>
-                <ChartNoAxesCombined size={45} />
-                <h3>Su precio, a través del tiempo</h3>
-                <p>Consulta el gráfico externo cuando lo necesites.</p>
-                <button onClick={() => setOpened(true)}>Cargar precio e historial</button>
-              </div>
-            ) : (
-              <>
-                <iframe
-                  key={revision}
-                  className={styles.chart}
-                  src={embedUrl}
-                  title="Precio e historial de Dark Time Wizard · TCGIndex"
-                  loading="lazy"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
-                <div className={styles.chartFooter}>
-                  <a href={cardUrl} target="_blank" rel="noopener noreferrer">
-                    Datos de mercado por TCGIndex <ArrowUpRight size={14} />
-                  </a>
-                  <button onClick={() => setRevision((n) => n + 1)}>
-                    <RefreshCw size={15} /> Actualizar
-                  </button>
-                </div>
-              </>
-            )}
-            <p className={styles.note}>
-              Referencia externa en USD, no es el precio de venta de SERGOD. El proveedor controla
-              los valores, el historial y su actualización. Si el gráfico no carga,{' '}
-              <a href={cardUrl} target="_blank" rel="noopener noreferrer">
-                abre la referencia
-              </a>
-              .
-            </p>
+            <div className={styles.contentIntro}>
+              <Layers3 size={45} aria-hidden="true" />
+              <p>Consulta las cartas y sus rarezas antes de elegir tu sobre o caja.</p>
+            </div>
             <a className={styles.listLink} href={setUrl} target="_blank" rel="noopener noreferrer">
               <span>
-                Explorar cartas de la edición<small>Lista por precio en la web de TCGIndex</small>
+                Ver cartas de Beyond the Brave<small>Abre la lista actualizada en TCGIndex</small>
               </span>
               <ArrowUpRight size={22} />
             </a>
             <p className={styles.note}>
-              Esta prueba no incluye todavía la lista dentro de la tienda. No guardamos cartas,
-              precios ni historial en Supabase.
+              La lista se consulta en la fuente externa. No guardamos las cartas ni sus imágenes en
+              Supabase.
             </p>
           </section>
         </div>
