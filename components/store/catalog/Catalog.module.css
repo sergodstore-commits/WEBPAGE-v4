@@ -390,36 +390,36 @@
   margin-top: 3px;
 }
 
-:global(.store-app) .shopCatalog .layout {
+:global(.store-app) :is(.shopCatalog, .preorderCatalog) .layout {
   grid-template-columns: 206px minmax(0, 1fr);
   gap: 24px;
 }
-:global(.store-app) .shopCatalog .filters {
+:global(.store-app) :is(.shopCatalog, .preorderCatalog) .filters {
   border-radius: 12px;
   padding: 18px 14px;
 }
-.shopCatalog .filterControls {
+:is(.shopCatalog, .preorderCatalog) .filterControls {
   gap: 16px;
 }
-:global(.store-app) .shopCatalog :global(.store-catalog-toolbar) {
+:global(.store-app) :is(.shopCatalog, .preorderCatalog) :global(.store-catalog-toolbar) {
   padding: 12px;
   margin-bottom: 18px;
   border-radius: 12px;
 }
-:global(.store-app) .shopCatalog :global(.store-catalog-grid) {
+:global(.store-app) :is(.shopCatalog, .preorderCatalog) :global(.store-catalog-grid) {
   gap: 20px 16px;
 }
 @media (max-width: 900px) {
-  :global(.store-app) .shopCatalog .layout {
+  :global(.store-app) :is(.shopCatalog, .preorderCatalog) .layout {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  :global(.store-app) .shopCatalog .filters {
+  :global(.store-app) :is(.shopCatalog, .preorderCatalog) .filters {
     padding: 0;
   }
 }
 @media (max-width: 700px) {
-  :global(.store-app) .shopCatalog :global(.store-catalog-grid) {
+  :global(.store-app) :is(.shopCatalog, .preorderCatalog) :global(.store-catalog-grid) {
     gap: 16px 10px;
   }
 }

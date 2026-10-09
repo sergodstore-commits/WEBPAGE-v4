@@ -39,6 +39,7 @@ function article(id: string, change: Partial<Product> = {}): Product {
 }
 const products = [
   article('reserva-es', {
+    release_date: '2027-01-28',
     catalog_group: 'grupo',
     catalog_name: family,
     options: { Idioma: 'Español' },
@@ -109,6 +110,12 @@ test('Preventas: estados, fechas por opción, filtros persistentes y responsive'
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/preventas');
     await expect(page.locator('.store-product-card')).toHaveCount(6);
+    const spanishCard = page
+      .locator('.store-product-card')
+      .filter({ has: page.getByRole('link', { name: 'reserva-es', exact: true }) });
+    await expect(spanishCard).toContainText('Hora de Chile');
+    await expect(spanishCard).toContainText('Máximo 2 por cliente.');
+    await expect(spanishCard.locator('time[datetime="2027-01-28"]')).toHaveText(/28.*ene.*2027/);
     for (const label of [
       'Reserva abierta',
       'Próximamente',

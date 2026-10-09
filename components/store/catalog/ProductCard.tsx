@@ -45,7 +45,7 @@ export function ProductCard({
     values.slice(0, 2).join(' / ') + (values.length > 2 ? ` +${values.length - 2}` : '');
   return (
     <article
-      className={`store-product-card ${catalogStyle ? styles.card : ''} ${shop ? styles.shopCard : ''}`}
+      className={`store-product-card ${catalogStyle ? styles.card : ''} ${shop ? styles.shopCard : reservation ? styles.preorderCard : ''}`}
     >
       <Link href={`/producto/${p.slug}`} className="store-product-visual">
         <ProductImage src={p.images[0]} name={title} />
@@ -67,7 +67,7 @@ export function ProductCard({
             )}
           </div>
         )}
-        <div className={shop ? styles.priceRow : undefined}>
+        <div className={catalogStyle ? styles.priceRow : undefined}>
           <div className="store-product-price">
             <strong>
               <span>{money(minimum)}</span>
@@ -103,28 +103,55 @@ export function ProductCard({
               <dl>
                 <div>
                   <dt>Apertura</dt>
-                  <dd>{date(reservation.opensAt)}</dd>
+                  <dd>
+                    <time dateTime={reservation.opensAt}>{date(reservation.opensAt)}</time>
+                  </dd>
                 </div>
                 <div>
                   <dt>Cierre</dt>
-                  <dd>{date(reservation.closesAt)}</dd>
+                  <dd>
+                    <time dateTime={reservation.closesAt}>{date(reservation.closesAt)}</time>
+                  </dd>
                 </div>
               </dl>
             ) : (
               <p>{options ? 'Fechas según opción. Revisa la ficha.' : 'Fechas por confirmar.'}</p>
             )}
+            {reservation.opensAt && reservation.closesAt && (
+              <span className={styles.timezone}>Hora de Chile</span>
+            )}
+            {!options && p.release_date && (
+              <dl>
+                <div>
+                  <dt>Lanzamiento</dt>
+                  <dd>
+                    <time dateTime={p.release_date}>
+                      {new Intl.DateTimeFormat('es-CL', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        timeZone: 'UTC',
+                      }).format(new Date(p.release_date))}
+                    </time>
+                  </dd>
+                </div>
+              </dl>
+            )}
             {reservation.state === 'open' && (
-              <p>
+              <p className={styles.quota}>
                 {reservation.available} cupos para reservar{options ? ' entre las opciones' : ''}.
               </p>
             )}
+            {!options && p.max_per_customer != null && (
+              <p>Máximo {p.max_per_customer} por cliente.</p>
+            )}
+            <span className={styles.deliveryLabel}>Entrega</span>
             <p className={styles.delivery} title={reservation.deliveryTerms || undefined}>
               {reservation.deliveryTerms || 'Consulta las condiciones de entrega de cada opción.'}
             </p>
-            <span className={styles.conditionsHint}>Condiciones completas en la ficha</span>
           </div>
         )}
-        <div className={shop ? styles.actions : undefined}>
+        <div className={catalogStyle ? styles.actions : undefined}>
           <div className={`store-product-bottom ${catalogStyle ? styles.bottom : ''}`}>
             {!reservation && !shop && (
               <span className={closed ? 'store-muted' : 'store-stock-dot'}>
@@ -164,7 +191,7 @@ export function ProductCard({
               title="Vista rápida"
             >
               {catalogStyle && <Eye size={17} aria-hidden="true" />}
-              {!shop && 'Vista rápida'}
+              {!catalogStyle && 'Vista rápida'}
             </button>
           )}
         </div>

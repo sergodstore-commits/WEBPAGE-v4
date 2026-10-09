@@ -289,6 +289,119 @@
   color: #526170;
   font-size: 10px;
 }
+.timezone {
+  color: #637584;
+  font-size: 10px;
+}
+.quota {
+  color: #17634d;
+  font-weight: 600;
+}
+.deliveryLabel {
+  margin-top: 3px;
+  color: #334a5a;
+  font-weight: 700;
+}
+:global(.store-app) .card.preorderCard {
+  border-radius: 12px;
+  border-color: #dce5eb;
+}
+:global(.store-app) .preorderCard :global(.store-product-image) {
+  aspect-ratio: 1.08;
+  padding: 12px;
+  background: radial-gradient(ellipse at 50% 40%, #ffffff, #edf3f7);
+}
+:global(.store-app) .preorderCard :global(.store-product-content) {
+  padding: 16px;
+}
+:global(.store-app) .preorderCard :global(.store-product-title) {
+  font-size: 15px;
+  min-height: 44px;
+  line-height: 1.45;
+}
+.preorderCard .optionsSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 0;
+}
+.preorderCard .optionsSummary span {
+  padding: 3px 7px;
+  border: 1px solid #e0e7ed;
+  border-radius: 5px;
+  background: #f5f8fa;
+  font-size: 10px;
+}
+:global(.store-app) .preorderCard :global(.store-product-price) {
+  margin: 0;
+  min-height: 0;
+}
+:global(.store-app) .preorderCard :global(.store-product-price) strong {
+  font-size: 21px;
+}
+.preorderCard .reservation {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e0e8ee;
+  border-radius: 8px;
+  background: #f7f9fb;
+  gap: 7px;
+}
+.preorderCard .reservation dl {
+  gap: 8px;
+}
+.preorderCard .reservation dl > div {
+  display: grid;
+  gap: 2px;
+}
+.preorderCard .reservation dd {
+  color: #203747;
+  font-size: 12px;
+}
+:global(.store-app) .preorderCard .bottom {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+:global(.store-app) .preorderCard .purchase {
+  min-height: 44px;
+  border-radius: 6px;
+}
+:global(.store-app) .preorderCard .quick {
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #cadbe4;
+  border-radius: 6px;
+  background: #f4f8fa;
+}
+@media (max-width: 700px) {
+  :global(.store-app) .preorderCard :global(.store-product-content) {
+    padding: 12px 10px;
+  }
+  :global(.store-app) .preorderCard :global(.store-product-title) {
+    font-size: 13px;
+    min-height: 38px;
+  }
+  :global(.store-app) .preorderCard :global(.store-product-price) strong {
+    font-size: 18px;
+  }
+  .preorderCard .reservation {
+    padding: 10px 8px;
+  }
+  .preorderCard .reservation dd {
+    font-size: 11px;
+  }
+  :global(.store-app) .preorderCard .purchase {
+    text-align: center;
+  }
+  :global(.store-app) .preorderCard .purchase > svg {
+    display: none;
+  }
+}
 
 :global(.store-app) .card.shopCard {
   border-radius: 12px;
