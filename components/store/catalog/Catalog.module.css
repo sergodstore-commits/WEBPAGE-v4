@@ -410,6 +410,14 @@
 :global(.store-app) :is(.shopCatalog, .preorderCatalog) :global(.store-catalog-grid) {
   gap: 20px 16px;
 }
+:global(.store-interior) .shopCatalog .filters,
+:global(.store-interior) .shopCatalog :global(.store-catalog-toolbar) {
+  background:
+    linear-gradient(130deg, rgb(125 228 245 / 3%), transparent 55%), var(--sg-surface-soft);
+}
+:global(.store-interior) .shopCatalog .categories button:hover {
+  border-color: var(--sg-link);
+}
 @media (max-width: 900px) {
   :global(.store-app) :is(.shopCatalog, .preorderCatalog) .layout {
     grid-template-columns: 1fr;
@@ -420,6 +428,20 @@
   }
 }
 @media (max-width: 700px) {
+  .shopCatalog .categories {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  :global(.store-app) .shopCatalog .categories button {
+    min-width: 0;
+    gap: 6px;
+    padding: 9px 10px;
+    text-align: center;
+  }
+  .shopCatalog .categories button:last-child {
+    grid-column: 1 / -1;
+  }
   :global(.store-app) :is(.shopCatalog, .preorderCatalog) :global(.store-catalog-grid) {
     gap: 16px 10px;
   }

@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import type { Product, Settings } from '../../lib/types';
+import { expectReadable } from './helpers/readability';
 
 // These browser-only fixtures exercise the presentation without creating
 // products, changing inventory, calling checkout or contacting a payment provider.
@@ -166,6 +167,112 @@ async function expectFitsHorizontally(locator: Locator, width: number) {
 test.beforeEach(async ({ page }) => {
   await mockShop(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
+});
+
+test('Tienda: reacción anime, pausa compartida, fuera de pantalla y movimiento reducido', async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/tienda');
+  const frame = page.locator('[data-store-banner-motion]');
+  const effects = page.locator('[data-store-banner-effects]');
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
+  await expect(effects).toHaveAttribute('aria-hidden', 'true');
+  const dimensions = await frame.boundingBox();
+  await page.getByRole('button', { name: 'Pausar efectos del banner', exact: true }).click();
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
+  await expect
+    .poll(() =>
+      effects.evaluate((element) =>
+        element
+          .getAnimations({ subtree: true })
+          .every((animation) => animation.playState === 'paused'),
+      ),
+    )
+    .toBe(true);
+  await page.reload();
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
+  await page.getByRole('button', { name: 'Activar efectos del banner', exact: true }).click();
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
+  await page.getByRole('contentinfo').scrollIntoViewIfNeeded();
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
+  await frame.scrollIntoViewIfNeeded();
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
+  // Exercise the visibility lifecycle without changing browser permissions or opening another tab.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
+  await page.evaluate(() => {
+    delete (document as unknown as { hidden?: boolean }).hidden;
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
+  // Capture two different moments of the nine-second comic sequence.
+  for (const [name, time] of [
+    ['enfado', 1900],
+    ['risa', 4800],
+  ] as const) {
+    await effects.evaluate(
+      (element, time) =>
+        element.getAnimations({ subtree: true }).forEach((animation) => {
+          animation.pause();
+          animation.currentTime = time;
+        }),
+      time,
+    );
+    await frame.screenshot({ path: info.outputPath(`banner-${name}.png`) });
+  }
+  expect((await frame.boundingBox())!.height).toBeCloseTo(dimensions!.height, 0);
+  await page.reload();
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'reduced');
+  await expect(effects).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Efectos reducidos del banner' })).toBeDisabled();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expectNoOverflow(page);
+  await expectReadable(page);
+  await page.screenshot({ path: info.outputPath('tienda-banner-movil.png') });
+  await page.goto('/preventas');
+  await expect(effects).toHaveCount(0);
+});
+
+test('Tarjetas: foco, contraste y encuadre completo sin movimiento continuo', async ({
+  page,
+}, info) => {
+  await page.goto('/tienda');
+  const cards = page.locator('.store-product-card');
+  await expect(cards).toHaveCount(8);
+  const first = cards.first();
+  const original = (await first.boundingBox())!;
+  await first.locator('.store-product-visual').focus();
+  await expect
+    .poll(() => first.evaluate((element) => getComputedStyle(element).borderColor))
+    .toBe('rgb(125, 228, 245)');
+  await first.hover();
+  await expectReadable(page);
+  expect((await first.boundingBox())!.width).toBeCloseTo(original.width, 0);
+  for (const card of await cards.all()) {
+    expect(
+      await card
+        .locator('.store-product-image img')
+        .evaluate((image) => getComputedStyle(image).objectFit),
+    ).toBe('contain');
+    expect(
+      await card.evaluate(
+        (element) =>
+          element
+            .getAnimations({ subtree: true })
+            .filter((animation) => animation.effect?.getTiming().iterations === Infinity).length,
+      ),
+    ).toBe(0);
+  }
+  await first.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath('tarjetas-escritorio.png') });
 });
 
 test('Tienda y ficha: imágenes, controles y precios caben entre 320 y 1440 píxeles', async ({

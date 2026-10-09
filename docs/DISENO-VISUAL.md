@@ -1,5 +1,17 @@
 # Rediseño visual de SERGOD STORE
 
+## Tienda — punto 3, ambientación anime y catálogo
+
+El banner conserva su ilustración completa en proporción 3:1. Los productos pasan a las estanterías del fondo, pequeños y suaves, para que los personajes y los chistes sean protagonistas. La Maga Oscura tiene cachetes ligeramente inflados y un puchero kawaii. Se reemplaza el WebP existente de 319.392 bytes por uno de 246.502 bytes (1800 × 600); no se añade otro medio público ni se usa almacenamiento de Supabase.
+
+La escena recibe una secuencia de nueve segundos mediante SVG inline y CSS: bocanada de enfado, pulsos en las marcas de risa y destellos puntuales de lámparas/vidrio. No se mueve ni recorta la ilustración. El control junto al título permite pausar; conserva la preferencia de la portada. Los efectos se detienen fuera de pantalla, en pestañas ocultas y con movimiento reducido. En celular se elimina un destello. No hay reproducción de video, temporizadores de animación JavaScript ni nuevas bibliotecas.
+
+Las tarjetas de Tienda mantienen imágenes completas y formatos separados, con una superficie de profundidad suave y esquinas cian discretas. El foco y el hover destacan el artículo sin mover precios ni botones; el movimiento reducido elimina la elevación. Las categorías ocupan dos columnas en celular, con Accesorios Zero Mulligan en una fila propia. No se cambian precios, stock, pedidos ni los datos de los productos.
+
+La edición raster usa la herramienta integrada de ImageGen; el prompt final y sus restricciones están en `docs/TIENDA-BANNER-EDICION.md`. Las pruebas comprueban tamaños de 320 a 1440 px, filtros, formato/idioma, carrito, vista rápida y las condiciones de pausa y movimiento reducido.
+
+Verificación: tipos y compilación de producción correctos; 16 recorridos únicos de navegador aprobados para Tienda, banners, portada y preventas. Se corrigieron la altura del control de pausa y un selector del nuevo recorrido; las pruebas afectadas pasaron al repetirlas. La comprobación final volvió a cubrir la ilustración vigente y la distribución móvil de categorías. Las pruebas de catálogo usan datos aislados y no hacen cobros ni cambios de inventario.
+
 ## Base visual compartida — punto 2, octubre de 2026
 
 Las páginas públicas interiores usan un fondo azul grafito con luz ambiental estática en los márgenes. Los paneles tienen distintos tonos de profundidad, texto claro, bordes discretos y acciones cian. Los banners conservan la proporción 3:1 y los títulos quedan fuera de la ilustración, con contraste sobre el nuevo fondo. La Academia de Duelos mantiene sus marcos completos y el desplazamiento interno de jugadores.
