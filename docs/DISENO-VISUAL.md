@@ -1,5 +1,13 @@
 # Rediseño visual de SERGOD STORE
 
+## Checkout — punto 10 de la pauta vigente, octubre de 2026
+
+La entrega se presenta en un panel azul grafito con iluminación estática discreta. Retiro y envío tienen tarjetas de selección coherentes, iconos diferenciados y foco visible. Los campos conservan sus etiquetas, autocompletado y validación, con altura cómoda y espacios regulares. La dirección de retiro y el aviso de flete por pagar reciben un acento cian; el resumen conserva separado el pago online del cobro del transportista.
+
+En celulares pequeños las modalidades se apilan y sus iconos y textos permanecen alineados. No se cambian cálculos, transportistas, autenticación, reservas, envío de pedidos ni pagos. No se añaden medios, dependencias, storage ni animaciones de banners. Modelo recomendado Sol 6.1 / Medio; siguiente Admin con el mismo nivel.
+
+Verificación: tipos y compilación de producción; dos pruebas de navegador para retiro, domicilio, agencia, flete por pagar y tarifa online, disponibilidad, acceso, validación y recuperación de error. Incluyen contraste, foco y desbordamientos entre 320 y 1440 px, con datos simulados y sin pagos reales.
+
 ## Carrito — punto 9 de la pauta vigente, octubre de 2026
 
 Cada artículo tiene su propia tarjeta, imagen completa de mayor tamaño y subtotal identificado. Los controles de cantidad y eliminación tienen superficies y foco visibles; los productos con problemas de disponibilidad reciben un borde discreto de advertencia. El resumen destaca los importes sobre una superficie con luz cian estática. En celular se conservan tarjetas compactas sin recortar imágenes.

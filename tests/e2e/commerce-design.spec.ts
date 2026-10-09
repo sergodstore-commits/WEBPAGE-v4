@@ -183,9 +183,14 @@ test('Compra: resumen, pasos y modalidades de entrega entre 320 y 1440 px', asyn
       page.getByLabel('Pasos de la compra').locator('[aria-current=step]'),
     ).toContainText('Entrega');
     await expect(page.locator('.store-pickup-details')).toContainText(settings.address);
+    await noOverflow(page);
+    if (width === 1440 || width === 375)
+      await page.screenshot({ path: info.outputPath(`${width}-pickup.png`), fullPage: true });
     await page.getByRole('radio', { name: /Envío/ }).check();
     await page.getByRole('combobox', { name: 'Transportista', exact: true }).selectOption('agency');
     await expect(page.getByLabel('Agencia de destino')).toBeVisible();
+    await page.getByLabel('Agencia de destino').focus();
+    await expect(page.getByLabel('Agencia de destino')).toBeFocused();
     await expect(page.getByLabel('Dirección de entrega')).toHaveCount(0);
     await expect(page.locator('.store-shipping-notice')).toContainText('no está incluido');
     await expect(page.locator('.store-total')).toContainText('$8.000');
