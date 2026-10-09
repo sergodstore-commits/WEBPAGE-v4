@@ -184,21 +184,21 @@
 
 @media (max-width: 767px) {
   .scene {
-    inset: auto 0 30px;
-    height: 244px;
+    inset: auto 0 38px;
+    height: 194px;
     perspective: 850px;
   }
   .placement[data-mobile='false'] {
     display: none;
   }
   .lead {
-    width: 144px;
-    right: calc(50% - 133px);
+    width: 122px;
+    right: calc(50% - 119px);
     top: 4px;
   }
   .companion {
-    width: 142px;
-    left: calc(50% - 132px);
+    width: 118px;
+    left: calc(50% - 117px);
     top: 24px;
   }
   .face {
@@ -208,6 +208,22 @@
   }
   .glow {
     box-shadow: 0 0 38px 6px #089ac1;
+  }
+}
+
+@media (max-width: 767px) and (max-height: 700px) {
+  .scene {
+    height: 132px;
+    bottom: 40px;
+  }
+  .lead {
+    width: 85px;
+    right: calc(50% - 87px);
+  }
+  .companion {
+    width: 82px;
+    left: calc(50% - 85px);
+    top: 8px;
   }
 }
 

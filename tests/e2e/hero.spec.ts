@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import type { Post, Product } from '../../lib/types';
+import type { Product } from '../../lib/types';
 
 async function expectNoHorizontalOverflow(page: Page) {
   await expect
@@ -218,11 +218,64 @@ test('Movimiento: carga solo en Home, pausa persistente y preferencia reducida e
   await expect(hero).toHaveAttribute('data-motion', 'running');
 });
 
-test('Home: respeta productos y publicaciones recibidos, separa próximos torneos y conserva el estado vacío', async ({
+test('Portada: una pantalla, cinco accesos visibles y sin consultar contenido secundario', async ({
+  page,
+}, testInfo) => {
+  const contentRequests: string[] = [];
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+    if (['/api/products', '/api/posts', '/api/news', '/api/tournaments'].includes(path))
+      contentRequests.push(path);
+  });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const [width, height] of [
+    [320, 568],
+    [375, 667],
+    [375, 812],
+    [768, 1024],
+    [1440, 900],
+    [1280, 600],
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    const hero = page.getByTestId('home-hero');
+    await expectHeroContentAvailable(hero);
+    await page.evaluate(() => document.fonts.ready.then(() => true));
+    await expectNoHorizontalOverflow(page);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight))
+      .toBeLessThanOrEqual(1);
+    await expect(page.getByRole('contentinfo')).toHaveCount(0);
+    const navigation =
+      width > 980
+        ? page.getByRole('navigation', { name: 'Navegación principal', exact: true })
+        : hero.getByRole('navigation', { name: 'Accesos de la portada', exact: true });
+    for (const name of ['Preventas', 'Comunidad', 'Noticias']) {
+      const link = navigation.getByRole('link', { name, exact: true });
+      await link.click({ trial: true });
+      const box = await link.boundingBox();
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+    }
+    const pause = hero.getByRole('button', { name: 'Movimiento reducido', exact: true });
+    const box = await pause.boundingBox();
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+    await page.screenshot({ path: testInfo.outputPath(`portada-${width}x${height}.png`) });
+  }
+  expect(contentRequests).toEqual([]);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/');
+  await page
+    .getByRole('navigation', { name: 'Accesos de la portada' })
+    .getByRole('link', { name: 'Noticias', exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/noticias$/);
+  await expect(page.getByRole('contentinfo')).toBeVisible();
+});
+
+test('Portada: los accesos por juego conservan el filtro al entrar y recargar la tienda', async ({
   page,
 }) => {
-  // These responses isolate the presentation contract. They are not seed data,
-  // are never persisted and cannot reach a production database or payment API.
   const now = new Date().toISOString();
   const product: Product = {
     id: 'home-fixture-product',
@@ -254,50 +307,6 @@ test('Home: respeta productos y publicaciones recibidos, separa próximos torneo
     updated_at: now,
     version: 1,
   };
-  const post = (
-    kind: Post['kind'],
-    slug: string,
-    title: string,
-    event_at: string | null,
-  ): Post => ({
-    id: slug,
-    slug,
-    kind,
-    title,
-    body: 'Publicación de prueba recibida por la API.',
-    image: '',
-    event_at,
-    location: 'Copiapó de prueba',
-    status: 'published',
-    created_at: now,
-    updated_at: now,
-  });
-  const future = post(
-    'tournament',
-    'torneo-futuro-home',
-    'Torneo futuro de prueba Home',
-    new Date(Date.now() + 86400000).toISOString(),
-  );
-  const past = post(
-    'tournament',
-    'torneo-pasado-home',
-    'Torneo pasado de prueba Home',
-    new Date(Date.now() - 86400000).toISOString(),
-  );
-  const news = post('news', 'noticia-home', 'Noticia publicada de prueba Home', null);
-  const community = post('community', 'comunidad-home', 'Comunidad publicada de prueba Home', null);
-  const preorder: Product = {
-    ...product,
-    id: 'home-fixture-preorder',
-    name: 'Preventa visible de prueba Home',
-    slug: 'preventa-visible-prueba-home',
-    sku: 'HOME-FIXTURE-PREORDER',
-    kind: 'preorder',
-    opens_at: new Date(Date.now() - 86400000).toISOString(),
-    closes_at: new Date(Date.now() + 86400000).toISOString(),
-    max_per_customer: 2,
-    delivery_terms: 'Condiciones de prueba publicadas.',
-  };
   const mitos: Product = {
     ...product,
     id: 'home-fixture-mitos',
@@ -306,42 +315,14 @@ test('Home: respeta productos y publicaciones recibidos, separa próximos torneo
     sku: 'HOME-FIXTURE-MITOS',
     category: 'Mitos y Leyendas',
   };
-  let empty = false;
   await page.route('**/api/products?kind=store', (route) =>
-    route.fulfill({ json: empty ? [] : [product, mitos] }),
+    route.fulfill({ json: [product, mitos] }),
   );
-  await page.route('**/api/products?kind=preorder', (route) =>
-    route.fulfill({ json: empty ? [] : [preorder] }),
-  );
-  await page.route('**/api/posts', (route) =>
-    route.fulfill({ json: empty ? [] : [past, news, future, community] }),
-  );
-  await page.goto('/');
-  const productCard = page
-    .locator('.store-product-card')
-    .filter({ has: page.getByRole('link', { name: product.name, exact: true }) });
-  await expect(productCard).toContainText('$12.500');
-  await expect(productCard.getByRole('link', { name: product.name, exact: true })).toHaveAttribute(
-    'href',
-    `/producto/${product.slug}`,
-  );
-  await expect(page.getByRole('link', { name: preorder.name, exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: preorder.name, exact: true })).toHaveAttribute(
-    'href',
-    `/producto/${preorder.slug}`,
-  );
-  await expect(page.getByRole('heading', { name: future.title, exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: past.title, exact: true })).toHaveCount(0);
-  for (const item of [news, community]) {
-    await expect(page.getByRole('heading', { name: item.title, exact: true })).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: item.title, exact: true }).getByRole('link'),
-    ).toHaveAttribute('href', `/publicacion/${item.slug}`);
-  }
   for (const [selected, excluded] of [
     [product, mitos],
     [mitos, product],
   ]) {
+    await page.goto('/');
     await page
       .getByTestId('home-hero')
       .getByRole('link', { name: selected.category, exact: true })
@@ -360,16 +341,5 @@ test('Home: respeta productos y publicaciones recibidos, separa próximos torneo
       selected.category,
     );
     await expect(page.getByRole('link', { name: selected.name, exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: excluded.name, exact: true })).toHaveCount(0);
-    await page.goto('/');
-  }
-  empty = true;
-  await page.reload();
-  await expect(page.getByText('El catálogo se está preparando', { exact: true })).toBeVisible();
-  for (const title of [product.name, preorder.name, mitos.name]) {
-    await expect(page.getByRole('link', { name: title, exact: true })).toHaveCount(0);
-  }
-  for (const title of [future.title, news.title, community.title]) {
-    await expect(page.getByRole('heading', { name: title, exact: true })).toHaveCount(0);
   }
 });

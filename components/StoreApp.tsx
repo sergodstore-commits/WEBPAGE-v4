@@ -5,7 +5,6 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { StoreHeader } from '@/components/store/StoreHeader';
 import { StoreFooter } from '@/components/store/StoreFooter';
-import HomeSections from '@/components/store/home/HomeSections';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -29,12 +28,8 @@ import {
   RemoteError,
   ProductImage,
   availability,
-  productFamilies,
-  representative,
-  type Remote,
 } from './store/shared';
 import { Cart, Account, OrderDetail } from './store/commerce/Commerce';
-import { ProductCard } from './store/catalog/ProductCard';
 import { Community } from './store/community/Community';
 import { News } from './store/news/News';
 import { Catalog } from './store/catalog/Catalog';
@@ -170,7 +165,7 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
   }
   const count = cart.reduce((sum, i) => sum + i.quantity, 0);
   let content: ReactNode;
-  if (pathname === '/') content = <Home settings={settings} add={add} />;
+  if (pathname === '/') content = <HomeHero description={settings.description} />;
   else if (pathname === '/tienda' || pathname === '/preventas')
     content = (
       <Catalog key={pathname} kind={pathname === '/tienda' ? 'store' : 'preorder'} add={add} />
@@ -227,7 +222,7 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
       </Empty>
     );
   return (
-    <div className="store-app">
+    <div className={pathname === '/' ? 'store-app store-cover' : 'store-app'}>
       <StoreHeader
         pathname={pathname}
         user={user}
@@ -241,7 +236,7 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
       >
         {content}
       </main>
-      <StoreFooter settings={settings} />
+      {pathname !== '/' && <StoreFooter settings={settings} />}
       {toast && (
         <div className="store-toast" role="status">
           <Check size={18} />
@@ -252,64 +247,6 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
         </div>
       )}
     </div>
-  );
-}
-
-function Home({ settings, add }: { settings: Settings; add: (p: Product, n?: number) => void }) {
-  const products = useRemote<Product[]>('/products?kind=store'),
-    preorders = useRemote<Product[]>('/products?kind=preorder'),
-    posts = useRemote<Post[]>('/posts');
-  function renderCatalog(remote: Remote<Product[]>, kind: 'store' | 'preorder') {
-    if (remote.loading) return <Loading />;
-    if (remote.error) return <RemoteError error={remote.error} reload={remote.reload} />;
-    if (!remote.data?.length)
-      return (
-        <Empty
-          title={
-            kind === 'store'
-              ? 'El catálogo se está preparando'
-              : 'Las próximas preventas estarán aquí'
-          }
-          body={
-            kind === 'store'
-              ? 'Aquí encontrarás los artículos cuando la tienda los publique.'
-              : 'Te mostraremos cada reserva cuando la tienda publique sus fechas, cupos y condiciones.'
-          }
-        />
-      );
-    return (
-      <div className="store-product-grid">
-        {productFamilies(remote.data)
-          .slice(0, 4)
-          .map((family) => (
-            <ProductCard
-              key={family[0].id}
-              product={representative(family)}
-              variants={family}
-              add={add}
-            />
-          ))}
-      </div>
-    );
-  }
-  return (
-    <>
-      <HomeHero description={settings.description} />
-      <HomeSections
-        settings={settings}
-        products={renderCatalog(products, 'store')}
-        preorders={renderCatalog(preorders, 'preorder')}
-        posts={posts.data || []}
-        postsState={
-          posts.loading ? (
-            <Loading />
-          ) : posts.error ? (
-            <RemoteError error={posts.error} reload={posts.reload} />
-          ) : null
-        }
-        renderPost={(post) => <PostCard key={post.id} post={post} />}
-      />
-    </>
   );
 }
 

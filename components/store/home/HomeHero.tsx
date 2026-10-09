@@ -77,6 +77,11 @@ export default function HomeHero({ description }: { description?: string }) {
             Mitos y Leyendas <ArrowUpRight size={14} aria-hidden="true" />
           </Link>
         </div>
+        <nav className={styles.sectionLinks} aria-label="Accesos de la portada">
+          <Link href="/preventas">Preventas</Link>
+          <Link href="/comunidad">Comunidad</Link>
+          <Link href="/noticias">Noticias</Link>
+        </nav>
       </div>
       <div className={styles.bottom}>
         <button

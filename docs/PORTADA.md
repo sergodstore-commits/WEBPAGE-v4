@@ -1,0 +1,11 @@
+# Portada de una pantalla
+
+Desde el 9 de octubre de 2026, Inicio muestra únicamente la cabecera de navegación y la escena de cartas con el mensaje principal. Catálogo, preventas, noticias y torneos se consultan en sus secciones. Inicio ya no solicita sus listas ni muestra bloques inferiores o el pie de página completo.
+
+La composición ocupa la altura disponible mediante una cuadrícula y `100svh`, sin bloquear el desplazamiento del documento. En pantallas muy bajas, con textos administrativos extensos o zoom elevado, se permite desplazamiento para conservar acceso al contenido. Las páginas interiores mantienen su pie y su desplazamiento habitual.
+
+En computador los cinco destinos están en la navegación superior. En celular y tablet, Tienda y Torneos conservan sus botones principales y Preventas, Comunidad y Noticias tienen accesos visibles bajo los enlaces por juego. También se mantiene el menú móvil, cuenta, carrito, navegación por teclado, pausa y preferencia de movimiento reducido. Las cartas siguen alternando cada ocho segundos.
+
+Validación: TypeScript y seis recorridos de Playwright aprobados. Incluyen carga y rotación de cartas, pausa, teclado, menú móvil, filtros por juego persistentes al recargar y ausencia de consultas a contenido secundario en Inicio. El recorrido de una pantalla comprueba 320×568, 375×667, 375×812, 768×1024, 1280×600 y 1440×900, sin desplazamiento vertical u horizontal y con accesos utilizables dentro del viewport.
+
+No se modificaron noticias, fuentes externas, productos, stock, pedidos ni pagos.
