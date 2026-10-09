@@ -13,11 +13,18 @@ test('Banners: cinco secciones con altura uniforme, t√≠tulo legible e ilustraci√
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const heights: number[] = [];
+    const titleMetrics: string[] = [];
     for (const [path, title] of sections) {
       await page.goto(path);
       const banner = page.locator('[data-section-header]');
       const heading = banner.getByRole('heading', { name: title, exact: true });
       await expect(heading).toBeVisible();
+      titleMetrics.push(
+        await heading.evaluate((element) => {
+          const style = getComputedStyle(element);
+          return `${style.fontSize}/${style.fontWeight}`;
+        }),
+      );
       await expect
         .poll(() =>
           banner
@@ -43,5 +50,6 @@ test('Banners: cinco secciones con altura uniforme, t√≠tulo legible e ilustraci√
       await banner.screenshot({ path: info.outputPath(`${path.slice(1)}-${width}.png`) });
     }
     expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+    expect(new Set(titleMetrics).size).toBe(1);
   }
 });

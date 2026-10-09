@@ -2,9 +2,9 @@
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  width: min(1104px, calc(100vw - 64px));
+  width: min(1044px, calc(100vw - 64px));
   display: grid;
-  gap: 14px;
+  gap: 6px;
 }
 .title {
   display: flex;
@@ -12,8 +12,8 @@
   gap: 16px;
   margin: 0;
   font-family: var(--sg-font-display);
-  font-size: 32px;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 700;
   font-style: italic;
   line-height: 1.1;
   letter-spacing: -0.025em;
@@ -56,11 +56,11 @@
 }
 @media (max-width: 700px) {
   .header {
-    gap: 10px;
+    gap: 6px;
     width: calc(100vw - 32px);
   }
   .title {
-    font-size: 28px;
+    font-size: 22px;
   }
   .frame {
     border-radius: 16px;
