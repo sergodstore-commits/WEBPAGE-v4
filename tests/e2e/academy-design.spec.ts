@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { expectReadable } from './helpers/readability';
 
 test('Academia: marcos completos, listas con scroll y detalle del jugador', async ({
   page,
@@ -42,6 +43,7 @@ test('Academia: marcos completos, listas con scroll y detalle del jugador', asyn
     await page.goto('/comunidad?ranking=yugioh');
     const houses = page.locator('section[data-house]');
     await expect(houses).toHaveCount(3);
+    await expectReadable(page);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth))
       .toBeLessThanOrEqual(1);
@@ -55,6 +57,8 @@ test('Academia: marcos completos, listas con scroll y detalle del jugador', asyn
       }));
       expect(size.total).toBeGreaterThan(size.visible);
       expect(size.width).toBeLessThanOrEqual(1);
+      const art = page.locator(`section[data-house="${name.toLowerCase()}"] img`);
+      expect(await art.evaluate((el) => getComputedStyle(el).objectFit)).toBe('contain');
     }
     await expect
       .poll(() =>
@@ -73,6 +77,7 @@ test('Academia: marcos completos, listas con scroll y detalle del jugador', asyn
     const list = page.getByRole('region', { name: 'Jugadores de Slifer', exact: true });
     const height = await houses.first().evaluate((el) => el.clientHeight);
     await list.focus();
+    await expect(list).toBeFocused();
     await page.keyboard.press('End');
     await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
     expect(await houses.first().evaluate((el) => el.clientHeight)).toBe(height);

@@ -1,5 +1,17 @@
 # Rediseño visual de SERGOD STORE
 
+## Comunidad — punto 5 de la pauta vigente, octubre de 2026
+
+La Academia integra los tres marcos originales en una superficie azul grafito común, con luces estáticas suaves en rojo, dorado y azul. Cada ilustración conserva su proporción y encuadre completo; la sombra corresponde al color de su casa. No se añaden imágenes, movimientos ni efectos de banner.
+
+Los nombres, puestos y puntos tienen una jerarquía más clara. Las listas conservan el scroll interno, los encabezados pegados dentro de cada lista y el acceso al detalle por torneo. Los nombres largos siguen limitados a dos líneas y tienen el nombre completo en el título y en el detalle. Las casas permanecen contiguas, con desplazamiento horizontal contenido en celular; no crecen por la cantidad de jugadores.
+
+La selección de rankings usa dos grupos claros para MyL y Yu-Gi-Oh!. Los primeros lugares de MyL reciben un acento dorado discreto y su tabla usa la misma superficie que el resto de la página. Primera Era y Primer Bloque conservan sus datos y selección independientes. No se cambian límites de las casas, posiciones, puntos, torneos ni reglas de cálculo.
+
+La recomendación para esta etapa y la siguiente, Torneos, es Sol 6.1 / Medio.
+
+Verificación: tipos y compilación de producción correctos; cinco pruebas de navegador aprobadas. Cubren 72 jugadores con nombres largos, contraste, foco, scroll interno y altura fija, detalle por torneo, casas contiguas, búsqueda, rankings independientes y recuperación de errores entre 320 y 1440 px. Las capturas de escritorio y celular se revisaron. No se modifican datos comerciales ni resultados reales.
+
 ## Preventas — punto 4 de la pauta vigente, octubre de 2026
 
 Las tarjetas usan una superficie azul grafito con luz ámbar estática detrás del producto y un panel de reserva legible. Se evita repetir la etiqueta genérica «Preventa». La fecha de lanzamiento ocupa un bloque propio con icono de calendario, separado de apertura y cierre. Los estados mantienen texto y color: verde para reserva abierta, ámbar para próxima y neutro para finalizada, agotada o sin fechas. No se inventan fechas ausentes.
