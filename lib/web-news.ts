@@ -25,14 +25,19 @@ export function yugiohMetaArticle(value: string): string | null {
   }
 }
 
-// A short original Spanish description of the edition supplied by the owner.
-// No article text, card catalog or third-party images are stored.
+export function localWebArticle(url: string) {
+  return yugiohMetaArticle(url) === 'https://www.yugiohmeta.com/articles/sets/tcg/betb'
+    ? '/noticias/beyond-the-brave'
+    : null;
+}
+
+// Original editorial summary. Full galleries are prepared separately and reviewed.
 export const initialWebNews: WebNewsItem[] = [
   {
     id: 'beyond-the-brave',
     title: 'Beyond the Brave: explora las cartas de la edición',
     summary:
-      'Consulta las cartas de Beyond the Brave organizadas por rareza. Al abrir una carta encontrarás su imagen y efecto en la fuente original.',
+      'Explora las 100 cartas de Beyond the Brave. Busca por nombre o rareza y abre cada carta para ver su imagen ampliada y su efecto en español.',
     url: 'https://www.yugiohmeta.com/articles/sets/tcg/betb',
     published_on: '2026-09-26',
     visible: true,

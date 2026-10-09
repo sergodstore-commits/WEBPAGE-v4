@@ -65,6 +65,10 @@ export function WebNewsAdmin() {
         artículo original; no copies el artículo completo.
       </p>
       <p>
+        Beyond the Brave ya cuenta con una guía propia y galería completa en español. Su tarjeta
+        enlaza automáticamente a la guía, además de conservar la fuente original.
+      </p>
+      <p>
         <a
           href="https://www.yugiohmeta.com/"
           target="_blank"

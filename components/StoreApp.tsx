@@ -40,6 +40,7 @@ import '@/styles/store-foundation.css';
 import '@/styles/store-interior.css';
 
 const HomeHero = dynamic(() => import('@/components/store/home/HomeHero'));
+const EditionArticle = dynamic(() => import('@/components/store/news/EditionArticle'));
 
 const CART_KEY = 'sergod-store-cart-v1';
 const emptySettings: Settings = {
@@ -175,6 +176,7 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
     content = <ProductDetail slug={pathname.split('/')[2]} add={add} />;
   else if (pathname === '/torneos') content = <Tournaments />;
   else if (pathname === '/comunidad') content = <Community />;
+  else if (pathname === '/noticias/beyond-the-brave') content = <EditionArticle />;
   else if (pathname === '/noticias') content = <News />;
   else if (['/noticias', '/comunidad'].includes(pathname))
     content = (

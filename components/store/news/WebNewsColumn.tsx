@@ -1,5 +1,7 @@
 'use client';
 import { ArrowUpRight, BookOpen, Newspaper } from 'lucide-react';
+import Link from 'next/link';
+import { localWebArticle } from '@/lib/web-news';
 import type { WebNewsItem } from '@/lib/web-news';
 import { useRemote, Loading } from '../shared';
 import styles from './News.module.css';
@@ -45,6 +47,11 @@ export function WebNewsColumn() {
               </div>
               <h3>{item.title}</h3>
               <p>{item.summary}</p>
+              {localWebArticle(item.url) && (
+                <Link href={localWebArticle(item.url)!}>
+                  Leer en español · Ver todas las cartas
+                </Link>
+              )}
               <a
                 href={item.url}
                 target="_blank"
@@ -58,8 +65,7 @@ export function WebNewsColumn() {
         </div>
       )}
       <p className={styles.sourceNote}>
-        Resúmenes en español seleccionados por SERGOD. Los artículos originales pueden estar en
-        inglés.
+        Guías y resúmenes en español seleccionados por SERGOD, con enlace a sus fuentes.
       </p>
     </aside>
   );

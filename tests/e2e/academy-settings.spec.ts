@@ -65,8 +65,12 @@ test('Academia: admin guarda, recarga, lectura pública y protección de escritu
       }),
     );
     await page.goto('/comunidad?ranking=yugioh');
-    await expect(page.getByText('De 80 a 199 puntos', { exact: true })).toBeVisible();
-    await expect(page.getByText('Desde 200 puntos', { exact: true })).toBeVisible();
+    // Thresholds remain configurable in admin but are intentionally hidden publicly.
+    await expect(page.getByRole('region', { name: 'Jugadores de Ra', exact: true })).toContainText(
+      'Jugador de prueba',
+    );
+    await expect(page.getByText('De 80 a 199 puntos', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Desde 200 puntos', { exact: true })).toHaveCount(0);
   } finally {
     await page.request.patch('/api/admin/league/academy', {
       headers: { Origin: 'http://localhost:3100' },

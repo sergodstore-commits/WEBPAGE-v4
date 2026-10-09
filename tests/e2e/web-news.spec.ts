@@ -36,6 +36,9 @@ test('Noticias: columnas adaptables y enlace a fuente sin cargar sus recursos', 
   const link = world.getByRole('link', { name: /Leer noticia original/ });
   await expect(link).toHaveAttribute('target', '_blank');
   await expect(link).toHaveAttribute('href', initialWebNews[0].url);
+  await expect(
+    world.getByRole('link', { name: 'Leer en español · Ver todas las cartas' }),
+  ).toHaveAttribute('href', '/noticias/beyond-the-brave');
   expect((await own.boundingBox())!.x).toBeLessThan((await world.boundingBox())!.x);
   await page.screenshot({ path: '.data/web-news-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
