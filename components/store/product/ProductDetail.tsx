@@ -293,7 +293,25 @@ export function ProductDetail({
                 <CalendarDays size={18} />
                 Información de la preventa
               </h2>
-              <p className={styles.preorderState}>{preorderLabels[preorderState(p)]}</p>
+              <p className={styles.preorderState} data-state={preorderState(p)}>
+                {preorderLabels[preorderState(p)]}
+              </p>
+              {p.release_date && (
+                <div className={styles.preorderRelease}>
+                  <CalendarDays size={22} aria-hidden="true" />
+                  <div>
+                    <span>Lanzamiento</span>
+                    <time dateTime={p.release_date}>
+                      {new Intl.DateTimeFormat('es-CL', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        timeZone: 'UTC',
+                      }).format(new Date(p.release_date))}
+                    </time>
+                  </div>
+                </div>
+              )}
               <dl>
                 <div>
                   <dt>Apertura</dt>

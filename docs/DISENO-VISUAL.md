@@ -1,5 +1,17 @@
 # Rediseño visual de SERGOD STORE
 
+## Preventas — punto 4 de la pauta vigente, octubre de 2026
+
+Las tarjetas usan una superficie azul grafito con luz ámbar estática detrás del producto y un panel de reserva legible. Se evita repetir la etiqueta genérica «Preventa». La fecha de lanzamiento ocupa un bloque propio con icono de calendario, separado de apertura y cierre. Los estados mantienen texto y color: verde para reserva abierta, ámbar para próxima y neutro para finalizada, agotada o sin fechas. No se inventan fechas ausentes.
+
+En celulares de hasta 540 px se muestra una tarjeta por fila para leer fechas y condiciones sin comprimir el contenido. Las categorías mantienen dos columnas y Accesorios Zero Mulligan una fila propia. El foco destaca el artículo y la imagen conserva su encuadre completo.
+
+La ficha y la vista rápida incorporan el lanzamiento de la opción seleccionada con el mismo lenguaje visual. El día de lanzamiento se interpreta como fecha de calendario en UTC; apertura y cierre siguen mostrando hora de Santiago. Los datos comerciales, las reglas de reserva, los límites, el carrito y la conversión a Tienda no cambian.
+
+No se añaden imágenes, videos, bibliotecas ni medios a Supabase. El banner permanece estático. La recomendación de modelo para esta etapa y la siguiente es Sol 6.1 / Medio.
+
+Verificación: tipos y compilación de producción correctos; once pruebas de navegador aprobadas para Preventas, Tienda y los cinco banners. Incluyen fechas distintas por idioma, día de lanzamiento sin desplazamiento de zona horaria, estados, contraste, foco, filtros, cantidades, carrito y vista rápida entre 320 y 1440 px. Se revisaron capturas de escritorio y celular. Los recorridos usan datos aislados o simulados, sin cobros ni cambios de inventario comercial.
+
 ## Tienda — punto 3, ambientación anime y catálogo
 
 El banner conserva su ilustración completa en proporción 3:1. Los productos pasan a las estanterías del fondo, pequeños y suaves, para que los personajes y los chistes sean protagonistas. La Maga Oscura tiene cachetes ligeramente inflados y un puchero kawaii. Se reemplaza el WebP existente de 319.392 bytes por uno de 246.502 bytes (1800 × 600); no se añade otro medio público ni se usa almacenamiento de Supabase.

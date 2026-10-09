@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test';
 test('Banners: cinco secciones con altura uniforme, título legible e ilustración cargada', async ({
   page,
 }, info) => {
+  // Twenty page loads and screenshots need extra time on slower Windows hosts.
+  test.setTimeout(180_000);
   const sections = [
     ['/tienda', 'Tienda'],
     ['/preventas', 'Preventas'],

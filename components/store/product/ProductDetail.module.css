@@ -691,28 +691,73 @@
   }
 }
 .product .preorder {
-  border-left: 3px solid #67def5;
-  background: linear-gradient(120deg, #15232c, #11161c);
-  color: #e6edf4;
+  border-left: 3px solid var(--sg-warning-line);
+  border-radius: 10px;
+  background:
+    linear-gradient(120deg, rgb(229 169 85 / 4%), transparent 65%), var(--sg-surface-soft);
+  color: var(--sg-ink);
   overflow-wrap: anywhere;
 }
 .product.product .preorder h2 {
-  color: #bde9f3;
+  color: var(--sg-ink);
 }
 .product .preorder dt {
-  color: #b2c2d0;
+  color: var(--sg-muted);
 }
 .product .preorder dd {
-  color: #e6edf4;
+  color: var(--sg-ink);
 }
 .product.product .preorder p {
-  color: #d6e1ec;
+  color: var(--sg-ink);
 }
 .product.product .preorder .preorderState {
-  color: #67def5;
+  display: inline-flex;
+  padding: 4px 9px;
+  border: 1px solid var(--sg-line);
+  border-radius: 5px;
+  color: var(--sg-muted);
+  background: var(--sg-surface);
+  font-size: 12px;
   font-weight: 700;
+}
+.product.product .preorder .preorderState[data-state='open'] {
+  color: var(--sg-success);
+  background: var(--sg-success-bg);
+  border-color: var(--sg-success-line);
+}
+.product.product .preorder .preorderState[data-state='upcoming'] {
+  color: var(--sg-warning);
+  background: var(--sg-warning-bg);
+  border-color: var(--sg-warning-line);
+}
+.preorderRelease {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--sg-warning-line);
+  border-radius: 8px;
+  background: var(--sg-warning-bg);
+  color: var(--sg-warning);
+  margin-bottom: 14px;
+}
+.preorderRelease > svg {
+  flex-shrink: 0;
+}
+.preorderRelease > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.preorderRelease span {
+  font-size: 12px;
+}
+.preorderRelease time {
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.4;
 }
 .product.product .preorder .preorderTimezone {
   font-size: 12px;
-  color: #aebbc8;
+  color: var(--sg-muted);
 }

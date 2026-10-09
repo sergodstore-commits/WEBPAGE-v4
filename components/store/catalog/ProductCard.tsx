@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Plus, ArrowRight, Eye } from 'lucide-react';
+import { Plus, ArrowRight, Eye, CalendarDays } from 'lucide-react';
 import { date, money, price } from '@/lib/client';
 import { preorderFamily } from '@/lib/preorders';
 import type { Product } from '@/lib/types';
@@ -52,7 +52,9 @@ export function ProductCard({
         {!options && p.discount_percent > 0 && (
           <span className="store-discount">−{p.discount_percent}%</span>
         )}
-        {p.kind === 'preorder' && <span className="store-kind-label">Preventa</span>}
+        {p.kind === 'preorder' && !reservation && (
+          <span className="store-kind-label">Preventa</span>
+        )}
       </Link>
       <div className="store-product-content">
         <p className="store-product-category">{p.category || 'Coleccionables'}</p>
@@ -99,8 +101,24 @@ export function ProductCard({
             <span className={styles.reservationState} data-state={reservation.state || 'mixed'}>
               {reservation.label}
             </span>
+            {!options && p.release_date && (
+              <div className={styles.release}>
+                <CalendarDays size={19} aria-hidden="true" />
+                <div>
+                  <span>Lanzamiento</span>
+                  <time dateTime={p.release_date}>
+                    {new Intl.DateTimeFormat('es-CL', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    }).format(new Date(p.release_date))}
+                  </time>
+                </div>
+              </div>
+            )}
             {reservation.opensAt && reservation.closesAt ? (
-              <dl>
+              <dl className={styles.reservationDates} aria-label="Período de reserva">
                 <div>
                   <dt>Apertura</dt>
                   <dd>
@@ -119,23 +137,6 @@ export function ProductCard({
             )}
             {reservation.opensAt && reservation.closesAt && (
               <span className={styles.timezone}>Hora de Chile</span>
-            )}
-            {!options && p.release_date && (
-              <dl>
-                <div>
-                  <dt>Lanzamiento</dt>
-                  <dd>
-                    <time dateTime={p.release_date}>
-                      {new Intl.DateTimeFormat('es-CL', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        timeZone: 'UTC',
-                      }).format(new Date(p.release_date))}
-                    </time>
-                  </dd>
-                </div>
-              </dl>
             )}
             {reservation.state === 'open' && (
               <p className={styles.quota}>

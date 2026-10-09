@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { Product } from '../../lib/types';
+import { expectReadable } from './helpers/readability';
 
 const family = 'Preventa de prueba';
 const now = Date.now(),
@@ -45,6 +46,7 @@ const products = [
     options: { Idioma: 'Español' },
   }),
   article('reserva-en', {
+    release_date: '2027-02-04',
     catalog_group: 'grupo',
     catalog_name: family,
     options: { Idioma: 'Inglés' },
@@ -116,6 +118,26 @@ test('Preventas: estados, fechas por opción, filtros persistentes y responsive'
     await expect(spanishCard).toContainText('Hora de Chile');
     await expect(spanishCard).toContainText('Máximo 2 por cliente.');
     await expect(spanishCard.locator('time[datetime="2027-01-28"]')).toHaveText(/28.*ene.*2027/);
+    await expect(spanishCard.getByLabel('Período de reserva')).toContainText('Apertura');
+    await expect(spanishCard.getByLabel('Período de reserva')).toContainText('Cierre');
+    await expect(spanishCard.getByLabel('Período de reserva')).not.toContainText('Lanzamiento');
+    const englishCard = page.locator('.store-product-card').filter({
+      has: page.getByRole('link', { name: 'reserva-en', exact: true }),
+    });
+    await expect(englishCard.locator('time[datetime="2027-02-04"]')).toHaveText(/4.*feb.*2027/);
+    await expect(englishCard.locator('time[datetime="2027-01-28"]')).toHaveCount(0);
+    await expectReadable(page);
+    await spanishCard.locator('.store-product-visual').focus();
+    await expect
+      .poll(() => spanishCard.evaluate((el) => getComputedStyle(el).borderColor))
+      .toBe('rgb(125, 228, 245)');
+    await expect(page.locator('[data-section-header]').getByRole('button')).toHaveCount(0);
+    if (width <= 540) {
+      expect((await spanishCard.boundingBox())!.width).toBeCloseTo(
+        (await page.locator('.store-catalog-grid').boundingBox())!.width,
+        0,
+      );
+    }
     for (const label of [
       'Reserva abierta',
       'Próximamente',
@@ -147,6 +169,9 @@ test('Reserva: límites e idioma actualizan fechas, precio, condiciones y carrit
   await mock(page);
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/producto/reserva-es');
+  await expect(page.locator('.store-preorder-info time[datetime="2027-01-28"]')).toHaveText(
+    '28 de enero de 2027',
+  );
   await expect(page.getByLabel('Cantidad', { exact: true })).toHaveAttribute('max', '2');
   await page.getByRole('combobox', { name: 'Idioma', exact: true }).selectOption('Inglés');
   await expect(page).toHaveURL('/producto/reserva-en');
@@ -154,6 +179,11 @@ test('Reserva: límites e idioma actualizan fechas, precio, condiciones y carrit
   await expect(page.locator('.store-preorder-info')).toContainText(
     'Envío al llegar la edición en inglés.',
   );
+  await expect(page.locator('.store-preorder-info time[datetime="2027-02-04"]')).toHaveText(
+    '4 de febrero de 2027',
+  );
+  await expect(page.locator('.store-preorder-info time[datetime="2027-01-28"]')).toHaveCount(0);
+  await expectReadable(page);
   await expect(page.getByLabel('Cantidad', { exact: true })).toHaveAttribute('max', '1');
   await page.reload();
   await expect(page.getByRole('combobox', { name: 'Idioma', exact: true })).toHaveValue('Inglés');
