@@ -9,6 +9,7 @@ import { instagramEmbedUrl } from '@/lib/news';
 import { useRemote, Loading, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './News.module.css';
+import { WebNewsColumn } from './WebNewsColumn';
 
 export function NewsMedia({ assets, permalink = '' }: { assets: NewsAsset[]; permalink?: string }) {
   const [index, setIndex] = useState(0),
@@ -173,130 +174,145 @@ export function News() {
           .map((asset) => asset.url)
           .slice(0, 1)}
       />
-      {remote.loading ? (
-        <Loading />
-      ) : remote.error ? (
-        <div role="alert" className={styles.error}>
-          <p>{remote.error}</p>
-          <button className="store-button store-button-secondary" onClick={remote.reload}>
-            Reintentar noticias
-          </button>
-        </div>
-      ) : !selected ? (
-        <section className={styles.empty} aria-label="Noticias de la tienda">
-          <Newspaper size={26} aria-hidden="true" />
-          <div>
-            <h2>Pronto tendremos novedades</h2>
-            <p>Las noticias de la tienda aparecerán aquí cuando estén publicadas.</p>
-          </div>
-        </section>
-      ) : (
-        <>
-          <section
-            ref={feature}
-            tabIndex={-1}
-            className={styles.feature}
-            data-has-text={Boolean(selected.title || selected.caption)}
-            aria-label="Noticia seleccionada"
-          >
-            <NewsMedia key={selected.id} assets={selected.assets} permalink={selected.permalink} />
-            <div className={styles.caption}>
-              <span className={styles.eyebrow}>
-                {selected.id === list[0]?.id ? 'PUBLICACIÓN DESTACADA' : 'DEL ARCHIVO'}
-              </span>
-              <time dateTime={selected.recorded_at}>{date(selected.recorded_at)}</time>
-              {selected.title && (
-                <h2>
-                  {selected.legacy_slug ? (
-                    <Link href={`/publicacion/${selected.legacy_slug}`}>{selected.title}</Link>
-                  ) : (
-                    selected.title
-                  )}
-                </h2>
-              )}
-              {selected.caption && <p>{selected.caption}</p>}
-              <div className={styles.links}>
-                {selected.permalink && (
-                  <a href={selected.permalink} target="_blank" rel="noopener noreferrer">
-                    <Camera size={17} />
-                    Ver en Instagram{selected.username ? ` · @${selected.username}` : ''}
-                  </a>
-                )}
-                {selected.tournament_id && (
-                  <Link href={`/torneo/${selected.tournament_id}`}>
-                    Ver torneo
-                    <ArrowRight size={16} />
-                  </Link>
-                )}
-                {selected.league_tournament_id && selected.ranking_board && (
-                  <Link href={`/comunidad?ranking=${selected.ranking_board}`}>
-                    Ver clasificación
-                    <ArrowRight size={16} />
-                  </Link>
-                )}
-              </div>
+      <div className={styles.columns}>
+        <section className={styles.storeNews} aria-labelledby="store-news-heading">
+          <h2 id="store-news-heading" className={styles.storeHeading}>
+            SERGOD STORE
+          </h2>
+          {remote.loading ? (
+            <Loading />
+          ) : remote.error ? (
+            <div role="alert" className={styles.error}>
+              <p>{remote.error}</p>
+              <button className="store-button store-button-secondary" onClick={remote.reload}>
+                Reintentar noticias
+              </button>
             </div>
-          </section>
-          {earlier.length > 0 && (
-            <section className={styles.archive} aria-labelledby="news-archive-heading">
-              <div className={styles.heading}>
-                <div>
-                  <h2 id="news-archive-heading">Más noticias</h2>
-                </div>
-                <span>
-                  {earlier.length} {earlier.length === 1 ? 'publicación' : 'publicaciones'}
-                </span>
+          ) : !selected ? (
+            <section className={styles.empty} aria-label="Noticias de la tienda">
+              <Newspaper size={26} aria-hidden="true" />
+              <div>
+                <h2>Pronto tendremos novedades</h2>
+                <p>Las noticias de la tienda aparecerán aquí cuando estén publicadas.</p>
               </div>
-              <div className={styles.grid}>
-                {earlier.slice(0, limit).map((p) => (
-                  <button
-                    type="button"
-                    className={styles.card}
-                    key={p.id}
-                    onClick={() => choose(p.id)}
-                    aria-label={`Ver noticia: ${(p.title || p.caption || 'Publicación de Instagram').slice(0, 90)}`}
-                  >
-                    <div className={styles.thumbnail}>
-                      <ProductImage
-                        src={
-                          p.thumbnail ||
-                          (p.assets[0]?.type === 'video' ? p.assets[0].poster : p.assets[0]?.url)
-                        }
-                        name="Miniatura de noticia"
-                      />
-                      {(p.media_type === 'VIDEO' || p.assets.some((a) => a.type === 'video')) && (
-                        <span>
-                          <Play size={15} />
-                          Video
-                        </span>
-                      )}
-                      {p.assets.length > 1 && <small>{p.assets.length} medios</small>}
-                    </div>
-                    <time dateTime={p.recorded_at}>{date(p.recorded_at)}</time>
-                    {p.title && <h3>{p.title}</h3>}
-                    <p>
-                      {(p.caption || (p.title ? '' : 'Publicación de Instagram')).slice(0, 150)}
-                      {p.caption.length > 150 ? '…' : ''}
-                    </p>
-                    <span className={styles.read}>
-                      Ver noticia
-                      <ArrowRight size={16} />
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {earlier.length > limit && (
-                <button
-                  className="store-button store-button-secondary"
-                  onClick={() => setLimit((n) => n + 9)}
-                >
-                  Ver más noticias
-                </button>
-              )}
             </section>
+          ) : (
+            <>
+              <section
+                ref={feature}
+                tabIndex={-1}
+                className={styles.feature}
+                data-has-text={Boolean(selected.title || selected.caption)}
+                aria-label="Noticia seleccionada"
+              >
+                <NewsMedia
+                  key={selected.id}
+                  assets={selected.assets}
+                  permalink={selected.permalink}
+                />
+                <div className={styles.caption}>
+                  <span className={styles.eyebrow}>
+                    {selected.id === list[0]?.id ? 'PUBLICACIÓN DESTACADA' : 'DEL ARCHIVO'}
+                  </span>
+                  <time dateTime={selected.recorded_at}>{date(selected.recorded_at)}</time>
+                  {selected.title && (
+                    <h2>
+                      {selected.legacy_slug ? (
+                        <Link href={`/publicacion/${selected.legacy_slug}`}>{selected.title}</Link>
+                      ) : (
+                        selected.title
+                      )}
+                    </h2>
+                  )}
+                  {selected.caption && <p>{selected.caption}</p>}
+                  <div className={styles.links}>
+                    {selected.permalink && (
+                      <a href={selected.permalink} target="_blank" rel="noopener noreferrer">
+                        <Camera size={17} />
+                        Ver en Instagram{selected.username ? ` · @${selected.username}` : ''}
+                      </a>
+                    )}
+                    {selected.tournament_id && (
+                      <Link href={`/torneo/${selected.tournament_id}`}>
+                        Ver torneo
+                        <ArrowRight size={16} />
+                      </Link>
+                    )}
+                    {selected.league_tournament_id && selected.ranking_board && (
+                      <Link href={`/comunidad?ranking=${selected.ranking_board}`}>
+                        Ver clasificación
+                        <ArrowRight size={16} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </section>
+              {earlier.length > 0 && (
+                <section className={styles.archive} aria-labelledby="news-archive-heading">
+                  <div className={styles.heading}>
+                    <div>
+                      <h2 id="news-archive-heading">Más noticias</h2>
+                    </div>
+                    <span>
+                      {earlier.length} {earlier.length === 1 ? 'publicación' : 'publicaciones'}
+                    </span>
+                  </div>
+                  <div className={styles.grid}>
+                    {earlier.slice(0, limit).map((p) => (
+                      <button
+                        type="button"
+                        className={styles.card}
+                        key={p.id}
+                        onClick={() => choose(p.id)}
+                        aria-label={`Ver noticia: ${(p.title || p.caption || 'Publicación de Instagram').slice(0, 90)}`}
+                      >
+                        <div className={styles.thumbnail}>
+                          <ProductImage
+                            src={
+                              p.thumbnail ||
+                              (p.assets[0]?.type === 'video'
+                                ? p.assets[0].poster
+                                : p.assets[0]?.url)
+                            }
+                            name="Miniatura de noticia"
+                          />
+                          {(p.media_type === 'VIDEO' ||
+                            p.assets.some((a) => a.type === 'video')) && (
+                            <span>
+                              <Play size={15} />
+                              Video
+                            </span>
+                          )}
+                          {p.assets.length > 1 && <small>{p.assets.length} medios</small>}
+                        </div>
+                        <time dateTime={p.recorded_at}>{date(p.recorded_at)}</time>
+                        {p.title && <h3>{p.title}</h3>}
+                        <p>
+                          {(p.caption || (p.title ? '' : 'Publicación de Instagram')).slice(0, 150)}
+                          {p.caption.length > 150 ? '…' : ''}
+                        </p>
+                        <span className={styles.read}>
+                          Ver noticia
+                          <ArrowRight size={16} />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {earlier.length > limit && (
+                    <button
+                      className="store-button store-button-secondary"
+                      onClick={() => setLimit((n) => n + 9)}
+                    >
+                      Ver más noticias
+                    </button>
+                  )}
+                </section>
+              )}
+            </>
           )}
-        </>
-      )}
+        </section>
+        <WebNewsColumn />
+      </div>
     </div>
   );
 }

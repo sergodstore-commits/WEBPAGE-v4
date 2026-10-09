@@ -7,6 +7,7 @@ import type { Post } from '@/lib/types';
 import type { LeagueTournament } from '@/lib/rankings';
 import { boards } from '@/lib/rankings';
 import { NewsMedia } from '../store/news/News';
+import { WebNewsAdmin } from './WebNewsAdmin';
 
 const message = (e: unknown) =>
   e instanceof Error ? e.message : 'No se pudo completar la operación.';
@@ -556,9 +557,10 @@ export function InstagramNewsPage() {
       <div className="admin-page-heading">
         <div>
           <h1>Noticias</h1>
-          <p>Publicaciones de Instagram incorporadas a SERGOD STORE.</p>
+          <p>Noticias de la tienda y selección de actualidad Yu-Gi-Oh!.</p>
         </div>
       </div>
+      <WebNewsAdmin />
       <InstagramIntegration
         news
         onSaved={() => {

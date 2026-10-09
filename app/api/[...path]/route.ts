@@ -38,6 +38,7 @@ import {
   withdrawProduct,
 } from '@/lib/server/catalog';
 import { deletePost, getPost, getPosts, savePost } from '@/lib/server/content';
+import { getWebNews, saveWebNews } from '@/lib/server/web-news';
 import {
   commercialOrderStats,
   completePos,
@@ -214,6 +215,7 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         ),
       );
     if (route === 'news' && method === 'GET') return json(await publicNews());
+    if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());
     if (path[0] === 'news' && path.length === 3 && path[2] === 'thumbnail' && method === 'GET') {
       const thumbnail = await publicNewsThumbnail(path[1]);
       return new Response(null, {
@@ -307,6 +309,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await reviewInstagram(user.id, input.cursor));
       }
       if (route === 'admin/news' && method === 'GET') return json(await listInstagramNews());
+      if (route === 'admin/news/web-sources' && method === 'GET')
+        return json(await getWebNews(true));
+      if (route === 'admin/news/web-sources' && method === 'PATCH')
+        return json(await saveWebNews(await body(request)));
       if (route === 'admin/news' && method === 'POST') {
         await rateLimit(`instagram-import:${user.id}`, 30, 15);
         return json(await importInstagram(user.id, await body(request)), 201);

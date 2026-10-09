@@ -30,7 +30,7 @@ test('explorador conserva presentaciones y lista externa sin cargar gráficos', 
     }),
   );
   page.on('request', (request) => {
-    if (/https:\/\/(www\.)?tcgplayer\.com\//.test(request.url()))
+    if (/https:\/\/(www\.)?(tcgplayer|yugiohmeta)\.com\//.test(request.url()))
       externalRequests.push(request.url());
   });
   await page.goto('/pruebas/explorador');
@@ -46,7 +46,7 @@ test('explorador conserva presentaciones y lista externa sin cargar gráficos', 
   );
   await expect(page.getByRole('link', { name: /Ver cartas de Beyond the Brave/ })).toHaveAttribute(
     'href',
-    'https://www.tcgplayer.com/categories/trading-and-collectible-card-games/yugioh/beyond-the-brave',
+    'https://www.yugiohmeta.com/articles/sets/tcg/betb',
   );
   await expect(page.getByRole('link', { name: /Ver cartas de Beyond the Brave/ })).toHaveAttribute(
     'target',

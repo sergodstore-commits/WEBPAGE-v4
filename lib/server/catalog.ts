@@ -83,7 +83,10 @@ const productSchema = z.object({
   delivery_terms: z.string().max(3000).default(''),
 });
 export async function getSettings(): Promise<Settings> {
-  return (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0].data;
+  const { web_news: _webNews, ...settings } = (
+    await (await getDb()).query('SELECT data FROM settings WHERE id=1')
+  ).rows[0].data;
+  return settings;
 }
 export async function saveSettings(input: unknown) {
   const d = z
@@ -112,7 +115,9 @@ export async function saveSettings(input: unknown) {
     .parse(input);
   if (new Set(d.carriers.map((c) => c.id)).size !== d.carriers.length)
     fail(400, 'Los transportistas deben tener identificadores distintos.');
-  await (await getDb()).query('UPDATE settings SET data=$1 WHERE id=1', [JSON.stringify(d)]);
+  await (
+    await getDb()
+  ).query('UPDATE settings SET data=data || $1::jsonb WHERE id=1', [JSON.stringify(d)]);
   return d;
 }
 export async function validateImages(tx: Db, images: string[]) {

@@ -102,7 +102,7 @@ export default function ExplorerTrial() {
             <a className={styles.listLink} href={setUrl} target="_blank" rel="noopener noreferrer">
               <span>
                 Ver cartas de Beyond the Brave
-                <small>Abre la lista en TCGplayer · Pestaña nueva</small>
+                <small>Abre la lista en Yu-Gi-Oh! Meta · Pestaña nueva</small>
               </span>
               <ArrowUpRight size={22} />
             </a>

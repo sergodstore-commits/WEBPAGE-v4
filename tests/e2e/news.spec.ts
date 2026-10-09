@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { NewsItem, InstagramCandidate, InstagramStatus } from '../../lib/news';
 import { expectReadable } from './helpers/readability';
+import { initialWebNews } from '../../lib/web-news';
 const id = '5a368dc3-f1d6-44cb-8d4b-2171df852ec0';
 const image = '/art/hero/mitos-front.webp',
   image2 = '/art/hero/yugioh-front.webp';
@@ -33,6 +34,7 @@ async function publicMock(page: Page, kind: 'normal' | 'empty' | 'error' = 'norm
     const p = new URL(r.request().url()).pathname;
     if (p === '/api/auth/me') return r.fulfill({ json: null });
     if (p === '/api/settings') return r.fulfill({ json: { name: 'SERGOD STORE', carriers: [] } });
+    if (p === '/api/news/web-sources') return r.fulfill({ json: initialWebNews });
     if (p === '/api/news') {
       if (failed) {
         failed = false;

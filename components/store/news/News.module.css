@@ -6,6 +6,127 @@
   padding: 40px 32px 80px;
   color: var(--sg-ink);
 }
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(300px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.storeNews,
+.worldNews {
+  min-width: 0;
+}
+.storeHeading {
+  margin: 0 0 20px;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+}
+.columns .feature {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.columns .grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.worldNews {
+  padding: 22px;
+  border: 1px solid var(--sg-line);
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 100% 0, rgb(82 113 230 / 12%), transparent 65%),
+    var(--sg-surface-soft);
+}
+.worldHeading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  color: var(--sg-link);
+}
+.worldHeading span {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  font-weight: 600;
+}
+.worldHeading h2 {
+  margin: 4px 0 0;
+  font-size: 25px;
+  color: var(--sg-ink);
+}
+.bubbles {
+  display: grid;
+  gap: 16px;
+}
+.bubble {
+  position: relative;
+  padding: 18px;
+  border: 1px solid var(--sg-line);
+  border-left: 3px solid var(--sg-link);
+  border-radius: 4px 16px 16px 16px;
+  background: var(--sg-surface);
+  overflow-wrap: anywhere;
+}
+.bubbleMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--sg-muted);
+  font-size: 10px;
+}
+.bubbleMeta span {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.bubble h3 {
+  margin: 14px 0 8px;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.bubble p {
+  margin: 0;
+  color: var(--sg-muted);
+  font-size: 13px;
+  line-height: 1.75;
+}
+.bubble a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  color: var(--sg-link);
+  font-size: 12px;
+  font-weight: 600;
+}
+.bubble a:hover {
+  text-decoration: underline;
+}
+.bubble a:focus-visible {
+  outline: 2px solid var(--sg-link);
+  outline-offset: 4px;
+}
+.sourceNote,
+.worldEmpty {
+  color: var(--sg-muted);
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 18px 0 0;
+}
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .columns .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .worldNews {
+    padding: 16px;
+  }
+}
 .feature {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);

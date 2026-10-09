@@ -13,17 +13,17 @@ export function EditionLink({ product, detail = false }: { product: Product; det
         href={edition.url}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={`Ver cartas de ${edition.name} en TCGplayer (abre una pestaña nueva)`}
+        aria-label={`Ver cartas de ${edition.name} en ${edition.source} (abre una pestaña nueva)`}
       >
         <Layers3 size={17} aria-hidden="true" />
         <span>
-          Ver cartas de esta edición <small>en TCGplayer</small>
+          Ver cartas de esta edición <small>en {edition.source}</small>
         </span>
         <ArrowUpRight size={17} aria-hidden="true" />
       </a>
       {detail && (
         <p>
-          Consulta cartas y precios de referencia en una pestaña nueva. La lista de la edición no
+          Consulta las cartas y sus efectos en una pestaña nueva. La lista de la edición no
           garantiza el contenido de cada caja ni incluye necesariamente sus extras promocionales.
         </p>
       )}
