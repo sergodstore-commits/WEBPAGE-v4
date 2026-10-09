@@ -140,6 +140,9 @@
 .houseEmpty {
   margin: 20px 0 4px;
 }
+.page .house .houseEmpty {
+  color: #cbd3df;
+}
 .house .table th,
 .house .table td {
   padding: 9px 3px;
