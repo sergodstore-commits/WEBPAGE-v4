@@ -19,6 +19,7 @@ import type { Product } from '@/lib/types';
 import type { AddToCart } from '../shared';
 import { useRemote, availability, familyName, Loading, RemoteError, ProductImage } from '../shared';
 import styles from './ProductDetail.module.css';
+import { EditionLink } from '../catalog/EditionLink';
 function VariantOptions({
   product,
   variants,
@@ -343,6 +344,7 @@ export function ProductDetail({
               </p>
             </div>
           )}
+          <EditionLink product={p} detail />
           <div className={`store-purchase-row ${styles.purchase}`}>
             <div className={`store-quantity ${styles.quantity}`}>
               <button

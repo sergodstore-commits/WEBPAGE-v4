@@ -30,7 +30,8 @@ test('explorador conserva presentaciones y lista externa sin cargar gráficos', 
     }),
   );
   page.on('request', (request) => {
-    if (request.url().startsWith('https://tcgindex.io/')) externalRequests.push(request.url());
+    if (/https:\/\/(www\.)?tcgplayer\.com\//.test(request.url()))
+      externalRequests.push(request.url());
   });
   await page.goto('/pruebas/explorador');
   await expect(page.getByRole('button', { name: 'Sobre Inglés' })).toHaveAttribute(
@@ -45,7 +46,11 @@ test('explorador conserva presentaciones y lista externa sin cargar gráficos', 
   );
   await expect(page.getByRole('link', { name: /Ver cartas de Beyond the Brave/ })).toHaveAttribute(
     'href',
-    'https://tcgindex.io/yu-gi-oh/set/beyond-the-brave-yugioh',
+    'https://www.tcgplayer.com/categories/trading-and-collectible-card-games/yugioh/beyond-the-brave',
+  );
+  await expect(page.getByRole('link', { name: /Ver cartas de Beyond the Brave/ })).toHaveAttribute(
+    'target',
+    '_blank',
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('heading', { name: '¿Qué cartas puede traer?' })).toBeVisible();

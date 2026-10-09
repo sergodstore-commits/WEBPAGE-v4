@@ -6,8 +6,9 @@ import { ArrowLeft, ArrowUpRight, Layers3 } from 'lucide-react';
 import { api } from '@/lib/client';
 import type { Product } from '@/lib/types';
 import styles from './trial.module.css';
+import { editionLinks } from '@/lib/edition-links';
 
-const setUrl = 'https://tcgindex.io/yu-gi-oh/set/beyond-the-brave-yugioh';
+const setUrl = editionLinks['ygo-beyond-the-brave'].url;
 
 export default function ExplorerTrial() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -100,7 +101,8 @@ export default function ExplorerTrial() {
             </div>
             <a className={styles.listLink} href={setUrl} target="_blank" rel="noopener noreferrer">
               <span>
-                Ver cartas de Beyond the Brave<small>Abre la lista actualizada en TCGIndex</small>
+                Ver cartas de Beyond the Brave
+                <small>Abre la lista en TCGplayer · Pestaña nueva</small>
               </span>
               <ArrowUpRight size={22} />
             </a>

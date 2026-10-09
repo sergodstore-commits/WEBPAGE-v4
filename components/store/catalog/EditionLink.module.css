@@ -1,0 +1,47 @@
+.compact {
+  margin-top: 12px;
+}
+.detail {
+  margin: 18px 0;
+}
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid var(--sg-line);
+  border-radius: 8px;
+  background: var(--sg-surface);
+  color: var(--sg-link);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.link > svg {
+  flex-shrink: 0;
+}
+.link > span {
+  flex: 1;
+  min-width: 0;
+}
+.link small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--sg-muted);
+}
+.link:hover {
+  border-color: var(--sg-link);
+}
+.link:focus-visible {
+  outline: 2px solid var(--sg-link);
+  outline-offset: 3px;
+}
+.detail p {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--sg-muted);
+}

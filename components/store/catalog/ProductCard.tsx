@@ -6,6 +6,7 @@ import { preorderFamily } from '@/lib/preorders';
 import type { Product } from '@/lib/types';
 import { ProductImage, availability, familyName } from '../shared';
 import styles from './ProductCard.module.css';
+import { EditionLink } from './EditionLink';
 export function ProductCard({
   product: p,
   variants = [p],
@@ -152,6 +153,7 @@ export function ProductCard({
             </p>
           </div>
         )}
+        {catalogStyle && <EditionLink product={p} />}
         <div className={catalogStyle ? styles.actions : undefined}>
           <div className={`store-product-bottom ${catalogStyle ? styles.bottom : ''}`}>
             {!reservation && !shop && (
