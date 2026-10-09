@@ -169,78 +169,20 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
 });
 
-test('Tienda: reacción anime, pausa compartida, fuera de pantalla y movimiento reducido', async ({
-  page,
-}, info) => {
+test('Tienda: banner estático sin efectos ni control de animación', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/tienda');
-  const frame = page.locator('[data-store-banner-motion]');
-  const effects = page.locator('[data-store-banner-effects]');
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
-  await expect(effects).toHaveAttribute('aria-hidden', 'true');
-  const dimensions = await frame.boundingBox();
-  await page.getByRole('button', { name: 'Pausar efectos del banner', exact: true }).click();
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
-  await expect
-    .poll(() =>
-      effects.evaluate((element) =>
-        element
-          .getAnimations({ subtree: true })
-          .every((animation) => animation.playState === 'paused'),
-      ),
-    )
-    .toBe(true);
-  await page.reload();
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
-  await page.getByRole('button', { name: 'Activar efectos del banner', exact: true }).click();
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
-  await page.getByRole('contentinfo').scrollIntoViewIfNeeded();
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
-  await frame.scrollIntoViewIfNeeded();
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
-  // Exercise the visibility lifecycle without changing browser permissions or opening another tab.
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'paused');
-  await page.evaluate(() => {
-    delete (document as unknown as { hidden?: boolean }).hidden;
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
-  // Capture two different moments of the nine-second comic sequence.
-  for (const [name, time] of [
-    ['enfado', 1900],
-    ['risa', 4800],
-  ] as const) {
-    await effects.evaluate(
-      (element, time) =>
-        element.getAnimations({ subtree: true }).forEach((animation) => {
-          animation.pause();
-          animation.currentTime = time;
-        }),
-      time,
-    );
-    await frame.screenshot({ path: info.outputPath(`banner-${name}.png`) });
-  }
-  expect((await frame.boundingBox())!.height).toBeCloseTo(dimensions!.height, 0);
-  await page.reload();
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'reduced');
-  await expect(effects).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Efectos reducidos del banner' })).toBeDisabled();
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect(frame).toHaveAttribute('data-store-banner-motion', 'running');
-  await page.setViewportSize({ width: 375, height: 812 });
-  await expectNoOverflow(page);
-  await expectReadable(page);
-  await page.screenshot({ path: info.outputPath('tienda-banner-movil.png') });
-  await page.goto('/preventas');
-  await expect(effects).toHaveCount(0);
+  const banner = page.locator('[data-section-header="store"]');
+  await expect(banner.locator('[data-banner-art] img')).toBeVisible();
+  await expect(banner.locator('svg')).toHaveCount(0);
+  await expect(page.locator('[data-store-banner-motion], [data-store-banner-effects]')).toHaveCount(
+    0,
+  );
+  await expect(banner.getByRole('button')).toHaveCount(0);
+  expect(await banner.evaluate((element) => element.getAnimations({ subtree: true }).length)).toBe(
+    0,
+  );
 });
-
 test('Tarjetas: foco, contraste y encuadre completo sin movimiento continuo', async ({
   page,
 }, info) => {

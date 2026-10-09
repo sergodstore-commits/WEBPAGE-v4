@@ -4,13 +4,13 @@
 
 El banner conserva su ilustración completa en proporción 3:1. Los productos pasan a las estanterías del fondo, pequeños y suaves, para que los personajes y los chistes sean protagonistas. La Maga Oscura tiene cachetes ligeramente inflados y un puchero kawaii. Se reemplaza el WebP existente de 319.392 bytes por uno de 246.502 bytes (1800 × 600); no se añade otro medio público ni se usa almacenamiento de Supabase.
 
-La escena recibe una secuencia de nueve segundos mediante SVG inline y CSS: bocanada de enfado, pulsos en las marcas de risa y destellos puntuales de lámparas/vidrio. No se mueve ni recorta la ilustración. El control junto al título permite pausar; conserva la preferencia de la portada. Los efectos se detienen fuera de pantalla, en pestañas ocultas y con movimiento reducido. En celular se elimina un destello. No hay reproducción de video, temporizadores de animación JavaScript ni nuevas bibliotecas.
+Por petición del propietario, el banner vuelve a ser una ilustración estática. Se retiran la bocanada superpuesta, los pulsos de risa, los destellos animados y el control de pausa. Tienda usa el mismo encabezado estático que Preventas, Comunidad, Noticias y Torneos: título fuera de la imagen y marco 3:1. Se conserva la ilustración corregida y la rotación de cartas de la portada, que pertenece a otra sección.
 
 Las tarjetas de Tienda mantienen imágenes completas y formatos separados, con una superficie de profundidad suave y esquinas cian discretas. El foco y el hover destacan el artículo sin mover precios ni botones; el movimiento reducido elimina la elevación. Las categorías ocupan dos columnas en celular, con Accesorios Zero Mulligan en una fila propia. No se cambian precios, stock, pedidos ni los datos de los productos.
 
-La edición raster usa la herramienta integrada de ImageGen; el prompt final y sus restricciones están en `docs/TIENDA-BANNER-EDICION.md`. Las pruebas comprueban tamaños de 320 a 1440 px, filtros, formato/idioma, carrito, vista rápida y las condiciones de pausa y movimiento reducido.
+La edición raster usa la herramienta integrada de ImageGen; el prompt final y sus restricciones están en `docs/TIENDA-BANNER-EDICION.md`. Las pruebas comprueban tamaños de 320 a 1440 px, filtros, formato/idioma, carrito y vista rápida. Una comprobación adicional verifica que el banner no tenga animaciones, capas SVG de efectos ni control de pausa, incluso con movimiento habilitado en el navegador.
 
-Verificación: tipos y compilación de producción correctos; 16 recorridos únicos de navegador aprobados para Tienda, banners, portada y preventas. Se corrigieron la altura del control de pausa y un selector del nuevo recorrido; las pruebas afectadas pasaron al repetirlas. La comprobación final volvió a cubrir la ilustración vigente y la distribución móvil de categorías. Las pruebas de catálogo usan datos aislados y no hacen cobros ni cambios de inventario.
+Verificación del retorno a banners estáticos: tipos y compilación de producción correctos; siete pruebas de navegador aprobadas para los cinco banners y la Tienda. Comprueban ausencia de animación, proporción uniforme, títulos, imágenes completas, contraste, filtros, formatos/idiomas, carrito y vista rápida, entre 320 y 1440 px. Las pruebas usan datos aislados y no hacen cobros ni cambios de inventario.
 
 ## Base visual compartida — punto 2, octubre de 2026
 
@@ -18,7 +18,7 @@ Las páginas públicas interiores usan un fondo azul grafito con luz ambiental e
 
 `styles/tokens.css` define colores por función: superficie, campo, selección, acción y estados. `styles/store-interior.css` aplica la paleta dentro de `.store-interior`; los módulos de catálogo, producto, comunidad, noticias, torneos y compra comparten esas variables. Las categorías y clasificaciones seleccionadas combinan borde y acento, además del color. Cuenta y checkout usan campos oscuros, texto legible y autofill coherente. Los mensajes y estados de pago distinguen éxito, pendiente y error con texto y color.
 
-La ambientación común usa solamente CSS, sin nuevos archivos de imagen, fuentes, videos, paquetes ni almacenamiento externo. El fondo permanece estático; se conservan las transiciones de interacción y la preferencia de movimiento reducido. Los efectos anime propios de cada ilustración se incorporarán en los siguientes puntos de la pauta.
+La ambientación común usa solamente CSS, sin nuevos archivos de imagen, fuentes, videos, paquetes ni almacenamiento externo. El fondo permanece estático; se conservan las transiciones de interacción y la preferencia de movimiento reducido. Todos los banners permanecen estáticos por decisión del propietario. La pauta vigente está en `docs/PLAN-VISUAL-VIGENTE.md`.
 
 La validación de contraste mide el texto frente al fondo compuesto de sus antecesores CSS: mínimo 4,5:1 para texto normal y 3:1 para texto grande. Esta comprobación complementa la inspección visual; no certifica el contenido de imágenes ni de reproductores externos. Los recorridos de compra también comprueban lectura de importes, entrega, mensajes y estados sin realizar cobros.
 

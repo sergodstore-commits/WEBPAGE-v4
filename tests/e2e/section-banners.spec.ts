@@ -19,6 +19,10 @@ test('Banners: cinco secciones con altura uniforme, tÃ­tulo legible e ilustraciÃ
       const banner = page.locator('[data-section-header]');
       const heading = banner.getByRole('heading', { name: title, exact: true });
       await expect(heading).toBeVisible();
+      await expect(banner.getByRole('button')).toHaveCount(0);
+      expect(
+        await banner.evaluate((element) => element.getAnimations({ subtree: true }).length),
+      ).toBe(0);
       titleMetrics.push(
         await heading.evaluate((element) => {
           const style = getComputedStyle(element);

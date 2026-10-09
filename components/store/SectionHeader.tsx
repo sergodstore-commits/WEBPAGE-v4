@@ -1,5 +1,4 @@
 import styles from './SectionHeader.module.css';
-import { StoreSectionBanner } from './StoreSectionBanner';
 
 type Section = 'store' | 'preorder' | 'community' | 'news' | 'tournaments';
 
@@ -15,26 +14,18 @@ export function SectionHeader({
 }) {
   return (
     <header className={styles.header} data-section-header={section}>
-      {section === 'store' ? (
-        <StoreSectionBanner title={title} />
-      ) : (
-        <>
-          <div className={styles.titleRow}>
-            <h1 className={styles.title}>{title}</h1>
-          </div>
-          <div className={styles.frame} data-banner-art>
-            <img
-              className={styles.illustration}
-              src={`/art/banners/${section}-wide.webp`}
-              width="1800"
-              height="600"
-              alt=""
-              fetchPriority="high"
-              decoding="async"
-            />
-          </div>
-        </>
-      )}
+      <h1 className={styles.title}>{title}</h1>
+      <div className={styles.frame} data-banner-art>
+        <img
+          className={styles.illustration}
+          src={`/art/banners/${section}-wide.webp`}
+          width="1800"
+          height="600"
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+        />
+      </div>
     </header>
   );
 }

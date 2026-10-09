@@ -20,13 +20,6 @@
   text-transform: uppercase;
   color: var(--sg-ink);
 }
-.titleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 36px;
-}
 .title::after {
   content: '';
   width: 42px;
