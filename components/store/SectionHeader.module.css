@@ -1,82 +1,72 @@
 .header {
   position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1104px, calc(100vw - 64px));
+  display: grid;
+  gap: 14px;
+}
+.title {
   display: flex;
   align-items: center;
-  height: clamp(280px, 29vw, 380px);
+  gap: 16px;
+  margin: 0;
+  font-family: var(--sg-font-display);
+  font-size: 32px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  color: #142735;
+}
+.title::after {
+  content: '';
+  width: 42px;
+  height: 3px;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, #007f9d, #37c4ed);
+}
+.frame {
+  position: relative;
+  aspect-ratio: 3 / 1;
   overflow: hidden;
   isolation: isolate;
   border: 1px solid #b9ced9;
   border-radius: 20px;
-  background: radial-gradient(ellipse at 8% 90%, #e3f2f7, transparent 50%), #f7fafc;
+  background: #17232d;
   box-shadow: 0 8px 26px rgb(24 49 65 / 9%);
 }
-.header::after {
+.frame::after {
   content: '';
   position: absolute;
   inset: 7px;
   z-index: 2;
-  border: 1px solid rgb(255 255 255 / 50%);
+  border: 1px solid rgb(255 255 255 / 35%);
   border-radius: 14px;
-  box-shadow: inset 0 0 0 1px rgb(13 54 72 / 8%);
   pointer-events: none;
 }
-.title {
-  position: relative;
-  z-index: 1;
-  max-width: 27%;
-  margin: 0;
-  padding: 0 0 0 26px;
-  font-family: var(--sg-font-display);
-  font-size: clamp(30px, 4vw, 56px);
-  font-weight: 800;
-  font-style: italic;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  text-transform: uppercase;
-  color: #142735;
-  text-shadow:
-    0 2px 0 #fff,
-    0 6px 16px rgb(6 44 64 / 9%);
-}
-.title::after {
-  content: '';
-  display: block;
-  width: 64px;
-  height: 5px;
-  margin-top: 18px;
-  transform: skewX(-20deg);
-  background: linear-gradient(90deg, #007f9d, #37c4ed);
-  box-shadow: 12px 0 0 rgb(0 127 157 / 15%);
-}
 .illustration {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 73%;
+  position: relative;
+  display: block;
+  width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: right center;
+  object-position: center;
 }
 @media (max-width: 700px) {
   .header {
-    height: 250px;
-    align-items: flex-start;
+    gap: 10px;
+    width: calc(100vw - 32px);
   }
   .title {
-    max-width: 100%;
-    padding: 22px 24px 0;
-    font-size: 38px;
+    font-size: 28px;
   }
-  .title::after {
-    height: 3px;
-    width: 44px;
-    margin-top: 9px;
+  .frame {
+    border-radius: 16px;
   }
-  .illustration {
-    top: auto;
-    bottom: 0;
-    width: 100%;
-    height: 160px;
-    object-position: center;
+  .frame::after {
+    inset: 5px;
+    border-radius: 11px;
   }
 }

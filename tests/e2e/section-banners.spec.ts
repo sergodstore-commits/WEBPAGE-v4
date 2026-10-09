@@ -30,6 +30,10 @@ test('Banners: cinco secciones con altura uniforme, tÃ­tulo legible e ilustraciÃ
         await banner.locator('img').evaluate((image) => getComputedStyle(image).objectFit),
       ).toBe('contain');
       const text = (await heading.boundingBox())!;
+      const illustration = (await banner.locator('[data-banner-art]').boundingBox())!;
+      expect(illustration.width / illustration.height).toBeCloseTo(3, 1);
+      expect(text.y + text.height).toBeLessThanOrEqual(illustration.y);
+      expect(illustration.width).toBeCloseTo(frame.width, 0);
       heights.push(frame.height);
       expect(text.x).toBeGreaterThanOrEqual(frame.x);
       expect(text.x + text.width).toBeLessThanOrEqual(frame.x + frame.width);
