@@ -1,5 +1,13 @@
 # Rediseño visual de SERGOD STORE
 
+## Carrito — punto 9 de la pauta vigente, octubre de 2026
+
+Cada artículo tiene su propia tarjeta, imagen completa de mayor tamaño y subtotal identificado. Los controles de cantidad y eliminación tienen superficies y foco visibles; los productos con problemas de disponibilidad reciben un borde discreto de advertencia. El resumen destaca los importes sobre una superficie con luz cian estática. En celular se conservan tarjetas compactas sin recortar imágenes.
+
+No se modifican cálculos, stock, descuentos, pedidos ni pagos. No se añaden imágenes, dependencias, storage ni animaciones de banners. Modelo recomendado Sol 6.1 / Medio; siguiente Checkout con el mismo nivel.
+
+Verificación: tipos y compilación de producción; pruebas de navegador para carrito y entrega entre 320 y 1440 px, con datos simulados, sin iniciar pagos reales. Incluyen cantidades, subtotales, eliminación, disponibilidad, contraste y desbordamientos.
+
 ## Cuenta — punto 8 de la pauta vigente, octubre de 2026
 
 El acceso usa una superficie azul grafito con iluminación estática y bloques discretos para sus beneficios. El formulario comparte esquinas y profundidad con el resto de la tienda. La navegación del perfil tiene estados seleccionados y foco visibles, y permanece compacta en celulares.

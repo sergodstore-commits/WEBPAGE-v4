@@ -235,7 +235,11 @@ export function Cart({
                     : availability(p) ||
                       (row.quantity > limit ? `Solo puedes comprar ${limit} unidades.` : '');
                 return (
-                  <div className="store-cart-item" key={row.product_id}>
+                  <div
+                    className="store-cart-item"
+                    key={row.product_id}
+                    data-unavailable={Boolean(issue)}
+                  >
                     <Link href={p ? `/producto/${p.slug}` : '/tienda'}>
                       <ProductImage src={p?.images[0]} name={p?.name || 'Artículo no disponible'} />
                     </Link>
@@ -305,7 +309,10 @@ export function Cart({
                           <Plus size={14} />
                         </button>
                       </div>
-                      <strong>{p ? money(price(p) * row.quantity) : '—'}</strong>
+                      <strong>
+                        <small className={styles.itemSubtotal}>Subtotal</small>
+                        {p ? money(price(p) * row.quantity) : '—'}
+                      </strong>
                       <button
                         type="button"
                         className="store-icon-button"

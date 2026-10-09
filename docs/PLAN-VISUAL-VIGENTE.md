@@ -12,6 +12,7 @@ Este plan reemplaza las propuestas anteriores que incluían animaciones en los b
 6. Torneos: agenda y pantalla de YouTube con paneles coherentes, día seleccionado visible, eventos en tarjetas, estados de transmisión distinguibles y archivo de videos ordenado.
 7. Noticias: presentación editorial, medios enmarcados, tarjetas y fechas claras, foco visible y composición centrada para publicaciones sin texto.
 8. Cuenta: acceso con ambientación estática, navegación compacta, perfil agrupado y jerarquía clara en historial y detalle de pedidos.
+9. Carrito: artículos en tarjetas individuales, imágenes completas, controles claros, subtotales y resumen destacados, con avisos de disponibilidad visibles.
 
 ## Orden pendiente
 
@@ -19,7 +20,6 @@ Son refinamientos visuales sobre funciones existentes. No implican rehacer la ti
 
 | Punto | Sección         | Trabajo pendiente                                                                                             |
 | ----- | --------------- | ------------------------------------------------------------------------------------------------------------- |
-| 9     | Carrito         | Mejorar jerarquía de productos, cantidades, importes y acciones.                                              |
 | 10    | Checkout        | Pulir campos, entrega, resumen y estados de pago, conservando la lógica comercial.                            |
 | 11    | Admin           | Afinar navegación, densidad y acciones principales de catálogo, noticias, torneos y ligas.                    |
 | 12    | Textos e iconos | Retirar redundancias y unificar etiquetas, tamaños, espacios y estados vacíos.                                |
@@ -39,4 +39,4 @@ La recomendación para Comunidad, Torneos, Noticias, Cuenta, Carrito, Checkout y
 
 Estos niveles son una recomendación práctica según el alcance. OpenAI Docs describe Medio como una opción equilibrada para trabajo de código y planificación: [guía de razonamiento](https://developers.openai.com/api/docs/guides/reasoning). No es una promesa de consumo fijo ni un cambio automático del modelo seleccionado en la aplicación.
 
-Continuar por el punto 9, Carrito, únicamente cuando el propietario lo indique. Incluir siempre modelo y razonamiento al indicar el siguiente punto.
+Continuar por el punto 10, Checkout, únicamente cuando el propietario lo indique. Incluir siempre modelo y razonamiento al indicar el siguiente punto.

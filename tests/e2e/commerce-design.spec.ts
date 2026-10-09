@@ -245,6 +245,55 @@ test('Compra: iniciar sesión, correo pendiente, falta de stock y validación an
   await expect(page.getByLabel('Agencia de destino')).toBeEnabled();
 });
 
+test('Carrito: varios formatos, cantidades, subtotales y eliminación sin iniciar un pago', async ({
+  page,
+}, info) => {
+  const state = await fixtures(page);
+  state.products.push({
+    ...product,
+    id: 'cart-box',
+    slug: 'cart-box',
+    name: 'Display de 24 sobres con nombre extenso · Inglés',
+    price: 90000,
+    discount_percent: 0,
+  });
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'sergod-store-cart-v1',
+      JSON.stringify([
+        { product_id: 'commerce-product', quantity: 2 },
+        { product_id: 'cart-box', quantity: 1 },
+      ]),
+    ),
+  );
+  for (const width of [1440, 375, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/carrito');
+    await expect(page.locator('.store-cart-item')).toHaveCount(2);
+    await expect(page.locator('.store-total')).toContainText('$98.000');
+    await page
+      .getByRole('button', { name: `Aumentar cantidad de ${product.name}`, exact: true })
+      .click();
+    await expect(page.locator('.store-total')).toContainText('$102.000');
+    await page
+      .getByRole('button', { name: `Disminuir cantidad de ${product.name}`, exact: true })
+      .click();
+    await expect(page.locator('.store-total')).toContainText('$98.000');
+    await noOverflow(page);
+    if (width !== 320)
+      await page.screenshot({ path: info.outputPath(`${width}-cart-items.png`), fullPage: true });
+    await page
+      .getByRole('button', { name: `Eliminar ${state.products[1].name}`, exact: true })
+      .click();
+    await expect(page.locator('.store-total')).toContainText('$8.000');
+    await page.getByRole('button', { name: `Eliminar ${product.name}`, exact: true }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Tu carrito está esperando', exact: true }),
+    ).toBeVisible();
+    expect(state.checkout).toHaveLength(0);
+  }
+});
+
 test('Cuenta: acceso, recuperación, perfil y enlaces inválidos adaptables', async ({
   page,
 }, info) => {
