@@ -1,5 +1,15 @@
 # Rediseño visual de SERGOD STORE
 
+## Noticias — punto 7 de la pauta vigente, octubre de 2026
+
+La publicación seleccionada usa una superficie azul grafito con profundidad y acento estático discreto. Los medios quedan enmarcados y el texto mantiene una anchura cómoda, con fechas, títulos y enlaces diferenciados. Las publicaciones que no tienen título ni texto muestran el medio centrado y la información debajo, evitando una columna vacía. Se conserva el texto completo de la noticia seleccionada.
+
+El archivo mantiene miniaturas uniformes y títulos de dos líneas; cuando no existe título, el extracto recibe mayor presencia. Las acciones se alinean al pie de las tarjetas y tienen hover y foco visibles. Se retira el subtítulo redundante del archivo. Los controles del carrusel tienen foco claro y el medio seleccionado usa el acento de la tienda.
+
+Instagram sigue sirviendo sus publicaciones y miniaturas directamente, sin nuevos medios, storage ni dependencias. No se cambia el botón de importación, no se agregan fuentes web, ni se modifica contenido o estado de publicación. Los banners siguen estáticos. Modelo recomendado: Sol 6.1 / Medio; siguiente Cuenta con el mismo nivel.
+
+Verificación: tipos y compilación de producción correctos; tres pruebas de navegador para Noticias y publicaciones integradas. Cubren contraste, teclado y swipe, selección y recarga, paginación, video sin reproducción automática, estados vacíos y recuperación de error, composición sin texto e integración externa sin descargar medios propios entre 320 y 1440 px. Capturas de escritorio y celular revisadas. Datos simulados, sin cambios en publicaciones reales.
+
 ## Torneos — punto 6 de la pauta vigente, octubre de 2026
 
 La agenda permanece a la izquierda y YouTube a la derecha en escritorio; en celular se apilan. Los paneles comparten esquinas, superficies y profundidad discreta. El calendario destaca los días con eventos y el día seleccionado con un borde cian legible. El detalle conserva su posición dentro de la agenda y presenta cada evento en una tarjeta, con fecha, lugar y precio cuando están configurados.

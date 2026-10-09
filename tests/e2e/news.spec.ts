@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { NewsItem, InstagramCandidate, InstagramStatus } from '../../lib/news';
+import { expectReadable } from './helpers/readability';
 const id = '5a368dc3-f1d6-44cb-8d4b-2171df852ec0';
 const image = '/art/hero/mitos-front.webp',
   image2 = '/art/hero/yugioh-front.webp';
@@ -117,6 +118,7 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
     await expect(titled.getByRole('heading', { name: 'Encuentro de la comunidad' })).toBeVisible();
     await expect(titled).toContainText('Momento de la tienda 3');
     expect(videoRequests).toBe(0);
+    await expectReadable(page);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))
       .toBeLessThanOrEqual(1);
@@ -128,6 +130,7 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
   }
   const carousel = page.getByLabel('Carrusel de la noticia', { exact: true });
   await carousel.focus();
+  await expect(carousel).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(
     page.getByRole('img', { name: 'Imagen 2 de la noticia', exact: true }),
@@ -314,6 +317,7 @@ test('Instagram integrado: una publicación a la vez, selección y recarga sin m
   let mediaDownloads = 0;
   const embedded = items.slice(0, 3).map((n, i) => ({
     ...n,
+    caption: i === 0 ? '' : n.caption,
     source: 'instagram',
     assets: [],
     permalink: `https://www.instagram.com/${i === 1 ? 'reel' : 'p'}/PUBLIC${i}/`,
@@ -332,10 +336,16 @@ test('Instagram integrado: una publicación a la vez, selección y recarga sin m
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/noticias');
     await expect(page.locator('iframe')).toHaveCount(1);
+    const selected = page.getByRole('region', { name: 'Noticia seleccionada' });
+    await expect(selected).toHaveAttribute('data-has-text', 'false');
+    const frame = await selected.locator('iframe').boundingBox();
+    const date = await selected.locator('time').boundingBox();
+    expect(date!.y).toBeGreaterThan(frame!.y + frame!.height);
     await expect(page.locator('iframe')).toHaveAttribute(
       'src',
       'https://www.instagram.com/p/PUBLIC0/embed/',
     );
+    await expectReadable(page);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth))
       .toBeLessThanOrEqual(1);

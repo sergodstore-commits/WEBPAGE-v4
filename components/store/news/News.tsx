@@ -196,6 +196,7 @@ export function News() {
             ref={feature}
             tabIndex={-1}
             className={styles.feature}
+            data-has-text={Boolean(selected.title || selected.caption)}
             aria-label="Noticia seleccionada"
           >
             <NewsMedia key={selected.id} assets={selected.assets} permalink={selected.permalink} />
@@ -240,7 +241,6 @@ export function News() {
             <section className={styles.archive} aria-labelledby="news-archive-heading">
               <div className={styles.heading}>
                 <div>
-                  <span>EL ARCHIVO DE LA TIENDA</span>
                   <h2 id="news-archive-heading">Más noticias</h2>
                 </div>
                 <span>
