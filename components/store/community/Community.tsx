@@ -133,9 +133,11 @@ function RankingTable({
     <table className={styles.table} aria-label={label}>
       <thead>
         <tr>
-          <th>{compact ? 'Puesto' : 'Posición'}</th>
+          <th aria-label="Posición">{compact ? '#' : 'Posición'}</th>
           <th>Jugador</th>
-          <th aria-label="Torneos jugados">{compact ? 'Torneos' : 'Torneos jugados'}</th>
+          <th aria-label="Torneos jugados" title="Torneos jugados">
+            {compact ? 'T.' : 'Torneos jugados'}
+          </th>
           <th>Puntos</th>
         </tr>
       </thead>
@@ -155,7 +157,11 @@ function RankingTable({
                 `${r.position}°`
               )}
             </td>
-            <td>{r.name}</td>
+            <td>
+              <span className={compact ? styles.playerName : undefined} title={r.name}>
+                {r.name}
+              </span>
+            </td>
             <td>{r.tournaments}</td>
             <td>
               <strong>{r.points}</strong>
@@ -324,30 +330,48 @@ export function Community() {
                               data-house={house.id}
                               aria-labelledby={`house-${house.id}`}
                             >
-                              <div className={styles.houseHeading}>
-                                <div>
-                                  <span>{house.range}</span>
-                                  <h3 id={`house-${house.id}`}>{house.name}</h3>
+                              <img
+                                className={styles.houseArt}
+                                src={`/art/academy/${house.id}.webp`}
+                                alt=""
+                                width={720}
+                                height={960}
+                                loading="lazy"
+                              />
+                              <div className={styles.houseContent}>
+                                <div className={styles.houseHeading}>
+                                  <div>
+                                    <span>{house.range}</span>
+                                    <h3 id={`house-${house.id}`}>{house.name}</h3>
+                                  </div>
+                                  <p>
+                                    {members.length}{' '}
+                                    {members.length === 1 ? 'jugador' : 'jugadores'}
+                                  </p>
                                 </div>
-                                <p>
-                                  {members.length} {members.length === 1 ? 'jugador' : 'jugadores'}
-                                </p>
+                                <div
+                                  className={styles.houseScroll}
+                                  tabIndex={0}
+                                  role="region"
+                                  aria-label={`Jugadores de ${house.name}`}
+                                >
+                                  {matches.length ? (
+                                    <RankingTable
+                                      rows={matches}
+                                      label={`Clasificación ${house.name}`}
+                                      compact
+                                      clickable
+                                      onPlayer={setPlayer}
+                                    />
+                                  ) : (
+                                    <p className={styles.houseEmpty}>
+                                      {members.length
+                                        ? 'No hay jugadores que coincidan con esa búsqueda en esta casa.'
+                                        : 'Todavía no hay jugadores en esta casa.'}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                              {matches.length ? (
-                                <RankingTable
-                                  rows={matches.slice(0, limit)}
-                                  label={`Clasificación ${house.name}`}
-                                  compact
-                                  clickable
-                                  onPlayer={setPlayer}
-                                />
-                              ) : (
-                                <p className={styles.houseEmpty}>
-                                  {members.length
-                                    ? 'No hay jugadores que coincidan con esa búsqueda en esta casa.'
-                                    : 'Todavía no hay jugadores en esta casa.'}
-                                </p>
-                              )}
                             </section>
                           );
                         })}
@@ -364,13 +388,7 @@ export function Community() {
                   {!filtered.length && (
                     <p role="status">No hay jugadores que coincidan con esa búsqueda.</p>
                   )}
-                  {(board === 'yugioh'
-                    ? duelHouses.some(
-                        (house) =>
-                          filtered.filter((r) => duelHouse(r.points, limits) === house.id).length >
-                          limit,
-                      )
-                    : filtered.length > limit) && (
+                  {board !== 'yugioh' && filtered.length > limit && (
                     <button
                       className="store-button store-button-secondary"
                       onClick={() => setLimit((n) => n + 50)}

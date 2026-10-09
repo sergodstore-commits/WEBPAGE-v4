@@ -49,7 +49,7 @@
 }
 .academy {
   display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(320px, 1fr));
   align-items: start;
   gap: 20px;
   overflow-x: auto;
@@ -66,13 +66,42 @@
 }
 .house {
   --house-color: #9b3636;
-  border: 1px solid #dbe3e9;
-  border-top: 4px solid var(--house-color);
-  border-radius: 8px;
-  padding: clamp(12px, 2vw, 24px);
+  position: relative;
+  aspect-ratio: 3 / 4;
   min-width: 0;
   scroll-snap-align: start;
-  background: #fff;
+  color: #f4f6fa;
+}
+.houseArt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.houseContent {
+  position: absolute;
+  inset: 34% 14% 9%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.houseScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #788390 #18212a;
+  overscroll-behavior: contain;
+}
+.houseScroll:focus-visible {
+  outline: 2px solid #c5e8ff;
+  outline-offset: 2px;
+}
+.playerName {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .house[data-house='ra'] {
   --house-color: #866315;
@@ -87,27 +116,33 @@
   gap: 12px;
   flex-wrap: wrap;
 }
-.houseHeading span,
-.houseHeading p,
+.house .houseHeading span,
+.house .houseHeading p,
 .houseEmpty {
-  color: #526170;
-  font-size: 13px;
+  color: #cbd3df;
+  font-size: 11px;
 }
 .houseHeading h3 {
-  font-family: var(--sg-font-display);
-  font-size: 30px;
-  color: var(--house-color);
-  margin: 6px 0 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 .houseHeading p {
   flex-shrink: 0;
+  margin: 0;
+}
+.houseHeading {
+  gap: 4px;
+  padding-bottom: 10px;
 }
 .houseEmpty {
   margin: 20px 0 4px;
 }
 .house .table th,
 .house .table td {
-  padding: 10px 5px;
+  padding: 9px 3px;
   overflow-wrap: anywhere;
 }
 .house .table th {
@@ -117,11 +152,43 @@
   font-size: 12px;
 }
 .house .table th:first-child {
-  width: 46px;
+  width: 38px;
 }
 .house .table th:nth-last-child(-n + 2) {
-  width: 56px;
+  width: 34px;
   white-space: nowrap;
+}
+.house .table th:last-child {
+  width: 42px;
+}
+.house .table {
+  margin: 0;
+  color: #eef2f7;
+}
+.house .table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #20232d;
+  color: #cad4df;
+}
+.house .table td {
+  border-bottom-color: #ffffff20;
+}
+.house .table tbody tr:nth-child(even) {
+  background: #ffffff06;
+}
+.house .table tbody tr:hover {
+  background: #ffffff12;
+}
+.house .table td:first-child {
+  color: #d2eaff;
+  font-size: 15px;
+}
+.house .positionButton {
+  color: #d2eaff;
+  border-color: #ffffff35;
+  background: #ffffff08;
 }
 .heading {
   display: flex;
