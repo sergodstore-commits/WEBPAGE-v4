@@ -45,6 +45,29 @@
 .header h1 > span {
   color: #007f9d;
 }
+.storeBanner {
+  display: block;
+  min-height: 0;
+  background: #fff;
+}
+.storeBanner picture,
+.storeBanner picture img {
+  display: block;
+  width: 100%;
+}
+.storeBanner picture img {
+  height: auto;
+}
+.storeBanner .storeBannerTitle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .header .description {
   margin: 0;
   max-width: 48ch;
@@ -224,6 +247,16 @@
   }
 }
 @media (max-width: 600px) {
+  .storeBanner .storeBannerTitle {
+    position: relative;
+    width: auto;
+    height: auto;
+    padding: 20px 24px;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
   .header {
     display: block;
     min-height: 0;

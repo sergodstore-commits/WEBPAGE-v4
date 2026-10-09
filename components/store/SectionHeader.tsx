@@ -15,6 +15,32 @@ export function SectionHeader({
   description?: string;
   images?: string[];
 }) {
+  if (section === 'store') {
+    return (
+      <header className={`${styles.header} ${styles.storeBanner}`} data-section-header={section}>
+        <h1 className={styles.storeBannerTitle}>
+          {title}
+          <span aria-hidden="true">.</span>
+        </h1>
+        <picture>
+          <source
+            media="(max-width: 600px)"
+            srcSet="/art/banners/store-mobile.webp"
+            width="880"
+            height="466"
+          />
+          <img
+            src="/art/banners/store.webp"
+            width="1665"
+            height="583"
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
+      </header>
+    );
+  }
   const photos = [...new Set(images.filter(Boolean))].slice(0, 2);
   return (
     <header className={`${styles.header} ${styles[section]}`} data-section-header={section}>
@@ -27,9 +53,7 @@ export function SectionHeader({
         )}
         <h1>
           {title}
-          <span aria-hidden={section === 'store' || section === 'preorder' ? true : undefined}>
-            .
-          </span>
+          <span aria-hidden={section === 'preorder' ? true : undefined}>.</span>
         </h1>
         {description && <p className={styles.description}>{description}</p>}
       </div>
