@@ -9,6 +9,7 @@ Este plan reemplaza las propuestas anteriores que incluían animaciones en los b
 3. Tienda: tarjetas, imágenes completas, espacios, foco, categorías móviles y banner estático. Se conservan los cachetes corregidos de la Maga Oscura y los productos pequeños en las estanterías del fondo.
 4. Preventas: lanzamiento destacado y separado del período de reserva, estados distinguibles, superficie con acento ámbar, ficha coherente y tarjetas de una columna en celulares pequeños.
 5. Comunidad: marcos integrados en una superficie común con luz estática por casa, listas internas legibles, selección de rankings agrupada y presentación coherente de MyL.
+6. Torneos: agenda y pantalla de YouTube con paneles coherentes, día seleccionado visible, eventos en tarjetas, estados de transmisión distinguibles y archivo de videos ordenado.
 
 ## Orden pendiente
 
@@ -16,7 +17,6 @@ Son refinamientos visuales sobre funciones existentes. No implican rehacer la ti
 
 | Punto | Sección         | Trabajo pendiente                                                                                             |
 | ----- | --------------- | ------------------------------------------------------------------------------------------------------------- |
-| 6     | Torneos         | Pulir calendario, detalle del día, transmisión de YouTube y archivo de videos, en escritorio y celular.       |
 | 7     | Noticias        | Afinar publicación destacada, miniaturas, archivo y lectura; mantener medios de Instagram externos.           |
 | 8     | Cuenta          | Unificar formularios, perfil, historial y detalle de pedidos.                                                 |
 | 9     | Carrito         | Mejorar jerarquía de productos, cantidades, importes y acciones.                                              |
@@ -39,4 +39,4 @@ La recomendación para Comunidad, Torneos, Noticias, Cuenta, Carrito, Checkout y
 
 Estos niveles son una recomendación práctica según el alcance. OpenAI Docs describe Medio como una opción equilibrada para trabajo de código y planificación: [guía de razonamiento](https://developers.openai.com/api/docs/guides/reasoning). No es una promesa de consumo fijo ni un cambio automático del modelo seleccionado en la aplicación.
 
-Continuar por el punto 6 únicamente cuando el propietario lo indique. Incluir siempre modelo y razonamiento al indicar el siguiente punto.
+Continuar por el punto 7, Noticias, únicamente cuando el propietario lo indique. Incluir siempre modelo y razonamiento al indicar el siguiente punto.

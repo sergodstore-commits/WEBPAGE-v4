@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Post } from '../../lib/types';
+import { expectReadable } from './helpers/readability';
 
 const post = (id: string, title: string, at: string): Post => ({
   id,
@@ -65,6 +66,7 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
     'Liga Mitos Primera Era →',
     'Sellado de medianoche →',
   ]);
+  await expectReadable(page);
   await expect(calendar.getByRole('link', { name: 'Liga Yu-Gi-Oh!', exact: true })).toHaveAttribute(
     'href',
     '/publicacion/yugi',
@@ -115,6 +117,7 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
       .toBeLessThanOrEqual(1);
     const mobileCalendar = await calendar.boundingBox();
     await expect(calendar.getByRole('region')).toBeVisible();
+    await expectReadable(page);
     const mobileLive = await page
       .getByRole('region', { name: 'Transmisión en vivo', exact: true })
       .boundingBox();

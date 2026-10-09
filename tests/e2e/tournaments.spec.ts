@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { Post, YouTubeVideo } from '../../lib/types';
+import { expectReadable } from './helpers/readability';
 const post = (id: string, time: string | null): Post => ({
   id,
   slug: id,
@@ -210,6 +211,7 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
     ).toBeVisible();
     await expect(page.getByText('Liga pasado', { exact: true })).toHaveCount(0);
     await expect(page.locator('iframe')).toHaveCount(0);
+    await expectReadable(page);
     await expect(page.getByRole('img', { name: 'Transmisión 0', exact: true })).toHaveAttribute(
       'src',
       '/art/hero/mitos-front.webp',
@@ -241,6 +243,7 @@ test('Directo YouTube visible en computador y celular, y detalle sin inscripció
   await mock(page, true);
   await page.goto('/torneos');
   await expect(page.getByText('● EN VIVO', { exact: true })).toBeVisible();
+  await expectReadable(page);
   await expect(page.locator('iframe')).toHaveAttribute(
     'src',
     /youtube-nocookie.com\/embed\/SergodLive1/,

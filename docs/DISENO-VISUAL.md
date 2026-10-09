@@ -1,5 +1,15 @@
 # Rediseño visual de SERGOD STORE
 
+## Torneos — punto 6 de la pauta vigente, octubre de 2026
+
+La agenda permanece a la izquierda y YouTube a la derecha en escritorio; en celular se apilan. Los paneles comparten esquinas, superficies y profundidad discreta. El calendario destaca los días con eventos y el día seleccionado con un borde cian legible. El detalle conserva su posición dentro de la agenda y presenta cada evento en una tarjeta, con fecha, lugar y precio cuando están configurados.
+
+La pantalla fuera de línea usa luz estática azul grafito y el logo existente. Los estados En vivo y Próxima transmisión tienen etiquetas diferentes, roja y ámbar. El archivo conserva miniaturas 16:9, títulos limitados a dos líneas y fechas legibles; los reproductores de grabaciones se abren únicamente al seleccionar un video. Se mantienen teclado, cierre con Escape, paginación y apertura externa en YouTube.
+
+No se alteran programación, recurrencias, precios, publicaciones ni integración de YouTube. No se agregan medios, dependencias, almacenamiento ni animaciones de banners. Modelo recomendado: Sol 6.1 / Medio; siguiente etapa Noticias con el mismo nivel.
+
+Verificación: tipos y compilación de producción correctos; tres pruebas de navegador aprobadas para agenda, archivo y directo. Incluyen contraste, días de Chile, varios eventos, detalle y cierre con retorno del foco, navegación mensual, modo ampliado, paginación, reproducción y ausencia de desbordamientos entre 320 y 1440 px. Se revisaron capturas de escritorio y celular. Datos simulados, sin cambios comerciales.
+
 ## Comunidad — punto 5 de la pauta vigente, octubre de 2026
 
 La Academia integra los tres marcos originales en una superficie azul grafito común, con luces estáticas suaves en rojo, dorado y azul. Cada ilustración conserva su proporción y encuadre completo; la sombra corresponde al color de su casa. No se añaden imágenes, movimientos ni efectos de banner.

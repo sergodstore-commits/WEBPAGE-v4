@@ -1,9 +1,10 @@
 .calendar {
   border: 1px solid var(--sg-line);
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
   background: var(--sg-surface);
   color: var(--sg-ink);
+  box-shadow: 0 10px 32px rgb(0 0 0 / 12%);
 }
 .panelHeading {
   display: flex;
@@ -37,7 +38,7 @@
 .toolbar {
   justify-content: space-between;
   flex-wrap: wrap;
-  padding: 12px;
+  padding: 16px 12px;
 }
 .navigation {
   min-width: 0;
@@ -46,7 +47,7 @@
   margin: 0;
   min-width: 155px;
   text-align: center;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   text-transform: capitalize;
 }
@@ -55,12 +56,12 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 36px;
+  min-height: 40px;
   padding: 6px 10px;
   background: var(--sg-surface);
   color: var(--sg-link);
   border: 1px solid var(--sg-line);
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
 }
@@ -78,7 +79,7 @@
   border-collapse: collapse;
 }
 .month th {
-  padding: 8px 2px;
+  padding: 10px 2px;
   color: var(--sg-muted);
   background: var(--sg-surface-soft);
   font-size: 11px;
@@ -101,7 +102,7 @@
   align-items: stretch;
   gap: 4px;
   width: 100%;
-  min-height: 62px;
+  min-height: 70px;
   height: 100%;
   padding: 6px;
   text-align: left;
@@ -113,8 +114,8 @@
 .day time {
   align-self: flex-start;
   font-size: 12px;
-  line-height: 20px;
-  min-width: 20px;
+  line-height: 24px;
+  min-width: 24px;
   text-align: center;
 }
 .day[aria-current='date'] time {
@@ -125,11 +126,19 @@
 .hasEvents {
   background: var(--sg-surface-selected);
 }
+.hasEvents time {
+  font-weight: 700;
+  color: var(--sg-link);
+}
+.hasEvents[aria-current='date'] time {
+  color: var(--sg-action-text);
+}
 .day:hover {
   background: var(--sg-surface-hover);
 }
 .day[aria-pressed='true'] {
-  box-shadow: inset 0 0 0 2px #006482;
+  box-shadow: inset 0 0 0 2px var(--sg-link);
+  background: var(--sg-surface-selected);
 }
 .event {
   display: block;
@@ -140,6 +149,8 @@
   font-size: 11px;
   line-height: 1.4;
   font-weight: 600;
+  border-left: 2px solid var(--sg-link);
+  padding-left: 4px;
 }
 .more {
   font-size: 10px;
@@ -156,6 +167,8 @@
   border-top: 1px solid var(--sg-line);
   padding: 16px;
   font-size: 13px;
+  background:
+    linear-gradient(145deg, rgb(56 152 176 / 8%), transparent 70%), var(--sg-surface-soft);
 }
 .details p {
   margin: 0;
@@ -163,7 +176,7 @@
 }
 .selectedDate {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
   font-weight: 600;
   text-transform: capitalize;
@@ -198,6 +211,13 @@
   display: grid;
   gap: 12px;
 }
+.details li {
+  padding: 14px;
+  border: 1px solid var(--sg-line);
+  border-left: 3px solid var(--sg-link);
+  border-radius: 8px;
+  background: var(--sg-surface);
+}
 .details a {
   color: var(--sg-link);
   font-weight: 600;
@@ -206,6 +226,9 @@
 .details li p {
   margin-top: 4px;
   color: var(--sg-muted);
+}
+.details li p:last-child:not(:first-child) {
+  font-variant-numeric: tabular-nums;
 }
 .expanded .day {
   min-height: 105px;
@@ -258,6 +281,7 @@
   }
   .event {
     font-size: 10px;
+    padding-left: 2px;
   }
   .expanded .day {
     min-height: 86px;

@@ -146,7 +146,7 @@ export function Tournaments() {
               <RemoteError error={media.error} reload={media.reload} />
             ) : media.data?.live ? (
               <>
-                <span className={styles.liveBadge}>
+                <span className={styles.liveBadge} data-stage={media.data.live.stage}>
                   {media.data.live.stage === 'live' ? '● EN VIVO' : 'PRÓXIMA TRANSMISIÓN'}
                 </span>
                 <p className={styles.liveTitle}>{media.data.live.title}</p>
