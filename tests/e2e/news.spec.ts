@@ -102,7 +102,7 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/noticias');
-    await expect(page.getByRole('heading', { name: 'Noticias.', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Noticias', exact: true })).toBeVisible();
     await expect(
       page.getByText('Novedades, encuentros y momentos de nuestra tienda.', { exact: true }),
     ).toHaveCount(0);

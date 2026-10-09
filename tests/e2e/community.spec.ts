@@ -198,7 +198,7 @@ test('Comunidad: rankings separados, búsqueda, más jugadores y lectura adaptab
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/comunidad');
-    await expect(page.getByRole('heading', { name: 'Comunidad.', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Comunidad', exact: true })).toBeVisible();
     await expect(
       page.getByText('Liga y rankings internos de SERGOD STORE.', { exact: true }),
     ).toHaveCount(0);

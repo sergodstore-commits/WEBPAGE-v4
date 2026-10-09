@@ -15,12 +15,17 @@ export function SectionHeader({
   description?: string;
   images?: string[];
 }) {
-  if (section === 'store' || section === 'preorder') {
-    const preorder = section === 'preorder';
-    const banner = preorder ? 'preorder' : 'store';
+  if (section !== 'tournaments') {
+    const banner = section;
+    const dimensions = {
+      store: { width: 1665, height: 583, mobileHeight: 466 },
+      preorder: { width: 1934, height: 754, mobileHeight: 490 },
+      news: { width: 1642, height: 405, mobileHeight: 405 },
+      community: { width: 2143, height: 511, mobileHeight: 288 },
+    }[section];
     return (
       <header
-        className={`${styles.header} ${styles.storeBanner} ${preorder ? styles.preorderBanner : ''}`}
+        className={`${styles.header} ${styles.storeBanner} ${section !== 'store' ? styles.preorderBanner : ''}`}
         data-section-header={section}
       >
         <h1 className={styles.storeBannerTitle}>
@@ -32,12 +37,12 @@ export function SectionHeader({
             media="(max-width: 600px)"
             srcSet={`/art/banners/${banner}-mobile.webp`}
             width="880"
-            height={preorder ? 490 : 466}
+            height={dimensions.mobileHeight}
           />
           <img
             src={`/art/banners/${banner}.webp`}
-            width={preorder ? 1934 : 1665}
-            height={preorder ? 754 : 583}
+            width={dimensions.width}
+            height={dimensions.height}
             alt=""
             fetchPriority="high"
             decoding="async"
@@ -46,7 +51,6 @@ export function SectionHeader({
       </header>
     );
   }
-  const photos = [...new Set(images.filter(Boolean))].slice(0, 2);
   return (
     <header className={`${styles.header} ${styles[section]}`} data-section-header={section}>
       <div className={styles.content}>
@@ -64,46 +68,11 @@ export function SectionHeader({
       </div>
       <div className={styles.art} aria-hidden="true">
         <div className={styles.orbit} />
-        {section === 'news' ? (
-          photos.length ? (
-            <img className={styles.newsPhoto} src={photos[0]} alt="" />
-          ) : (
-            <div className={styles.editorial}>
-              <img src="/brand/sergod-logo-480.webp" alt="" width="480" height="240" />
-              <div />
-              <div />
-              <div />
-            </div>
-          )
-        ) : section === 'community' ? (
-          <div className={styles.arena}>
-            <img src="/art/hero/mitos-back-320.webp" alt="" />
-            <img src="/art/hero/yugioh-back-320.webp" alt="" />
-            <img src="/art/hero/mitos-back-320.webp" alt="" />
-          </div>
-        ) : section === 'tournaments' ? (
-          <div className={styles.duel}>
-            <img src="/art/hero/yugioh-front-320.webp" alt="" />
-            <span>×</span>
-            <img src="/art/hero/mitos-front-320.webp" alt="" />
-          </div>
-        ) : (
-          <div className={`${styles.products} ${photos.length ? styles.withPhotos : ''}`}>
-            {(photos.length
-              ? photos
-              : ['/art/hero/yugioh-back-320.webp', '/art/hero/mitos-back-320.webp']
-            ).map((src) => (
-              <img
-                key={src}
-                src={src}
-                alt=""
-                onError={(event) => {
-                  event.currentTarget.style.visibility = 'hidden';
-                }}
-              />
-            ))}
-          </div>
-        )}
+        <div className={styles.duel}>
+          <img src="/art/hero/yugioh-front-320.webp" alt="" />
+          <span>×</span>
+          <img src="/art/hero/mitos-front-320.webp" alt="" />
+        </div>
         <span className={styles.signature}>SERGOD STORE / COPIAPÓ</span>
       </div>
     </header>
