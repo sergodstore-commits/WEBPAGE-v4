@@ -389,3 +389,37 @@
   flex-shrink: 0;
   margin-top: 3px;
 }
+
+:global(.store-app) .shopCatalog .layout {
+  grid-template-columns: 206px minmax(0, 1fr);
+  gap: 24px;
+}
+:global(.store-app) .shopCatalog .filters {
+  border-radius: 12px;
+  padding: 18px 14px;
+}
+.shopCatalog .filterControls {
+  gap: 16px;
+}
+:global(.store-app) .shopCatalog :global(.store-catalog-toolbar) {
+  padding: 12px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+}
+:global(.store-app) .shopCatalog :global(.store-catalog-grid) {
+  gap: 20px 16px;
+}
+@media (max-width: 900px) {
+  :global(.store-app) .shopCatalog .layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  :global(.store-app) .shopCatalog .filters {
+    padding: 0;
+  }
+}
+@media (max-width: 700px) {
+  :global(.store-app) .shopCatalog :global(.store-catalog-grid) {
+    gap: 16px 10px;
+  }
+}

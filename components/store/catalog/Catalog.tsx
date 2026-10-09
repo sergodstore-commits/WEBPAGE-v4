@@ -238,7 +238,9 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   const currentPage = Math.min(page, pages);
   const pageProducts = visible.slice((currentPage - 1) * 24, currentPage * 24);
   return (
-    <div className={`store-page ${styles.catalog} ${preorder ? styles.preorderCatalog : ''}`}>
+    <div
+      className={`store-page ${styles.catalog} ${preorder ? styles.preorderCatalog : styles.shopCatalog}`}
+    >
       <SectionHeader
         section={preorder ? 'preorder' : 'store'}
         title={preorder ? 'Preventas' : 'Tienda'}

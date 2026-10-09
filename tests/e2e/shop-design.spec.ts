@@ -170,7 +170,7 @@ test.beforeEach(async ({ page }) => {
 
 test('Tienda y ficha: imágenes, controles y precios caben entre 320 y 1440 píxeles', async ({
   page,
-}) => {
+}, testInfo) => {
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/tienda');
@@ -190,6 +190,10 @@ test('Tienda y ficha: imágenes, controles y precios caben entre 320 y 1440 píx
       exact: true,
     });
     await quick.click({ trial: true });
+    if (width === 375 || width === 1440) {
+      await page.locator('.store-product-card').first().scrollIntoViewIfNeeded();
+      await page.screenshot({ path: testInfo.outputPath(`tienda-${width}.png`) });
+    }
 
     await page.goto(`/producto/${variants[0].slug}`);
     await expect(page.getByRole('heading', { name: family, level: 1, exact: true })).toBeVisible();
