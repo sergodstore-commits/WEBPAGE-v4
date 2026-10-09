@@ -26,6 +26,9 @@ test('Banners: cinco secciones con altura uniforme, tÃ­tulo legible e ilustraciÃ
         )
         .toBe(true);
       const frame = (await banner.boundingBox())!;
+      expect(
+        await banner.locator('img').evaluate((image) => getComputedStyle(image).objectFit),
+      ).toBe('contain');
       const text = (await heading.boundingBox())!;
       heights.push(frame.height);
       expect(text.x).toBeGreaterThanOrEqual(frame.x);

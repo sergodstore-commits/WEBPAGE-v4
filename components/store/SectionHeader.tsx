@@ -12,17 +12,21 @@ export function SectionHeader({
   description?: string;
   images?: string[];
 }) {
-  const imageHeight = { store: 466, preorder: 490, news: 405, community: 288, tournaments: 405 }[
-    section
-  ];
+  const dimensions = {
+    store: [1365, 583],
+    preorder: [1434, 754],
+    news: [1292, 405],
+    community: [1593, 511],
+    tournaments: [1612, 724],
+  }[section];
   return (
     <header className={styles.header} data-section-header={section}>
       <h1 className={styles.title}>{title}</h1>
       <img
         className={styles.illustration}
-        src={`/art/banners/${section}-mobile.webp`}
-        width="880"
-        height={imageHeight}
+        src={`/art/banners/${section}-art.webp`}
+        width={dimensions[0]}
+        height={dimensions[1]}
         alt=""
         fetchPriority="high"
         decoding="async"

@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  height: clamp(240px, 23vw, 300px);
+  height: clamp(280px, 29vw, 380px);
   overflow: hidden;
   isolation: isolate;
   border: 1px solid #b9ced9;
@@ -23,11 +23,11 @@
 .title {
   position: relative;
   z-index: 1;
-  max-width: 44%;
+  max-width: 27%;
   margin: 0;
-  padding: 0 0 0 38px;
+  padding: 0 0 0 26px;
   font-family: var(--sg-font-display);
-  font-size: clamp(42px, 5.8vw, 80px);
+  font-size: clamp(30px, 4vw, 56px);
   font-weight: 800;
   font-style: italic;
   line-height: 1;
@@ -52,11 +52,10 @@
   position: absolute;
   right: 0;
   top: 0;
-  width: 70%;
+  width: 73%;
   height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  mask-image: linear-gradient(90deg, transparent, #000 18%);
+  object-fit: contain;
+  object-position: right center;
 }
 @media (max-width: 700px) {
   .header {
@@ -78,7 +77,6 @@
     bottom: 0;
     width: 100%;
     height: 160px;
-    object-position: center top;
-    mask-image: linear-gradient(180deg, transparent, #000 12%);
+    object-position: center;
   }
 }
