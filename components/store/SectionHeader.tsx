@@ -15,9 +15,14 @@ export function SectionHeader({
   description?: string;
   images?: string[];
 }) {
-  if (section === 'store') {
+  if (section === 'store' || section === 'preorder') {
+    const preorder = section === 'preorder';
+    const banner = preorder ? 'preorder' : 'store';
     return (
-      <header className={`${styles.header} ${styles.storeBanner}`} data-section-header={section}>
+      <header
+        className={`${styles.header} ${styles.storeBanner} ${preorder ? styles.preorderBanner : ''}`}
+        data-section-header={section}
+      >
         <h1 className={styles.storeBannerTitle}>
           {title}
           <span aria-hidden="true">.</span>
@@ -25,14 +30,14 @@ export function SectionHeader({
         <picture>
           <source
             media="(max-width: 600px)"
-            srcSet="/art/banners/store-mobile.webp"
+            srcSet={`/art/banners/${banner}-mobile.webp`}
             width="880"
-            height="466"
+            height={preorder ? 490 : 466}
           />
           <img
-            src="/art/banners/store.webp"
-            width="1665"
-            height="583"
+            src={`/art/banners/${banner}.webp`}
+            width={preorder ? 1934 : 1665}
+            height={preorder ? 754 : 583}
             alt=""
             fetchPriority="high"
             decoding="async"
@@ -53,7 +58,7 @@ export function SectionHeader({
         )}
         <h1>
           {title}
-          <span aria-hidden={section === 'preorder' ? true : undefined}>.</span>
+          <span>.</span>
         </h1>
         {description && <p className={styles.description}>{description}</p>}
       </div>
