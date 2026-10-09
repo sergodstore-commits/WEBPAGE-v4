@@ -1,0 +1,255 @@
+.page {
+  min-height: 100svh;
+  background: radial-gradient(ellipse at 15% 15%, #1c3547, transparent 58%), #0c141f;
+  color: #edf4fa;
+  padding: 28px 24px 60px;
+  font-family: var(--font-inter), sans-serif;
+}
+.shell {
+  max-width: 1200px;
+  margin: auto;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.header a,
+.productLink,
+.chartFooter a,
+.chartFooter button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+.header a {
+  color: #d6e9f7;
+  text-decoration: none;
+  min-height: 44px;
+}
+.header span,
+.intro > p:first-child,
+.cardTitle > span {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #8acde8;
+  font-weight: 700;
+}
+.intro {
+  margin: 38px 0 30px;
+}
+.intro h1 {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: clamp(40px, 6vw, 68px);
+  margin: 8px 0;
+  line-height: 1;
+}
+.intro h1 span {
+  color: #4bceed;
+}
+.intro h2 {
+  font-size: 23px;
+  margin: 12px 0;
+}
+.intro > p:last-child {
+  color: #acc0d1;
+  line-height: 1.6;
+  max-width: 650px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 28px;
+}
+.products,
+.market {
+  min-width: 0;
+  background: #101e2c;
+  border: 1px solid #2c4154;
+  border-radius: 22px;
+  padding: 24px;
+}
+.stage {
+  display: grid;
+  place-items: center;
+  height: 280px;
+  border-radius: 16px;
+  background: radial-gradient(ellipse, #24475c, transparent 70%);
+  color: #63ccec;
+}
+.stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-height: 280px;
+}
+.formats {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 16px 0;
+}
+.formats button {
+  flex: 0 0 120px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border: 1px solid #344a5e;
+  border-radius: 12px;
+  background: #142535;
+  color: #f2f7fb;
+  padding: 12px 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.formats button[aria-pressed='true'] {
+  border-color: #54d8f2;
+  background: #193c50;
+}
+.formats img {
+  height: 65px;
+  width: 80px;
+  object-fit: contain;
+}
+.formats small {
+  display: block;
+  color: #a6bed0;
+  margin-top: 4px;
+}
+.productLink {
+  color: #84dcf3;
+  min-height: 44px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.note {
+  color: #a7bdce;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 16px 0 0;
+}
+.note a {
+  color: #88def4;
+}
+.cardTitle h2 {
+  margin: 10px 0 6px;
+  font-size: 27px;
+}
+.cardTitle p {
+  color: #a7bdce;
+  margin: 0 0 20px;
+  font-size: 13px;
+}
+.placeholder {
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  border: 1px dashed #34536b;
+  border-radius: 14px;
+  color: #8dd9ef;
+}
+.placeholder h3 {
+  color: #edf4fa;
+  margin-bottom: 0;
+}
+.placeholder p {
+  color: #a7bdce;
+  line-height: 1.6;
+}
+.placeholder button {
+  background: #65d4ee;
+  color: #081c29;
+  border: 0;
+  padding: 13px 18px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+.chart {
+  display: block;
+  width: 100%;
+  height: 432px;
+  border: 0;
+  border-radius: 12px;
+  background: #0d1521;
+}
+.chartFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.chartFooter a {
+  color: #a7bdce;
+}
+.chartFooter button {
+  background: transparent;
+  color: #bce5f2;
+  border: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+.listLink {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  color: #edf4fa;
+  border-top: 1px solid #31485c;
+  margin-top: 22px;
+  padding-top: 20px;
+  text-decoration: none;
+  font-weight: 700;
+  min-height: 44px;
+}
+.listLink small {
+  display: block;
+  color: #8db5cc;
+  font-weight: 400;
+  font-size: 12px;
+  margin-top: 6px;
+}
+.page :is(a, button):focus-visible {
+  outline: 3px solid #71dff8;
+  outline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .page {
+    padding: 18px 14px 36px;
+  }
+  .header span {
+    max-width: 150px;
+    text-align: right;
+    font-size: 9px;
+  }
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .products,
+  .market {
+    padding: 18px;
+    border-radius: 16px;
+  }
+  .intro {
+    margin-top: 28px;
+  }
+  .stage {
+    height: 220px;
+  }
+  .stage img {
+    max-height: 220px;
+  }
+  .chart {
+    height: 432px;
+  }
+}
