@@ -12,37 +12,6 @@
   color: #f4f7fa;
 }
 
-.atmosphere {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 105%, rgb(24 91 112 / 32%), transparent 59%),
-    radial-gradient(ellipse at 88% 25%, rgb(11 72 92 / 12%), transparent 36%);
-}
-
-.orbit {
-  position: absolute;
-  pointer-events: none;
-  width: 1150px;
-  height: 620px;
-  left: 50%;
-  top: 59%;
-  transform: translate(-50%, -50%) rotate(-12deg);
-  border: 1px solid rgb(161 202 220 / 9%);
-  border-radius: 50%;
-}
-
-.orbit::after {
-  content: '';
-  position: absolute;
-  inset: 54px -135px;
-  border-radius: 50%;
-  border: 1px solid rgb(161 202 220 / 5%);
-  transform: rotate(23deg);
-}
-
 .content {
   position: relative;
   z-index: 2;
@@ -306,12 +275,6 @@
   .hero .pause {
     font-size: 9px;
     gap: 5px;
-  }
-  .orbit {
-    width: 610px;
-    height: 460px;
-    top: auto;
-    bottom: -285px;
   }
 }
 

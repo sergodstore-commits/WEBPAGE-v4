@@ -8,9 +8,14 @@ import { motion } from '@/lib/motion/tokens';
 import { TradingCard3D } from './TradingCard3D';
 import styles from './hero.module.css';
 
-type Props = { running: boolean; reduced: boolean; ready: boolean };
+type Props = {
+  running: boolean;
+  reduced: boolean;
+  ready: boolean;
+  onRotation?: (cycle: number) => void;
+};
 
-export default function HeroScene({ running, reduced, ready }: Props) {
+export default function HeroScene({ running, reduced, ready, onRotation }: Props) {
   const scene = useRef<HTMLDivElement>(null);
   const [cycle, setCycle] = useState(0);
   const controls = useRef<JSAnimation[]>([]);
@@ -36,7 +41,10 @@ export default function HeroScene({ running, reduced, ready }: Props) {
             await image.decode();
           }),
         );
-        if (active) setCycle((value) => value + 1);
+        if (active) {
+          setCycle(cycle + 1);
+          onRotation?.(cycle + 1);
+        }
       } catch {
         /* Keep the last complete scene if an optional image fails. */
       }
@@ -45,7 +53,7 @@ export default function HeroScene({ running, reduced, ready }: Props) {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [running, reduced, cycle]);
+  }, [running, reduced, cycle, onRotation]);
 
   useEffect(() => {
     if (!ready || reduced || !scene.current) return;

@@ -9,8 +9,13 @@ async function expectNoHorizontalOverflow(page: Page) {
 
 async function sceneIsStill(scene: Locator) {
   return scene.evaluate(async (element) => {
+    const surface = element.closest('[data-testid="home-hero"]') || element;
     const sample = () =>
-      [...element.querySelectorAll('[data-hero-card], [data-hero-card] *')]
+      [
+        ...surface.querySelectorAll(
+          '[data-hero-card], [data-hero-card] *, [data-hero-atmosphere] *',
+        ),
+      ]
         .map((node) => {
           const style = getComputedStyle(node);
           return `${style.transform}|${style.opacity}`;

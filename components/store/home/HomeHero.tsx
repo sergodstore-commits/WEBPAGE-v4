@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Pause, Play } from 'lucide-react';
 import HeroScene from '@/components/hero/HeroScene';
+import HeroAtmosphere from './HeroAtmosphere';
 import { useMotionPreferences } from '@/lib/motion/useMotionPreferences';
 import styles from './HomeHero.module.css';
 
@@ -12,6 +13,7 @@ export default function HomeHero({ description }: { description?: string }) {
   const { ready, paused, reduced, togglePaused } = useMotionPreferences();
   const [visible, setVisible] = useState(true);
   const [documentVisible, setDocumentVisible] = useState(true);
+  const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
     const syncVisibility = () => setDocumentVisible(!document.hidden);
@@ -38,9 +40,8 @@ export default function HomeHero({ description }: { description?: string }) {
       data-testid="home-hero"
       data-motion={state}
     >
-      <div className={styles.atmosphere} aria-hidden="true" />
-      <div className={styles.orbit} aria-hidden="true" />
-      <HeroScene running={running} reduced={reduced} ready={ready} />
+      <HeroAtmosphere cycle={cycle} />
+      <HeroScene running={running} reduced={reduced} ready={ready} onRotation={setCycle} />
       <div className={styles.content}>
         <p className={styles.eyebrow}>
           <span />

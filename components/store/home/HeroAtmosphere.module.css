@@ -1,0 +1,192 @@
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 120%, #0b4256 0, transparent 66%),
+    radial-gradient(ellipse at 12% 45%, #0b2437 0, transparent 43%),
+    radial-gradient(ellipse at 92% 30%, #17172e 0, transparent 41%), #080c12;
+}
+
+.hazeLeft,
+.hazeRight {
+  position: absolute;
+  width: min(55vw, 760px);
+  height: 78%;
+  top: 15%;
+  opacity: 0.7;
+  animation: breathe 14s ease-in-out infinite alternate paused;
+}
+.hazeLeft {
+  left: -16%;
+  background: radial-gradient(ellipse, rgb(18 155 192 / 30%), transparent 67%);
+}
+.hazeRight {
+  right: -16%;
+  top: 5%;
+  background: radial-gradient(ellipse, rgb(61 104 188 / 32%), transparent 67%);
+  animation-delay: -7s;
+}
+
+.texture,
+.beams,
+.constellation,
+.motes,
+.vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.texture {
+  opacity: 0.13;
+  background-image: radial-gradient(#a7d5e4 0.6px, transparent 0.8px);
+  background-size: 7px 7px;
+  mask-image: linear-gradient(transparent, #000 80%);
+}
+.beams {
+  background:
+    linear-gradient(116deg, transparent 16%, rgb(76 194 244 / 6%) 16.1%, transparent 26%),
+    linear-gradient(64deg, transparent 76%, rgb(99 152 233 / 7%) 86%, transparent 86.1%);
+  mask-image: linear-gradient(transparent, #000 30%, transparent 90%);
+}
+.constellation {
+  color: #74c7e1;
+  opacity: 0.17;
+}
+.vignette {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgb(8 12 18 / 80%) 0, transparent 58%),
+    linear-gradient(#080a0d, transparent 14%, transparent 87%, rgb(8 10 13 / 30%));
+}
+
+.floor {
+  position: absolute;
+  left: 50%;
+  bottom: -56px;
+  width: min(128%, 1720px);
+  transform: translateX(-50%);
+  color: #4cdfff;
+  background: radial-gradient(ellipse at center, rgb(48 202 236 / 9%), transparent 67%);
+}
+.floor svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.inscription {
+  opacity: 0.22;
+  stroke-width: 0.8;
+}
+.invocation {
+  opacity: 0;
+  transform-origin: 600px 130px;
+  animation: summon 1800ms ease-out both paused;
+}
+.mote {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  color: #83e6ff;
+  background: currentColor;
+  box-shadow: 0 0 8px 2px rgb(74 193 244 / 32%);
+  opacity: 0.35;
+  animation: drift 11s var(--delay) ease-in-out infinite paused;
+}
+.mote:nth-child(3n) {
+  width: 2px;
+  height: 8px;
+  border-radius: 0;
+}
+
+:global([data-motion='running']) .hazeLeft,
+:global([data-motion='running']) .hazeRight,
+:global([data-motion='running']) .invocation,
+:global([data-motion='running']) .mote {
+  animation-play-state: running;
+}
+
+@keyframes breathe {
+  from {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0.95;
+    transform: translate3d(3%, -3%, 0);
+  }
+}
+@keyframes summon {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  24% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.035);
+  }
+}
+@keyframes drift {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  25% {
+    opacity: 0.55;
+  }
+  75% {
+    opacity: 0.2;
+  }
+  99% {
+    opacity: 0;
+    transform: translate3d(14px, -48px, 0);
+  }
+}
+
+@media (max-width: 767px) {
+  .atmosphere {
+    background:
+      radial-gradient(ellipse at 50% 100%, #0c374b, transparent 64%),
+      radial-gradient(ellipse at 105% 24%, #141c32, transparent 50%), #080c12;
+  }
+  .hazeLeft,
+  .hazeRight,
+  .texture,
+  .beams {
+    display: none;
+  }
+  .constellation {
+    opacity: 0.1;
+  }
+  .floor {
+    bottom: 9px;
+    width: 760px;
+  }
+  .inscription {
+    opacity: 0.15;
+  }
+  .mote:nth-child(even) {
+    display: none;
+  }
+  .vignette {
+    background: linear-gradient(#080a0d, transparent 12%, transparent 83%, rgb(8 10 13 / 35%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hazeLeft,
+  .hazeRight,
+  .invocation,
+  .mote {
+    animation: none;
+  }
+}
