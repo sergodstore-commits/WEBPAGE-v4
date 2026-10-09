@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { Order, Product, Settings, User } from '../../lib/types';
+import { expectReadable } from './helpers/readability';
 
 const now = '2026-10-07T12:00:00.000Z';
 const product: Product = {
@@ -164,6 +165,7 @@ async function noOverflow(page: Page) {
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
   ).toBeLessThanOrEqual(1);
+  await expectReadable(page);
 }
 
 test('Compra: resumen, pasos y modalidades de entrega entre 320 y 1440 px', async ({

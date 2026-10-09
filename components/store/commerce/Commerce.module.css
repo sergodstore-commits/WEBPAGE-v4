@@ -40,7 +40,7 @@
   padding: 14px 18px;
   border: 1px solid var(--sg-line);
   border-radius: 8px;
-  background: #f8fafb;
+  background: var(--sg-surface-soft);
 }
 .intro {
   scroll-margin-top: 112px;
@@ -67,15 +67,15 @@
   font-weight: 700;
 }
 .steps [aria-current='step'] span {
-  color: white;
-  background: #006482;
-  border-color: #006482;
+  color: var(--sg-action-text);
+  background: var(--sg-action);
+  border-color: var(--sg-link);
 }
 .page.page :global(.store-cart-items) {
   padding: 0 22px;
   border: 1px solid var(--sg-line);
   border-radius: 12px;
-  background: white;
+  background: var(--sg-surface);
 }
 .page.page :global(.store-cart-item) {
   display: grid;
@@ -129,7 +129,7 @@
 }
 .page.page :global(.store-order-summary) {
   border: 1px solid var(--sg-line);
-  border-top: 3px solid #006482;
+  border-top: 3px solid var(--sg-link);
   border-radius: 12px;
   background: var(--sg-paper);
   padding: 26px;
@@ -149,13 +149,13 @@
   white-space: nowrap;
 }
 .page.page :global(.store-button):not(:global(.store-button-secondary)):not(:disabled) {
-  color: white;
-  background: #006482;
-  border-color: #006482;
+  color: var(--sg-action-text);
+  background: var(--sg-action);
+  border-color: var(--sg-link);
 }
 .page.page :global(.store-button):not(:global(.store-button-secondary)):not(:disabled):hover {
-  background: #164355;
-  border-color: #164355;
+  background: var(--sg-action-hover);
+  border-color: var(--sg-link);
 }
 .page.page :global(.store-order-summary) dt,
 .page.page :global(.store-order-totals) dt {
@@ -189,7 +189,7 @@
 .page.page :global(.store-account-content),
 .page.page :global(.store-order-panel) {
   padding: 26px;
-  background: white;
+  background: var(--sg-surface);
   border: 1px solid var(--sg-line);
   border-radius: 12px;
 }
@@ -204,15 +204,15 @@
 .page.page :global(.store-label) :is(input, select, textarea) {
   font-size: 16px;
   border-radius: 7px;
-  border-color: #b7c5d2;
+  border-color: var(--sg-line);
 }
 .page.page :global(.store-delivery-options) > label {
   padding: 18px 14px;
   border-radius: 9px;
 }
 .page.page :global(.store-delivery-options) > :global(.is-selected) {
-  background: #edfaff;
-  border-color: #007d96;
+  background: var(--sg-surface-selected);
+  border-color: var(--sg-link);
 }
 .page.page :global(.store-delivery-options) strong {
   font-size: 15px;
@@ -222,9 +222,9 @@
 }
 .page.page :global(.store-shipping-notice) {
   border-radius: 8px;
-  background: #eef9fd;
-  border-color: #b4dfe9;
-  color: #264c5d;
+  background: var(--sg-surface-selected);
+  border-color: var(--sg-line);
+  color: var(--sg-ink);
   font-size: 14px;
 }
 .page.page :global(.store-pickup-details) {
@@ -301,7 +301,7 @@
   font-size: 14px;
 }
 .page.page :global(.store-auth-tabs) button:global(.is-active):after {
-  background: #007d96;
+  background: var(--sg-action);
   height: 3px;
 }
 .page.page :global(.store-token-page) {
@@ -326,8 +326,8 @@
   font-size: 14px;
 }
 .page.page :global(.store-account-nav) > button:global(.is-active) {
-  background: #ddf4fa;
-  color: #00546a;
+  background: var(--sg-surface-selected);
+  color: var(--sg-link);
   border-radius: 7px;
 }
 .page.page :global(.store-account-nav) > a {
@@ -354,12 +354,12 @@
   margin-bottom: 12px;
   border: 1px solid var(--sg-line);
   border-radius: 8px;
-  background: #f8fafb;
+  background: var(--sg-surface-soft);
   text-decoration: none;
 }
 .page.page :global(.store-order-row):hover {
-  border-color: #91b5c2;
-  background: #eef6f9;
+  border-color: var(--sg-line);
+  background: var(--sg-surface-selected);
 }
 .page.page :global(.store-order-row) strong {
   font-size: 15px;
@@ -375,14 +375,14 @@
   border-radius: 12px;
   border-color: var(--sg-line);
   background: var(--sg-paper);
-  border-left: 4px solid #006482;
+  border-left: 4px solid var(--sg-link);
 }
 .page.page :global(.store-order-status)[data-payment='approved'] {
-  border-left-color: #17634d;
+  border-left-color: var(--sg-success-line);
 }
 .page.page :global(.store-order-status)[data-payment='rejected'],
 .page.page :global(.store-order-status)[data-payment='expired'] {
-  border-left-color: #8c4949;
+  border-left-color: var(--sg-danger-line);
 }
 .page.page :global(.store-order-status) p {
   font-size: 14px;

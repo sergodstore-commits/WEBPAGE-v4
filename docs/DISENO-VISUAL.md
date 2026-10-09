@@ -1,5 +1,17 @@
 # Rediseño visual de SERGOD STORE
 
+## Base visual compartida — punto 2, octubre de 2026
+
+Las páginas públicas interiores usan un fondo azul grafito con luz ambiental estática en los márgenes. Los paneles tienen distintos tonos de profundidad, texto claro, bordes discretos y acciones cian. Los banners conservan la proporción 3:1 y los títulos quedan fuera de la ilustración, con contraste sobre el nuevo fondo. La Academia de Duelos mantiene sus marcos completos y el desplazamiento interno de jugadores.
+
+`styles/tokens.css` define colores por función: superficie, campo, selección, acción y estados. `styles/store-interior.css` aplica la paleta dentro de `.store-interior`; los módulos de catálogo, producto, comunidad, noticias, torneos y compra comparten esas variables. Las categorías y clasificaciones seleccionadas combinan borde y acento, además del color. Cuenta y checkout usan campos oscuros, texto legible y autofill coherente. Los mensajes y estados de pago distinguen éxito, pendiente y error con texto y color.
+
+La ambientación común usa solamente CSS, sin nuevos archivos de imagen, fuentes, videos, paquetes ni almacenamiento externo. El fondo permanece estático; se conservan las transiciones de interacción y la preferencia de movimiento reducido. Los efectos anime propios de cada ilustración se incorporarán en los siguientes puntos de la pauta.
+
+La validación de contraste mide el texto frente al fondo compuesto de sus antecesores CSS: mínimo 4,5:1 para texto normal y 3:1 para texto grande. Esta comprobación complementa la inspección visual; no certifica el contenido de imágenes ni de reproductores externos. Los recorridos de compra también comprueban lectura de importes, entrega, mensajes y estados sin realizar cobros.
+
+Verificación del punto 2: comprobación de tipos y compilación de producción correctas; 27 pruebas de navegador aprobadas. Cubren portada, catálogo, variantes, preventas, Academia, noticias, agenda, cuenta y compra, con capturas de escritorio y celular revisadas. Los datos de los recorridos se aíslan o simulan; esta fase visual no realiza pagos ni cambia el inventario comercial.
+
 ## Ajustes compartidos — punto 10
 
 El podio adapta el número de columnas al ancho disponible para mostrar los empates sin dejar una tarjeta aislada cuando caben cuatro. Se mantienen las filas amplias en celular. Los botones de categoría indican la interacción al pasar el cursor; los iconos de acciones conservan su tamaño y los desplegables ofrecen una altura mínima de 44 px. El historial evita repetir «Pago» junto al estado, y los contadores de torneos y noticias usan el singular cuando corresponde.

@@ -1,20 +1,20 @@
 .calendar {
-  border: 1px solid #dbe3e9;
+  border: 1px solid var(--sg-line);
   border-radius: 8px;
   overflow: hidden;
-  background: #fff;
-  color: #17212b;
+  background: var(--sg-surface);
+  color: var(--sg-ink);
 }
 .panelHeading {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 16px 20px;
-  border-bottom: 1px solid #dbe3e9;
-  background: #f4f7fa;
+  border-bottom: 1px solid var(--sg-line);
+  background: var(--sg-surface-soft);
 }
 .panelHeading svg {
-  color: #006482;
+  color: var(--sg-link);
   flex-shrink: 0;
 }
 .panelHeading h3 {
@@ -25,7 +25,7 @@
 .panelHeading span {
   margin-left: auto;
   font-size: 11px;
-  color: #526170;
+  color: var(--sg-muted);
 }
 .toolbar,
 .navigation,
@@ -57,20 +57,20 @@
   gap: 6px;
   min-height: 36px;
   padding: 6px 10px;
-  background: #fff;
-  color: #006482;
-  border: 1px solid #cbd6df;
+  background: var(--sg-surface);
+  color: var(--sg-link);
+  border: 1px solid var(--sg-line);
   border-radius: 5px;
   cursor: pointer;
   font-size: 12px;
 }
 .calendar button:focus-visible,
 .details a:focus-visible {
-  outline: 3px solid #006482;
+  outline: 3px solid var(--sg-link);
   outline-offset: -3px;
 }
 .toolbar button:hover {
-  background: #edf6f9;
+  background: var(--sg-surface-hover);
 }
 .month {
   width: 100%;
@@ -79,8 +79,8 @@
 }
 .month th {
   padding: 8px 2px;
-  color: #526170;
-  background: #f4f7fa;
+  color: var(--sg-muted);
+  background: var(--sg-surface-soft);
   font-size: 11px;
   font-weight: 600;
 }
@@ -89,11 +89,11 @@
 }
 .month td {
   padding: 0;
-  border: 1px solid #e1e8ed;
+  border: 1px solid var(--sg-line);
   vertical-align: top;
 }
 .outside {
-  background: #f8fafb;
+  background: var(--sg-surface-soft);
 }
 .day {
   display: flex;
@@ -106,8 +106,8 @@
   padding: 6px;
   text-align: left;
   border: 0;
-  background: #fff;
-  color: #17212b;
+  background: var(--sg-surface);
+  color: var(--sg-ink);
   cursor: pointer;
 }
 .day time {
@@ -118,15 +118,15 @@
   text-align: center;
 }
 .day[aria-current='date'] time {
-  background: #006482;
+  background: var(--sg-action);
   border-radius: 50%;
-  color: #fff;
+  color: var(--sg-action-text);
 }
 .hasEvents {
-  background: #f0f8fa;
+  background: var(--sg-surface-selected);
 }
 .day:hover {
-  background: #e3f1f5;
+  background: var(--sg-surface-hover);
 }
 .day[aria-pressed='true'] {
   box-shadow: inset 0 0 0 2px #006482;
@@ -136,24 +136,24 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #005a73;
+  color: var(--sg-link);
   font-size: 11px;
   line-height: 1.4;
   font-weight: 600;
 }
 .more {
   font-size: 10px;
-  color: #526170;
+  color: var(--sg-muted);
 }
 .hint {
   padding: 10px 12px;
   margin: 0;
-  color: #526170;
+  color: var(--sg-muted);
   font-size: 12px;
   line-height: 1.5;
 }
 .details {
-  border-top: 1px solid #dbe3e9;
+  border-top: 1px solid var(--sg-line);
   padding: 16px;
   font-size: 13px;
 }
@@ -182,14 +182,14 @@
   flex-shrink: 0;
   width: 32px;
   height: 32px;
-  border: 1px solid #cbd6df;
+  border: 1px solid var(--sg-line);
   border-radius: 5px;
-  background: #fff;
-  color: #006482;
+  background: var(--sg-surface);
+  color: var(--sg-link);
   cursor: pointer;
 }
 .detailsHeading button:hover {
-  background: #edf6f9;
+  background: var(--sg-surface-hover);
 }
 .details ul {
   list-style: none;
@@ -199,13 +199,13 @@
   gap: 12px;
 }
 .details a {
-  color: #006482;
+  color: var(--sg-link);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 .details li p {
   margin-top: 4px;
-  color: #526170;
+  color: var(--sg-muted);
 }
 .expanded .day {
   min-height: 105px;

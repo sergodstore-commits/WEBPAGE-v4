@@ -18,7 +18,7 @@
   line-height: 1.1;
   letter-spacing: -0.025em;
   text-transform: uppercase;
-  color: #142735;
+  color: var(--sg-ink);
 }
 .title::after {
   content: '';
@@ -32,7 +32,7 @@
   aspect-ratio: 3 / 1;
   overflow: hidden;
   isolation: isolate;
-  border: 1px solid #b9ced9;
+  border: 1px solid var(--sg-line);
   border-radius: 20px;
   background: #17232d;
   box-shadow: 0 8px 26px rgb(24 49 65 / 9%);

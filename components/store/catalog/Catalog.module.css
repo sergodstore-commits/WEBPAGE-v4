@@ -24,7 +24,7 @@
   border: 1px solid var(--sg-line);
   border-radius: 6px;
   color: var(--sg-ink);
-  background: white;
+  background: var(--sg-surface);
   font-size: 13px;
   font-weight: 600;
   transition:
@@ -32,13 +32,14 @@
     background 180ms ease;
 }
 :global(.store-app) .catalog .categories button:hover {
-  border-color: #7396a4;
+  border-color: var(--sg-line);
   background: var(--sg-paper);
 }
 :global(.store-app) .catalog .categories button[aria-pressed='true'] {
-  border-color: var(--sg-graphite);
-  color: var(--sg-white);
-  background: var(--sg-graphite);
+  border-color: var(--sg-link);
+  color: var(--sg-ink);
+  background: var(--sg-surface-selected);
+  box-shadow: inset 0 -2px 0 var(--sg-link);
 }
 :global(.store-app) .catalog .categories button[aria-pressed='true'] > svg {
   color: var(--sg-cyan);
@@ -56,7 +57,7 @@
   padding: 20px 16px;
   border: 1px solid var(--sg-line);
   border-radius: 8px;
-  background: #f4f7fa;
+  background: var(--sg-surface-soft);
 }
 :global(.store-app) .catalog .filters h2 {
   margin: 0 0 24px;
@@ -79,11 +80,11 @@
 :global(.store-app) .catalog .filters :global(.store-label) input {
   min-height: 44px;
   padding: 10px;
-  border: 1px solid #cbd5df;
+  border: 1px solid var(--sg-line);
   border-radius: 5px;
   font-size: 13px;
   color: var(--sg-ink);
-  background: var(--sg-white);
+  background: var(--sg-surface);
 }
 :global(.store-app) .catalog :global(.store-price-filters) {
   margin: 0;
@@ -139,15 +140,15 @@
   margin-bottom: 24px;
   border: 1px solid var(--sg-line);
   border-radius: 8px;
-  background: #f4f7fa;
+  background: var(--sg-surface-soft);
 }
 :global(.store-app) .catalog :global(.store-search) {
   min-height: 48px;
   padding: 0 14px;
   gap: 10px;
-  border: 1px solid #7396a4;
+  border: 1px solid var(--sg-line);
   border-radius: 6px;
-  background: var(--sg-white);
+  background: var(--sg-surface);
 }
 :global(.store-app) .catalog :global(.store-search) input {
   min-height: 46px;
@@ -203,10 +204,10 @@
   min-height: 34px;
   max-width: 100%;
   padding: 6px 10px;
-  border: 1px solid #c6dce5;
+  border: 1px solid var(--sg-line);
   border-radius: 5px;
-  background: #eef7fa;
-  color: #205366;
+  background: var(--sg-surface-selected);
+  color: var(--sg-link);
   font-size: 12px;
   text-align: left;
   overflow-wrap: anywhere;
@@ -380,7 +381,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  color: #526170;
+  color: var(--sg-muted);
   font-size: 13px;
   line-height: 1.6;
   margin: 18px 0 28px;

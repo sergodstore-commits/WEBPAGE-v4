@@ -1,0 +1,159 @@
+/* Public interior palette. Home and the administrative panel keep their own surfaces. */
+.store-app.store-interior {
+  --sg-ink: #e9edf2;
+  --sg-muted: #a8b8c7;
+  --sg-line: #344857;
+  --sg-paper: #1b2a37;
+  --sg-link: #7de4f5;
+  --sg-surface: #16222e;
+  --sg-surface-soft: #111c27;
+  --sg-surface-selected: #153a46;
+  --sg-surface-hover: #233a49;
+  --sg-field: #0d1823;
+  --sg-action: #67def5;
+  --sg-action-hover: #a3effb;
+  --sg-action-text: #09232e;
+  --sg-success: #a1e6c7;
+  --sg-success-bg: #173a31;
+  --sg-success-line: #3e6d59;
+  --sg-warning: #f2d4a0;
+  --sg-warning-bg: #392c1c;
+  --sg-warning-line: #735836;
+  --sg-danger: #ffc3b5;
+  --sg-danger-bg: #412a2c;
+  --sg-danger-line: #84514d;
+  --sg-shadow: 0 12px 32px rgb(0 0 0 / 20%);
+  position: relative;
+  isolation: isolate;
+  color-scheme: dark;
+  background: #0b131d;
+  color: var(--sg-ink);
+}
+
+.store-interior::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1000px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 3% 18%, rgb(40 128 164 / 14%), transparent 42%),
+    radial-gradient(ellipse at 97% 32%, rgb(79 77 155 / 10%), transparent 40%),
+    linear-gradient(118deg, transparent 12%, rgb(114 187 219 / 3%) 12.1%, transparent 26%),
+    linear-gradient(62deg, transparent 72%, rgb(114 187 219 / 3%) 88%, transparent 88.1%);
+}
+
+.store-interior .store-button {
+  color: var(--sg-action-text) !important;
+  background: var(--sg-action);
+  border-color: var(--sg-action);
+}
+.store-interior .store-button:hover:not(:disabled) {
+  background: var(--sg-action-hover);
+  border-color: var(--sg-action-hover);
+}
+.store-interior .store-button-secondary,
+.store-interior .store-button-light {
+  color: var(--sg-ink) !important;
+  background: var(--sg-surface);
+  border-color: var(--sg-line);
+}
+.store-interior .store-button-secondary:hover:not(:disabled),
+.store-interior .store-button-light:hover:not(:disabled) {
+  background: var(--sg-surface-hover);
+  border-color: var(--sg-link);
+}
+.store-interior .store-button:disabled {
+  color: var(--sg-muted) !important;
+  background: var(--sg-surface-soft);
+  border-color: var(--sg-line);
+  opacity: 0.65;
+}
+
+.store-interior .store-label :is(input, select, textarea) {
+  background: var(--sg-field);
+  color: var(--sg-ink);
+  border-color: var(--sg-line);
+  caret-color: var(--sg-cyan);
+}
+.store-interior :is(input, textarea)::placeholder {
+  color: #92a5b6;
+  opacity: 1;
+}
+.store-interior .store-label :is(input, select, textarea):focus {
+  border-color: var(--sg-link);
+}
+.store-interior input:-webkit-autofill {
+  -webkit-text-fill-color: var(--sg-ink);
+  box-shadow: inset 0 0 0 100px var(--sg-field);
+  caret-color: var(--sg-cyan);
+}
+.store-interior :is(input[type='radio'], input[type='checkbox']) {
+  accent-color: var(--sg-action);
+}
+.store-interior .store-message {
+  background: var(--sg-success-bg);
+  border-color: var(--sg-success-line);
+  color: var(--sg-success);
+}
+.store-interior .store-message-error {
+  background: var(--sg-danger-bg);
+  border-color: var(--sg-danger-line);
+  color: var(--sg-danger);
+}
+.store-interior .store-verification {
+  background: var(--sg-warning-bg);
+  border-color: var(--sg-warning-line);
+  color: var(--sg-warning);
+}
+.store-interior .store-verification p {
+  color: var(--sg-warning);
+}
+.store-interior .store-payment-approved {
+  background: var(--sg-success-bg);
+  border-color: var(--sg-success-line);
+  color: var(--sg-success);
+}
+.store-interior .store-payment-rejected,
+.store-interior .store-payment-expired {
+  background: var(--sg-danger-bg);
+  border-color: var(--sg-danger-line);
+  color: var(--sg-danger);
+}
+.store-interior .store-payment-pending,
+.store-interior .store-payment-review {
+  background: var(--sg-warning-bg);
+  border-color: var(--sg-warning-line);
+  color: var(--sg-warning);
+}
+.store-interior :is(.store-auth-card, .store-order-panel, .store-cart-items, .store-delivery-form) {
+  box-shadow: var(--sg-shadow);
+}
+.store-interior .store-toast {
+  background: var(--sg-surface-selected);
+  border-color: var(--sg-line);
+  color: var(--sg-ink);
+  box-shadow: var(--sg-shadow);
+}
+.store-interior .store-icon-button:hover {
+  background: var(--sg-surface-hover);
+}
+.store-interior .store-eyebrow,
+.store-interior .store-text-link {
+  color: var(--sg-link);
+}
+.store-interior .store-auth-tabs button.is-active,
+.store-interior .store-breadcrumb > span:last-child {
+  color: var(--sg-ink);
+}
+.store-interior .store-auth-tabs button.is-active::after {
+  background: var(--sg-link);
+}
+
+@media (max-width: 700px) {
+  .store-interior::before {
+    height: 650px;
+    background: radial-gradient(ellipse at 0 20%, rgb(40 128 164 / 12%), transparent 70%);
+  }
+}

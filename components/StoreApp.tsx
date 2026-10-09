@@ -37,6 +37,7 @@ import { ProductDetail } from './store/product/ProductDetail';
 import { Tournaments, TournamentDetail } from './store/tournaments/Tournaments';
 import './store.css';
 import '@/styles/store-foundation.css';
+import '@/styles/store-interior.css';
 
 const HomeHero = dynamic(() => import('@/components/store/home/HomeHero'));
 
@@ -222,7 +223,7 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
       </Empty>
     );
   return (
-    <div className={pathname === '/' ? 'store-app store-cover' : 'store-app'}>
+    <div className={pathname === '/' ? 'store-app store-cover' : 'store-app store-interior'}>
       <StoreHeader
         pathname={pathname}
         user={user}
