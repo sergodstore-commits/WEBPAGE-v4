@@ -1,69 +1,16 @@
 .header {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-  min-height: 220px;
-  border: 1px solid #dbe3e9;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #f4f7fa;
-  isolation: isolate;
-}
-.content {
-  position: relative;
-  z-index: 1;
-  padding: 30px 36px;
-  align-self: center;
-}
-.header .eyebrow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 12px;
-  color: #006482;
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 0.12em;
-  line-height: 1.6;
-}
-.eyebrow span {
-  width: 18px;
-  height: 2px;
-  flex-shrink: 0;
-  background: #006482;
-}
-.header h1 {
-  font-family: var(--sg-font-display);
-  font-size: clamp(40px, 4.8vw, 62px);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  color: #17212b;
-  margin: 0 0 14px;
-  overflow-wrap: anywhere;
-}
-.header h1 > span {
-  color: #007f9d;
-}
-.storeBanner {
-  display: block;
-  min-height: 0;
-  background: #fff;
-}
-.storeBanner picture,
-.storeBanner picture img {
-  display: block;
-  width: 100%;
-}
-.storeBanner picture img {
-  height: auto;
-}
-.preorderBanner {
+  height: clamp(240px, 23vw, 300px);
+  overflow: hidden;
+  isolation: isolate;
   border: 1px solid #b9ced9;
   border-radius: 20px;
+  background: radial-gradient(ellipse at 8% 90%, #e3f2f7, transparent 50%), #f7fafc;
   box-shadow: 0 8px 26px rgb(24 49 65 / 9%);
 }
-.preorderBanner::after {
+.header::after {
   content: '';
   position: absolute;
   inset: 7px;
@@ -73,267 +20,65 @@
   box-shadow: inset 0 0 0 1px rgb(13 54 72 / 8%);
   pointer-events: none;
 }
-.storeBanner .storeBannerTitle {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.header .description {
+.title {
+  position: relative;
+  z-index: 1;
+  max-width: 44%;
   margin: 0;
-  max-width: 48ch;
-  color: #526170;
-  font-size: 14px;
-  line-height: 1.65;
+  padding: 0 0 0 38px;
+  font-family: var(--sg-font-display);
+  font-size: clamp(42px, 5.8vw, 80px);
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  color: #142735;
+  text-shadow:
+    0 2px 0 #fff,
+    0 6px 16px rgb(6 44 64 / 9%);
 }
-.art {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-width: 0;
-  overflow: hidden;
-  background: radial-gradient(ellipse at 40% 100%, #185169, transparent 75%), #101a23;
-  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
-}
-.orbit {
-  position: absolute;
-  width: 240px;
-  height: 240px;
-  border: 1px solid rgb(103 222 245 / 20%);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 28px rgb(103 222 245 / 4%),
-    0 0 0 56px rgb(103 222 245 / 3%);
-}
-.products,
-.duel,
-.arena {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 20px 30px 36px;
-}
-.products img {
-  width: 100px;
-  height: 145px;
-  object-fit: contain;
-  transform: rotate(-12deg);
-  filter: drop-shadow(0 10px 8px rgb(0 0 0 / 35%));
-}
-.products img + img {
-  transform: rotate(12deg) translateY(8px);
-}
-.withPhotos img {
-  width: 135px;
-  height: 150px;
-  transform: rotate(-8deg);
-}
-.signature {
-  position: absolute;
-  bottom: 16px;
-  right: 20px;
-  color: #a5c9d8;
-  font-size: 8px;
-  letter-spacing: 0.18em;
-}
-.preorder .art {
-  background: radial-gradient(ellipse at 70% 40%, #255579, transparent 70%), #111c2d;
-}
-.store .art {
-  background: radial-gradient(ellipse at 40% 100%, #185169, transparent 75%), #101a23;
-}
-.community .orbit {
-  width: 210px;
-  height: 210px;
-}
-.tournaments .orbit {
-  width: 180px;
-  height: 180px;
-}
-.preorder .orbit {
-  border-style: dashed;
-  width: 190px;
-  height: 190px;
-}
-.arena {
-  align-items: flex-end;
-  gap: 0;
-  padding-top: 36px;
-}
-.arena img {
-  width: 74px;
-  height: 108px;
-  object-fit: cover;
-  border-radius: 5px;
-  transform: rotate(-14deg);
-  filter: drop-shadow(0 8px 10px #0006);
-}
-.arena img:nth-child(2) {
-  width: 92px;
-  height: 135px;
-  margin: 0 5px;
-  transform: translateY(-12px);
-  z-index: 1;
-}
-.arena img:last-child {
-  transform: rotate(14deg);
-}
-.duel img {
-  width: 90px;
-  height: 130px;
-  object-fit: cover;
-  border-radius: 4px;
-  transform: rotate(-8deg);
-  filter: drop-shadow(0 8px 10px #0006);
-}
-.duel img:last-child {
-  transform: rotate(8deg);
-}
-.duel span {
-  font-size: 30px;
-  font-weight: 300;
-  color: #67def5;
-}
-.news .art {
-  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
-}
-.newsPhoto {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-}
-.news .art::after {
+.title::after {
   content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(transparent 60%, #101a23);
-}
-.news .signature {
-  z-index: 1;
-}
-.editorial {
-  width: 200px;
-  padding: 20px;
-  border: 1px solid #3a5869;
-  background: #152c3b;
-  transform: rotate(-5deg);
-}
-.editorial img {
   display: block;
-  width: 145px;
-  height: auto;
-  margin: 0 auto 16px;
+  width: 64px;
+  height: 5px;
+  margin-top: 18px;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, #007f9d, #37c4ed);
+  box-shadow: 12px 0 0 rgb(0 127 157 / 15%);
 }
-.editorial > div {
-  height: 2px;
-  margin: 8px 0;
-  background: #547d90;
+.illustration {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 70%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  mask-image: linear-gradient(90deg, transparent, #000 18%);
 }
-.editorial > div:last-child {
-  width: 60%;
-}
-@media (max-width: 900px) {
-  .content {
-    padding: 28px;
-  }
-  .products {
-    gap: 8px;
-    padding-inline: 16px;
-  }
-  .products img {
-    width: 80px;
-  }
-  .withPhotos img {
-    width: 105px;
-  }
-  .duel {
-    gap: 10px;
-    padding-inline: 16px;
-  }
-  .duel img {
-    width: 74px;
-    height: 108px;
-  }
-}
-@media (max-width: 600px) {
-  .storeBanner .storeBannerTitle {
-    position: relative;
-    width: auto;
-    height: auto;
-    padding: 20px 24px;
-    margin: 0;
-    overflow: visible;
-    clip-path: none;
-    white-space: normal;
-  }
+@media (max-width: 700px) {
   .header {
-    display: block;
-    min-height: 0;
+    height: 250px;
+    align-items: flex-start;
   }
-  .content {
-    padding: 26px 24px;
+  .title {
+    max-width: 100%;
+    padding: 22px 24px 0;
+    font-size: 38px;
   }
-  .header h1 {
-    font-size: 42px;
+  .title::after {
+    height: 3px;
+    width: 44px;
+    margin-top: 9px;
   }
-  .header .description {
-    font-size: 13px;
-    max-width: 36ch;
-  }
-  .art {
-    position: absolute;
-    inset: 0 0 0 auto;
-    width: 45%;
-    opacity: 0.08;
-    clip-path: none;
-    background: transparent;
-  }
-  .signature {
-    display: none;
-  }
-  .products,
-  .duel,
-  .arena {
-    padding: 0;
-    gap: 4px;
-  }
-  .products img,
-  .withPhotos img {
-    width: 75px;
-    height: 125px;
-  }
-  .duel img {
-    width: 65px;
-    height: 95px;
-  }
-  .arena img {
-    width: 55px;
-    height: 80px;
-  }
-  .arena img:nth-child(2) {
-    width: 66px;
-    height: 96px;
-  }
-  .orbit {
-    width: 150px;
-    height: 150px;
-  }
-  .editorial {
-    width: 150px;
-  }
-  .editorial img {
-    width: 100px;
-  }
-  .news .art {
-    clip-path: none;
-  }
-  .newsPhoto {
-    height: 100%;
+  .illustration {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: 160px;
+    object-position: center top;
+    mask-image: linear-gradient(180deg, transparent, #000 12%);
   }
 }
