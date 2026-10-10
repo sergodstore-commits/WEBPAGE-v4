@@ -3,6 +3,24 @@ import { getDb, type Db } from './db';
 import { fail, integer, slugify, uuid } from './core';
 import type { Settings, Product } from '../types';
 import { moveReleasedPreorders } from './preorder-release';
+import { publishedEditions } from './edition-imports';
+
+async function withEditionGuides(products: Product[]) {
+  const editions = await publishedEditions();
+  return products.map((product) => {
+    const edition = editions.find(
+      (item) =>
+        product.catalog_group === `ygo-${slugify(item.name)}` ||
+        product.catalog_name?.toLowerCase() === item.name.toLowerCase(),
+    );
+    return edition
+      ? {
+          ...product,
+          edition_guide: { name: edition.name, url: `/noticias/ediciones/${edition.code}` },
+        }
+      : product;
+  });
+}
 const nullableDate = z
   .union([z.iso.datetime({ offset: true }), z.literal(''), z.null()])
   .optional()
@@ -174,7 +192,8 @@ export async function getProducts(
   if (query.get('brand')) add('brand=?', query.get('brand'));
   if (query.get('tag')) add('tags @> ?::jsonb', JSON.stringify([query.get('tag')]));
   sql += ' ORDER BY created_at DESC LIMIT 1000';
-  return (await (await getDb()).query<Product>(sql, params)).rows;
+  const products = (await (await getDb()).query<Product>(sql, params)).rows;
+  return admin ? products : withEditionGuides(products);
 }
 export async function getProduct(slug: string, admin = false): Promise<Product> {
   await moveReleasedPreorders();
@@ -183,7 +202,7 @@ export async function getProduct(slug: string, admin = false): Promise<Product> 
     : "SELECT *,stock-reserved AS available FROM products WHERE slug=$1 AND status='published' AND deleted_at IS NULL";
   const p = (await (await getDb()).query<Product>(sql, [slug])).rows[0];
   if (!p) fail(404, 'Este artículo no está disponible.');
-  return p;
+  return admin ? p : (await withEditionGuides([p]))[0];
 }
 export async function saveProduct(user: any, input: unknown, id?: string): Promise<Product> {
   const d = productSchema.parse(input);

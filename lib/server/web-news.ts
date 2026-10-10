@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { getDb } from './db';
-import { initialWebNews, yugiohMetaArticle } from '../web-news';
+import { initialWebNews, yugiohMetaArticle, type WebNewsItem } from '../web-news';
 import { validDay } from '../tournament-schedule';
+import { publishedEditions } from './edition-imports';
 
 const schema = z
   .array(
@@ -35,10 +36,31 @@ const schema = z
     'No repitas artículos ni identificadores.',
   );
 
-export async function getWebNews(admin = false) {
+export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
   const row = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0];
   const items = schema.parse(row?.data?.web_news ?? initialWebNews);
-  return admin ? items : items.filter((item) => item.visible);
+  if (admin) return items;
+  const editions = await publishedEditions();
+  return [
+    ...editions.map((edition) => ({
+      id: `edition-${edition.code}`,
+      title: edition.title,
+      summary: edition.summary,
+      url: `https://db.ygoprodeck.com/api/v7/cardinfo.php?cardset=${encodeURIComponent(edition.name)}`,
+      published_on: edition.published_on,
+      visible: true,
+      article_path: `/noticias/ediciones/${edition.code}`,
+      source_label: 'YGOPRODeck',
+    })),
+    ...items.filter(
+      (item) =>
+        item.visible &&
+        !(
+          editions.some((edition) => edition.code === 'betb') &&
+          yugiohMetaArticle(item.url) === 'https://www.yugiohmeta.com/articles/sets/tcg/betb'
+        ),
+    ),
+  ];
 }
 
 export async function saveWebNews(input: unknown) {

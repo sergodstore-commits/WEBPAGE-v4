@@ -40,6 +40,17 @@ import {
 import { deletePost, getPost, getPosts, savePost } from '@/lib/server/content';
 import { getWebNews, saveWebNews } from '@/lib/server/web-news';
 import {
+  editionPanel,
+  searchEditions,
+  prepareEdition,
+  importEditionBatch,
+  editEdition,
+  previewEdition,
+  publishEdition,
+  publicEdition,
+  publishedEditions,
+} from '@/lib/server/edition-imports';
+import {
   commercialOrderStats,
   completePos,
   getOrder,
@@ -216,6 +227,12 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       );
     if (route === 'news' && method === 'GET') return json(await publicNews());
     if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());
+    if (route === 'news/editions' && method === 'GET') return json(await publishedEditions());
+    if (path[0] === 'news' && path[1] === 'editions' && path.length === 3 && method === 'GET') {
+      return NextResponse.json(await publicEdition(path[2]), {
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
+      });
+    }
     if (path[0] === 'news' && path.length === 3 && path[2] === 'thumbnail' && method === 'GET') {
       const thumbnail = await publicNewsThumbnail(path[1]);
       return new Response(null, {
@@ -270,6 +287,25 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     if (path[0] === 'admin') {
       const user = await requireUser(request, true);
       const db = await getDb();
+      if (route === 'admin/news/editions' && method === 'GET') return json(await editionPanel());
+      if (route === 'admin/news/editions/search' && method === 'POST') {
+        await rateLimit(`edition-search:${user.id}`, 30, 60);
+        return json(await searchEditions());
+      }
+      if (path[1] === 'news' && path[2] === 'editions' && path.length >= 4) {
+        const code = path[3];
+        if (path.length === 4 && method === 'PATCH')
+          return json(await editEdition(code, await body(request)));
+        if (path.length === 5 && path[4] === 'preview' && method === 'GET')
+          return json(await previewEdition(code));
+        if (path.length === 5 && method === 'POST') {
+          await rateLimit(`edition-import:${user.id}`, 300, 15);
+          if (path[4] === 'prepare') return json(await prepareEdition(code));
+          if (path[4] === 'batch') return json(await importEditionBatch(code));
+          if (path[4] === 'publish') return json(await publishEdition(code, true));
+          if (path[4] === 'withdraw') return json(await publishEdition(code, false));
+        }
+      }
       if (route === 'admin/integrations/instagram' && method === 'GET')
         return json(await instagramStatus());
       if (route === 'admin/integrations/instagram' && method === 'PATCH')

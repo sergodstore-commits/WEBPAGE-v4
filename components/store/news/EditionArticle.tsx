@@ -1,25 +1,20 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Search, X, Layers3 } from 'lucide-react';
 import styles from './EditionArticle.module.css';
+import type { EditionDocument, EditionCard as Card } from '@/lib/edition-gallery';
 
-type Card = {
-  id: number;
-  name: string;
-  englishName: string;
-  effects: string[];
-  printings: { code: string; rarity: string }[];
-  source: string;
-  image: string;
-  thumbnail: string;
-  type: string;
-  attribute: string;
-  atk: number | null;
-  def: number | null;
-  level: number | null;
-  link: number | null;
+const defaultDocument: EditionDocument = {
+  name: 'Beyond the Brave',
+  code: 'betb',
+  title: 'Beyond the Brave',
+  summary: 'Una edición. Todas sus cartas. Descubre tu próximo duelo.',
+  body: 'Beyond the Brave reúne monstruos, Magias y Trampas para descubrir nuevas combinaciones. Aquí puedes recorrer la edición completa, comparar sus rarezas y leer cada efecto sin salir de SERGOD STORE.\n\nBusca por el nombre en español, en inglés o por su código BETB. Pulsa una carta para ampliar su imagen y consultar el texto en español de la base oficial de Konami.',
+  updated: '2026-10-09',
+  cards: [],
 };
 export const rarityNames: Record<string, string> = {
   Common: 'Común',
@@ -56,7 +51,11 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-export default function EditionArticle() {
+export default function EditionArticle({ code }: { code?: string } = {}) {
+  const preview = useSearchParams().get('vista') === 'admin';
+  const [documentData, setDocumentData] = useState<EditionDocument | null>(
+    code ? null : defaultDocument,
+  );
   const [cards, setCards] = useState<Card[]>([]);
   const [error, setError] = useState(false);
   const [version, setVersion] = useState(0);
@@ -67,17 +66,25 @@ export default function EditionArticle() {
   useEffect(() => {
     const controller = new AbortController();
     setError(false);
-    fetch('/editions/betb/cards.json', { signal: controller.signal })
+    fetch(
+      code
+        ? `/api/${preview ? 'admin/news/editions' : 'news/editions'}/${encodeURIComponent(code)}${preview ? '/preview' : ''}`
+        : '/editions/betb/cards.json',
+      { signal: controller.signal, cache: preview ? 'no-store' : 'default' },
+    )
       .then((response) => {
         if (!response.ok) throw new Error();
         return response.json();
       })
-      .then((data) => setCards(data.cards))
+      .then((data) => {
+        setCards(data.cards);
+        setDocumentData(code ? data : { ...defaultDocument, ...data });
+      })
       .catch(() => {
         if (!controller.signal.aborted) setError(true);
       });
     return () => controller.abort();
-  }, [version]);
+  }, [version, code, preview]);
   useEffect(() => {
     if (!selected || !dialog.current) return;
     const previous = document.body.style.overflow;
@@ -96,37 +103,65 @@ export default function EditionArticle() {
         `${card.name} ${card.englishName} ${card.printings.map((printing) => printing.code).join(' ')}`,
       ).includes(normalize(query.trim())),
   );
+  if (!documentData)
+    return (
+      <article className={styles.article}>
+        <Link href="/noticias">Volver a Noticias</Link>
+        {error ? (
+          <div role="alert">
+            <h1>Guía no disponible</h1>
+            <p>Puede que aún no esté publicada o que no tengas acceso a su vista previa.</p>
+            <button onClick={() => setVersion((value) => value + 1)}>Reintentar</button>
+          </div>
+        ) : (
+          <p role="status">Cargando la edición…</p>
+        )}
+      </article>
+    );
   return (
     <article className={styles.article}>
       <Link className={styles.back} href="/noticias">
         <ArrowLeft size={16} /> Volver a Noticias
       </Link>
       <header className={styles.header}>
-        <div className={styles.eyebrow}>GUÍA DE EDICIÓN · YU-GI-OH! TCG</div>
+        <div className={styles.eyebrow}>
+          {preview && code ? 'VISTA PREVIA · SIN PUBLICAR' : 'GUÍA DE EDICIÓN · YU-GI-OH! TCG'}
+        </div>
         <h1>
-          Beyond the <em>Brave</em>
+          {code ? (
+            documentData.title
+          ) : (
+            <>
+              Beyond the <em>Brave</em>
+            </>
+          )}
         </h1>
-        <p>Una edición. Todas sus cartas. Descubre tu próximo duelo.</p>
+        <p>{documentData.summary}</p>
         <div className={styles.meta}>
           <span>
-            <Layers3 size={16} /> 100 cartas distintas
+            <Layers3 size={16} /> {cards.length || (code ? 0 : 100)} cartas distintas
           </span>
           <span>Textos en español</span>
-          <time dateTime="2026-10-09">Revisado el 9 de octubre de 2026</time>
+          <time dateTime={documentData.updated}>
+            Revisado el{' '}
+            {new Intl.DateTimeFormat('es-CL', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              timeZone: 'UTC',
+            }).format(new Date(`${documentData.updated}T12:00:00Z`))}
+          </time>
         </div>
       </header>
       <div className={styles.intro}>
         <section>
           <h2>Explora antes de abrir</h2>
-          <p>
-            Beyond the Brave reúne monstruos, Magias y Trampas para descubrir nuevas combinaciones.
-            Aquí puedes recorrer la edición completa, comparar sus rarezas y leer cada efecto sin
-            salir de SERGOD STORE.
-          </p>
-          <p>
-            Busca por el nombre en español, en inglés o por su código BETB. Pulsa una carta para
-            ampliar su imagen y consultar el texto en español de la base oficial de Konami.
-          </p>
+          {documentData.body
+            .split(/\n+/)
+            .filter(Boolean)
+            .map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
         </section>
         <aside>
           <strong>¿Qué puede salir en un sobre?</strong>
@@ -135,7 +170,9 @@ export default function EditionArticle() {
             Las variantes de rareza se reúnen en una sola ficha por carta. Los extras promocionales
             de otros productos pueden ser diferentes.
           </p>
-          <Link href="/tienda?busqueda=Beyond">Ver productos en la tienda →</Link>
+          <Link href={`/tienda?busqueda=${encodeURIComponent(documentData.name)}`}>
+            Ver productos en la tienda →
+          </Link>
         </aside>
       </div>
       <section className={styles.catalog} aria-labelledby="edition-gallery-heading">
@@ -221,16 +258,20 @@ export default function EditionArticle() {
           <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">
             YGOPRODeck
           </a>
-          . Nombres y efectos en español: base oficial de Konami, enlazada en cada carta. Referencia
-          de la edición:{' '}
-          <a
-            href="https://www.yugiohmeta.com/articles/sets/tcg/betb"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Yu-Gi-Oh! Meta
-          </a>
-          .
+          . Nombres y efectos en español: base oficial de Konami, enlazada en cada carta.{' '}
+          {documentData.code === 'betb' && (
+            <>
+              Referencia de la edición:{' '}
+              <a
+                href="https://www.yugiohmeta.com/articles/sets/tcg/betb"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Yu-Gi-Oh! Meta
+              </a>
+              .
+            </>
+          )}
         </p>
         <p>
           Las imágenes conservan su idioma original; los textos de consulta están en español.
@@ -274,7 +315,7 @@ export default function EditionArticle() {
               height="875"
             />
             <div className={styles.detailText}>
-              <span className={styles.eyebrow}>BEYOND THE BRAVE</span>
+              <span className={styles.eyebrow}>{documentData.name.toUpperCase()}</span>
               <h2 id="card-detail-title">{selected.name}</h2>
               <p className={styles.english}>{selected.englishName}</p>
               <div className={styles.stats}>

@@ -14,4 +14,24 @@ scripts/import-betb-gallery.mjs prepara manualmente la edición: consulta la API
 
 El paquete completo pesa aproximadamente 12,6 MB decimales (12,0 MiB); miniaturas 1,8 MB. Se sirve estáticamente en Vercel, sin almacenamiento Supabase, funciones por carta, traducción de pago ni solicitudes de visitantes a proveedores. Las miniaturas usan carga diferida y la imagen grande solo aparece al abrir una ficha. El ancho de banda depende de las visitas: no es consumo cero.
 
-Las demás noticias siguen como selección manual con resúmenes originales. No se copian artículos completos. Detección automática pendiente de una API, feed o permiso adecuado. La edición es una instantánea revisada el 09-10-2026, no sincronización en tiempo real.
+Las demás noticias siguen como selección manual con resúmenes originales. No se copian artículos completos. Beyond the Brave conserva su guía estática revisada el 09-10-2026.
+
+## Buscar nuevas ediciones
+
+En Admin → Noticias → Guías de nuevas ediciones:
+
+1. Pulsa **Buscar nuevas ediciones**. Consulta el catálogo gratuito documentado de YGOPRODeck; guarda la búsqueda 6 horas y muestra ediciones TCG recientes (últimos 180 días) y próximas anunciadas, hasta 60 resultados. Una edición ausente en la fuente no se inventa.
+2. Selecciona la edición y pulsa **Preparar galería**. Procesa una carta por petición para respetar el tiempo de ejecución del servidor. Puedes pausar o cerrar el panel y reanudar después. El listado y el avance persisten en PostgreSQL.
+3. Si la fuente no incluye el catálogo completo o Konami todavía no tiene un texto oficial español, se detiene con un aviso y conserva el avance. No usa traducción de pago ni publica efectos ingleses como españoles. Las imágenes originales pueden estar en inglés.
+4. Revisa y edita el título, resumen y artículo propio en español. El texto inicial es una presentación original de la guía; no es una traducción de artículos de Meta ni un análisis generado por IA. Guarda el borrador y abre **Vista previa**.
+5. Marca la revisión y pulsa **Publicar guía**. Aparece en la columna Yu-Gi-Oh! de Noticias y en los botones de productos cuyo grupo/nombre de catálogo coincide con la edición. No hay publicación automática. Un borrador posterior no modifica la instantánea pública hasta publicar cambios.
+
+Las guías usan `/noticias/ediciones/{código}`. Se pueden retirar de Noticias conservando el borrador y las imágenes. Las referencias web manuales continúan funcionando; si se publica BETB con esta herramienta, evita duplicar su tarjeta en la columna.
+
+### Recursos y almacenamiento
+
+Las cartas se comparten por identificador entre ediciones y rarezas. Las 100 cartas estáticas de Beyond se reutilizan sin descargarlas. Para nuevas cartas se generan WebP de hasta 600 px y miniaturas de 220 px; se guardan en el depósito Supabase ya configurado (`SUPABASE_STORAGE_BUCKET`, por defecto `product-images`), bajo `editions/`. La API de YGOPRODeck solicita descargar y alojar las imágenes en lugar de hotlinking continuo.
+
+El contador y límite de **100 MB adicionales** corresponden exclusivamente a esta herramienta, no al uso total de Supabase ni a su cuota de plan. Si se alcanza, deja de guardar nuevas cartas; no cambia de plan ni borra imágenes automáticamente. Las claves deterministas evitan duplicados al reintentar. En desarrollo usa `.data/objects/`. Visitantes consultan una guía completa, con caché pública de 60 segundos, y cargan miniaturas diferidas; la imagen grande se pide al abrir la carta. Hay consumo normal de base de datos, funciones, almacenamiento y transferencia, sin proveedor de IA de pago ni consultas por visitante a Konami/YGOPRODeck.
+
+No hay cron ni monitoreo en segundo plano: una nueva caja se descubre al pulsar el botón después de que la fuente la incorpore. Sus textos oficiales españoles también deben estar disponibles. Se serializan búsquedas/importaciones para proteger el avance y el límite de almacenamiento. Las operaciones administrativas requieren sesión de administrador y origen de la tienda; los borradores no están disponibles en los endpoints públicos.

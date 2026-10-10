@@ -34,7 +34,7 @@ export function WebNewsColumn() {
             <article key={item.id} className={styles.bubble}>
               <div className={styles.bubbleMeta}>
                 <span>
-                  <Newspaper size={13} aria-hidden="true" /> Yu-Gi-Oh! Meta
+                  <Newspaper size={13} aria-hidden="true" /> {item.source_label ?? 'Yu-Gi-Oh! Meta'}
                 </span>
                 <time dateTime={item.published_on}>
                   {new Intl.DateTimeFormat('es-CL', {
@@ -47,8 +47,8 @@ export function WebNewsColumn() {
               </div>
               <h3>{item.title}</h3>
               <p>{item.summary}</p>
-              {localWebArticle(item.url) && (
-                <Link href={localWebArticle(item.url)!}>
+              {(item.article_path || localWebArticle(item.url)) && (
+                <Link href={item.article_path || localWebArticle(item.url)!}>
                   Leer en español · Ver todas las cartas
                 </Link>
               )}
@@ -56,9 +56,10 @@ export function WebNewsColumn() {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`Leer noticia original: ${item.title} (abre una pestaña nueva)`}
+                aria-label={`${item.source_label ? 'Ver fuente del catálogo' : 'Leer noticia original'}: ${item.title} (abre una pestaña nueva)`}
               >
-                Leer noticia original <ArrowUpRight size={16} aria-hidden="true" />
+                {item.source_label ? 'Ver fuente del catálogo' : 'Leer noticia original'}{' '}
+                <ArrowUpRight size={16} aria-hidden="true" />
               </a>
             </article>
           ))}

@@ -177,6 +177,8 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
   else if (pathname === '/torneos') content = <Tournaments />;
   else if (pathname === '/comunidad') content = <Community />;
   else if (pathname === '/noticias/beyond-the-brave') content = <EditionArticle />;
+  else if (/^\/noticias\/ediciones\/[a-z0-9-]+$/.test(pathname))
+    content = <EditionArticle key={pathname} code={pathname.split('/')[3]} />;
   else if (pathname === '/noticias') content = <News />;
   else if (['/noticias', '/comunidad'].includes(pathname))
     content = (

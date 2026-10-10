@@ -8,7 +8,7 @@ import styles from './EditionLink.module.css';
 export function EditionLink({ product, detail = false }: { product: Product; detail?: boolean }) {
   const edition = editionLink(product);
   if (!edition) return null;
-  const local = localWebArticle(edition.url);
+  const local = edition.internal ? edition.url : localWebArticle(edition.url);
   return (
     <div className={detail ? styles.detail : styles.compact}>
       <Link

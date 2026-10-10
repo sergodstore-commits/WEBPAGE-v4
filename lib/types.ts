@@ -1,4 +1,5 @@
 export type Product = {
+  edition_guide?: { name: string; url: string };
   id: string;
   name: string;
   slug: string;

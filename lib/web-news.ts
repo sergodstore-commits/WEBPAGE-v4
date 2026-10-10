@@ -5,6 +5,8 @@ export type WebNewsItem = {
   url: string;
   published_on: string;
   visible: boolean;
+  article_path?: string;
+  source_label?: string;
 };
 
 export function yugiohMetaArticle(value: string): string | null {
