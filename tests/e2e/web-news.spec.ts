@@ -233,9 +233,17 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
     source_image: '',
   };
   let saved: any[] = [];
+  let rejectPublication = true;
   await page.route('**/api/admin/news/web-sources', (r) => r.fulfill({ json: saved }));
   await page.route('**/api/admin/news/web-sources/*', (r) => {
-    if (r.request().method() === 'PATCH') saved = [r.request().postDataJSON()];
+    if (r.request().method() === 'PATCH') {
+      const item = r.request().postDataJSON();
+      if (item.visible && rejectPublication) {
+        rejectPublication = false;
+        return r.fulfill({ status: 503, json: { error: 'Servicio temporalmente no disponible.' } });
+      }
+      saved = [item];
+    }
     if (r.request().url().endsWith('/draft'))
       saved = [
         {
@@ -282,8 +290,32 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
   expect(saved[0].visible).toBe(false);
   expect(saved[0].effective_dates['myl-first-era']).toBe('2026-10-08');
   await section.getByRole('button', { name: 'Editar', exact: true }).click();
+  const publishRow = section.getByRole('row').filter({ hasText: saved[0].title });
+  await expect(
+    publishRow.getByRole('button', { name: 'Publicar noticia', exact: true }),
+  ).toBeEnabled();
+  await section.getByLabel('Título en español', { exact: true }).fill('');
+  await publishRow.getByRole('button', { name: 'Publicar noticia', exact: true }).click();
+  await expect(section.getByRole('alert')).toContainText('Título en español:');
+  expect(saved[0].visible).toBe(false);
+  await section
+    .getByLabel('Título en español', { exact: true })
+    .fill('Cambios revisados para nuestra liga');
+  await publishRow.getByRole('button', { name: 'Publicar noticia', exact: true }).click();
+  await expect(section.getByRole('alert')).toContainText('Servicio temporalmente no disponible.');
+  const errorBox = await section.getByRole('alert').boundingBox();
+  expect(errorBox!.y).toBeGreaterThanOrEqual(0);
+  expect(errorBox!.y + errorBox!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
+    'Cambios revisados para nuestra liga',
+  );
+  expect(saved[0].visible).toBe(false);
   await section.getByRole('button', { name: 'Publicar noticia revisada', exact: true }).click();
   await expect(section.getByRole('status').filter({ hasText: 'Noticia publicada' })).toBeVisible();
+  await expect(section.getByRole('link', { name: 'Ver noticia publicada ↗' })).toHaveAttribute(
+    'href',
+    '/noticias/myl/myl-admin-example',
+  );
   expect(saved[0].visible).toBe(true);
   await page.reload();
   await expect(section.getByRole('row').filter({ hasText: saved[0].title })).toContainText(

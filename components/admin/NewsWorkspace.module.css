@@ -64,6 +64,23 @@
   display: block;
   margin-bottom: 8px;
 }
+.feedback:not(:empty) {
+  position: sticky;
+  top: 12px;
+  z-index: 3;
+  padding: 1px 12px;
+  border: 1px solid #c8d7df;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 5px 18px #142b351a;
+  margin: 12px 0;
+}
+.feedback a {
+  display: inline-block;
+  margin-left: 8px;
+  color: #096780;
+  text-decoration: underline;
+}
 .editor {
   border: 1px solid #c8d7df;
   border-radius: 10px;

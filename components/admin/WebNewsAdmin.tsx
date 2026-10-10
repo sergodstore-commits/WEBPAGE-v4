@@ -38,8 +38,14 @@ export function WebNewsAdmin() {
   const [filter, setFilter] = useState('all');
   const [candidates, setCandidates] = useState<WebNewsCandidate[]>([]);
   const [progress, setProgress] = useState('');
+  const [workingId, setWorkingId] = useState('');
+  const [publishedItem, setPublishedItem] = useState<WebNewsItem | null>(null);
   const stop = useRef(false);
   const editor = useRef<HTMLFormElement>(null);
+  const feedback = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (error || notice) feedback.current?.scrollIntoView({ block: 'center', behavior: 'instant' });
+  }, [error, notice]);
   useEffect(() => {
     if (draft.id) editor.current?.scrollIntoView({ block: 'start' });
   }, [draft.id]);
@@ -194,6 +200,8 @@ export function WebNewsAdmin() {
   }
   async function publish(item: WebNewsItem) {
     setBusy(true);
+    setWorkingId(item.id);
+    setPublishedItem(null);
     setError('');
     setNotice('');
     try {
@@ -203,21 +211,30 @@ export function WebNewsAdmin() {
         ((item.original_title && !item.media_checked) || item.media?.some((m) => !m.image))
       ) {
         const prepared = await prepareImages(item.id);
-        if (stop.current) return;
+        if (stop.current) return false;
         ready = prepared!.find((i) => i.id === item.id)!;
       }
       setBusy(true);
       await persist({ ...ready, visible: !item.visible });
+      if (!item.visible) setPublishedItem(ready);
       setNotice(
         item.visible
           ? 'Noticia retirada. El borrador y sus imágenes se conservan.'
           : 'Noticia publicada. Guardado y aparición en Noticias comprobados.',
       );
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar.');
+      return false;
     } finally {
       setBusy(false);
+      setWorkingId('');
     }
+  }
+  function articlePath(item: WebNewsItem) {
+    return item.id === 'beyond-the-brave'
+      ? '/noticias/beyond-the-brave'
+      : `/noticias/${mylArticle(item.url) ? 'myl' : 'tcg'}/${item.id}`;
   }
   return (
     <>
@@ -323,21 +340,36 @@ export function WebNewsAdmin() {
             </table>
           </section>
         )}
-        {error && (
-          <p role="alert" className="admin-feedback error">
-            {error}{' '}
-            {!items && (
-              <button className="admin-button secondary" onClick={() => void load()}>
-                Reintentar
-              </button>
-            )}
-          </p>
-        )}
-        {notice && (
-          <p role="status" className="admin-feedback success">
-            {notice}
-          </p>
-        )}
+        <div ref={feedback} className={styles.feedback}>
+          {busy && (
+            <p role="status" className="admin-feedback">
+              {progress || 'Procesando noticia. Espera la confirmación antes de volver a pulsar.'}
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="admin-feedback error">
+              {error}{' '}
+              {!items && (
+                <button className="admin-button secondary" onClick={() => void load()}>
+                  Reintentar
+                </button>
+              )}
+            </p>
+          )}
+          {notice && (
+            <p role="status" className="admin-feedback success">
+              {notice}
+              {publishedItem && (
+                <>
+                  {' '}
+                  <a href={articlePath(publishedItem)} target="_blank" rel="noopener noreferrer">
+                    Ver noticia publicada ↗
+                  </a>
+                </>
+              )}
+            </p>
+          )}
+        </div>
         {items === null ? (
           <p>Cargando selección…</p>
         ) : (
@@ -347,7 +379,14 @@ export function WebNewsAdmin() {
                 {draft.id ? 'Revisar noticia seleccionada' : 'Crear una noticia manualmente'}
               </summary>
               <form
+                id="web-news-editor"
                 ref={editor}
+                onInvalidCapture={(event) => {
+                  const field = event.target as HTMLInputElement;
+                  const label = field.labels?.[0]?.textContent?.trim() || 'Un campo';
+                  setNotice('');
+                  setError(`${label}: ${field.validationMessage}`);
+                }}
                 onSubmit={async (event) => {
                   event.preventDefault();
                   const publishing =
@@ -363,7 +402,10 @@ export function WebNewsAdmin() {
                     return;
                   }
                   setBusy(true);
+                  setWorkingId(draft.id);
+                  setPublishedItem(null);
                   setError('');
+                  setNotice('');
                   try {
                     const item = {
                       ...draft,
@@ -373,11 +415,12 @@ export function WebNewsAdmin() {
                       id: draft.id || crypto.randomUUID(),
                     };
                     const saved = await persist(item);
-                    setDraft(blank());
                     if (publishing) {
-                      await publish(saved.find((v) => v.id === item.id)!);
+                      const stored = saved.find((v) => v.id === item.id)!;
+                      setDraft((await publish(stored)) ? blank() : stored);
                       return;
                     }
+                    setDraft(blank());
                     setNotice(
                       'Noticia guardada y lectura comprobada. Los borradores aún no aparecen en la web.',
                     );
@@ -385,6 +428,7 @@ export function WebNewsAdmin() {
                     setError(e instanceof Error ? e.message : 'No se pudo guardar.');
                   } finally {
                     setBusy(false);
+                    setWorkingId('');
                   }
                 }}
               >
@@ -577,7 +621,7 @@ export function WebNewsAdmin() {
                         value="publish"
                         disabled={!draft.id && items.length >= 80}
                       >
-                        Publicar noticia revisada
+                        {busy ? 'Procesando noticia…' : 'Publicar noticia revisada'}
                       </button>
                     )}
                     <button
@@ -635,23 +679,27 @@ export function WebNewsAdmin() {
                             {item.visible ? 'Publicada' : 'Borrador'}
                           </span>
                           <button
-                            type="button"
+                            type={draft.id === item.id && !item.visible ? 'submit' : 'button'}
+                            form={
+                              draft.id === item.id && !item.visible ? 'web-news-editor' : undefined
+                            }
+                            value="publish"
                             className="admin-button"
-                            disabled={busy || draft.id === item.id}
-                            onClick={() => void publish(item)}
+                            disabled={busy || (draft.id === item.id && item.visible)}
+                            onClick={
+                              draft.id === item.id && !item.visible
+                                ? undefined
+                                : () => void publish(item)
+                            }
                           >
-                            {item.visible ? 'Retirar noticia' : 'Publicar noticia'}
+                            {busy && workingId === item.id
+                              ? 'Procesando noticia…'
+                              : item.visible
+                                ? 'Retirar noticia'
+                                : 'Publicar noticia'}
                           </button>
                           {item.visible && (
-                            <a
-                              href={
-                                item.id === 'beyond-the-brave'
-                                  ? '/noticias/beyond-the-brave'
-                                  : `/noticias/${mylArticle(item.url) ? 'myl' : 'tcg'}/${item.id}`
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
+                            <a href={articlePath(item)} target="_blank" rel="noopener noreferrer">
                               Ver publicada ↗
                             </a>
                           )}
