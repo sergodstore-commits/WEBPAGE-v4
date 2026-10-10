@@ -15,7 +15,7 @@ test('Admin: búsqueda protegida, pausar, reanudar, revisar y publicar una guía
   expect((await page.request.get('/api/admin/news/editions/test/preview')).status()).toBe(401);
   expect((await page.request.get('/api/news/editions/test')).status()).toBe(404);
   await page.goto('/admin');
-  await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e@example.test');
+  await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e-news@example.test');
   await page.getByLabel('Contraseña', { exact: true }).fill('E2e-Prueba-Sergod-2026!');
   await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();

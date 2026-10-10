@@ -11,8 +11,12 @@ async function setup() {
   const db = await getDb();
   const password = await passwordHash('E2e-Prueba-Sergod-2026!');
   // The complete suite exceeds one account's login allowance. Give the
-  // tournament journey its own isolated admin without weakening real limits.
-  for (const email of ['e2e@example.test', 'e2e-tournaments@example.test']) {
+  // tournament and news journeys their own isolated admins without weakening real limits.
+  for (const email of [
+    'e2e@example.test',
+    'e2e-tournaments@example.test',
+    'e2e-news@example.test',
+  ]) {
     await db.query(
       `INSERT INTO users(id,email,password_hash,name,role,email_verified)
      VALUES($1,$2,$3,'Administrador E2E','admin',true)
@@ -21,7 +25,7 @@ async function setup() {
     );
   }
   await db.query(
-    "DELETE FROM rate_limits WHERE key IN ('login:e2e@example.test', 'login:e2e-tournaments@example.test') OR key LIKE 'auth-ip:%'",
+    "DELETE FROM rate_limits WHERE key IN ('login:e2e@example.test', 'login:e2e-tournaments@example.test', 'login:e2e-news@example.test') OR key LIKE 'auth-ip:%'",
   );
   console.log(
     'Administrador de pruebas listo en .data/e2e. La base principal permanece independiente.',

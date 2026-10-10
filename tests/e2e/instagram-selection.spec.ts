@@ -34,6 +34,20 @@ test('Instagram: selección por páginas, guardado parcial recuperable y lectura
       return r.fulfill({
         json: { id: 'admin', role: 'admin', name: 'Admin', email: 'admin@example.test' },
       });
+    if (path === '/api/admin/news/editions')
+      return r.fulfill({
+        json: {
+          discoveries: [],
+          discovered_at: null,
+          editions: [],
+          storage_bytes: 0,
+          storage_limit: 100000000,
+        },
+      });
+    if (path === '/api/admin/news/banlist')
+      return r.fulfill({
+        json: { state: null, ready: 0, total: 0, storage_bytes: 0, storage_limit: 100000000 },
+      });
     if (path === '/api/admin/integrations/instagram')
       return r.fulfill({
         json: {
