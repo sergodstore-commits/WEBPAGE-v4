@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ShieldCheck, Search, X } from 'lucide-react';
 import {
   banlistDay,
@@ -187,7 +188,7 @@ export function Banlist() {
       <button className={styles.trigger} onClick={() => setOpen(true)}>
         <ShieldCheck size={18} aria-hidden="true" /> Banlist TCG
       </button>
-      {open && <BanlistDialog close={() => setOpen(false)} />}
+      {open && createPortal(<BanlistDialog close={() => setOpen(false)} />, document.body)}
     </>
   );
 }
