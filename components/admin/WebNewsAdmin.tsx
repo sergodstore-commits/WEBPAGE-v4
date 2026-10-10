@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/client';
 import { yugiohMetaArticle, type WebNewsItem } from '@/lib/web-news';
 import { EditionImportAdmin } from './EditionImportAdmin';
+import { BanlistAdmin } from './BanlistAdmin';
 
 const blank = (): WebNewsItem => ({
   id: '',
@@ -60,6 +61,7 @@ export function WebNewsAdmin() {
   }
   return (
     <>
+      <BanlistAdmin />
       <EditionImportAdmin />
       <section className="admin-card admin-card-body" aria-labelledby="web-news-admin-heading">
         <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh!</h2>

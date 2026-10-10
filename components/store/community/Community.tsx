@@ -9,6 +9,7 @@ import { academyHouses, duelHouse } from '@/lib/duel-academy';
 import { boards, type RankingBoard, type PublicRanking } from '@/lib/rankings';
 import { useRemote, Loading, Empty, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
+import { Banlist } from './Banlist';
 import styles from './Community.module.css';
 
 const day = (v: string) =>
@@ -228,7 +229,10 @@ export function Community() {
         </div>
         <div>
           <h2>Yu-Gi-Oh! Ranking</h2>
-          <div>{link('yugioh')}</div>
+          <div>
+            {link('yugioh')}
+            <Banlist />
+          </div>
         </div>
       </nav>
       <section className={styles.ranking} aria-labelledby="ranking-title">

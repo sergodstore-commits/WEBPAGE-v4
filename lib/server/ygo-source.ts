@@ -27,8 +27,8 @@ const entities: Record<string, string> = {
   bull: '•',
   middot: '·',
 };
-export function spanishPlain(html: string) {
-  let text = html;
+export function spanishPlain(html: string, literalAngles = false) {
+  let text = literalAngles ? html.replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, '') : html;
   for (let i = 0; i < 3; i++)
     text = text.replace(/&(#x[0-9a-f]+|#\d+|\w+);/gi, (match, entity: string) => {
       if (!entity.startsWith('#')) return entities[entity] ?? match;
@@ -38,6 +38,7 @@ export function spanishPlain(html: string) {
       );
       return number > 0 && number <= 0x10ffff ? String.fromCodePoint(number) : '';
     });
+  if (literalAngles) return text.trim();
   return text
     .replace(/<br\s*\/?\s*>/gi, '\n')
     .replace(/<[^>]+>/g, '')

@@ -39,6 +39,7 @@ import {
 } from '@/lib/server/catalog';
 import { deletePost, getPost, getPosts, savePost } from '@/lib/server/content';
 import { getWebNews, saveWebNews } from '@/lib/server/web-news';
+import { getBanlist, refreshBanlist } from '@/lib/server/banlist';
 import {
   editionPanel,
   searchEditions,
@@ -226,6 +227,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         ),
       );
     if (route === 'news' && method === 'GET') return json(await publicNews());
+    if (route === 'community/banlist' && method === 'GET')
+      return NextResponse.json(await getBanlist(), {
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
+      });
     if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());
     if (route === 'news/editions' && method === 'GET') return json(await publishedEditions());
     if (path[0] === 'news' && path[1] === 'editions' && path.length === 3 && method === 'GET') {
@@ -287,6 +292,11 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     if (path[0] === 'admin') {
       const user = await requireUser(request, true);
       const db = await getDb();
+      if (route === 'admin/news/banlist' && method === 'GET') return json(await getBanlist());
+      if (route === 'admin/news/banlist' && method === 'POST') {
+        await rateLimit(`banlist-refresh:${user.id}`, 10, 60);
+        return json(await refreshBanlist());
+      }
       if (route === 'admin/news/editions' && method === 'GET') return json(await editionPanel());
       if (route === 'admin/news/editions/search' && method === 'POST') {
         await rateLimit(`edition-search:${user.id}`, 30, 60);

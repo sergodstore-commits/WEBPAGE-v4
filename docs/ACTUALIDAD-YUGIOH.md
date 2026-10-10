@@ -1,5 +1,13 @@
 # Actualidad Yu-Gi-Oh!
 
+## Banlist TCG en Comunidad
+
+En Admin → Noticias, **Actualizar banlist TCG** consulta la base oficial de Konami en español y guarda una instantánea con nombres, identificadores, restricciones, cambios y fechas. Comunidad muestra **Banlist TCG** junto al ranking de Yu-Gi-Oh!: abre un diálogo interno con buscador, filtros y desplazamiento propio, también en móvil.
+
+No usa IA ni descarga imágenes. Reutiliza consultas durante 5 minutos y nunca consulta la fuente por cada visita. El diálogo indica cuándo se consultó; no se presenta como una transmisión continua. Si Konami anuncia una lista futura, conserva la vigente y permite consultar la próxima, activándola en su fecha de entrada en vigor según Chile. Si la respuesta está incompleta o cambió de formato, conserva la última lista verificada. La instantánea tiene un endpoint público específico y no se incluye en la configuración general de la tienda.
+
+Las noticias generales siguen pendientes del flujo de borradores en español. La estructura visual puede prepararse sin IA; la traducción y revisión editorial necesitan intervención del administrador. No hay un motor local instalado ni tarifas de traducción contratadas.
+
 Noticias muestra publicaciones SERGOD a la izquierda y actualidad Yu-Gi-Oh! a la derecha; las columnas se apilan en móvil.
 
 En Admin → Noticias → Actualidad Yu-Gi-Oh!, añade el enlace, fecha, título y resumen propio en español. Pulsa Añadir a la lista y Guardar selección de actualidad. Editar permite corregir textos; desmarcar Mostrar retira la tarjeta. La configuración conserva hasta 80 referencias, sin nuevas tablas; los elementos ocultos solo se entregan al admin.

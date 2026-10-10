@@ -101,9 +101,11 @@ const productSchema = z.object({
   delivery_terms: z.string().max(3000).default(''),
 });
 export async function getSettings(): Promise<Settings> {
-  const { web_news: _webNews, ...settings } = (
-    await (await getDb()).query('SELECT data FROM settings WHERE id=1')
-  ).rows[0].data;
+  const {
+    web_news: _webNews,
+    ygo_banlist: _banlist,
+    ...settings
+  } = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0].data;
   return settings;
 }
 export async function saveSettings(input: unknown) {
