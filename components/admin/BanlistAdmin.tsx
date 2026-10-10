@@ -105,7 +105,7 @@ export function BanlistAdmin() {
               stopped.current = true;
             }}
           >
-            Pausar después de esta carta
+            Pausar preparación
           </button>
         )}
         <a

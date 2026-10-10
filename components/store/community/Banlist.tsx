@@ -170,10 +170,6 @@ function BanlistDialog({ close }: { close: () => void }) {
               </button>
             ))}
           </div>
-          <p className={styles.note}>
-            El máximo indicado se cuenta entre Deck Principal, Extra y Side Deck. «Fuera de la
-            lista» muestra las cartas liberadas en esta actualización.
-          </p>
           <div
             className={styles.results}
             tabIndex={0}
@@ -242,6 +238,10 @@ function BanlistDialog({ close }: { close: () => void }) {
               <p>
                 Lista y textos oficiales de Konami en español. Imágenes de YGOPRODeck alojadas y
                 optimizadas por SERGOD. Se actualiza desde Admin, no de forma continua.
+              </p>
+              <p>
+                El máximo indicado incluye Deck Principal, Extra y Side Deck. «Fuera de la lista»
+                muestra las cartas liberadas en esta actualización.
               </p>
               <a href={banlistSource} target="_blank" rel="noopener noreferrer">
                 Consultar fuente oficial ↗

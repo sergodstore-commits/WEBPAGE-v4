@@ -31,6 +31,15 @@
   background: rgb(4 10 18 / 80%);
   backdrop-filter: blur(5px);
 }
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+  height: min(920px, calc(100dvh - 32px));
+  overflow: hidden;
+}
+.dialog > * {
+  flex-shrink: 0;
+}
 .header {
   display: flex;
   align-items: flex-start;
@@ -148,7 +157,7 @@
 }
 .results ul {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
   list-style: none;
   padding: 0;
@@ -184,8 +193,7 @@
 .thumbnail img {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 220 / 320;
+  height: clamp(130px, 22dvh, 220px);
   object-fit: contain;
   border-radius: 6px;
 }
@@ -218,7 +226,9 @@
 }
 .results {
   padding: 14px 8px 14px 0;
-  height: min(530px, 48dvh);
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 100px;
 }
 .back {
   display: inline-flex;
@@ -238,7 +248,8 @@
   display: grid;
   grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1fr);
   gap: 30px;
-  max-height: 66dvh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 8px;
@@ -397,7 +408,7 @@
     padding: 8px;
   }
   .results {
-    height: 44dvh;
+    height: auto;
   }
   .results ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
