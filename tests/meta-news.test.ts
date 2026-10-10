@@ -62,6 +62,14 @@ test('TCG news: selection, resumable complete gallery, reuse, quota and private 
   assert.equal(found.length, 1);
   assert.equal(found[0].category, 'reveals');
   assert.equal(articleImageManifest(article).length, 3, 'Deduplicates repeated inline cards');
+  assert.equal(
+    articleImageManifest({
+      parsedMarkdown: {
+        htmlTree: [{ name: 'img', attrs: { src: '/mdm_img/test.webp', alt: '' } }],
+      },
+    })[0].name,
+    'Imagen de la noticia',
+  );
   assert.throws(() => articleImageManifest({}), /estructura/);
   assert.throws(
     () =>

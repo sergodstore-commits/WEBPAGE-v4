@@ -175,7 +175,11 @@ export function WebNewsAdmin() {
           </p>
         )}
         {candidates.length > 0 && (
-          <section aria-label="Noticias TCG disponibles" className="admin-table-scroll">
+          <section
+            aria-label="Noticias TCG disponibles"
+            className="admin-table-scroll"
+            style={{ maxHeight: 460, overflow: 'auto' }}
+          >
             <table className="admin-table">
               <thead>
                 <tr>

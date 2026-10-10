@@ -138,7 +138,10 @@ export function articleImageManifest(article: unknown): WebNewsMedia[] {
     if (url && !media.has(url))
       media.set(url, {
         source: url,
-        name: typeof name === 'string' ? name.slice(0, 200) : 'Imagen de la noticia',
+        name:
+          typeof name === 'string' && name.trim()
+            ? name.trim().slice(0, 200)
+            : 'Imagen de la noticia',
         caption: '',
       });
   };
