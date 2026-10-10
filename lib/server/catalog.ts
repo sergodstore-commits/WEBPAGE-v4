@@ -195,7 +195,9 @@ export async function getProducts(
   if (query.get('group')) add('catalog_group=?', query.get('group'));
   if (query.get('brand')) add('brand=?', query.get('brand'));
   if (query.get('tag')) add('tags @> ?::jsonb', JSON.stringify([query.get('tag')]));
-  sql += ' ORDER BY created_at DESC LIMIT 1000';
+  sql += admin
+    ? ' ORDER BY created_at DESC LIMIT 1000'
+    : ' ORDER BY release_date DESC NULLS LAST,name,sku LIMIT 1000';
   const products = (await (await getDb()).query<Product>(sql, params)).rows;
   return admin ? products : withEditionGuides(products);
 }

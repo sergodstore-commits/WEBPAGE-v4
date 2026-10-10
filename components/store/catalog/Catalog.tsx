@@ -220,7 +220,8 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           ? Math.max(...b.map(price)) - Math.max(...a.map(price))
           : sort === 'name'
             ? familyName(a[0]).localeCompare(familyName(b[0]), 'es')
-            : b[0].created_at.localeCompare(a[0].created_at),
+            : (b[0].release_date || '').localeCompare(a[0].release_date || '') ||
+              a[0].name.localeCompare(b[0].name, 'es'),
     );
   }, [
     products.data,
@@ -293,7 +294,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
             value={sort}
             onChange={(e) => setSort(e.target.value)}
           >
-            <option value="recent">Más recientes</option>
+            <option value="recent">Lanzamientos: más recientes</option>
             <option value="price-asc">Menor precio</option>
             <option value="price-desc">Mayor precio</option>
             <option value="name">Nombre: A–Z</option>

@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 import { initialWebNews } from '../../lib/web-news';
 import { expectReadable } from './helpers/readability';
 
-test('Noticias: SERGOD primero, galería TCG con filtros y lectura interna', async ({ page }) => {
+test('Noticias: pestañas por comunidad, galería TCG con filtros y lectura interna', async ({
+  page,
+}) => {
   const external: string[] = [];
   page.on('request', (r) => {
     if (r.url().includes('yugiohmeta.com')) external.push(r.url());
@@ -67,13 +69,25 @@ test('Noticias: SERGOD primero, galería TCG con filtros y lectura interna', asy
   await page.goto('/noticias');
   const own = page.getByRole('region', { name: 'SERGOD STORE', exact: true });
   const world = page.getByRole('region', { name: 'Yu-Gi-Oh! TCG', exact: true });
+  await expect(own).toHaveCount(0);
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await page.getByRole('button', { name: 'SERGOD STORE', exact: true }).click();
   await expect(own).toContainText('Liga SERGOD STORE');
+  await page.getByRole('button', { name: 'MyL Primera Era', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'MyL Primera Era', exact: true })).toContainText(
+    'Pronto tendremos novedades',
+  );
+  await page.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'MyL Primer Bloque', exact: true })).toContainText(
+    'Pronto tendremos novedades',
+  );
+  await page.getByRole('button', { name: 'Yu-Gi-Oh! TCG', exact: true }).click();
   await expect(world).toContainText(initialWebNews[0].summary);
   await expect(world.getByRole('link', { name: /Beyond the Brave/ })).toHaveAttribute(
     'href',
     '/noticias/beyond-the-brave',
   );
-  expect((await own.boundingBox())!.y).toBeLessThan((await world.boundingBox())!.y);
+  await expect(own).toHaveCount(0);
   await expectReadable(page);
   await world.getByRole('button', { name: 'Revelaciones', exact: true }).click();
   await expect(world.getByRole('link')).toHaveCount(1);
@@ -82,7 +96,7 @@ test('Noticias: SERGOD primero, galería TCG con filtros y lectura interna', asy
   await world.getByRole('searchbox').fill('');
   await page.screenshot({ path: '.data/web-news-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
-  expect((await own.boundingBox())!.y).toBeLessThan((await world.boundingBox())!.y);
+  await expect(own).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(external).toEqual([]);
   await world.getByRole('link', { name: /Nuevas cartas reveladas/ }).click();

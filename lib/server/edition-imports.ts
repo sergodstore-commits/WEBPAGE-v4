@@ -386,7 +386,7 @@ export async function publishedEditions() {
     await (
       await getDb()
     ).query(
-      "SELECT code,name,published->>'title' AS title,published->>'summary' AS summary,published->>'updated' AS published_on,(SELECT jsonb_agg(card->>'thumbnail') FROM (SELECT value AS card FROM jsonb_array_elements(published->'cards') LIMIT 3) previews) AS cover_cards FROM ygo_editions WHERE published IS NOT NULL ORDER BY published_at DESC",
+      "SELECT code,name,published->>'title' AS title,published->>'summary' AS summary,release_date AS published_on,(SELECT jsonb_agg(card->>'thumbnail') FROM (SELECT value AS card FROM jsonb_array_elements(published->'cards') LIMIT 3) previews) AS cover_cards FROM ygo_editions WHERE published IS NOT NULL ORDER BY release_date DESC NULLS LAST,code",
     )
   ).rows as {
     code: string;

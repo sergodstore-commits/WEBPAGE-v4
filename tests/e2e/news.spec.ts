@@ -104,14 +104,12 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
   });
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/noticias');
+    await page.goto('/noticias?seccion=sergod');
     await expect(page.getByRole('heading', { name: 'Noticias', exact: true })).toBeVisible();
     await expect(
       page.getByText('Novedades, encuentros y momentos de nuestra tienda.', { exact: true }),
     ).toHaveCount(0);
-    await expect(page.getByRole('region', { name: 'Noticia seleccionada' })).toContainText(
-      'Nuestra última Liga.',
-    );
+    await expect(page.getByRole('region', { name: 'Noticia seleccionada' })).toHaveCount(0);
     await expect(page.locator('video')).toHaveCount(0);
     const titled = page.getByRole('button', {
       name: 'Ver noticia: Encuentro de la comunidad',
@@ -130,6 +128,7 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
       animations: 'disabled',
     });
   }
+  await page.getByRole('button', { name: /^Ver noticia: Nuestra última Liga/ }).click();
   const carousel = page.getByLabel('Carrusel de la noticia', { exact: true });
   await carousel.focus();
   await expect(carousel).toBeFocused();
@@ -146,34 +145,39 @@ test('Noticias: visor, carrusel por teclado y swipe, selección anterior y recar
   await expect(
     page.getByRole('img', { name: 'Imagen 1 de la noticia', exact: true }),
   ).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar noticia', exact: true }).click();
   await page.getByRole('button', { name: 'Ver más noticias', exact: true }).click();
-  await expect(page.getByRole('button', { name: /^Ver noticia:/ })).toHaveCount(11);
+  await expect(page.getByRole('button', { name: /^Ver noticia:/ })).toHaveCount(12);
   await page
     .getByRole('button', { name: 'Ver noticia: Momento de la tienda 2', exact: true })
     .click();
   await expect(page).toHaveURL(/publicacion=news-2/);
-  await expect(page.getByRole('region', { name: 'Noticia seleccionada' })).toBeFocused();
+  await expect(page.getByRole('dialog', { name: 'Detalle de la noticia' })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('region', { name: 'Noticia seleccionada' })).toContainText(
     'Momento de la tienda 2',
   );
+  await page.getByRole('button', { name: 'Cerrar noticia', exact: true }).click();
   await page
     .getByRole('button', { name: 'Ver noticia: Momento de la tienda 1', exact: true })
     .click();
   await expect(page.locator('video')).toHaveCount(1);
   await expect(page.locator('video')).toHaveAttribute('preload', 'none');
   await expect(page.locator('video')).not.toHaveAttribute('autoplay');
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /^Ver noticia: Nuestra última Liga/ }).click();
   await expect(page.locator('video')).toHaveCount(0);
 });
 test('Noticias: vacío y recuperación de error conservan acciones utilizables', async ({ page }) => {
   await publicMock(page, 'error');
-  await page.goto('/noticias');
+  await page.goto('/noticias?seccion=sergod');
   await expect(
     page.getByRole('alert').filter({ hasText: 'No se pudo leer Noticias.' }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Reintentar noticias', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Noticia seleccionada' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /^Ver noticia: Nuestra última Liga/ }),
+  ).toBeVisible();
   await page.unroute('**/api/**');
   await publicMock(page, 'empty');
   await page.reload();
@@ -303,7 +307,7 @@ test('Admin Instagram: actualizar sin hashtag, vista previa, publicar, recargar,
     page.getByText('Cambios guardados y lectura comprobada.', { exact: true }),
   ).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Retirado', exact: true })).toBeVisible();
-  await page.goto('/noticias');
+  await page.goto('/noticias?seccion=sergod');
   await expect(
     page.getByRole('heading', { name: 'Pronto tendremos novedades', exact: true }),
   ).toBeVisible();
@@ -336,7 +340,11 @@ test('Instagram integrado: una publicación a la vez, selección y recarga sin m
   });
   for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/noticias');
+    await page.goto('/noticias?seccion=sergod');
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await page
+      .getByRole('button', { name: 'Ver noticia: Publicación de Instagram', exact: true })
+      .click();
     await expect(page.locator('iframe')).toHaveCount(1);
     const selected = page.getByRole('region', { name: 'Noticia seleccionada' });
     await expect(selected).toHaveAttribute('data-has-text', 'false');
@@ -356,6 +364,7 @@ test('Instagram integrado: una publicación a la vez, selección y recarga sin m
       fullPage: true,
     });
   }
+  await page.getByRole('button', { name: 'Cerrar noticia', exact: true }).click();
   await page
     .getByRole('button', { name: 'Ver noticia: Momento de la tienda 1', exact: true })
     .click();

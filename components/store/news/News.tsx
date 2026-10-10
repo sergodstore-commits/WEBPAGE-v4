@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Camera, Newspaper, Play } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Camera, Newspaper, Play, X } from 'lucide-react';
 import { date } from '@/lib/client';
 import type { NewsAsset, NewsItem } from '@/lib/news';
 import { instagramEmbedUrl } from '@/lib/news';
@@ -143,27 +143,43 @@ export function News() {
     params = useSearchParams(),
     router = useRouter();
   const [limit, setLimit] = useState(9);
-  const feature = useRef<HTMLElement>(null),
-    scrollRequested = useRef(false);
-  const list = remote.data || [],
-    selected = list.find((p) => p.id === params.get('publicacion')) || list[0];
+  const dialog = useRef<HTMLDialogElement>(null);
+  const list = [...(remote.data || [])].sort(
+    (a, b) => b.recorded_at.localeCompare(a.recorded_at) || a.id.localeCompare(b.id),
+  );
+  const selected = list.find((p) => p.id === params.get('publicacion'));
+  const sections = [
+    ['yugioh', 'Yu-Gi-Oh! TCG'],
+    ['sergod', 'SERGOD STORE'],
+    ['myl-first-era', 'MyL Primera Era'],
+    ['myl-first-block', 'MyL Primer Bloque'],
+  ] as const;
+  const requested = params.get('seccion');
+  const active = selected
+    ? 'sergod'
+    : sections.some(([id]) => id === requested)
+      ? requested!
+      : 'yugioh';
+  function navigate(section: string, publication?: string) {
+    const query = new URLSearchParams({ seccion: section });
+    if (publication) query.set('publicacion', publication);
+    router.replace(`/noticias?${query}`, { scroll: false });
+  }
+  function close() {
+    navigate('sergod');
+  }
   useEffect(() => {
-    if (scrollRequested.current) {
-      feature.current?.scrollIntoView({
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-          ? 'instant'
-          : 'smooth',
-        block: 'start',
-      });
-      feature.current?.focus({ preventScroll: true });
-      scrollRequested.current = false;
-    }
+    if (!selected || !dialog.current) return;
+    dialog.current.showModal();
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
   }, [selected?.id]);
   function choose(id: string) {
-    scrollRequested.current = true;
-    router.replace(`/noticias?publicacion=${encodeURIComponent(id)}`, { scroll: false });
+    navigate('sergod', id);
   }
-  const earlier = list.filter((p) => p.id !== selected?.id);
   return (
     <div className={`store-page ${styles.page}`}>
       <SectionHeader
@@ -174,144 +190,195 @@ export function News() {
           .map((asset) => asset.url)
           .slice(0, 1)}
       />
+      <nav className={styles.sectionTabs} aria-label="Secciones de noticias">
+        {sections.map(([id, label]) => (
+          <button key={id} type="button" aria-pressed={active === id} onClick={() => navigate(id)}>
+            {label}
+          </button>
+        ))}
+      </nav>
       <div className={styles.columns}>
-        <section className={styles.storeNews} aria-labelledby="store-news-heading">
-          <h2 id="store-news-heading" className={styles.storeHeading}>
-            SERGOD STORE
-          </h2>
-          {remote.loading ? (
-            <Loading />
-          ) : remote.error ? (
-            <div role="alert" className={styles.error}>
-              <p>{remote.error}</p>
-              <button className="store-button store-button-secondary" onClick={remote.reload}>
-                Reintentar noticias
-              </button>
-            </div>
-          ) : !selected ? (
-            <section className={styles.empty} aria-label="Noticias de la tienda">
-              <Newspaper size={26} aria-hidden="true" />
-              <div>
-                <h2>Pronto tendremos novedades</h2>
-                <p>Las noticias de la tienda aparecerán aquí cuando estén publicadas.</p>
+        {active === 'yugioh' && <WebNewsColumn />}
+        {active === 'sergod' && (
+          <section className={styles.storeNews} aria-labelledby="store-news-heading">
+            <h2 id="store-news-heading" className={styles.storeHeading}>
+              SERGOD STORE
+            </h2>
+            {remote.loading ? (
+              <Loading />
+            ) : remote.error ? (
+              <div role="alert" className={styles.error}>
+                <p>{remote.error}</p>
+                <button className="store-button store-button-secondary" onClick={remote.reload}>
+                  Reintentar noticias
+                </button>
               </div>
-            </section>
-          ) : (
-            <>
-              <section
-                ref={feature}
-                tabIndex={-1}
-                className={styles.feature}
-                data-has-text={Boolean(selected.title || selected.caption)}
-                aria-label="Noticia seleccionada"
-              >
-                <NewsMedia
-                  key={selected.id}
-                  assets={selected.assets}
-                  permalink={selected.permalink}
-                />
-                <div className={styles.caption}>
-                  <span className={styles.eyebrow}>
-                    {selected.id === list[0]?.id ? 'PUBLICACIÓN DESTACADA' : 'DEL ARCHIVO'}
-                  </span>
-                  <time dateTime={selected.recorded_at}>{date(selected.recorded_at)}</time>
-                  {selected.title && (
-                    <h2>
-                      {selected.legacy_slug ? (
-                        <Link href={`/publicacion/${selected.legacy_slug}`}>{selected.title}</Link>
-                      ) : (
-                        selected.title
-                      )}
-                    </h2>
-                  )}
-                  {selected.caption && <p>{selected.caption}</p>}
-                  <div className={styles.links}>
-                    {selected.permalink && (
-                      <a href={selected.permalink} target="_blank" rel="noopener noreferrer">
-                        <Camera size={17} />
-                        Ver en Instagram{selected.username ? ` · @${selected.username}` : ''}
-                      </a>
-                    )}
-                    {selected.tournament_id && (
-                      <Link href={`/torneo/${selected.tournament_id}`}>
-                        Ver torneo
-                        <ArrowRight size={16} />
-                      </Link>
-                    )}
-                    {selected.league_tournament_id && selected.ranking_board && (
-                      <Link href={`/comunidad?ranking=${selected.ranking_board}`}>
-                        Ver clasificación
-                        <ArrowRight size={16} />
-                      </Link>
-                    )}
-                  </div>
+            ) : !list.length ? (
+              <section className={styles.empty} aria-label="Noticias de la tienda">
+                <Newspaper size={26} aria-hidden="true" />
+                <div>
+                  <h2>Pronto tendremos novedades</h2>
+                  <p>Las noticias de la tienda aparecerán aquí cuando estén publicadas.</p>
                 </div>
               </section>
-              {earlier.length > 0 && (
-                <section className={styles.archive} aria-labelledby="news-archive-heading">
-                  <div className={styles.heading}>
-                    <div>
-                      <h2 id="news-archive-heading">Más noticias</h2>
-                    </div>
-                    <span>
-                      {earlier.length} {earlier.length === 1 ? 'publicación' : 'publicaciones'}
-                    </span>
-                  </div>
-                  <div className={styles.grid}>
-                    {earlier.slice(0, limit).map((p) => (
-                      <button
-                        type="button"
-                        className={styles.card}
-                        key={p.id}
-                        onClick={() => choose(p.id)}
-                        aria-label={`Ver noticia: ${(p.title || p.caption || 'Publicación de Instagram').slice(0, 90)}`}
-                      >
-                        <div className={styles.thumbnail}>
-                          <ProductImage
-                            src={
-                              p.thumbnail ||
-                              (p.assets[0]?.type === 'video'
-                                ? p.assets[0].poster
-                                : p.assets[0]?.url)
-                            }
-                            name="Miniatura de noticia"
-                          />
-                          {(p.media_type === 'VIDEO' ||
-                            p.assets.some((a) => a.type === 'video')) && (
-                            <span>
-                              <Play size={15} />
-                              Video
-                            </span>
-                          )}
-                          {p.assets.length > 1 && <small>{p.assets.length} medios</small>}
-                        </div>
-                        <time dateTime={p.recorded_at}>{date(p.recorded_at)}</time>
-                        {p.title && <h3>{p.title}</h3>}
-                        <p>
-                          {(p.caption || (p.title ? '' : 'Publicación de Instagram')).slice(0, 150)}
-                          {p.caption.length > 150 ? '…' : ''}
-                        </p>
-                        <span className={styles.read}>
-                          Ver noticia
-                          <ArrowRight size={16} />
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  {earlier.length > limit && (
+            ) : (
+              <>
+                {selected && (
+                  <dialog
+                    ref={dialog}
+                    className={styles.storeDialog}
+                    aria-label="Detalle de la noticia"
+                    onCancel={close}
+                    onClose={close}
+                    onClick={(event) => {
+                      if (event.target === event.currentTarget) close();
+                    }}
+                  >
                     <button
-                      className="store-button store-button-secondary"
-                      onClick={() => setLimit((n) => n + 9)}
+                      type="button"
+                      className={styles.closeNews}
+                      onClick={close}
+                      aria-label="Cerrar noticia"
                     >
-                      Ver más noticias
+                      <X size={22} />
                     </button>
-                  )}
-                </section>
-              )}
-            </>
-          )}
-        </section>
-        <WebNewsColumn />
+                    <section
+                      tabIndex={-1}
+                      className={styles.feature}
+                      data-has-text={Boolean(selected.title || selected.caption)}
+                      aria-label="Noticia seleccionada"
+                    >
+                      <NewsMedia
+                        key={selected.id}
+                        assets={selected.assets}
+                        permalink={selected.permalink}
+                      />
+                      <div className={styles.caption}>
+                        <span className={styles.eyebrow}>
+                          {selected.id === list[0]?.id ? 'PUBLICACIÓN DESTACADA' : 'DEL ARCHIVO'}
+                        </span>
+                        <time dateTime={selected.recorded_at}>{date(selected.recorded_at)}</time>
+                        {selected.title && (
+                          <h2>
+                            {selected.legacy_slug ? (
+                              <Link href={`/publicacion/${selected.legacy_slug}`}>
+                                {selected.title}
+                              </Link>
+                            ) : (
+                              selected.title
+                            )}
+                          </h2>
+                        )}
+                        {selected.caption && <p>{selected.caption}</p>}
+                        <div className={styles.links}>
+                          {selected.permalink && (
+                            <a href={selected.permalink} target="_blank" rel="noopener noreferrer">
+                              <Camera size={17} />
+                              Ver en Instagram{selected.username ? ` · @${selected.username}` : ''}
+                            </a>
+                          )}
+                          {selected.tournament_id && (
+                            <Link href={`/torneo/${selected.tournament_id}`}>
+                              Ver torneo
+                              <ArrowRight size={16} />
+                            </Link>
+                          )}
+                          {selected.league_tournament_id && selected.ranking_board && (
+                            <Link href={`/comunidad?ranking=${selected.ranking_board}`}>
+                              Ver clasificación
+                              <ArrowRight size={16} />
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </section>
+                  </dialog>
+                )}
+                {list.length > 0 && (
+                  <section className={styles.archive} aria-labelledby="news-archive-heading">
+                    <div className={styles.heading}>
+                      <div>
+                        <h2 id="news-archive-heading">Publicaciones</h2>
+                      </div>
+                      <span>
+                        {list.length} {list.length === 1 ? 'publicación' : 'publicaciones'}
+                      </span>
+                    </div>
+                    <div className={styles.grid}>
+                      {list.slice(0, limit).map((p) => (
+                        <button
+                          type="button"
+                          className={styles.card}
+                          key={p.id}
+                          onClick={() => choose(p.id)}
+                          aria-label={`Ver noticia: ${(p.title || p.caption || 'Publicación de Instagram').slice(0, 90)}`}
+                        >
+                          <div className={styles.thumbnail}>
+                            <ProductImage
+                              src={
+                                p.thumbnail ||
+                                (p.assets[0]?.type === 'video'
+                                  ? p.assets[0].poster
+                                  : p.assets[0]?.url)
+                              }
+                              name="Miniatura de noticia"
+                            />
+                            {(p.media_type === 'VIDEO' ||
+                              p.assets.some((a) => a.type === 'video')) && (
+                              <span>
+                                <Play size={15} />
+                                Video
+                              </span>
+                            )}
+                            {p.assets.length > 1 && <small>{p.assets.length} medios</small>}
+                          </div>
+                          <time dateTime={p.recorded_at}>{date(p.recorded_at)}</time>
+                          {p.title && <h3>{p.title}</h3>}
+                          <p>
+                            {(p.caption || (p.title ? '' : 'Publicación de Instagram')).slice(
+                              0,
+                              150,
+                            )}
+                            {p.caption.length > 150 ? '…' : ''}
+                          </p>
+                          <span className={styles.read}>
+                            Ver noticia
+                            <ArrowRight size={16} />
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {list.length > limit && (
+                      <button
+                        className="store-button store-button-secondary"
+                        onClick={() => setLimit((n) => n + 9)}
+                      >
+                        Ver más noticias
+                      </button>
+                    )}
+                  </section>
+                )}
+              </>
+            )}
+          </section>
+        )}
+        {(active === 'myl-first-era' || active === 'myl-first-block') && (
+          <section
+            className={styles.worldNews}
+            aria-label={active === 'myl-first-era' ? 'MyL Primera Era' : 'MyL Primer Bloque'}
+          >
+            <h2 className={styles.storeHeading}>
+              {active === 'myl-first-era' ? 'MyL Primera Era' : 'MyL Primer Bloque'}
+            </h2>
+            <div className={styles.empty}>
+              <Newspaper size={28} aria-hidden="true" />
+              <div>
+                <h3>Pronto tendremos novedades</h3>
+                <p>Las noticias seleccionadas de este formato aparecerán aquí.</p>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

@@ -1172,6 +1172,21 @@ function ProductEditor({ productId }: { productId?: string }) {
                 </div>
               </div>
             </details>
+            {form.kind === 'store' && (
+              <section className="admin-card admin-card-body">
+                <Field label="Fecha de lanzamiento">
+                  <input
+                    type="date"
+                    value={form.release_date}
+                    onChange={(e) => update('release_date', e.target.value)}
+                  />
+                </Field>
+                <p className="admin-help">
+                  La tienda se ordena por el lanzamiento original. Los artículos sin fecha aparecen
+                  al final.
+                </p>
+              </section>
+            )}
             {form.kind === 'preorder' && (
               <section className="admin-card admin-card-body">
                 <h2>

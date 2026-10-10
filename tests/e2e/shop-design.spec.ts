@@ -432,3 +432,29 @@ test('Vista rápida móvil y escritorio: variante agotada, precio actualizado y 
     await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
   }
 });
+
+test('Lanzamientos: fecha original primero y artículos sin fecha al final', async ({ page }) => {
+  await page.route('**/api/products?**', (route) =>
+    route.fulfill({
+      json: [
+        product('sin-fecha', { name: 'Sin fecha', created_at: '2026-12-01T00:00:00Z' }),
+        product('antiguo', {
+          name: 'Lanzamiento antiguo',
+          release_date: '2026-01-01',
+          created_at: '2026-11-01T00:00:00Z',
+        }),
+        product('reciente', {
+          name: 'Lanzamiento reciente',
+          release_date: '2026-10-01',
+          created_at: '2026-01-01T00:00:00Z',
+        }),
+      ],
+    }),
+  );
+  await page.goto('/tienda');
+  const cards = page.locator('.store-product-card');
+  await expect(cards).toHaveCount(3);
+  await expect(cards.nth(0)).toContainText('Lanzamiento reciente');
+  await expect(cards.nth(1)).toContainText('Lanzamiento antiguo');
+  await expect(cards.nth(2)).toContainText('Sin fecha');
+});
