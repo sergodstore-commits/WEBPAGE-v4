@@ -45,6 +45,7 @@ import {
   prepareWebNewsImages,
 } from '@/lib/server/web-news';
 import { reviewMetaNews } from '@/lib/server/meta-news-source';
+import { reviewMylNews } from '@/lib/server/myl-news-source';
 import { getBanlist, refreshBanlist, banlistPanel, importBanlistCard } from '@/lib/server/banlist';
 import {
   editionPanel,
@@ -238,7 +239,12 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
       });
     if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());
-    if (path[0] === 'news' && path[1] === 'tcg' && path.length === 3 && method === 'GET')
+    if (
+      path[0] === 'news' &&
+      ['tcg', 'myl'].includes(path[1]) &&
+      path.length === 3 &&
+      method === 'GET'
+    )
       return json(await publicWebArticle(path[2]));
     if (route === 'news/editions' && method === 'GET') return json(await publishedEditions());
     if (path[0] === 'news' && path[1] === 'editions' && path.length === 3 && method === 'GET') {
@@ -372,6 +378,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await getWebNews(true));
       if (route === 'admin/news/web-sources' && method === 'PATCH')
         return json(await saveWebNews(await body(request)));
+      if (route === 'admin/news/web-sources/review-myl' && method === 'POST') {
+        await rateLimit(`myl-news-review:${user.id}`, 20, 60);
+        return json(await reviewMylNews());
+      }
       if (route === 'admin/news/web-sources/review' && method === 'POST') {
         await rateLimit(`meta-news-review:${user.id}`, 20, 60);
         return json(await reviewMetaNews());

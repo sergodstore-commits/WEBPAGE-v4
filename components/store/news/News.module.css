@@ -1070,3 +1070,11 @@
     padding: 46px 8px 8px;
   }
 }
+
+.effectiveDates {
+  margin: 24px 0;
+  border-left: 3px solid #74def0;
+  padding: 12px 20px;
+  background: #152d3c;
+  color: #dceef5;
+}

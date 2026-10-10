@@ -119,7 +119,7 @@ test('Admin: selección web protegida, editar español, ocultar y persistir', as
       })
     ).status(),
   ).toBe(401);
-  for (const path of ['review', 'example/prepare', 'example/images'])
+  for (const path of ['review', 'review-myl', 'example/prepare', 'example/images'])
     expect(
       (
         await page.request.post(`/api/admin/news/web-sources/${path}`, {
@@ -152,7 +152,7 @@ test('Admin: selección web protegida, editar español, ocultar y persistir', as
       ).status(),
     ).toBe(403);
     await page.goto('/admin/noticias');
-    const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh!', exact: true });
+    const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh! y MyL', exact: true });
     await section.getByRole('button', { name: 'Editar', exact: true }).click();
     await section
       .getByLabel('Título en español', { exact: true })
@@ -179,4 +179,94 @@ test('Admin: selección web protegida, editar español, ocultar y persistir', as
       headers: { Origin: 'http://localhost:3100' },
     });
   }
+});
+
+test('MyL: pestañas separadas, banlist y vigencia dentro de la noticia', async ({ page }) => {
+  const myl = {
+    id: 'myl-example',
+    title: 'Cambios revisados de la banlist',
+    summary: 'Aviso para los jugadores de los dos formatos clásicos.',
+    url: 'https://blog.myl.cl/noticia-de-prueba/',
+    published_on: '2026-10-07',
+    visible: true,
+    boards: ['myl-first-era', 'myl-first-block'],
+    category: 'banlist',
+    article_path: '/noticias/myl/myl-example',
+    body: 'Consulta los cambios revisados por SERGOD STORE.',
+    effective_dates: { 'myl-first-era': '2026-10-08', 'myl-first-block': '2026-10-11' },
+  };
+  await page.route('**/api/news', (r) => r.fulfill({ json: [] }));
+  await page.route('**/api/news/web-sources', (r) => r.fulfill({ json: [initialWebNews[0], myl] }));
+  await page.route('**/api/news/myl/myl-example', (r) => r.fulfill({ json: myl }));
+  await page.goto('/noticias');
+  await expect(page.getByRole('link', { name: /Cambios revisados/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'MyL Primera Era', exact: true }).click();
+  const era = page.getByRole('region', { name: 'MyL Primera Era', exact: true });
+  await expect(era.getByRole('link', { name: /Cambios revisados/ })).toBeVisible();
+  await expect(era.getByRole('link', { name: /Beyond the Brave/ })).toHaveCount(0);
+  await era.getByRole('button', { name: 'Banlist', exact: true }).click();
+  await expect(era.getByRole('link')).toHaveCount(1);
+  await page.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
+  const block = page.getByRole('region', { name: 'MyL Primer Bloque', exact: true });
+  await expectReadable(page);
+  await block.getByRole('link', { name: /Cambios revisados/ }).click();
+  await expect(page.getByRole('heading', { name: myl.title, exact: true })).toBeVisible();
+  await expect(page.getByLabel('Vigencia de la banlist')).toContainText('8 de octubre de 2026');
+  await expect(page.getByLabel('Vigencia de la banlist')).toContainText('11 de octubre de 2026');
+  await expect(page.getByRole('link', { name: 'Blog oficial Mitos y Leyendas ↗' })).toHaveAttribute(
+    'href',
+    myl.url,
+  );
+});
+
+test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vigencia', async ({
+  page,
+}) => {
+  await page.goto('/admin');
+  await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e@example.test');
+  await page.getByLabel('Contraseña', { exact: true }).fill('E2e-Prueba-Sergod-2026!');
+  await page.getByRole('button', { name: 'Ingresar', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
+  const candidate = {
+    id: 'myl-admin-example',
+    title: 'Banlist General MyL',
+    summary: 'Referencia breve oficial del blog.',
+    url: 'https://blog.myl.cl/banlist-de-prueba/',
+    published_on: '2026-10-07',
+    boards: ['myl-first-era', 'myl-first-block'],
+    category: 'banlist',
+    source_image: '',
+  };
+  let saved: any[] = [];
+  await page.route('**/api/admin/news/web-sources', (r) => {
+    if (r.request().method() === 'PATCH') saved = r.request().postDataJSON();
+    return r.fulfill({ json: saved });
+  });
+  await page.route('**/api/admin/news/web-sources/review-myl', (r) =>
+    r.fulfill({ json: { items: [candidate] } }),
+  );
+  await page.goto('/admin/noticias');
+  const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh! y MyL', exact: true });
+  await section.getByRole('button', { name: 'Buscar novedades MyL', exact: true }).click();
+  await expect(section.getByRole('region', { name: 'Noticias MyL disponibles' })).toContainText(
+    candidate.title,
+  );
+  await section.getByRole('button', { name: 'Preparar noticia', exact: true }).click();
+  await expect(section.getByLabel('Fecha del artículo', { exact: true })).toHaveValue('2026-10-07');
+  await section
+    .getByLabel('Título en español', { exact: true })
+    .fill('Cambios revisados para nuestra liga');
+  await section
+    .getByLabel('Resumen propio en español', { exact: true })
+    .fill('Resumen preparado por la tienda para sus jugadores.');
+  await section.getByRole('checkbox', { name: 'MyL Primer Bloque', exact: true }).uncheck();
+  await section.getByLabel('MyL Primera Era · vigente desde', { exact: true }).fill('2026-10-08');
+  await section.getByRole('button', { name: 'Añadir a la lista', exact: true }).click();
+  await section
+    .getByRole('button', { name: 'Guardar selección de actualidad', exact: true })
+    .click();
+  await expect.poll(() => saved.length).toBe(1);
+  expect(saved[0].boards).toEqual(['myl-first-era']);
+  expect(saved[0].visible).toBe(false);
+  expect(saved[0].effective_dates['myl-first-era']).toBe('2026-10-08');
 });

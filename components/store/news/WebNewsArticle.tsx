@@ -2,18 +2,29 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, X } from 'lucide-react';
-import { type WebNewsItem, type WebNewsMedia, webNewsCategories } from '@/lib/web-news';
+import {
+  type WebNewsItem,
+  type WebNewsMedia,
+  webNewsCategories,
+  mylArticle,
+  newsBoards,
+} from '@/lib/web-news';
 import { useRemote, Loading } from '../shared';
 import styles from './News.module.css';
 
 export default function WebNewsArticle({ id }: { id: string }) {
-  const remote = useRemote<WebNewsItem>(`/news/tcg/${encodeURIComponent(id)}`);
+  const remote = useRemote<WebNewsItem>(
+    `/news/${id.startsWith('myl-') ? 'myl' : 'tcg'}/${encodeURIComponent(id)}`,
+  );
   const [selected, setSelected] = useState<WebNewsMedia | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const item = remote.data;
   return (
     <div className={`store-page ${styles.page}`}>
-      <Link href="/noticias" className={styles.articleBack}>
+      <Link
+        href={`/noticias?seccion=${remote.data?.boards?.[0] || 'yugioh'}`}
+        className={styles.articleBack}
+      >
         <ArrowLeft size={17} />
         Volver a Noticias
       </Link>
@@ -30,7 +41,8 @@ export default function WebNewsArticle({ id }: { id: string }) {
         <article className={styles.webArticle}>
           <header>
             <span className={styles.articleCategory}>
-              YU-GI-OH! TCG · {webNewsCategories[item.category || 'news']}
+              {mylArticle(item.url) ? 'MITOS Y LEYENDAS' : 'YU-GI-OH! TCG'} ·{' '}
+              {webNewsCategories[item.category || 'news']}
             </span>
             <h1>{item.title}</h1>
             <time dateTime={item.published_on}>
@@ -40,6 +52,21 @@ export default function WebNewsArticle({ id }: { id: string }) {
             </time>
             <p className={styles.articleLead}>{item.summary}</p>
           </header>
+          {item.category === 'banlist' && item.effective_dates && (
+            <aside className={styles.effectiveDates} aria-label="Vigencia de la banlist">
+              {Object.entries(item.effective_dates)
+                .filter(([board]) => item.boards?.includes(board as keyof typeof newsBoards))
+                .map(([board, day]) => (
+                  <p key={board}>
+                    <strong>{newsBoards[board as keyof typeof newsBoards]}</strong>: vigente desde{' '}
+                    {new Intl.DateTimeFormat('es-CL', {
+                      dateStyle: 'long',
+                      timeZone: 'UTC',
+                    }).format(new Date(`${day}T12:00:00Z`))}
+                  </p>
+                ))}
+            </aside>
+          )}
           {item.image && (
             <img className={styles.articleCover} src={item.image} alt="Portada de la noticia" />
           )}
@@ -79,7 +106,7 @@ export default function WebNewsArticle({ id }: { id: string }) {
           <footer className={styles.articleSource}>
             Preparado por SERGOD STORE · Fuente:{' '}
             <a href={item.url} target="_blank" rel="noopener noreferrer">
-              Yu-Gi-Oh! Meta ↗
+              {mylArticle(item.url) ? 'Blog oficial Mitos y Leyendas' : 'Yu-Gi-Oh! Meta'} ↗
             </a>
           </footer>
         </article>

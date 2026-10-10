@@ -4,6 +4,8 @@ import { ArrowRight, BookOpen, Search, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import {
   localWebArticle,
+  newsBoards,
+  type NewsBoard,
   webNewsCategories,
   type WebNewsItem,
   type WebNewsCategory,
@@ -26,17 +28,23 @@ export function WebNewsCover({ item }: { item: WebNewsItem }) {
       ) : (
         <Newspaper size={64} aria-hidden="true" />
       )}
-      <span className={styles.newsRibbon}>TCG · {webNewsCategories[item.category || 'news']}</span>
+      <span className={styles.newsRibbon}>
+        {item.boards?.some((b) => b !== 'yugioh') ? 'MyL' : 'TCG'} ·{' '}
+        {webNewsCategories[item.category || 'news']}
+      </span>
     </div>
   );
 }
-export function WebNewsColumn() {
+export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
+  const title = newsBoards[board];
   const remote = useRemote<WebNewsItem[]>('/news/web-sources');
   const [category, setCategory] = useState<WebNewsCategory | ''>('');
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(8);
-  const items = (remote.data || []).filter((item) =>
-    item.format !== undefined ? item.format === 'TCG' : true,
+  const items = (remote.data || []).filter(
+    (item) =>
+      (item.boards || ['yugioh']).includes(board) &&
+      (board !== 'yugioh' || item.format === undefined || item.format === 'TCG'),
   );
   const normalize = (s: string) =>
     s
@@ -54,11 +62,15 @@ export function WebNewsColumn() {
         <BookOpen size={23} aria-hidden="true" />
         <div>
           <span>ACTUALIDAD DEL JUEGO</span>
-          <h2 id="world-news-heading">Yu-Gi-Oh! TCG</h2>
+          <h2 id="world-news-heading">{title}</h2>
         </div>
       </div>
       <div className={styles.newsToolbar}>
-        <div className={styles.newsFilters} role="group" aria-label="Categoría de noticias TCG">
+        <div
+          className={styles.newsFilters}
+          role="group"
+          aria-label={`Categoría de noticias ${board === 'yugioh' ? 'TCG' : title}`}
+        >
           <button
             type="button"
             aria-pressed={!category}
@@ -87,7 +99,7 @@ export function WebNewsColumn() {
           <Search size={17} aria-hidden="true" />
           <input
             type="search"
-            aria-label="Buscar noticias TCG"
+            aria-label={`Buscar noticias ${board === 'yugioh' ? 'TCG' : title}`}
             placeholder="Buscar noticia…"
             value={query}
             onChange={(e) => {
@@ -101,13 +113,16 @@ export function WebNewsColumn() {
         <Loading />
       ) : remote.error ? (
         <div role="alert">
-          <p>No pudimos cargar la actualidad de Yu-Gi-Oh!.</p>
+          <p>No pudimos cargar las noticias.</p>
           <button className="store-text-link" onClick={remote.reload}>
             Reintentar
           </button>
         </div>
       ) : !items.length ? (
-        <p className={styles.worldEmpty}>Pronto compartiremos más novedades del juego.</p>
+        <div className={styles.worldEmpty}>
+          <h3>Pronto tendremos novedades</h3>
+          <p>Las noticias seleccionadas de este formato aparecerán aquí.</p>
+        </div>
       ) : (
         <>
           <p className={styles.newsCount} role="status">

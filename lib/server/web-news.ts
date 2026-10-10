@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { getDb } from './db';
-import { initialWebNews, yugiohMetaArticle, metaNewsImage, type WebNewsItem } from '../web-news';
+import {
+  initialWebNews,
+  yugiohMetaArticle,
+  newsArticle,
+  newsSourceImage,
+  mylArticle,
+  type WebNewsItem,
+} from '../web-news';
 import { validDay } from '../tournament-schedule';
 import { publishedEditions, withLease } from './edition-imports';
 import {
@@ -10,54 +17,78 @@ import {
   NEWS_MEDIA_LIMIT,
 } from './meta-news-source';
 import { fail } from './core';
+import { mylArticleImages } from './myl-news-source';
 
 const schema = z
   .array(
-    z.object({
-      id: z.string().regex(/^[a-zA-Z0-9-]{1,80}$/),
-      title: z.string().trim().min(3).max(160),
-      summary: z.string().trim().min(10).max(600),
-      url: z
-        .string()
-        .max(1000)
-        .transform((value, ctx) => {
-          const url = yugiohMetaArticle(value);
-          if (!url) {
-            ctx.addIssue({
-              code: 'custom',
-              message: 'Usa el enlace HTTPS de un artículo de Yu-Gi-Oh! Meta.',
-            });
-            return z.NEVER;
-          }
-          return url;
-        }),
-      published_on: z.string().refine(validDay, 'Indica una fecha válida.'),
-      visible: z.boolean(),
-      category: z.enum(['news', 'reveals', 'releases', 'tournaments']).default('news'),
-      body: z.string().trim().max(12000).default(''),
-      source_image: z
-        .string()
-        .max(1000)
-        .refine((v) => !v || Boolean(metaNewsImage(v)), 'Portada de fuente no válida.')
-        .optional(),
-      original_title: z.string().max(300).optional(),
-      original_summary: z.string().max(600).optional(),
-      image: z.string().max(1000).optional(),
-      image_bytes: z.number().int().min(0).max(160000).optional(),
-      media_checked: z.boolean().optional(),
-      media: z
-        .array(
-          z.object({
-            source: z.string().max(1000),
-            name: z.string().max(200),
-            image: z.string().max(1000).optional(),
-            bytes: z.number().int().min(0).max(160000).optional(),
-            caption: z.string().max(3000).optional(),
+    z
+      .object({
+        id: z.string().regex(/^[a-zA-Z0-9-]{1,80}$/),
+        title: z.string().trim().min(3).max(160),
+        summary: z.string().trim().min(10).max(600),
+        url: z
+          .string()
+          .max(1000)
+          .transform((value, ctx) => {
+            const url = newsArticle(value);
+            if (!url) {
+              ctx.addIssue({
+                code: 'custom',
+                message: 'Usa un artículo HTTPS de Yu-Gi-Oh! Meta o del blog oficial MyL.',
+              });
+              return z.NEVER;
+            }
+            return url;
           }),
+        published_on: z.string().refine(validDay, 'Indica una fecha válida.'),
+        visible: z.boolean(),
+        category: z.enum(['news', 'reveals', 'releases', 'tournaments', 'banlist']).default('news'),
+        boards: z
+          .array(z.enum(['yugioh', 'myl-first-era', 'myl-first-block']))
+          .min(1)
+          .max(2)
+          .default(['yugioh']),
+        effective_dates: z
+          .object({
+            'myl-first-era': z.string().refine(validDay).optional(),
+            'myl-first-block': z.string().refine(validDay).optional(),
+          })
+          .optional(),
+        body: z.string().trim().max(12000).default(''),
+        source_image: z
+          .string()
+          .max(1000)
+          .refine((v) => !v || Boolean(newsSourceImage(v)), 'Portada de fuente no válida.')
+          .optional(),
+        original_title: z.string().max(300).optional(),
+        original_summary: z.string().max(600).optional(),
+        image: z.string().max(1000).optional(),
+        image_bytes: z.number().int().min(0).max(160000).optional(),
+        media_checked: z.boolean().optional(),
+        media: z
+          .array(
+            z.object({
+              source: z.string().max(1000),
+              name: z.string().max(200),
+              image: z.string().max(1000).optional(),
+              bytes: z.number().int().min(0).max(160000).optional(),
+              caption: z.string().max(3000).optional(),
+            }),
+          )
+          .max(100)
+          .optional(),
+      })
+      .superRefine((item, context) => {
+        const isMyl = Boolean(mylArticle(item.url));
+        if (
+          new Set(item.boards).size !== item.boards.length ||
+          item.boards.some((board) => isMyl === (board === 'yugioh'))
         )
-        .max(100)
-        .optional(),
-    }),
+          context.addIssue({
+            code: 'custom',
+            message: 'El formato seleccionado no corresponde a la fuente de la noticia.',
+          });
+      }),
   )
   .max(80)
   .refine(
@@ -107,12 +138,12 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
           ...item
         }) => ({
           ...item,
-          format: 'TCG' as const,
+          format: mylArticle(item.url) ? undefined : ('TCG' as const),
           category: item.category || 'releases',
           article_path:
             item.id === 'beyond-the-brave'
               ? '/noticias/beyond-the-brave'
-              : `/noticias/tcg/${item.id}`,
+              : `/noticias/${mylArticle(item.url) ? 'myl' : 'tcg'}/${item.id}`,
           cover_cards:
             item.id === 'beyond-the-brave'
               ? [
@@ -169,7 +200,9 @@ export async function prepareWebNewsImages(id: string, batch = false) {
     const item = items.find((i) => i.id === id);
     if (!item) fail(404, 'Guarda primero el borrador de la noticia.');
     if (!batch) {
-      const manifest = await articleImages(item.url);
+      const manifest = mylArticle(item.url)
+        ? await mylArticleImages(item.url)
+        : await articleImages(item.url);
       item.media = manifest.map((m) => ({
         ...m,
         ...item.media?.find((old) => old.source === m.source),
@@ -220,5 +253,9 @@ export async function publicWebArticle(id: string) {
     media_checked,
     ...publicItem
   } = item;
-  return { ...publicItem, format: 'TCG' as const };
+  return {
+    ...publicItem,
+    source_label: mylArticle(item.url) ? 'Blog oficial Mitos y Leyendas' : 'Yu-Gi-Oh! Meta',
+    format: mylArticle(item.url) ? undefined : ('TCG' as const),
+  };
 }

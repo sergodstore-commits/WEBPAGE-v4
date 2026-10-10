@@ -2,7 +2,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/client';
 import {
-  yugiohMetaArticle,
+  newsArticle,
+  mylArticle,
+  newsBoards,
+  type MylNewsBoard,
   webNewsCategories,
   type WebNewsItem,
   type WebNewsCandidate,
@@ -43,18 +46,21 @@ export function WebNewsAdmin() {
     },
     [],
   );
-  async function review() {
+  async function review(source: 'tcg' | 'myl' = 'tcg') {
     setBusy(true);
     setError('');
     setNotice('');
     try {
-      const result = await api<{ items: WebNewsCandidate[] }>('/admin/news/web-sources/review', {
-        method: 'POST',
-        body: '{}',
-      });
+      const result = await api<{ items: WebNewsCandidate[] }>(
+        `/admin/news/web-sources/${source === 'myl' ? 'review-myl' : 'review'}`,
+        {
+          method: 'POST',
+          body: '{}',
+        },
+      );
       setCandidates(result.items);
       setNotice(
-        `${result.items.length} noticias TCG disponibles. Preparar una noticia no la publica.`,
+        `${result.items.length} noticias ${source === 'myl' ? 'MyL' : 'TCG'} disponibles. Preparar una noticia no la publica.`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos consultar la fuente.');
@@ -142,14 +148,17 @@ export function WebNewsAdmin() {
       <BanlistAdmin />
       <EditionImportAdmin />
       <section className="admin-card admin-card-body" aria-labelledby="web-news-admin-heading">
-        <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh!</h2>
+        <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh! y MyL</h2>
         <p>
-          Solo TCG. Busca novedades, prepara tu artículo en español y decide qué aparece en
-          Noticias. Las guías de ediciones se publican desde su sección superior.
+          Yu-Gi-Oh! solo TCG; MyL Primera Era, Primer Bloque y banlist. Busca novedades y decide qué
+          aparece en Noticias. Las guías de ediciones se publican desde su sección superior.
         </p>
         <p>
           <button className="admin-button" disabled={busy} onClick={() => void review()}>
             Buscar novedades TCG
+          </button>{' '}
+          <button className="admin-button" disabled={busy} onClick={() => void review('myl')}>
+            Buscar novedades MyL
           </button>{' '}
           <a
             href="https://www.yugiohmeta.com/"
@@ -176,14 +185,14 @@ export function WebNewsAdmin() {
         )}
         {candidates.length > 0 && (
           <section
-            aria-label="Noticias TCG disponibles"
+            aria-label={`Noticias ${candidates.some((c) => c.boards?.some((b) => b !== 'yugioh')) ? 'MyL' : 'TCG'} disponibles`}
             className="admin-table-scroll"
             style={{ maxHeight: 460, overflow: 'auto' }}
           >
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Fuente · TCG</th>
+                  <th>Fuente · novedades</th>
                   <th>Acción</th>
                 </tr>
               </thead>
@@ -193,6 +202,7 @@ export function WebNewsAdmin() {
                     <td>
                       <strong>{candidate.title}</strong>
                       <p>
+                        {(candidate.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
                         {webNewsCategories[candidate.category]} · {candidate.published_on}
                       </p>
                       <a href={candidate.url} target="_blank" rel="noopener noreferrer">
@@ -211,6 +221,7 @@ export function WebNewsAdmin() {
                             url: candidate.url,
                             published_on: candidate.published_on,
                             category: candidate.category,
+                            boards: candidate.boards || ['yugioh'],
                             source_image: candidate.source_image,
                             original_title: candidate.title,
                             original_summary: candidate.summary,
@@ -255,9 +266,9 @@ export function WebNewsAdmin() {
               ref={editor}
               onSubmit={(event) => {
                 event.preventDefault();
-                const url = yugiohMetaArticle(draft.url);
+                const url = newsArticle(draft.url);
                 if (!url) {
-                  setError('Usa el enlace de un artículo de yugiohmeta.com/articles/.');
+                  setError('Usa un artículo de Yu-Gi-Oh! Meta o del blog oficial MyL.');
                   return;
                 }
                 if (items.some((item) => item.url === url && item.id !== draft.id)) {
@@ -283,7 +294,7 @@ export function WebNewsAdmin() {
               <fieldset disabled={busy} style={{ border: 0, padding: 0, display: 'grid', gap: 12 }}>
                 {draft.original_title && (
                   <details open>
-                    <summary>Referencia original · traduce y redacta tu versión</summary>
+                    <summary>Referencia original · redacta tu versión en español</summary>
                     <p>
                       <strong>{draft.original_title}</strong>
                     </p>
@@ -300,12 +311,18 @@ export function WebNewsAdmin() {
                     type="url"
                     maxLength={1000}
                     value={draft.url}
-                    onChange={(e) => setDraft({ ...draft, url: e.target.value })}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        url: e.target.value,
+                        boards: mylArticle(e.target.value) ? ['myl-first-era'] : ['yugioh'],
+                      })
+                    }
                     placeholder="https://www.yugiohmeta.com/articles/…"
                   />
                 </label>
                 <label className="admin-field">
-                  <span>Categoría TCG</span>
+                  <span>Categoría de la noticia</span>
                   <select
                     value={draft.category || 'news'}
                     onChange={(e) =>
@@ -319,6 +336,63 @@ export function WebNewsAdmin() {
                     ))}
                   </select>
                 </label>
+                {mylArticle(draft.url) && (
+                  <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
+                    <legend>Mostrar en los formatos seleccionados</legend>
+                    {(['myl-first-era', 'myl-first-block'] as const).map((board) => (
+                      <label className="admin-check" key={board}>
+                        <input
+                          type="checkbox"
+                          checked={draft.boards?.includes(board) || false}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              boards: e.target.checked
+                                ? [...(draft.boards || []), board]
+                                : (draft.boards || []).filter((b) => b !== board),
+                              effective_dates: Object.fromEntries(
+                                Object.entries(draft.effective_dates || {}).filter(
+                                  ([key]) => e.target.checked || key !== board,
+                                ),
+                              ),
+                            })
+                          }
+                        />{' '}
+                        {newsBoards[board]}
+                      </label>
+                    ))}
+                    <p className="admin-help">
+                      Revisa el formato: algunas categorías del blog incluyen otros juegos
+                      organizados.
+                    </p>
+                  </fieldset>
+                )}
+                {mylArticle(draft.url) && draft.category === 'banlist' && (
+                  <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
+                    <legend>Vigencia por formato (opcional)</legend>
+                    {(draft.boards || [])
+                      .filter((b): b is MylNewsBoard => b !== 'yugioh')
+                      .map((board) => (
+                        <label className="admin-field" key={board}>
+                          <span>{newsBoards[board]} · vigente desde</span>
+                          <input
+                            type="date"
+                            value={draft.effective_dates?.[board] || ''}
+                            onChange={(e) => {
+                              const dates = { ...draft.effective_dates };
+                              if (e.target.value) dates[board] = e.target.value;
+                              else delete dates[board];
+                              setDraft({ ...draft, effective_dates: dates });
+                            }}
+                          />
+                        </label>
+                      ))}
+                    <p className="admin-help">
+                      Confirma estas fechas en el aviso oficial. No son la fecha de publicación ni
+                      una lista completa de cartas restringidas.
+                    </p>
+                  </fieldset>
+                )}
                 <label className="admin-field">
                   <span>Artículo en español</span>
                   <textarea
@@ -435,6 +509,7 @@ export function WebNewsAdmin() {
                         <strong>{item.title}</strong>
                         <p>{item.summary}</p>
                         <small>
+                          {(item.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
                           {webNewsCategories[item.category || 'news']} ·{' '}
                           {item.media_checked
                             ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`

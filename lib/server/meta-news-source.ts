@@ -7,6 +7,7 @@ import { boundedBytes, fail, hash, isProd } from './core';
 import { withLease } from './edition-imports';
 import {
   metaNewsImage,
+  newsSourceImage,
   yugiohMetaArticle,
   type WebNewsCandidate,
   type WebNewsMedia,
@@ -224,7 +225,7 @@ export async function newsMediaUsage() {
 // Persisted keys also account for archived images whose articles were later removed.
 // Callers hold the shared import lease while checking the quota and saving the image.
 export async function archiveMetaNewsCover(value: string) {
-  const url = metaNewsImage(value);
+  const url = newsSourceImage(value);
   if (!url) fail(400, 'La portada no pertenece a la fuente autorizada.');
   const cache = await mediaCache();
   const cacheKey = hash(url);

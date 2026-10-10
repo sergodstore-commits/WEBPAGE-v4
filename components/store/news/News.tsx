@@ -363,21 +363,7 @@ export function News() {
           </section>
         )}
         {(active === 'myl-first-era' || active === 'myl-first-block') && (
-          <section
-            className={styles.worldNews}
-            aria-label={active === 'myl-first-era' ? 'MyL Primera Era' : 'MyL Primer Bloque'}
-          >
-            <h2 className={styles.storeHeading}>
-              {active === 'myl-first-era' ? 'MyL Primera Era' : 'MyL Primer Bloque'}
-            </h2>
-            <div className={styles.empty}>
-              <Newspaper size={28} aria-hidden="true" />
-              <div>
-                <h3>Pronto tendremos novedades</h3>
-                <p>Las noticias seleccionadas de este formato aparecerán aquí.</p>
-              </div>
-            </div>
-          </section>
+          <WebNewsColumn key={active} board={active} />
         )}
       </div>
     </div>

@@ -181,7 +181,7 @@ export default function StoreApp({ pathname: pathnameProp }: { pathname?: string
   else if (/^\/noticias\/ediciones\/[a-z0-9-]+$/.test(pathname))
     content = <EditionArticle key={pathname} code={pathname.split('/')[3]} />;
   else if (pathname === '/noticias') content = <News />;
-  else if (/^\/noticias\/tcg\/[a-zA-Z0-9-]+$/.test(pathname))
+  else if (/^\/noticias\/(?:tcg|myl)\/[a-zA-Z0-9-]+$/.test(pathname))
     content = <WebNewsArticle key={pathname} id={pathname.split('/')[3]} />;
   else if (['/noticias', '/comunidad'].includes(pathname))
     content = (

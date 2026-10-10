@@ -1,4 +1,6 @@
 export type WebNewsItem = {
+  boards?: NewsBoard[];
+  effective_dates?: Partial<Record<MylNewsBoard, string>>;
   id: string;
   title: string;
   summary: string;
@@ -33,9 +35,18 @@ export const webNewsCategories = {
   reveals: 'Revelaciones',
   releases: 'Lanzamientos',
   tournaments: 'Torneos',
+  banlist: 'Banlist',
 } as const;
 export type WebNewsCategory = keyof typeof webNewsCategories;
+export const newsBoards = {
+  yugioh: 'Yu-Gi-Oh! TCG',
+  'myl-first-era': 'MyL Primera Era',
+  'myl-first-block': 'MyL Primer Bloque',
+} as const;
+export type NewsBoard = keyof typeof newsBoards;
+export type MylNewsBoard = Exclude<NewsBoard, 'yugioh'>;
 export type WebNewsCandidate = {
+  boards?: NewsBoard[];
   id: string;
   url: string;
   title: string;
@@ -104,3 +115,50 @@ export const initialWebNews: WebNewsItem[] = [
     category: 'releases',
   },
 ];
+
+export function mylArticle(value: string): string | null {
+  try {
+    const u = new URL(value);
+    if (
+      u.protocol !== 'https:' ||
+      u.hostname !== 'blog.myl.cl' ||
+      u.username ||
+      u.password ||
+      u.port ||
+      u.search ||
+      u.hash ||
+      !/^\/[a-z0-9%_-]+\/?$/i.test(u.pathname) ||
+      /^\/(?:wp-json|wp-admin|wp-login|feed|comments)\/?$/i.test(u.pathname)
+    )
+      return null;
+    return `https://blog.myl.cl${u.pathname.replace(/\/$/, '')}/`;
+  } catch {
+    return null;
+  }
+}
+export function mylNewsImage(value: string): string | null {
+  try {
+    const u = new URL(value);
+    if (
+      u.protocol !== 'https:' ||
+      u.hostname !== 'blog.myl.cl' ||
+      u.username ||
+      u.password ||
+      u.port ||
+      u.search ||
+      u.hash ||
+      !/^\/wp-content\/uploads\/[a-z0-9%_./-]+\.(?:webp|png|jpe?g)$/i.test(u.pathname) ||
+      decodeURIComponent(u.pathname).split('/').includes('..')
+    )
+      return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+export function newsArticle(value: string) {
+  return yugiohMetaArticle(value) || mylArticle(value);
+}
+export function newsSourceImage(value: string) {
+  return metaNewsImage(value) || mylNewsImage(value);
+}
