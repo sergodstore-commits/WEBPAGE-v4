@@ -18,7 +18,7 @@
 }
 .dialog {
   box-sizing: border-box;
-  width: min(880px, calc(100% - 24px));
+  width: min(1080px, calc(100% - 24px));
   max-height: calc(100dvh - 32px);
   padding: 26px;
   border: 1px solid #355161;
@@ -147,16 +147,172 @@
   outline-offset: 3px;
 }
 .results ul {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 .results li {
-  display: flex;
-  gap: 13px;
+  min-width: 0;
+  padding: 0;
+}
+.tile {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid #2d4559;
+  border-radius: 12px;
+  background: #0b1420;
+  color: #eaf3f7;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tile:hover:not(:disabled) {
+  border-color: #84cee6;
+  background: #142638;
+}
+.tile:disabled {
+  cursor: default;
+}
+.thumbnail {
+  position: relative;
+  margin-bottom: 12px;
+}
+.thumbnail img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 220 / 320;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.thumbnail .copies {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  box-shadow: 0 2px 8px #000b;
+}
+.pending {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 220 / 320;
+  color: #a8bdcb;
+  background: #172536;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.cardStatus {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  color: #b1c8d7;
+}
+.tile em {
+  display: block;
+  font-size: 10px;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.results {
+  padding: 14px 8px 14px 0;
+  height: min(530px, 48dvh);
+}
+.back {
+  display: inline-flex;
   align-items: center;
-  padding: 13px 5px;
-  border-bottom: 1px solid #26394b;
+  gap: 7px;
+  margin: 0 0 18px;
+  padding: 9px 12px;
+  border: 1px solid #42677f;
+  border-radius: 8px;
+  background: #1c2a38;
+  color: #d3e9f3;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.detail {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1fr);
+  gap: 30px;
+  max-height: 66dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 8px;
+  scrollbar-color: #42677f #0d1520;
+}
+.artwork img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.artwork small {
+  display: block;
+  color: #8faabb;
+  font-size: 11px;
+  margin-top: 10px;
+}
+.effect h3 {
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.2;
+  margin: 18px 0 5px;
+}
+.effect h4 {
+  color: #91cce2;
+  font-size: 12px;
+  margin: 24px 0 10px;
+}
+.effect p {
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+.effect .english {
+  color: #8faabb;
+  margin-top: 0;
+}
+.effect .change {
+  color: #b2dce9;
+  font-size: 12px;
+}
+.effect a {
+  color: #a7d9ee;
+  font-size: 12px;
+}
+.restriction {
+  display: inline-block;
+  background: #482632;
+  border: 1px solid #895b6b;
+  color: #ffc2ce;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.restriction[data-copies='1'] {
+  background: #443a23;
+  border-color: #c0a16b;
+  color: #f7d595;
+}
+.restriction[data-copies='2'] {
+  background: #293952;
+  border-color: #8da5cc;
+  color: #c9dbfc;
+}
+.restriction[data-copies='3'] {
+  background: #20473e;
+  border-color: #69ac9b;
+  color: #9de1c8;
+}
+@media (max-width: 760px) {
+  .results ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
 }
 .copies {
   display: grid;
@@ -194,13 +350,6 @@
   font-size: 14px;
   line-height: 1.5;
   overflow-wrap: anywhere;
-}
-.results li div > span {
-  display: block;
-  font-size: 11px;
-  color: #a8bdcb;
-  line-height: 1.6;
-  margin-top: 3px;
 }
 .results em {
   font-style: normal;
@@ -247,6 +396,20 @@
     padding: 8px;
   }
   .results {
-    height: 38dvh;
+    height: 44dvh;
+  }
+  .results ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tile {
+    padding: 9px;
+  }
+  .detail {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .artwork {
+    width: min(100%, 260px);
+    margin: 0 auto;
   }
 }

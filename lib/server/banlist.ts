@@ -3,11 +3,19 @@ import {
   type BanlistCard,
   type BanlistSnapshot,
   type BanlistState,
+  type BanlistPanel,
 } from '../banlist';
 import { validDay } from '../tournament-schedule';
 import { getDb } from './db';
 import { fail } from './core';
-import { sourceBytes, spanishPlain } from './ygo-source';
+import { sourceBytes, spanishPlain, manifestForKonamiCard } from './ygo-source';
+import {
+  cacheYgoCard,
+  cachedYgoCards,
+  withLease,
+  usedBytes,
+  EDITION_STORAGE_LIMIT,
+} from './edition-imports';
 
 const sections = ['forbidden', 'limited', 'semi_limited', 'release_of_restricted'] as const;
 const sourceError = () =>
@@ -92,9 +100,55 @@ export function parseBanlist(html: string): BanlistSnapshot {
 export async function getBanlist(): Promise<BanlistState | null> {
   const row = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0];
   const state: BanlistState | null = row?.data?.ygo_banlist ?? null;
-  if (state?.upcoming && state.upcoming.effective_on <= today())
+  if (!state) return null;
+  const cached = new Map(
+    (await cachedYgoCards()).map((card) => [
+      Number(new URL(card.source).searchParams.get('cid')),
+      card,
+    ]),
+  );
+  const enrich = (snapshot: BanlistSnapshot) => ({
+    ...snapshot,
+    cards: snapshot.cards.map((card) => {
+      const detail = cached.get(card.cid);
+      return { ...card, ...(detail ? { detail } : {}) };
+    }),
+  });
+  state.current = enrich(state.current);
+  if (state.upcoming) state.upcoming = enrich(state.upcoming);
+  if (state.upcoming && state.upcoming.effective_on <= today())
     return { ...state, current: state.upcoming, upcoming: null };
   return state;
+}
+
+export async function banlistPanel(): Promise<BanlistPanel> {
+  const state = await getBanlist();
+  const cards = [
+    ...new Map(
+      [...(state?.current.cards ?? []), ...(state?.upcoming?.cards ?? [])].map((card) => [
+        card.cid,
+        card,
+      ]),
+    ).values(),
+  ];
+  return {
+    state,
+    ready: cards.filter((card) => card.detail).length,
+    total: cards.length,
+    storage_bytes: await usedBytes(),
+    storage_limit: EDITION_STORAGE_LIMIT,
+  };
+}
+export async function importBanlistCard(): Promise<BanlistPanel> {
+  return withLease(async () => {
+    const state = await getBanlist();
+    if (!state) fail(409, 'Actualiza la lista oficial primero.');
+    const pending = [...state!.current.cards, ...(state!.upcoming?.cards ?? [])].find(
+      (card) => !card.detail,
+    );
+    if (pending) await cacheYgoCard(await manifestForKonamiCard(pending.cid));
+    return banlistPanel();
+  });
 }
 
 export async function refreshBanlist(): Promise<BanlistState> {

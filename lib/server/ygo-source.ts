@@ -38,24 +38,24 @@ export function spanishPlain(html: string, literalAngles = false) {
       );
       return number > 0 && number <= 0x10ffff ? String.fromCodePoint(number) : '';
     });
-  if (literalAngles) return text.trim();
+  if (literalAngles) return text.replace(/<br\s*\/?\s*>/gi, '\n').trim();
   return text
     .replace(/<br\s*\/?\s*>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .trim();
 }
 export function spanishCard(html: string) {
-  const name = spanishPlain(html.match(/<title>([^|]+)\|/)?.[1] ?? '');
+  const name = spanishPlain(html.match(/<title>([^|]+)\|/)?.[1] ?? '', true);
   const effects = [
     ...html
       .split('class="CardLanguage')[0]
       .matchAll(/<div class="text_linebreak">([\s\S]*?)<\/div>/g),
-  ].map((match) => spanishPlain(match[1]));
+  ].map((match) => spanishPlain(match[1], true));
   if (
     !html.includes('Texto de la Carta') ||
     !name ||
     !effects.length ||
-    effects.some((effect) => effect.length < 10 || /&\w+;|<[^>]+>/.test(effect))
+    effects.some((effect) => effect.length < 10 || /&\w+;/.test(effect))
   )
     fail(
       409,
@@ -128,6 +128,35 @@ export type ManifestCard = {
   level: number | null;
   link: number | null;
 };
+export async function manifestForKonamiCard(cid: number): Promise<ManifestCard> {
+  if (!Number.isInteger(cid) || cid <= 0 || cid > 999999) fail(400, 'Carta no válida.');
+  const bytes = await sourceBytes(
+    `https://db.ygoprodeck.com/api/v7/cardinfo.php?konami_id=${cid}&misc=yes`,
+    500_000,
+  );
+  const result = z
+    .object({ data: z.array(sourceCard).length(1) })
+    .safeParse(JSON.parse(bytes.toString()));
+  if (!result.success || result.data.data[0].misc_info?.[0]?.konami_id !== cid)
+    fail(409, 'La imagen de esta carta todavía no se puede verificar. El avance se conserva.');
+  const card = result.data.data[0];
+  const imageSource = card.card_images[0].image_url;
+  if (imageSource !== `https://images.ygoprodeck.com/images/cards/${card.id}.jpg`)
+    fail(409, 'La imagen de esta carta no corresponde a su identificador.');
+  return {
+    id: card.id,
+    cid,
+    englishName: card.name,
+    printings: [],
+    imageSource,
+    type: card.type,
+    attribute: card.attribute ?? '',
+    atk: card.atk ?? null,
+    def: card.def ?? null,
+    level: card.level ?? null,
+    link: card.linkval ?? null,
+  };
+}
 export async function editionManifest(name: string): Promise<ManifestCard[]> {
   const bytes = await sourceBytes(
     `https://db.ygoprodeck.com/api/v7/cardinfo.php?cardset=${encodeURIComponent(name)}&misc=yes`,

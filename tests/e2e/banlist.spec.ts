@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { BanlistState } from '../../lib/banlist';
+import baseline from '../../public/editions/betb/cards.json';
 
 test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actualización', async ({
   page,
@@ -11,18 +12,31 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
       })
     ).status(),
   ).toBe(401);
+  expect(
+    (
+      await page.request.post('/api/admin/news/banlist/cards', {
+        headers: { Origin: 'http://localhost:3100' },
+      })
+    ).status(),
+  ).toBe(401);
+  const detail = {
+    ...baseline.cards[0],
+    effects: ['Efecto oficial de prueba en español.'],
+    englishName: 'Test Dragon',
+  };
   const state: BanlistState = {
     checked_at: '2026-10-10T03:00:00Z',
     current: {
       effective_on: '2026-09-21',
       cards: [
-        { cid: 1, name: 'Dragón de Prueba', copies: 0, change: 'Limitada → Prohibida' },
-        { cid: 2, name: 'Mágica de Prueba', copies: 1 },
+        { cid: 1, name: 'Dragón de Prueba', copies: 0, change: 'Limitada → Prohibida', detail },
+        { cid: 2, name: 'Mágica de Prueba', copies: 1, detail },
         {
           cid: 3,
           name: 'Retorno de Prueba',
           copies: 3,
           change: 'Limitada → Ya no está en la Lista',
+          detail,
         },
       ],
     },
@@ -36,6 +50,18 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText('Dragón de Prueba', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Mágica de Prueba', { exact: true })).toHaveCount(0);
+  const dragon = dialog.getByRole('button', { name: 'Ver carta: Dragón de Prueba', exact: true });
+  await expect(dragon.getByRole('img')).toBeVisible();
+  await dragon.click();
+  await expect(
+    dialog.getByText('Efecto oficial de prueba en español.', { exact: true }),
+  ).toBeVisible();
+  await expect(dialog.getByRole('img', { name: 'Dragón de Prueba', exact: true })).toHaveAttribute(
+    'src',
+    detail.image,
+  );
+  await page.keyboard.press('Escape');
+  await expect(dragon).toBeFocused();
   await dialog.getByRole('searchbox', { name: 'Buscar carta en la banlist' }).fill('magica');
   await expect(dialog.getByText('Mágica de Prueba', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Dragón de Prueba', { exact: true })).toHaveCount(0);
@@ -63,13 +89,37 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
       })
     ).status(),
   ).toBe(403);
+  expect(
+    (
+      await page.request.post('/api/admin/news/banlist/cards', {
+        headers: { Origin: 'https://evil.test' },
+      })
+    ).status(),
+  ).toBe(403);
   let refreshed = false;
   await page.route('**/api/admin/news/banlist', (route) => {
     if (route.request().method() === 'POST') refreshed = true;
-    return route.fulfill({ json: refreshed ? state : null });
+    return route.fulfill({
+      json: {
+        state: refreshed ? state : null,
+        ready: refreshed ? 2 : 0,
+        total: refreshed ? 3 : 0,
+        storage_bytes: 20000,
+        storage_limit: 100000000,
+      },
+    });
+  });
+  let batches = 0;
+  await page.route('**/api/admin/news/banlist/cards', (route) => {
+    batches++;
+    return route.fulfill({
+      json: { state, ready: 3, total: 3, storage_bytes: 30000, storage_limit: 100000000 },
+    });
   });
   await page.goto('/admin/noticias');
   await page.getByRole('button', { name: 'Actualizar banlist TCG', exact: true }).click();
-  await expect(page.getByText(/Lista verificada. Ya se puede consultar/)).toBeVisible();
+  await expect(page.getByText(/Lista verificada. Galería completa/)).toBeVisible();
+  expect(batches).toBe(1);
+  await expect(page.getByText(/Galería: 3 de 3 cartas listas/)).toBeVisible();
   await expect(page.getByText(/Lista vigente:/)).toContainText('3 cartas');
 });

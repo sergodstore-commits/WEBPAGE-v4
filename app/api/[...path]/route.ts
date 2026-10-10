@@ -39,7 +39,7 @@ import {
 } from '@/lib/server/catalog';
 import { deletePost, getPost, getPosts, savePost } from '@/lib/server/content';
 import { getWebNews, saveWebNews } from '@/lib/server/web-news';
-import { getBanlist, refreshBanlist } from '@/lib/server/banlist';
+import { getBanlist, refreshBanlist, banlistPanel, importBanlistCard } from '@/lib/server/banlist';
 import {
   editionPanel,
   searchEditions,
@@ -292,10 +292,15 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     if (path[0] === 'admin') {
       const user = await requireUser(request, true);
       const db = await getDb();
-      if (route === 'admin/news/banlist' && method === 'GET') return json(await getBanlist());
+      if (route === 'admin/news/banlist' && method === 'GET') return json(await banlistPanel());
       if (route === 'admin/news/banlist' && method === 'POST') {
         await rateLimit(`banlist-refresh:${user.id}`, 10, 60);
-        return json(await refreshBanlist());
+        await refreshBanlist();
+        return json(await banlistPanel());
+      }
+      if (route === 'admin/news/banlist/cards' && method === 'POST') {
+        await rateLimit(`banlist-cards:${user.id}`, 600, 60);
+        return json(await importBanlistCard());
       }
       if (route === 'admin/news/editions' && method === 'GET') return json(await editionPanel());
       if (route === 'admin/news/editions/search' && method === 'POST') {

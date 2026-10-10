@@ -1,16 +1,18 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, date } from '@/lib/client';
-import { banlistDay, type BanlistState } from '@/lib/banlist';
+import { banlistDay, type BanlistPanel } from '@/lib/banlist';
 
 export function BanlistAdmin() {
-  const [state, setState] = useState<BanlistState | null>(null);
+  const [panel, setPanel] = useState<BanlistPanel | null>(null);
+  const state = panel?.state;
+  const stopped = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   async function load() {
     try {
-      setState(await api('/admin/news/banlist'));
+      setPanel(await api('/admin/news/banlist'));
       setError('');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos cargar la banlist.');
@@ -18,15 +20,32 @@ export function BanlistAdmin() {
   }
   useEffect(() => {
     void load();
+    return () => {
+      stopped.current = true;
+    };
   }, []);
   async function refresh() {
     setBusy(true);
     setError('');
     setNotice('');
+    stopped.current = false;
     try {
-      setState(await api('/admin/news/banlist', { method: 'POST' }));
+      let next = await api<BanlistPanel>('/admin/news/banlist', { method: 'POST' });
+      setPanel(next);
+      while (!stopped.current && next.ready < next.total) {
+        setNotice(
+          `Preparando cartas: ${next.ready} de ${next.total}. Puedes pausar y reanudar después.`,
+        );
+        const previous = next.ready;
+        next = await api<BanlistPanel>('/admin/news/banlist/cards', { method: 'POST' });
+        setPanel(next);
+        if (next.ready <= previous && next.ready < next.total)
+          throw Error('La preparación no avanzó. El progreso se conserva; vuelve a intentar.');
+      }
       setNotice(
-        'Lista verificada. Ya se puede consultar en Comunidad. Las consultas se reutilizan durante 5 minutos.',
+        stopped.current
+          ? 'Preparación pausada. El avance se conserva.'
+          : 'Lista verificada. Galería completa disponible en Comunidad.',
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo actualizar la lista.');
@@ -38,8 +57,8 @@ export function BanlistAdmin() {
     <section className="admin-card admin-card-body" aria-labelledby="banlist-admin-heading">
       <h2 id="banlist-admin-heading">Banlist Yu-Gi-Oh! TCG</h2>
       <p>
-        Actualiza la lista oficial de Konami en español. Solo guarda nombres, restricciones y
-        fechas; no descarga imágenes ni utiliza IA.
+        Consulta la lista y los efectos oficiales de Konami en español. Prepara imágenes WebP y
+        reutiliza las cartas de las guías. No utiliza IA.
       </p>
       {state && (
         <p>
@@ -51,6 +70,12 @@ export function BanlistAdmin() {
         <p>
           Próxima lista: {banlistDay(state.upcoming.effective_on)}. Se mostrará como vigente a
           partir de esa fecha.
+        </p>
+      )}
+      {panel && (
+        <p role="status">
+          Galería: {panel.ready} de {panel.total} cartas listas · Almacenamiento compartido:{' '}
+          {(panel.storage_bytes / 1_000_000).toFixed(1)} de {panel.storage_limit / 1_000_000} MB.
         </p>
       )}
       {error && (
@@ -68,8 +93,18 @@ export function BanlistAdmin() {
       )}
       <div className="admin-actions">
         <button className="admin-button" disabled={busy} onClick={() => void refresh()}>
-          {busy ? 'Consultando Konami…' : 'Actualizar banlist TCG'}
+          {busy ? 'Preparando galería…' : 'Actualizar banlist TCG'}
         </button>
+        {busy && (
+          <button
+            className="admin-button secondary"
+            onClick={() => {
+              stopped.current = true;
+            }}
+          >
+            Pausar después de esta carta
+          </button>
+        )}
         <a
           className="admin-button secondary"
           href="/comunidad?ranking=yugioh"

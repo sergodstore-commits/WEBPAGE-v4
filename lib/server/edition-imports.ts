@@ -30,7 +30,7 @@ async function rowFor(code: string) {
   if (!row) fail(404, 'Edición no encontrada. Pulsa Buscar nuevas ediciones primero.');
   return row;
 }
-async function withLease<T>(work: () => Promise<T>): Promise<T> {
+export async function withLease<T>(work: () => Promise<T>): Promise<T> {
   const db = await getDb(),
     lease = token();
   const locked = await db.query(
@@ -51,7 +51,7 @@ async function withLease<T>(work: () => Promise<T>): Promise<T> {
     );
   }
 }
-async function usedBytes() {
+export async function usedBytes() {
   return Number(
     (await (await getDb()).query('SELECT coalesce(sum(bytes),0) AS bytes FROM ygo_card_cache'))
       .rows[0].bytes,
@@ -217,6 +217,80 @@ async function saveImage(id: number, thumbnail: boolean, bytes: Buffer) {
   await writeFile(path.join(dir, key), bytes);
   return `/api/media/${key}`;
 }
+// Call under withLease: editions and banlist share images, texts and the storage cap.
+export async function cacheYgoCard(pending: ManifestCard): Promise<EditionCard> {
+  const cached = (
+    await (await getDb()).query('SELECT data FROM ygo_card_cache WHERE id=$1', [pending.id])
+  ).rows[0];
+  if (cached) return cached.data as EditionCard;
+  const existing = staticBetb.cards.find((card) => card.id === pending.id);
+  let card: EditionCard,
+    bytes = 0;
+  if (existing) card = existing;
+  else {
+    if (!pending.cid)
+      fail(
+        409,
+        `Falta la ficha oficial en español de ${pending.englishName}. Podrás reanudar cuando esté disponible.`,
+      );
+    const source = `https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=${pending.cid}&request_locale=es`;
+    const spanish = spanishCard((await sourceBytes(source, 500_000)).toString('utf8'));
+    const original = await sourceBytes(pending.imageSource, 2_000_000);
+    const processor = sharp(original, { limitInputPixels: 5_000_000 });
+    const metadata = await processor.metadata();
+    if (metadata.format !== 'jpeg')
+      fail(409, 'La imagen de la fuente no tiene un formato verificable.');
+    const large = await processor
+      .clone()
+      .rotate()
+      .resize({ width: 600, withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+    const small = await processor
+      .clone()
+      .rotate()
+      .resize({ width: 220, withoutEnlargement: true })
+      .webp({ quality: 76 })
+      .toBuffer();
+    bytes = large.length + small.length;
+    if (bytes > 350_000 || (await usedBytes()) + bytes > EDITION_STORAGE_LIMIT)
+      fail(
+        409,
+        'Se alcanzó el límite de almacenamiento de esta herramienta (100 MB). No se contratará más espacio ni se borrarán cartas automáticamente.',
+      );
+    const [image, thumbnail] = await Promise.all([
+      saveImage(pending.id, false, large),
+      saveImage(pending.id, true, small),
+    ]);
+    card = {
+      id: pending.id,
+      ...spanish,
+      englishName: pending.englishName,
+      printings: pending.printings,
+      source,
+      image,
+      thumbnail,
+      type: pending.type,
+      attribute: pending.attribute,
+      atk: pending.atk,
+      def: pending.def,
+      level: pending.level,
+      link: pending.link,
+    };
+  }
+  await (
+    await getDb()
+  ).query(
+    'INSERT INTO ygo_card_cache(id,data,bytes) VALUES($1,$2::jsonb,$3) ON CONFLICT(id) DO NOTHING',
+    [pending.id, jsonValue(card), bytes],
+  );
+
+  return card;
+}
+export async function cachedYgoCards(): Promise<EditionCard[]> {
+  const rows = (await (await getDb()).query('SELECT data FROM ygo_card_cache')).rows;
+  return [...staticBetb.cards, ...rows.map((row) => row.data)] as EditionCard[];
+}
 export async function importEditionBatch(code: string) {
   return withLease(async () => {
     const db = await getDb(),
@@ -231,66 +305,7 @@ export async function importEditionBatch(code: string) {
     const pending = manifest.find((card) => !cached.some((saved) => Number(saved.id) === card.id));
     if (!pending) return summary(row);
     try {
-      // Reuse already hosted Beyond images and texts, including across reprints.
-      const existing = staticBetb.cards.find((card) => card.id === pending.id);
-      let card: EditionCard,
-        bytes = 0;
-      if (existing) card = existing;
-      else {
-        if (!pending.cid)
-          fail(
-            409,
-            `Falta la ficha oficial en español de ${pending.englishName}. Podrás reanudar cuando esté disponible.`,
-          );
-        const source = `https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=${pending.cid}&request_locale=es`;
-        const spanish = spanishCard((await sourceBytes(source, 500_000)).toString('utf8'));
-        const original = await sourceBytes(pending.imageSource, 2_000_000);
-        const processor = sharp(original, { limitInputPixels: 5_000_000 });
-        const metadata = await processor.metadata();
-        if (metadata.format !== 'jpeg')
-          fail(409, 'La imagen de la fuente no tiene un formato verificable.');
-        const large = await processor
-          .clone()
-          .rotate()
-          .resize({ width: 600, withoutEnlargement: true })
-          .webp({ quality: 80 })
-          .toBuffer();
-        const small = await processor
-          .clone()
-          .rotate()
-          .resize({ width: 220, withoutEnlargement: true })
-          .webp({ quality: 76 })
-          .toBuffer();
-        bytes = large.length + small.length;
-        if (bytes > 350_000 || (await usedBytes()) + bytes > EDITION_STORAGE_LIMIT)
-          fail(
-            409,
-            'Se alcanzó el límite de almacenamiento de esta herramienta (100 MB). No se contratará más espacio ni se borrarán cartas automáticamente.',
-          );
-        const [image, thumbnail] = await Promise.all([
-          saveImage(pending.id, false, large),
-          saveImage(pending.id, true, small),
-        ]);
-        card = {
-          id: pending.id,
-          ...spanish,
-          englishName: pending.englishName,
-          printings: pending.printings,
-          source,
-          image,
-          thumbnail,
-          type: pending.type,
-          attribute: pending.attribute,
-          atk: pending.atk,
-          def: pending.def,
-          level: pending.level,
-          link: pending.link,
-        };
-      }
-      await db.query(
-        'INSERT INTO ygo_card_cache(id,data,bytes) VALUES($1,$2::jsonb,$3) ON CONFLICT(id) DO NOTHING',
-        [pending.id, jsonValue(card), bytes],
-      );
+      await cacheYgoCard(pending);
       await db.query("UPDATE ygo_editions SET last_error='' WHERE code=$1", [code]);
     } catch (error) {
       await recordError(code, error);

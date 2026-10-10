@@ -1,11 +1,26 @@
+import type { EditionCard } from './edition-gallery';
+
 export const banlistSource =
   'https://www.db.yugioh-card.com/yugiohdb/forbidden_limited.action?request_locale=es';
-export type BanlistCard = { cid: number; name: string; copies: 0 | 1 | 2 | 3; change?: string };
+export type BanlistCard = {
+  cid: number;
+  name: string;
+  copies: 0 | 1 | 2 | 3;
+  change?: string;
+  detail?: EditionCard;
+};
 export type BanlistSnapshot = { effective_on: string; cards: BanlistCard[] };
 export type BanlistState = {
   checked_at: string;
   current: BanlistSnapshot;
   upcoming: BanlistSnapshot | null;
+};
+export type BanlistPanel = {
+  state: BanlistState | null;
+  ready: number;
+  total: number;
+  storage_bytes: number;
+  storage_limit: number;
 };
 export const restrictionLabels = [
   'Prohibidas',
