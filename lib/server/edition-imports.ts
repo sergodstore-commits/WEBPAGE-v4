@@ -287,9 +287,8 @@ export async function cacheYgoCard(pending: ManifestCard): Promise<EditionCard> 
 
   return card;
 }
-export async function cachedYgoCards(): Promise<EditionCard[]> {
-  const rows = (await (await getDb()).query('SELECT data FROM ygo_card_cache')).rows;
-  return [...staticBetb.cards, ...rows.map((row) => row.data)] as EditionCard[];
+export function withStaticYgoCards(cached: EditionCard[]): EditionCard[] {
+  return [...staticBetb.cards, ...cached] as EditionCard[];
 }
 export async function importEditionBatch(code: string) {
   return withLease(async () => {

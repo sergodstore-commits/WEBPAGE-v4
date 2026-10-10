@@ -49,6 +49,9 @@ export function BanlistAdmin() {
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo actualizar la lista.');
+      setNotice(
+        'La preparación se detuvo. El avance se conserva; pulsa Actualizar banlist TCG para reanudar.',
+      );
     } finally {
       setBusy(false);
     }

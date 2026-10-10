@@ -11,9 +11,9 @@ import { fail } from './core';
 import { sourceBytes, spanishPlain, manifestForKonamiCard } from './ygo-source';
 import {
   cacheYgoCard,
-  cachedYgoCards,
-  withLease,
+  withStaticYgoCards,
   usedBytes,
+  withLease,
   EDITION_STORAGE_LIMIT,
 } from './edition-imports';
 
@@ -97,12 +97,20 @@ export function parseBanlist(html: string): BanlistSnapshot {
   return { effective_on, cards };
 }
 
-export async function getBanlist(): Promise<BanlistState | null> {
-  const row = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0];
-  const state: BanlistState | null = row?.data?.ygo_banlist ?? null;
-  if (!state) return null;
+async function readBanlist() {
+  // One scoped DB query avoids repeated transactions and cache reads on each progress step.
+  const row = (
+    await (
+      await getDb()
+    ).query(`SELECT data->'ygo_banlist' AS state,
+    (SELECT jsonb_build_object('cards',coalesce(jsonb_agg(data),'[]'::jsonb),'bytes',coalesce(sum(bytes),0)) FROM ygo_card_cache) AS cache
+    FROM settings WHERE id=1`)
+  ).rows[0];
+  let state: BanlistState | null = row?.state ?? null;
+  const bytes = Number(row?.cache?.bytes ?? 0);
+  if (!state) return { state, bytes };
   const cached = new Map(
-    (await cachedYgoCards()).map((card) => [
+    withStaticYgoCards(row.cache.cards).map((card) => [
       Number(new URL(card.source).searchParams.get('cid')),
       card,
     ]),
@@ -117,12 +125,16 @@ export async function getBanlist(): Promise<BanlistState | null> {
   state.current = enrich(state.current);
   if (state.upcoming) state.upcoming = enrich(state.upcoming);
   if (state.upcoming && state.upcoming.effective_on <= today())
-    return { ...state, current: state.upcoming, upcoming: null };
-  return state;
+    state = { ...state, current: state.upcoming, upcoming: null };
+  return { state, bytes };
+}
+
+export async function getBanlist(): Promise<BanlistState | null> {
+  return (await readBanlist()).state;
 }
 
 export async function banlistPanel(): Promise<BanlistPanel> {
-  const state = await getBanlist();
+  const { state, bytes } = await readBanlist();
   const cards = [
     ...new Map(
       [...(state?.current.cards ?? []), ...(state?.upcoming?.cards ?? [])].map((card) => [
@@ -143,18 +155,34 @@ export async function banlistPanel(): Promise<BanlistPanel> {
       : null,
     ready: cards.filter((card) => card.detail).length,
     total: cards.length,
-    storage_bytes: await usedBytes(),
+    storage_bytes: bytes,
     storage_limit: EDITION_STORAGE_LIMIT,
   };
 }
-export async function importBanlistCard(): Promise<BanlistPanel> {
+export async function importBanlistCard(batchSize = 1): Promise<BanlistPanel> {
   return withLease(async () => {
     const state = await getBanlist();
     if (!state) fail(409, 'Actualiza la lista oficial primero.');
-    const pending = [...state!.current.cards, ...(state!.upcoming?.cards ?? [])].find(
-      (card) => !card.detail,
+    const unique = [
+      ...new Map(
+        [...state!.current.cards, ...(state!.upcoming?.cards ?? [])].map((card) => [
+          card.cid,
+          card,
+        ]),
+      ).values(),
+    ];
+    const requested = Math.min(3, Math.max(1, Math.floor(batchSize)));
+    // Each image pair is bounded to 350 KB. Reserve the worst case before parallel work,
+    // while the shared lease prevents other importers from consuming that capacity.
+    const remaining = EDITION_STORAGE_LIMIT - (await usedBytes());
+    const capacity = Math.max(1, Math.floor(remaining / 350_000));
+    const pending = unique.filter((card) => !card.detail).slice(0, Math.min(requested, capacity));
+    const results = await Promise.allSettled(
+      pending.map(async (card) => cacheYgoCard(await manifestForKonamiCard(card.cid))),
     );
-    if (pending) await cacheYgoCard(await manifestForKonamiCard(pending.cid));
+    // Do not release the lease until every in-flight upload settles, even on source failure.
+    const error = results.find((result) => result.status === 'rejected');
+    if (error?.status === 'rejected') throw error.reason;
     return banlistPanel();
   });
 }

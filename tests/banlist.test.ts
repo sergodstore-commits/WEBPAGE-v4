@@ -141,6 +141,10 @@ test('Banlist TCG: nombres oficiales, lista completa, fechas futuras y conservac
   await db.query("UPDATE ygo_import_state SET lease_until=now()+interval '1 minute' WHERE id=1");
   await assert.rejects(importBanlistCard, /curso/);
   await db.query('UPDATE ygo_import_state SET lease_until=NULL WHERE id=1');
+  await db.query('DELETE FROM ygo_card_cache');
+  panel = await importBanlistCard(3);
+  assert.equal(panel.ready, 3, 'Bounded parallel batches prepare multiple cards in one request');
+  assert.ok(panel.storage_bytes <= panel.storage_limit);
   async function expire() {
     await db.query(
       "UPDATE settings SET data=jsonb_set(data,'{ygo_banlist,checked_at}','\"2000-01-01T00:00:00.000Z\"') WHERE id=1",

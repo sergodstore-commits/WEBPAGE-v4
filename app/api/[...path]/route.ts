@@ -300,7 +300,7 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       }
       if (route === 'admin/news/banlist/cards' && method === 'POST') {
         await rateLimit(`banlist-cards:${user.id}`, 600, 60);
-        return json(await importBanlistCard());
+        return json(await importBanlistCard(3));
       }
       if (route === 'admin/news/editions' && method === 'GET') return json(await editionPanel());
       if (route === 'admin/news/editions/search' && method === 'POST') {
