@@ -1,7 +1,12 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/client';
-import { yugiohMetaArticle, type WebNewsItem } from '@/lib/web-news';
+import {
+  yugiohMetaArticle,
+  webNewsCategories,
+  type WebNewsItem,
+  type WebNewsCandidate,
+} from '@/lib/web-news';
 import { EditionImportAdmin } from './EditionImportAdmin';
 import { BanlistAdmin } from './BanlistAdmin';
 
@@ -16,7 +21,9 @@ const blank = (): WebNewsItem => ({
     month: '2-digit',
     day: '2-digit',
   }).format(new Date()),
-  visible: true,
+  visible: false,
+  category: 'news',
+  body: '',
 });
 
 export function WebNewsAdmin() {
@@ -26,6 +33,77 @@ export function WebNewsAdmin() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [candidates, setCandidates] = useState<WebNewsCandidate[]>([]);
+  const [progress, setProgress] = useState('');
+  const stop = useRef(false);
+  const editor = useRef<HTMLFormElement>(null);
+  useEffect(
+    () => () => {
+      stop.current = true;
+    },
+    [],
+  );
+  async function review() {
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const result = await api<{ items: WebNewsCandidate[] }>('/admin/news/web-sources/review', {
+        method: 'POST',
+        body: '{}',
+      });
+      setCandidates(result.items);
+      setNotice(
+        `${result.items.length} noticias TCG disponibles. Preparar una noticia no la publica.`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No pudimos consultar la fuente.');
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function prepareImages(id: string) {
+    setBusy(true);
+    setError('');
+    stop.current = false;
+    type Result = {
+      items: WebNewsItem[];
+      ready: number;
+      total: number;
+      storage_bytes: number;
+      storage_limit: number;
+    };
+    try {
+      let result = await api<Result>(`/admin/news/web-sources/${id}/prepare`, {
+        method: 'POST',
+        body: '{}',
+      });
+      setItems(result.items);
+      setProgress(
+        `Imágenes: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
+      );
+      while (result.ready < result.total && !stop.current) {
+        result = await api<Result>(`/admin/news/web-sources/${id}/images`, {
+          method: 'POST',
+          body: '{}',
+        });
+        setItems(result.items);
+        setProgress(
+          `Imágenes: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
+        );
+      }
+      setNotice(
+        stop.current
+          ? 'Preparación pausada. Puedes reanudar con el mismo botón.'
+          : 'Imágenes listas. Revisa el texto y marca Mostrar para publicar.',
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No pudimos preparar las imágenes.');
+    } finally {
+      setBusy(false);
+      setProgress('');
+    }
+  }
   async function load() {
     try {
       setItems(await api<WebNewsItem[]>('/admin/news/web-sources'));
@@ -66,14 +144,13 @@ export function WebNewsAdmin() {
       <section className="admin-card admin-card-body" aria-labelledby="web-news-admin-heading">
         <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh!</h2>
         <p>
-          Tarjetas de la columna derecha de Noticias. Añade un resumen propio en español y enlaza el
-          artículo original; no copies el artículo completo.
+          Solo TCG. Busca novedades, prepara tu artículo en español y decide qué aparece en
+          Noticias. Las guías de ediciones se publican desde su sección superior.
         </p>
         <p>
-          Beyond the Brave ya cuenta con una guía propia y galería completa en español. Su tarjeta
-          enlaza automáticamente a la guía, además de conservar la fuente original.
-        </p>
-        <p>
+          <button className="admin-button" disabled={busy} onClick={() => void review()}>
+            Buscar novedades TCG
+          </button>{' '}
           <a
             href="https://www.yugiohmeta.com/"
             target="_blank"
@@ -83,6 +160,74 @@ export function WebNewsAdmin() {
             Consultar Yu-Gi-Oh! Meta ↗
           </a>
         </p>
+        {progress && (
+          <p role="status">
+            {progress}{' '}
+            <button
+              type="button"
+              className="admin-button secondary"
+              onClick={() => {
+                stop.current = true;
+              }}
+            >
+              Pausar preparación
+            </button>
+          </p>
+        )}
+        {candidates.length > 0 && (
+          <section aria-label="Noticias TCG disponibles" className="admin-table-scroll">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Fuente · TCG</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {candidates.map((candidate) => (
+                  <tr key={candidate.id}>
+                    <td>
+                      <strong>{candidate.title}</strong>
+                      <p>
+                        {webNewsCategories[candidate.category]} · {candidate.published_on}
+                      </p>
+                      <a href={candidate.url} target="_blank" rel="noopener noreferrer">
+                        Consultar original ↗
+                      </a>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="admin-button secondary"
+                        disabled={busy || Boolean(items?.some((i) => i.url === candidate.url))}
+                        onClick={() => {
+                          setDraft({
+                            ...blank(),
+                            id: candidate.id,
+                            url: candidate.url,
+                            published_on: candidate.published_on,
+                            category: candidate.category,
+                            source_image: candidate.source_image,
+                            original_title: candidate.title,
+                            original_summary: candidate.summary,
+                          });
+                          editor.current?.scrollIntoView({ block: 'center' });
+                          editor.current
+                            ?.querySelector<HTMLInputElement>('input[name="spanish-title"]')
+                            ?.focus({ preventScroll: true });
+                        }}
+                      >
+                        {items?.some((i) => i.url === candidate.url)
+                          ? 'Ya está en la lista'
+                          : 'Preparar noticia'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
         {error && (
           <p role="alert" className="admin-feedback error">
             {error}{' '}
@@ -103,6 +248,7 @@ export function WebNewsAdmin() {
         ) : (
           <>
             <form
+              ref={editor}
               onSubmit={(event) => {
                 event.preventDefault();
                 const url = yugiohMetaArticle(draft.url);
@@ -122,7 +268,7 @@ export function WebNewsAdmin() {
                   id: draft.id || crypto.randomUUID(),
                 };
                 change(
-                  draft.id
+                  items.some((old) => old.id === draft.id)
                     ? items.map((old) => (old.id === draft.id ? item : old))
                     : [item, ...items],
                 );
@@ -131,6 +277,18 @@ export function WebNewsAdmin() {
               }}
             >
               <fieldset disabled={busy} style={{ border: 0, padding: 0, display: 'grid', gap: 12 }}>
+                {draft.original_title && (
+                  <details open>
+                    <summary>Referencia original · traduce y redacta tu versión</summary>
+                    <p>
+                      <strong>{draft.original_title}</strong>
+                    </p>
+                    <p>{draft.original_summary}</p>
+                    <a href={draft.url} target="_blank" rel="noopener noreferrer">
+                      Abrir artículo original ↗
+                    </a>
+                  </details>
+                )}
                 <label className="admin-field">
                   <span>Enlace del artículo</span>
                   <input
@@ -143,8 +301,57 @@ export function WebNewsAdmin() {
                   />
                 </label>
                 <label className="admin-field">
+                  <span>Categoría TCG</span>
+                  <select
+                    value={draft.category || 'news'}
+                    onChange={(e) =>
+                      setDraft({ ...draft, category: e.target.value as WebNewsItem['category'] })
+                    }
+                  >
+                    {Object.entries(webNewsCategories).map(([value, label]) => (
+                      <option value={value} key={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="admin-field">
+                  <span>Artículo en español</span>
+                  <textarea
+                    rows={7}
+                    maxLength={12000}
+                    value={draft.body || ''}
+                    onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+                    placeholder="Redacta los detalles de la noticia. Separa los párrafos con una línea en blanco."
+                  />
+                </label>
+                {draft.media?.length ? (
+                  <details>
+                    <summary>Textos de las imágenes y cartas ({draft.media.length})</summary>
+                    {draft.media.map((m, index) => (
+                      <label className="admin-field" key={m.source}>
+                        <span>{m.name} · texto o efecto en español (opcional)</span>
+                        <textarea
+                          rows={3}
+                          maxLength={3000}
+                          value={m.caption || ''}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              media: draft.media!.map((old, i) =>
+                                i === index ? { ...old, caption: e.target.value } : old,
+                              ),
+                            })
+                          }
+                        />
+                      </label>
+                    ))}
+                  </details>
+                ) : null}
+                <label className="admin-field">
                   <span>Título en español</span>
                   <input
+                    name="spanish-title"
                     required
                     minLength={3}
                     maxLength={160}
@@ -177,7 +384,9 @@ export function WebNewsAdmin() {
                     className="admin-button secondary"
                     disabled={!draft.id && items.length >= 80}
                   >
-                    {draft.id ? 'Aplicar edición a la lista' : 'Añadir a la lista'}
+                    {items.some((old) => old.id === draft.id)
+                      ? 'Aplicar edición a la lista'
+                      : 'Añadir a la lista'}
                   </button>
                   {draft.id && (
                     <button
@@ -221,11 +430,25 @@ export function WebNewsAdmin() {
                       <td>
                         <strong>{item.title}</strong>
                         <p>{item.summary}</p>
+                        <small>
+                          {webNewsCategories[item.category || 'news']} ·{' '}
+                          {item.media_checked
+                            ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`
+                            : 'Imágenes sin preparar'}
+                        </small>
                         <a href={item.url} target="_blank" rel="noopener noreferrer">
                           Ver fuente ↗
                         </a>
                       </td>
                       <td>
+                        <button
+                          type="button"
+                          className="admin-button secondary"
+                          disabled={busy || dirty}
+                          onClick={() => void prepareImages(item.id)}
+                        >
+                          {item.media_checked ? 'Actualizar imágenes' : 'Preparar imágenes'}
+                        </button>{' '}
                         <button
                           className="admin-button secondary"
                           disabled={busy}
@@ -241,8 +464,9 @@ export function WebNewsAdmin() {
             </div>
             {!items.length && <p>No hay artículos seleccionados.</p>}
             <p className="admin-muted">
-              Antes de guardar, revisa el español y los nombres oficiales de las cartas. No hay
-              traducción automática ni importación de imágenes.
+              Guarda el borrador, prepara sus imágenes y después marca Mostrar. El botón descarga
+              las imágenes de la fuente sin Codex. Revisa tú el español; no hay IA ni traducción
+              automática. Portadas e imágenes de noticias: máximo 15 MB, 160 KB por archivo.
             </p>
             <button className="admin-button" disabled={busy || !dirty} onClick={() => void save()}>
               {busy ? 'Guardando…' : 'Guardar selección de actualidad'}

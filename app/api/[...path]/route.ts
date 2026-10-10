@@ -38,7 +38,13 @@ import {
   withdrawProduct,
 } from '@/lib/server/catalog';
 import { deletePost, getPost, getPosts, savePost } from '@/lib/server/content';
-import { getWebNews, saveWebNews } from '@/lib/server/web-news';
+import {
+  getWebNews,
+  saveWebNews,
+  publicWebArticle,
+  prepareWebNewsImages,
+} from '@/lib/server/web-news';
+import { reviewMetaNews } from '@/lib/server/meta-news-source';
 import { getBanlist, refreshBanlist, banlistPanel, importBanlistCard } from '@/lib/server/banlist';
 import {
   editionPanel,
@@ -232,6 +238,8 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
       });
     if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());
+    if (path[0] === 'news' && path[1] === 'tcg' && path.length === 3 && method === 'GET')
+      return json(await publicWebArticle(path[2]));
     if (route === 'news/editions' && method === 'GET') return json(await publishedEditions());
     if (path[0] === 'news' && path[1] === 'editions' && path.length === 3 && method === 'GET') {
       return NextResponse.json(await publicEdition(path[2]), {
@@ -364,6 +372,20 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await getWebNews(true));
       if (route === 'admin/news/web-sources' && method === 'PATCH')
         return json(await saveWebNews(await body(request)));
+      if (route === 'admin/news/web-sources/review' && method === 'POST') {
+        await rateLimit(`meta-news-review:${user.id}`, 20, 60);
+        return json(await reviewMetaNews());
+      }
+      if (
+        path[1] === 'news' &&
+        path[2] === 'web-sources' &&
+        path.length === 5 &&
+        ['prepare', 'images'].includes(path[4]) &&
+        method === 'POST'
+      ) {
+        await rateLimit(`meta-news-images:${user.id}`, 300, 60);
+        return json(await prepareWebNewsImages(path[3], path[4] === 'images'));
+      }
       if (route === 'admin/news' && method === 'POST') {
         await rateLimit(`instagram-import:${user.id}`, 30, 15);
         return json(await importInstagram(user.id, await body(request)), 201);

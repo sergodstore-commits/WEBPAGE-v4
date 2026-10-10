@@ -103,6 +103,8 @@ const productSchema = z.object({
 export async function getSettings(): Promise<Settings> {
   const {
     web_news: _webNews,
+    web_news_discovery: _webNewsDiscovery,
+    web_news_media_cache: _webNewsMedia,
     ygo_banlist: _banlist,
     ...settings
   } = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0].data;
