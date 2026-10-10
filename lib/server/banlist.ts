@@ -132,7 +132,15 @@ export async function banlistPanel(): Promise<BanlistPanel> {
     ).values(),
   ];
   return {
-    state,
+    state: state
+      ? {
+          checked_at: state.checked_at,
+          current: { effective_on: state.current.effective_on, total: state.current.cards.length },
+          upcoming: state.upcoming
+            ? { effective_on: state.upcoming.effective_on, total: state.upcoming.cards.length }
+            : null,
+        }
+      : null,
     ready: cards.filter((card) => card.detail).length,
     total: cards.length,
     storage_bytes: await usedBytes(),

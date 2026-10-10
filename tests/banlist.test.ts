@@ -102,11 +102,16 @@ test('Banlist TCG: nombres oficiales, lista completa, fechas futuras y conservac
   assert.equal((await banlistPanel()).ready, 0);
   let panel = await importBanlistCard();
   assert.equal(panel.ready, 1);
-  assert.equal(panel.state?.current.cards[0].detail?.name, 'Maliss <Q>');
-  assert.deepEqual(panel.state?.current.cards[0].detail?.effects, [
+  assert.equal((await getBanlist())?.current.cards[0].detail?.name, 'Maliss <Q>');
+  assert.deepEqual((await getBanlist())?.current.cards[0].detail?.effects, [
     'Invoca a "Maliss <Q>".\nDestruye 1 carta.',
   ]);
-  assert.match(panel.state!.current.cards[0].detail!.image, /\.webp$/);
+  assert.match((await getBanlist())!.current.cards[0].detail!.image, /\.webp$/);
+  assert.equal(
+    Object.hasOwn(panel.state!.current, 'cards'),
+    false,
+    'Admin progress omits the full gallery payload',
+  );
   assert.ok(panel.storage_bytes > 0 && panel.storage_bytes < 350000);
   invalidIdentity = true;
   await assert.rejects(importBanlistCard, /verificar/);
@@ -119,7 +124,7 @@ test('Banlist TCG: nombres oficiales, lista completa, fechas futuras y conservac
   panel = await importBanlistCard();
   assert.equal(panel.ready, 2);
   // A previously imported gallery card is reused by its official cid, without any source call.
-  const cached = panel.state!.current.cards[0].detail!;
+  const cached = (await getBanlist())!.current.cards[0].detail!;
   await db.query('INSERT INTO ygo_card_cache(id,data,bytes) VALUES($1,$2::jsonb,0)', [
     100000004,
     JSON.stringify({

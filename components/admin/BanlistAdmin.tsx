@@ -63,7 +63,7 @@ export function BanlistAdmin() {
       {state && (
         <p>
           Lista vigente: <strong>{banlistDay(state.current.effective_on)}</strong> ·{' '}
-          {state.current.cards.length} cartas · Última consulta: {date(state.checked_at)}.
+          {state.current.total} cartas · Última consulta: {date(state.checked_at)}.
         </p>
       )}
       {state?.upcoming && (

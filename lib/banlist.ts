@@ -16,7 +16,11 @@ export type BanlistState = {
   upcoming: BanlistSnapshot | null;
 };
 export type BanlistPanel = {
-  state: BanlistState | null;
+  state: {
+    checked_at: string;
+    current: { effective_on: string; total: number };
+    upcoming: { effective_on: string; total: number } | null;
+  } | null;
   ready: number;
   total: number;
   storage_bytes: number;

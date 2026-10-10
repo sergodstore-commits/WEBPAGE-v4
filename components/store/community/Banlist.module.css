@@ -248,6 +248,7 @@
   display: block;
   width: 100%;
   height: auto;
+  max-height: 58dvh;
   object-fit: contain;
   border-radius: 8px;
 }

@@ -97,11 +97,16 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
     ).status(),
   ).toBe(403);
   let refreshed = false;
+  const summary = {
+    checked_at: state.checked_at,
+    current: { effective_on: state.current.effective_on, total: 3 },
+    upcoming: null,
+  };
   await page.route('**/api/admin/news/banlist', (route) => {
     if (route.request().method() === 'POST') refreshed = true;
     return route.fulfill({
       json: {
-        state: refreshed ? state : null,
+        state: refreshed ? summary : null,
         ready: refreshed ? 2 : 0,
         total: refreshed ? 3 : 0,
         storage_bytes: 20000,
@@ -113,7 +118,7 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
   await page.route('**/api/admin/news/banlist/cards', (route) => {
     batches++;
     return route.fulfill({
-      json: { state, ready: 3, total: 3, storage_bytes: 30000, storage_limit: 100000000 },
+      json: { state: summary, ready: 3, total: 3, storage_bytes: 30000, storage_limit: 100000000 },
     });
   });
   await page.goto('/admin/noticias');
