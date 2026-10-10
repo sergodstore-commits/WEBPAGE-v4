@@ -119,7 +119,7 @@ test('Admin: selección web protegida, editar español, ocultar y persistir', as
       })
     ).status(),
   ).toBe(401);
-  for (const path of ['review', 'review-myl', 'example/prepare', 'example/images'])
+  for (const path of ['review', 'review-myl', 'draft', 'example/prepare', 'example/images'])
     expect(
       (
         await page.request.post(`/api/admin/news/web-sources/${path}`, {
@@ -157,21 +157,16 @@ test('Admin: selección web protegida, editar español, ocultar y persistir', as
     await section
       .getByLabel('Título en español', { exact: true })
       .fill('Beyond the Brave: cartas y rarezas');
-    await section.getByRole('button', { name: 'Aplicar edición a la lista', exact: true }).click();
-    await section.getByRole('checkbox', { name: /Mostrar Beyond the Brave/ }).uncheck();
     await section
-      .getByRole('button', { name: 'Guardar selección de actualidad', exact: true })
+      .getByRole('button', { name: 'Guardar cambios de la noticia', exact: true })
       .click();
-    await expect(
-      section.getByRole('status').filter({ hasText: 'Selección publicada' }),
-    ).toBeVisible();
+    await expect(section.getByRole('status').filter({ hasText: 'Noticia guardada' })).toBeVisible();
+    await section.getByRole('button', { name: 'Retirar noticia', exact: true }).click();
+    await expect(section.getByRole('status').filter({ hasText: 'Noticia retirada' })).toBeVisible();
     await page.reload();
-    await expect(
-      section.getByRole('checkbox', {
-        name: 'Mostrar Beyond the Brave: cartas y rarezas',
-        exact: true,
-      }),
-    ).not.toBeChecked();
+    const row = section.getByRole('row').filter({ hasText: 'Beyond the Brave: cartas y rarezas' });
+    await expect(row).toContainText('Borrador');
+    await expect(row.getByRole('button', { name: 'Publicar noticia', exact: true })).toBeVisible();
     expect(await (await page.request.get('/api/news/web-sources')).json()).toEqual([]);
   } finally {
     await page.request.patch('/api/admin/news/web-sources', {
@@ -238,10 +233,30 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
     source_image: '',
   };
   let saved: any[] = [];
-  await page.route('**/api/admin/news/web-sources', (r) => {
-    if (r.request().method() === 'PATCH') saved = r.request().postDataJSON();
+  await page.route('**/api/admin/news/web-sources', (r) => r.fulfill({ json: saved }));
+  await page.route('**/api/admin/news/web-sources/*', (r) => {
+    if (r.request().method() === 'PATCH') saved = [r.request().postDataJSON()];
+    if (r.request().url().endsWith('/draft'))
+      saved = [
+        {
+          ...candidate,
+          visible: false,
+          media_checked: true,
+          body: candidate.summary,
+          original_title: candidate.title,
+          original_summary: candidate.summary,
+        },
+      ];
     return r.fulfill({ json: saved });
   });
+  await page.route('**/api/admin/news/web-sources/*/prepare', (r) =>
+    r.fulfill({
+      json: { items: saved, ready: 0, total: 0, storage_bytes: 0, storage_limit: 15000000 },
+    }),
+  );
+  await page.route('**/api/news/web-sources', (r) =>
+    r.fulfill({ json: saved.filter((i) => i.visible) }),
+  );
   await page.route('**/api/admin/news/web-sources/review-myl', (r) =>
     r.fulfill({ json: { items: [candidate] } }),
   );
@@ -257,16 +272,31 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
     .getByLabel('Título en español', { exact: true })
     .fill('Cambios revisados para nuestra liga');
   await section
-    .getByLabel('Resumen propio en español', { exact: true })
+    .getByRole('textbox', { name: 'Resumen propio en español', exact: true })
     .fill('Resumen preparado por la tienda para sus jugadores.');
   await section.getByRole('checkbox', { name: 'MyL Primer Bloque', exact: true }).uncheck();
   await section.getByLabel('MyL Primera Era · vigente desde', { exact: true }).fill('2026-10-08');
-  await section.getByRole('button', { name: 'Añadir a la lista', exact: true }).click();
-  await section
-    .getByRole('button', { name: 'Guardar selección de actualidad', exact: true })
-    .click();
+  await section.getByRole('button', { name: 'Guardar cambios de la noticia', exact: true }).click();
   await expect.poll(() => saved.length).toBe(1);
   expect(saved[0].boards).toEqual(['myl-first-era']);
   expect(saved[0].visible).toBe(false);
   expect(saved[0].effective_dates['myl-first-era']).toBe('2026-10-08');
+  await section.getByRole('button', { name: 'Editar', exact: true }).click();
+  await section.getByRole('button', { name: 'Publicar noticia revisada', exact: true }).click();
+  await expect(section.getByRole('status').filter({ hasText: 'Noticia publicada' })).toBeVisible();
+  expect(saved[0].visible).toBe(true);
+  await page.reload();
+  await expect(section.getByRole('row').filter({ hasText: saved[0].title })).toContainText(
+    'Publicada',
+  );
+  await page
+    .getByRole('navigation', { name: 'Herramientas de contenido' })
+    .getByRole('button', { name: 'Banlist TCG' })
+    .click();
+  await expect(section).not.toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Banlist Yu-Gi-Oh! TCG' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole('navigation', { name: 'Herramientas de contenido' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.data/admin-news-workspace-mobile.png', fullPage: true });
 });

@@ -1,0 +1,90 @@
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.tab {
+  text-align: left;
+  padding: 18px;
+  border: 1px solid #c8d7df;
+  border-radius: 12px;
+  background: #fff;
+  color: #253e4b;
+  cursor: pointer;
+}
+.tab strong,
+.tab small {
+  display: block;
+}
+.tab strong {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.tab small {
+  line-height: 1.5;
+}
+.tab[aria-pressed='true'] {
+  background: #e8f6fa;
+  border-color: #16809d;
+  box-shadow: inset 0 -3px #16809d;
+}
+.tab:focus-visible {
+  outline: 3px solid #16809d;
+  outline-offset: 3px;
+}
+.inventory {
+  padding: 14px 18px;
+  background: #f2f6f8;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  color: #304956;
+}
+.inventory summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.inventory li {
+  margin: 10px 0;
+  line-height: 1.6;
+}
+.inventory a {
+  color: #096780;
+  text-decoration: underline;
+}
+.workflow {
+  padding: 14px;
+  border: 1px solid #c8d7df;
+  border-radius: 10px;
+  margin: 18px 0;
+  background: #f4f9fb;
+}
+.status {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 8px;
+}
+.editor {
+  border: 1px solid #c8d7df;
+  border-radius: 10px;
+  margin: 18px 0;
+  padding: 16px;
+}
+.editor > summary {
+  cursor: pointer;
+  color: #096780;
+  font-weight: 700;
+}
+.editor[open] > summary {
+  margin-bottom: 18px;
+}
+@media (max-width: 850px) {
+  .tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .tab {
+    padding: 12px;
+  }
+}

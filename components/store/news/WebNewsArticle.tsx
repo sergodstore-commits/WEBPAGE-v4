@@ -70,7 +70,7 @@ export default function WebNewsArticle({ id }: { id: string }) {
           {item.image && (
             <img className={styles.articleCover} src={item.image} alt="Portada de la noticia" />
           )}
-          {item.body && (
+          {item.body && item.body.trim() !== item.summary.trim() && (
             <div className={styles.articleBody}>
               {item.body
                 .split(/\n\s*\n/)

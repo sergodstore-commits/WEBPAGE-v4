@@ -122,6 +122,10 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
     });
   });
   await page.goto('/admin/noticias');
+  await page
+    .getByRole('navigation', { name: 'Herramientas de contenido' })
+    .getByRole('button', { name: 'Banlist TCG' })
+    .click();
   await page.getByRole('button', { name: 'Actualizar banlist TCG', exact: true }).click();
   await expect(page.getByText(/Lista verificada. Galería completa/)).toBeVisible();
   expect(batches).toBe(1);

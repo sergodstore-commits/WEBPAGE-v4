@@ -8,6 +8,9 @@ import type { LeagueTournament } from '@/lib/rankings';
 import { boards } from '@/lib/rankings';
 import { NewsMedia } from '../store/news/News';
 import { WebNewsAdmin } from './WebNewsAdmin';
+import { EditionImportAdmin } from './EditionImportAdmin';
+import { BanlistAdmin } from './BanlistAdmin';
+import styles from './NewsWorkspace.module.css';
 
 const message = (e: unknown) =>
   e instanceof Error ? e.message : 'No se pudo completar la operación.';
@@ -523,6 +526,11 @@ export function InstagramIntegration({
   );
 }
 export function InstagramNewsPage() {
+  const [workspace, setWorkspace] = useState('web');
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('herramienta');
+    if (tab && ['web', 'instagram', 'editions', 'banlist'].includes(tab)) setWorkspace(tab);
+  }, []);
   const [list, setList] = useState<NewsItem[]>([]),
     [selected, setSelected] = useState<NewsItem | null>(null),
     [loading, setLoading] = useState(true),
@@ -557,110 +565,169 @@ export function InstagramNewsPage() {
       <div className="admin-page-heading">
         <div>
           <h1>Noticias</h1>
-          <p>Noticias de la tienda y selección de actualidad Yu-Gi-Oh!.</p>
+          <p>Busca contenido, revisa el borrador y publica en su sección.</p>
         </div>
       </div>
-      <WebNewsAdmin />
-      <InstagramIntegration
-        news
-        onSaved={() => {
-          void load().catch((e) => setError(message(e)));
-        }}
-      />
-      <p>
-        Las publicaciones manuales existentes siguen en{' '}
-        <Link style={{ color: '#176d86', textDecoration: 'underline' }} href="/admin/publicaciones">
-          Publicaciones
-        </Link>
-        .
-      </p>
-      {error && (
-        <div role="alert" className="admin-feedback error">
-          {error}
+      <nav className={styles.tabs} aria-label="Herramientas de contenido">
+        {[
+          ['web', 'Noticias web', 'Yu-Gi-Oh! TCG y MyL'],
+          ['instagram', 'SERGOD STORE', 'Publicaciones de Instagram'],
+          ['editions', 'Guías de cartas', 'Contenido de sobres y cajas'],
+          ['banlist', 'Banlist TCG', 'Lista oficial de Konami'],
+        ].map(([id, title, help]) => (
           <button
-            className="admin-button secondary"
-            onClick={() =>
-              void load()
-                .then(() => setError(''))
-                .catch((e) => setError(message(e)))
-            }
+            key={id}
+            type="button"
+            className={styles.tab}
+            aria-pressed={workspace === id}
+            onClick={() => {
+              setWorkspace(id);
+              const url = new URL(window.location.href);
+              url.searchParams.set('herramienta', id);
+              window.history.replaceState(null, '', url);
+            }}
           >
-            Reintentar noticias
+            <strong>{title}</strong>
+            <small>{help}</small>
           </button>
-        </div>
-      )}
-      {notice && (
-        <p role="status" className="admin-feedback success">
-          {notice}
-        </p>
-      )}
-      {selected && (
-        <NewsEditor
-          key={selected.id}
-          item={selected}
-          cancel={() => setSelected(null)}
-          done={() => {
-            setSelected(null);
+        ))}
+      </nav>
+      <details className={styles.inventory}>
+        <summary>¿Qué importa cada herramienta?</summary>
+        <ul>
+          <li>
+            Noticias web: busca en Yu-Gi-Oh! Meta y el blog MyL. Solo descarga imágenes de noticias
+            que prepares.
+          </li>
+          <li>
+            SERGOD STORE: consulta Instagram y publica tu selección. Fotos y videos permanecen en
+            Instagram.
+          </li>
+          <li>
+            Guías de cartas: obtiene ediciones de YGOPRODeck, efectos oficiales en español de Konami
+            y guarda imágenes WebP.
+          </li>
+          <li>Banlist TCG: actualiza la lista oficial de Konami y su galería para Comunidad.</li>
+          <li>
+            <Link href="/admin/liga">Ligas: resultados de Konami y TOR</Link>. Importa torneos;
+            eliges cuáles suman puntos.
+          </li>
+        </ul>
+      </details>
+      <div hidden={workspace !== 'web'}>
+        <WebNewsAdmin />
+      </div>
+      <div hidden={workspace !== 'editions'}>
+        <EditionImportAdmin />
+      </div>
+      <div hidden={workspace !== 'banlist'}>
+        <BanlistAdmin />
+      </div>
+      <div hidden={workspace !== 'instagram'}>
+        <InstagramIntegration
+          news
+          onSaved={() => {
             void load().catch((e) => setError(message(e)));
-            setNotice('Cambios guardados y lectura comprobada.');
           }}
         />
-      )}
-      {loading ? (
-        <p role="status">Cargando noticias…</p>
-      ) : (
-        <section className="admin-card admin-card-body">
-          {!list.length ? (
-            <p>Todavía no hay noticias de Instagram guardadas.</p>
-          ) : (
-            <div className="admin-table-scroll">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Noticia</th>
-                    <th>Fecha</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {list.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.caption.slice(0, 150) || 'Publicación de Instagram'}</td>
-                      <td>{date(p.recorded_at)}</td>
-                      <td>
-                        {p.status === 'published'
-                          ? 'Publicado'
-                          : p.status === 'withdrawn'
-                            ? 'Retirado'
-                            : 'Borrador'}
-                      </td>
-                      <td>
-                        <div className="admin-actions">
-                          <button
-                            className="admin-button secondary"
-                            aria-label={`Editar noticia ${p.media_id}`}
-                            onClick={() => setSelected(p)}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            className="admin-button secondary"
-                            aria-label={`Borrar noticia ${p.media_id}`}
-                            onClick={() => void remove(p)}
-                          >
-                            Borrar
-                          </button>
-                        </div>
-                      </td>
+        <p>
+          Las publicaciones manuales existentes siguen en{' '}
+          <Link
+            style={{ color: '#176d86', textDecoration: 'underline' }}
+            href="/admin/publicaciones"
+          >
+            Publicaciones
+          </Link>
+          .
+        </p>
+        {error && (
+          <div role="alert" className="admin-feedback error">
+            {error}
+            <button
+              className="admin-button secondary"
+              onClick={() =>
+                void load()
+                  .then(() => setError(''))
+                  .catch((e) => setError(message(e)))
+              }
+            >
+              Reintentar noticias
+            </button>
+          </div>
+        )}
+        {notice && (
+          <p role="status" className="admin-feedback success">
+            {notice}
+          </p>
+        )}
+        {selected && (
+          <NewsEditor
+            key={selected.id}
+            item={selected}
+            cancel={() => setSelected(null)}
+            done={() => {
+              setSelected(null);
+              void load().catch((e) => setError(message(e)));
+              setNotice('Cambios guardados y lectura comprobada.');
+            }}
+          />
+        )}
+        {loading ? (
+          <p role="status">Cargando noticias…</p>
+        ) : (
+          <section className="admin-card admin-card-body">
+            {!list.length ? (
+              <p>Todavía no hay noticias de Instagram guardadas.</p>
+            ) : (
+              <div className="admin-table-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Noticia</th>
+                      <th>Fecha</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      )}
+                  </thead>
+                  <tbody>
+                    {list.map((p) => (
+                      <tr key={p.id}>
+                        <td>{p.caption.slice(0, 150) || 'Publicación de Instagram'}</td>
+                        <td>{date(p.recorded_at)}</td>
+                        <td>
+                          {p.status === 'published'
+                            ? 'Publicado'
+                            : p.status === 'withdrawn'
+                              ? 'Retirado'
+                              : 'Borrador'}
+                        </td>
+                        <td>
+                          <div className="admin-actions">
+                            <button
+                              className="admin-button secondary"
+                              aria-label={`Editar noticia ${p.media_id}`}
+                              onClick={() => setSelected(p)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className="admin-button secondary"
+                              aria-label={`Borrar noticia ${p.media_id}`}
+                              onClick={() => void remove(p)}
+                            >
+                              Borrar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </div>
   );
 }

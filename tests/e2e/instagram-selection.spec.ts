@@ -93,6 +93,10 @@ test('Instagram: selección por páginas, guardado parcial recuperable y lectura
     return r.fulfill({ json: [] });
   });
   await page.goto('/admin/noticias');
+  await page
+    .getByRole('navigation', { name: 'Herramientas de contenido' })
+    .getByRole('button', { name: 'SERGOD STORE' })
+    .click();
   const refresh = page.getByRole('button', { name: 'Actualizar publicaciones', exact: true });
   await refresh.click();
   await expect(

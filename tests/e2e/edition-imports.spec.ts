@@ -78,6 +78,10 @@ test('Admin: búsqueda protegida, pausar, reanudar, revisar y publicar una guía
     return route.fulfill({ json: panel });
   });
   await page.goto('/admin/noticias');
+  await page
+    .getByRole('navigation', { name: 'Herramientas de contenido' })
+    .getByRole('button', { name: 'Guías de cartas' })
+    .click();
   const section = page.getByRole('region', { name: 'Guías de nuevas ediciones' });
   await section.getByRole('button', { name: 'Buscar nuevas ediciones', exact: true }).click();
   await expect(section).toContainText('Encontramos 1 ediciones');

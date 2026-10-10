@@ -157,10 +157,14 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
   ].sort((a, b) => b.published_on.localeCompare(a.published_on));
 }
 
-export async function saveWebNews(input: unknown) {
+export async function saveWebNews(input: unknown, itemId?: string) {
   return withLease(async () => {
-    const inputItems = schema.parse(input);
     const previous = await getWebNews(true);
+    const parsed = schema.parse(itemId ? [input] : input);
+    if (itemId && parsed[0].id !== itemId) fail(400, 'Identificador de noticia no válido.');
+    const inputItems = itemId
+      ? schema.parse([...previous.filter((item) => item.id !== itemId), parsed[0]])
+      : parsed;
     const items = inputItems.map((item) => {
       const old = previous.find((v) => v.id === item.id && v.url === item.url);
       return {

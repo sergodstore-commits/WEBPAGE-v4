@@ -46,6 +46,7 @@ import {
 } from '@/lib/server/web-news';
 import { reviewMetaNews } from '@/lib/server/meta-news-source';
 import { reviewMylNews } from '@/lib/server/myl-news-source';
+import { prepareNewsDraft } from '@/lib/server/news-translation';
 import { getBanlist, refreshBanlist, banlistPanel, importBanlistCard } from '@/lib/server/banlist';
 import {
   editionPanel,
@@ -378,6 +379,17 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await getWebNews(true));
       if (route === 'admin/news/web-sources' && method === 'PATCH')
         return json(await saveWebNews(await body(request)));
+      if (route === 'admin/news/web-sources/draft' && method === 'POST') {
+        await rateLimit(`news-draft:${user.id}`, 20, 60);
+        return json(await prepareNewsDraft(await body(request)));
+      }
+      if (
+        path[1] === 'news' &&
+        path[2] === 'web-sources' &&
+        path.length === 4 &&
+        method === 'PATCH'
+      )
+        return json(await saveWebNews(await body(request), path[3]));
       if (route === 'admin/news/web-sources/review-myl' && method === 'POST') {
         await rateLimit(`myl-news-review:${user.id}`, 20, 60);
         return json(await reviewMylNews());

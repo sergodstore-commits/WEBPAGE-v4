@@ -271,6 +271,10 @@ test('Admin Instagram: actualizar sin hashtag, vista previa, publicar, recargar,
     return r.fulfill({ status: 404, json: { error: 'Fuera de la prueba' } });
   });
   await page.goto('/admin/noticias');
+  await page
+    .getByRole('navigation', { name: 'Herramientas de contenido' })
+    .getByRole('button', { name: 'SERGOD STORE' })
+    .click();
   await expect(page.getByLabel(/^Hashtag para Noticias/)).toHaveCount(0);
   await page.getByRole('button', { name: 'Actualizar publicaciones', exact: true }).click();
   await page.getByRole('button', { name: 'Previsualizar publicación 123456', exact: true }).click();
@@ -290,6 +294,10 @@ test('Admin Instagram: actualizar sin hashtag, vista previa, publicar, recargar,
   ).toBeVisible();
   expect(writes).toBe(1);
   await page.goto('/admin/noticias');
+  await page
+    .getByRole('navigation', { name: 'Herramientas de contenido' })
+    .getByRole('button', { name: 'SERGOD STORE' })
+    .click();
   await page.reload();
   await page.getByRole('button', { name: 'Editar noticia 123456', exact: true }).click();
   await page.getByRole('combobox', { name: /^Estado de la noticia/ }).selectOption('withdrawn');
@@ -312,6 +320,10 @@ test('Admin Instagram: actualizar sin hashtag, vista previa, publicar, recargar,
     page.getByRole('heading', { name: 'Pronto tendremos novedades', exact: true }),
   ).toBeVisible();
   await page.goto('/admin/noticias');
+  await page
+    .getByRole('navigation', { name: 'Herramientas de contenido' })
+    .getByRole('button', { name: 'SERGOD STORE' })
+    .click();
   page.once('dialog', (d) => d.accept());
   await page.getByRole('button', { name: 'Borrar noticia 123456', exact: true }).click();
   await expect(page.getByText('Noticia eliminada de SERGOD STORE.', { exact: true })).toBeVisible();

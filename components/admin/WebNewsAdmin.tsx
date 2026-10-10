@@ -10,8 +10,7 @@ import {
   type WebNewsItem,
   type WebNewsCandidate,
 } from '@/lib/web-news';
-import { EditionImportAdmin } from './EditionImportAdmin';
-import { BanlistAdmin } from './BanlistAdmin';
+import styles from './NewsWorkspace.module.css';
 
 const blank = (): WebNewsItem => ({
   id: '',
@@ -35,11 +34,15 @@ export function WebNewsAdmin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [dirty, setDirty] = useState(false);
+  const [translate, setTranslate] = useState(true);
+  const [filter, setFilter] = useState('all');
   const [candidates, setCandidates] = useState<WebNewsCandidate[]>([]);
   const [progress, setProgress] = useState('');
   const stop = useRef(false);
   const editor = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (draft.id) editor.current?.scrollIntoView({ block: 'start' });
+  }, [draft.id]);
   useEffect(
     () => () => {
       stop.current = true;
@@ -89,11 +92,14 @@ export function WebNewsAdmin() {
         `Imágenes: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
       );
       while (result.ready < result.total && !stop.current) {
+        const previous = result.ready;
         result = await api<Result>(`/admin/news/web-sources/${id}/images`, {
           method: 'POST',
           body: '{}',
         });
         setItems(result.items);
+        if (result.ready <= previous && result.ready < result.total)
+          throw Error('La preparación no avanzó. El borrador se conserva; vuelve a intentar.');
         setProgress(
           `Imágenes: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
         );
@@ -101,10 +107,12 @@ export function WebNewsAdmin() {
       setNotice(
         stop.current
           ? 'Preparación pausada. Puedes reanudar con el mismo botón.'
-          : 'Imágenes listas. Revisa el texto y marca Mostrar para publicar.',
+          : 'Borrador e imágenes guardados. Revisa el español y pulsa Publicar noticia.',
       );
+      return result.items;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos preparar las imágenes.');
+      throw e;
     } finally {
       setBusy(false);
       setProgress('');
@@ -121,22 +129,90 @@ export function WebNewsAdmin() {
   useEffect(() => {
     void load();
   }, []);
-  function change(next: WebNewsItem[]) {
-    setItems(next);
-    setDirty(true);
-    setNotice('');
+  async function persist(item: WebNewsItem) {
+    const saved = await api<WebNewsItem[]>(`/admin/news/web-sources/${item.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(item),
+    });
+    setItems(saved);
+    const verified = await api<WebNewsItem[]>('/admin/news/web-sources');
+    const stored = verified.find((v) => v.id === item.id);
+    if (!stored || stored.visible !== item.visible || stored.title !== item.title)
+      throw Error('No pudimos comprobar el guardado. Recarga antes de reintentar.');
+    if (item.visible) {
+      const publicItems = await api<WebNewsItem[]>('/news/web-sources');
+      if (!publicItems.some((v) => v.id === item.id))
+        throw Error(
+          'La noticia se guardó, pero no aparece en el listado público. Revisa su guía de edición.',
+        );
+    }
+    return saved;
   }
-  async function save() {
+  function editCandidate(candidate: WebNewsCandidate) {
+    setDraft({
+      ...blank(),
+      id: candidate.id,
+      url: candidate.url,
+      published_on: candidate.published_on,
+      category: candidate.category,
+      boards: candidate.boards || ['yugioh'],
+      source_image: candidate.source_image,
+      original_title: candidate.title,
+      original_summary: candidate.summary,
+      ...(candidate.boards?.some((b) => b !== 'yugioh')
+        ? { title: candidate.title, summary: candidate.summary, body: candidate.summary }
+        : {}),
+    });
+    editor.current?.scrollIntoView({ block: 'center' });
+  }
+  async function prepareCandidate(candidate: WebNewsCandidate) {
     setBusy(true);
     setError('');
+    setNotice('');
+    let savedDraft: WebNewsItem | undefined;
     try {
-      const saved = await api<WebNewsItem[]>('/admin/news/web-sources', {
-        method: 'PATCH',
-        body: JSON.stringify(items),
+      const saved = await api<WebNewsItem[]>('/admin/news/web-sources/draft', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: candidate.id,
+          source: candidate.boards?.some((b) => b !== 'yugioh') ? 'myl' : 'tcg',
+          translate,
+        }),
       });
       setItems(saved);
-      setDirty(false);
-      setNotice('Selección publicada. Las noticias ocultas se conservan en el panel.');
+      savedDraft = saved.find((item) => item.id === candidate.id);
+      const prepared = await prepareImages(candidate.id);
+      setDraft({ ...(prepared || saved).find((i) => i.id === candidate.id)! });
+      editor.current?.scrollIntoView({ block: 'center' });
+    } catch (e) {
+      if (savedDraft) setDraft({ ...savedDraft });
+      else editCandidate(candidate);
+      setError(e instanceof Error ? e.message : 'No pudimos preparar la noticia.');
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function publish(item: WebNewsItem) {
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      let ready = item;
+      if (
+        !item.visible &&
+        ((item.original_title && !item.media_checked) || item.media?.some((m) => !m.image))
+      ) {
+        const prepared = await prepareImages(item.id);
+        if (stop.current) return;
+        ready = prepared!.find((i) => i.id === item.id)!;
+      }
+      setBusy(true);
+      await persist({ ...ready, visible: !item.visible });
+      setNotice(
+        item.visible
+          ? 'Noticia retirada. El borrador y sus imágenes se conservan.'
+          : 'Noticia publicada. Guardado y aparición en Noticias comprobados.',
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar.');
     } finally {
@@ -145,14 +221,34 @@ export function WebNewsAdmin() {
   }
   return (
     <>
-      <BanlistAdmin />
-      <EditionImportAdmin />
       <section className="admin-card admin-card-body" aria-labelledby="web-news-admin-heading">
         <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh! y MyL</h2>
         <p>
           Yu-Gi-Oh! solo TCG; MyL Primera Era, Primer Bloque y banlist. Busca novedades y decide qué
-          aparece en Noticias. Las guías de ediciones se publican desde su sección superior.
+          aparece en Noticias. Cada noticia se guarda por separado.
         </p>
+        <div className={styles.workflow}>
+          <strong>1. Buscar → 2. Preparar y revisar → 3. Publicar noticia</strong>
+          <p>
+            Preparar guarda una nota breve con el título y resumen de la fuente y descarga sus
+            imágenes. No publica nada.
+          </p>
+          <label className="admin-check">
+            <input
+              type="checkbox"
+              checked={translate}
+              disabled={busy}
+              onChange={(e) => setTranslate(e.target.checked)}
+            />{' '}
+            Traducir notas TCG al español al preparar
+          </label>
+          <small>
+            {' '}
+            MyMemory gratuito: cuota externa de 5.000 caracteres/día, compartida por la conexión del
+            servidor. Solo se envían título y resumen públicos. Revisa nombres y traducción; no
+            traduce efectos oficiales ni redacta artículos completos. MyL ya viene en español.
+          </small>
+        </div>
         <p>
           <button className="admin-button" disabled={busy} onClick={() => void review()}>
             Buscar novedades TCG
@@ -214,23 +310,7 @@ export function WebNewsAdmin() {
                         type="button"
                         className="admin-button secondary"
                         disabled={busy || Boolean(items?.some((i) => i.url === candidate.url))}
-                        onClick={() => {
-                          setDraft({
-                            ...blank(),
-                            id: candidate.id,
-                            url: candidate.url,
-                            published_on: candidate.published_on,
-                            category: candidate.category,
-                            boards: candidate.boards || ['yugioh'],
-                            source_image: candidate.source_image,
-                            original_title: candidate.title,
-                            original_summary: candidate.summary,
-                          });
-                          editor.current?.scrollIntoView({ block: 'center' });
-                          editor.current
-                            ?.querySelector<HTMLInputElement>('input[name="spanish-title"]')
-                            ?.focus({ preventScroll: true });
-                        }}
+                        onClick={() => void prepareCandidate(candidate)}
                       >
                         {items?.some((i) => i.url === candidate.url)
                           ? 'Ya está en la lista'
@@ -262,295 +342,364 @@ export function WebNewsAdmin() {
           <p>Cargando selección…</p>
         ) : (
           <>
-            <form
-              ref={editor}
-              onSubmit={(event) => {
-                event.preventDefault();
-                const url = newsArticle(draft.url);
-                if (!url) {
-                  setError('Usa un artículo de Yu-Gi-Oh! Meta o del blog oficial MyL.');
-                  return;
-                }
-                if (items.some((item) => item.url === url && item.id !== draft.id)) {
-                  setError('Ese artículo ya está en la lista.');
-                  return;
-                }
-                const item = {
-                  ...draft,
-                  url,
-                  title: draft.title.trim(),
-                  summary: draft.summary.trim(),
-                  id: draft.id || crypto.randomUUID(),
-                };
-                change(
-                  items.some((old) => old.id === draft.id)
-                    ? items.map((old) => (old.id === draft.id ? item : old))
-                    : [item, ...items],
-                );
-                setDraft(blank());
-                setError('');
-              }}
-            >
-              <fieldset disabled={busy} style={{ border: 0, padding: 0, display: 'grid', gap: 12 }}>
-                {draft.original_title && (
-                  <details open>
-                    <summary>Referencia original · redacta tu versión en español</summary>
-                    <p>
-                      <strong>{draft.original_title}</strong>
-                    </p>
-                    <p>{draft.original_summary}</p>
-                    <a href={draft.url} target="_blank" rel="noopener noreferrer">
-                      Abrir artículo original ↗
-                    </a>
-                  </details>
-                )}
-                <label className="admin-field">
-                  <span>Enlace del artículo</span>
-                  <input
-                    required
-                    type="url"
-                    maxLength={1000}
-                    value={draft.url}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        url: e.target.value,
-                        boards: mylArticle(e.target.value) ? ['myl-first-era'] : ['yugioh'],
-                      })
+            <details open={Boolean(draft.id)} className={styles.editor}>
+              <summary>
+                {draft.id ? 'Revisar noticia seleccionada' : 'Crear una noticia manualmente'}
+              </summary>
+              <form
+                ref={editor}
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  const publishing =
+                    (event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') ===
+                    'publish';
+                  const url = newsArticle(draft.url);
+                  if (!url) {
+                    setError('Usa un artículo de Yu-Gi-Oh! Meta o del blog oficial MyL.');
+                    return;
+                  }
+                  if (items.some((item) => item.url === url && item.id !== draft.id)) {
+                    setError('Ese artículo ya está en la lista.');
+                    return;
+                  }
+                  setBusy(true);
+                  setError('');
+                  try {
+                    const item = {
+                      ...draft,
+                      url,
+                      title: draft.title.trim(),
+                      summary: draft.summary.trim(),
+                      id: draft.id || crypto.randomUUID(),
+                    };
+                    const saved = await persist(item);
+                    setDraft(blank());
+                    if (publishing) {
+                      await publish(saved.find((v) => v.id === item.id)!);
+                      return;
                     }
-                    placeholder="https://www.yugiohmeta.com/articles/…"
-                  />
-                </label>
-                <label className="admin-field">
-                  <span>Categoría de la noticia</span>
-                  <select
-                    value={draft.category || 'news'}
-                    onChange={(e) =>
-                      setDraft({ ...draft, category: e.target.value as WebNewsItem['category'] })
-                    }
-                  >
-                    {Object.entries(webNewsCategories).map(([value, label]) => (
-                      <option value={value} key={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {mylArticle(draft.url) && (
-                  <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
-                    <legend>Mostrar en los formatos seleccionados</legend>
-                    {(['myl-first-era', 'myl-first-block'] as const).map((board) => (
-                      <label className="admin-check" key={board}>
-                        <input
-                          type="checkbox"
-                          checked={draft.boards?.includes(board) || false}
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              boards: e.target.checked
-                                ? [...(draft.boards || []), board]
-                                : (draft.boards || []).filter((b) => b !== board),
-                              effective_dates: Object.fromEntries(
-                                Object.entries(draft.effective_dates || {}).filter(
-                                  ([key]) => e.target.checked || key !== board,
-                                ),
-                              ),
-                            })
-                          }
-                        />{' '}
-                        {newsBoards[board]}
-                      </label>
-                    ))}
-                    <p className="admin-help">
-                      Revisa el formato: algunas categorías del blog incluyen otros juegos
-                      organizados.
-                    </p>
-                  </fieldset>
-                )}
-                {mylArticle(draft.url) && draft.category === 'banlist' && (
-                  <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
-                    <legend>Vigencia por formato (opcional)</legend>
-                    {(draft.boards || [])
-                      .filter((b): b is MylNewsBoard => b !== 'yugioh')
-                      .map((board) => (
-                        <label className="admin-field" key={board}>
-                          <span>{newsBoards[board]} · vigente desde</span>
+                    setNotice(
+                      'Noticia guardada y lectura comprobada. Los borradores aún no aparecen en la web.',
+                    );
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : 'No se pudo guardar.');
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                <fieldset
+                  disabled={busy}
+                  style={{ border: 0, padding: 0, display: 'grid', gap: 12 }}
+                >
+                  {draft.original_title && (
+                    <details open>
+                      <summary>Referencia original · revisa tu versión en español</summary>
+                      <p>
+                        <strong>{draft.original_title}</strong>
+                      </p>
+                      <p>{draft.original_summary}</p>
+                      <a href={draft.url} target="_blank" rel="noopener noreferrer">
+                        Abrir artículo original ↗
+                      </a>
+                    </details>
+                  )}
+                  <label className="admin-field">
+                    <span>Enlace del artículo</span>
+                    <input
+                      required
+                      type="url"
+                      maxLength={1000}
+                      value={draft.url}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          url: e.target.value,
+                          boards: mylArticle(e.target.value) ? ['myl-first-era'] : ['yugioh'],
+                        })
+                      }
+                      placeholder="https://www.yugiohmeta.com/articles/…"
+                    />
+                  </label>
+                  <label className="admin-field">
+                    <span>Categoría de la noticia</span>
+                    <select
+                      value={draft.category || 'news'}
+                      onChange={(e) =>
+                        setDraft({ ...draft, category: e.target.value as WebNewsItem['category'] })
+                      }
+                    >
+                      {Object.entries(webNewsCategories).map(([value, label]) => (
+                        <option value={value} key={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {mylArticle(draft.url) && (
+                    <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
+                      <legend>Mostrar en los formatos seleccionados</legend>
+                      {(['myl-first-era', 'myl-first-block'] as const).map((board) => (
+                        <label className="admin-check" key={board}>
                           <input
-                            type="date"
-                            value={draft.effective_dates?.[board] || ''}
-                            onChange={(e) => {
-                              const dates = { ...draft.effective_dates };
-                              if (e.target.value) dates[board] = e.target.value;
-                              else delete dates[board];
-                              setDraft({ ...draft, effective_dates: dates });
-                            }}
+                            type="checkbox"
+                            checked={draft.boards?.includes(board) || false}
+                            onChange={(e) =>
+                              setDraft({
+                                ...draft,
+                                boards: e.target.checked
+                                  ? [...(draft.boards || []), board]
+                                  : (draft.boards || []).filter((b) => b !== board),
+                                effective_dates: Object.fromEntries(
+                                  Object.entries(draft.effective_dates || {}).filter(
+                                    ([key]) => e.target.checked || key !== board,
+                                  ),
+                                ),
+                              })
+                            }
+                          />{' '}
+                          {newsBoards[board]}
+                        </label>
+                      ))}
+                      <p className="admin-help">
+                        Revisa el formato: algunas categorías del blog incluyen otros juegos
+                        organizados.
+                      </p>
+                    </fieldset>
+                  )}
+                  {mylArticle(draft.url) && draft.category === 'banlist' && (
+                    <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
+                      <legend>Vigencia por formato (opcional)</legend>
+                      {(draft.boards || [])
+                        .filter((b): b is MylNewsBoard => b !== 'yugioh')
+                        .map((board) => (
+                          <label className="admin-field" key={board}>
+                            <span>{newsBoards[board]} · vigente desde</span>
+                            <input
+                              type="date"
+                              value={draft.effective_dates?.[board] || ''}
+                              onChange={(e) => {
+                                const dates = { ...draft.effective_dates };
+                                if (e.target.value) dates[board] = e.target.value;
+                                else delete dates[board];
+                                setDraft({ ...draft, effective_dates: dates });
+                              }}
+                            />
+                          </label>
+                        ))}
+                      <p className="admin-help">
+                        Confirma estas fechas en el aviso oficial. No son la fecha de publicación ni
+                        una lista completa de cartas restringidas.
+                      </p>
+                    </fieldset>
+                  )}
+                  <label className="admin-field">
+                    <span>Artículo en español</span>
+                    <textarea
+                      rows={7}
+                      maxLength={12000}
+                      value={draft.body || ''}
+                      onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+                      placeholder="Redacta los detalles de la noticia. Separa los párrafos con una línea en blanco."
+                    />
+                  </label>
+                  {draft.media?.length ? (
+                    <details>
+                      <summary>Textos de las imágenes y cartas ({draft.media.length})</summary>
+                      {draft.media.map((m, index) => (
+                        <label className="admin-field" key={m.source}>
+                          <span>{m.name} · texto o efecto en español (opcional)</span>
+                          <textarea
+                            rows={3}
+                            maxLength={3000}
+                            value={m.caption || ''}
+                            onChange={(e) =>
+                              setDraft({
+                                ...draft,
+                                media: draft.media!.map((old, i) =>
+                                  i === index ? { ...old, caption: e.target.value } : old,
+                                ),
+                              })
+                            }
                           />
                         </label>
                       ))}
-                    <p className="admin-help">
-                      Confirma estas fechas en el aviso oficial. No son la fecha de publicación ni
-                      una lista completa de cartas restringidas.
-                    </p>
-                  </fieldset>
-                )}
-                <label className="admin-field">
-                  <span>Artículo en español</span>
-                  <textarea
-                    rows={7}
-                    maxLength={12000}
-                    value={draft.body || ''}
-                    onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-                    placeholder="Redacta los detalles de la noticia. Separa los párrafos con una línea en blanco."
-                  />
-                </label>
-                {draft.media?.length ? (
-                  <details>
-                    <summary>Textos de las imágenes y cartas ({draft.media.length})</summary>
-                    {draft.media.map((m, index) => (
-                      <label className="admin-field" key={m.source}>
-                        <span>{m.name} · texto o efecto en español (opcional)</span>
-                        <textarea
-                          rows={3}
-                          maxLength={3000}
-                          value={m.caption || ''}
-                          onChange={(e) =>
-                            setDraft({
-                              ...draft,
-                              media: draft.media!.map((old, i) =>
-                                i === index ? { ...old, caption: e.target.value } : old,
-                              ),
-                            })
-                          }
-                        />
-                      </label>
-                    ))}
-                  </details>
-                ) : null}
-                <label className="admin-field">
-                  <span>Título en español</span>
-                  <input
-                    name="spanish-title"
-                    required
-                    minLength={3}
-                    maxLength={160}
-                    value={draft.title}
-                    onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                  />
-                </label>
-                <label className="admin-field">
-                  <span>Resumen propio en español</span>
-                  <textarea
-                    required
-                    minLength={10}
-                    maxLength={600}
-                    rows={3}
-                    value={draft.summary}
-                    onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
-                  />
-                </label>
-                <label className="admin-field">
-                  <span>Fecha del artículo</span>
-                  <input
-                    required
-                    type="date"
-                    value={draft.published_on}
-                    onChange={(e) => setDraft({ ...draft, published_on: e.target.value })}
-                  />
-                </label>
-                <div className="admin-actions">
-                  <button
-                    className="admin-button secondary"
-                    disabled={!draft.id && items.length >= 80}
-                  >
-                    {items.some((old) => old.id === draft.id)
-                      ? 'Aplicar edición a la lista'
-                      : 'Añadir a la lista'}
-                  </button>
-                  {draft.id && (
-                    <button
-                      type="button"
-                      className="admin-button secondary"
-                      onClick={() => setDraft(blank())}
-                    >
-                      Cancelar edición
-                    </button>
+                    </details>
+                  ) : null}
+                  <label className="admin-field">
+                    <span>Título en español</span>
+                    <input
+                      name="spanish-title"
+                      required
+                      minLength={3}
+                      maxLength={160}
+                      value={draft.title}
+                      onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                    />
+                  </label>
+                  <label className="admin-field">
+                    <span>Resumen propio en español</span>
+                    <textarea
+                      required
+                      minLength={10}
+                      maxLength={600}
+                      rows={3}
+                      value={draft.summary}
+                      onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
+                    />
+                  </label>
+                  <label className="admin-field">
+                    <span>Fecha del artículo</span>
+                    <input
+                      required
+                      type="date"
+                      value={draft.published_on}
+                      onChange={(e) => setDraft({ ...draft, published_on: e.target.value })}
+                    />
+                  </label>
+                  {draft.title && (
+                    <details open className={styles.workflow}>
+                      <summary>Vista previa del texto</summary>
+                      <h3>{draft.title}</h3>
+                      <p>{draft.summary}</p>
+                      <p style={{ whiteSpace: 'pre-wrap' }}>{draft.body}</p>
+                      <small>
+                        El artículo público también incluirá las imágenes preparadas y la atribución
+                        de la fuente.
+                      </small>
+                    </details>
                   )}
-                </div>
-              </fieldset>
-            </form>
+                  <div className="admin-actions">
+                    {!draft.visible && (
+                      <button
+                        className="admin-button"
+                        type="submit"
+                        value="publish"
+                        disabled={!draft.id && items.length >= 80}
+                      >
+                        Publicar noticia revisada
+                      </button>
+                    )}
+                    <button
+                      className="admin-button secondary"
+                      disabled={!draft.id && items.length >= 80}
+                    >
+                      {items.some((old) => old.id === draft.id)
+                        ? 'Guardar cambios de la noticia'
+                        : 'Guardar borrador'}
+                    </button>
+                    {draft.id && (
+                      <button
+                        type="button"
+                        className="admin-button secondary"
+                        onClick={() => setDraft(blank())}
+                      >
+                        Cancelar edición
+                      </button>
+                    )}
+                  </div>
+                </fieldset>
+              </form>
+            </details>
+            <div className="admin-actions" style={{ marginTop: 20 }}>
+              <label className="admin-field">
+                <span>Ver noticias guardadas</span>
+                <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+                  <option value="all">Todas ({items.length})</option>
+                  <option value="draft">
+                    Borradores ({items.filter((i) => !i.visible).length})
+                  </option>
+                  <option value="published">
+                    Publicadas ({items.filter((i) => i.visible).length})
+                  </option>
+                </select>
+              </label>
+            </div>
             <div className="admin-table-scroll" style={{ marginTop: 20 }}>
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Mostrar</th>
+                    <th>Estado</th>
                     <th>Noticia</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={item.visible}
-                          disabled={busy}
-                          aria-label={`Mostrar ${item.title}`}
-                          onChange={(e) =>
-                            change(
-                              items.map((old) =>
-                                old.id === item.id ? { ...old, visible: e.target.checked } : old,
-                              ),
-                            )
-                          }
-                        />
-                      </td>
-                      <td>
-                        <strong>{item.title}</strong>
-                        <p>{item.summary}</p>
-                        <small>
-                          {(item.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
-                          {webNewsCategories[item.category || 'news']} ·{' '}
-                          {item.media_checked
-                            ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`
-                            : 'Imágenes sin preparar'}
-                        </small>
-                        <a href={item.url} target="_blank" rel="noopener noreferrer">
-                          Ver fuente ↗
-                        </a>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="admin-button secondary"
-                          disabled={busy || dirty}
-                          onClick={() => void prepareImages(item.id)}
-                        >
-                          {item.media_checked ? 'Actualizar imágenes' : 'Preparar imágenes'}
-                        </button>{' '}
-                        <button
-                          className="admin-button secondary"
-                          disabled={busy}
-                          onClick={() => setDraft({ ...item })}
-                        >
-                          Editar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {items
+                    .filter((item) => filter === 'all' || item.visible === (filter === 'published'))
+                    .sort((a, b) => b.published_on.localeCompare(a.published_on))
+                    .map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <span className={styles.status}>
+                            {item.visible ? 'Publicada' : 'Borrador'}
+                          </span>
+                          <button
+                            type="button"
+                            className="admin-button"
+                            disabled={busy || draft.id === item.id}
+                            onClick={() => void publish(item)}
+                          >
+                            {item.visible ? 'Retirar noticia' : 'Publicar noticia'}
+                          </button>
+                          {item.visible && (
+                            <a
+                              href={
+                                item.id === 'beyond-the-brave'
+                                  ? '/noticias/beyond-the-brave'
+                                  : `/noticias/${mylArticle(item.url) ? 'myl' : 'tcg'}/${item.id}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Ver publicada ↗
+                            </a>
+                          )}
+                        </td>
+                        <td>
+                          <strong>{item.title}</strong>
+                          <p>{item.summary}</p>
+                          <small>
+                            {(item.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
+                            {webNewsCategories[item.category || 'news']} ·{' '}
+                            {item.media_checked
+                              ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`
+                              : 'Imágenes sin preparar'}
+                          </small>
+                          <a href={item.url} target="_blank" rel="noopener noreferrer">
+                            Ver fuente ↗
+                          </a>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="admin-button secondary"
+                            disabled={busy || draft.id === item.id}
+                            onClick={() => void prepareImages(item.id).catch(() => {})}
+                          >
+                            {item.media_checked ? 'Actualizar imágenes' : 'Preparar imágenes'}
+                          </button>{' '}
+                          <button
+                            className="admin-button secondary"
+                            disabled={busy}
+                            onClick={() => {
+                              setDraft({ ...item });
+                              editor.current?.scrollIntoView({ block: 'center' });
+                            }}
+                          >
+                            Editar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
             {!items.length && <p>No hay artículos seleccionados.</p>}
             <p className="admin-muted">
-              Guarda el borrador, prepara sus imágenes y después marca Mostrar. El botón descarga
-              las imágenes de la fuente sin Codex. Revisa tú el español; no hay IA ni traducción
-              automática. Portadas e imágenes de noticias: máximo 15 MB, 160 KB por archivo.
+              Preparar y guardar conserva un borrador. Publicar noticia comprueba que aparece en la
+              web. Imágenes WebP: presupuesto compartido de 15 MB y máximo 160 KB por archivo.
             </p>
-            <button className="admin-button" disabled={busy || !dirty} onClick={() => void save()}>
-              {busy ? 'Guardando…' : 'Guardar selección de actualidad'}
-            </button>
-            {dirty && <p role="status">Hay cambios pendientes de guardar.</p>}
           </>
         )}
       </section>
