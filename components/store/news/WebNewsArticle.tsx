@@ -11,6 +11,7 @@ import {
 } from '@/lib/web-news';
 import { useRemote, Loading } from '../shared';
 import styles from './News.module.css';
+import { EditionConnections } from '../catalog/EditionConnections';
 
 export default function WebNewsArticle({ id }: { id: string }) {
   const remote = useRemote<WebNewsItem>(
@@ -79,6 +80,9 @@ export default function WebNewsArticle({ id }: { id: string }) {
                   <p key={i}>{paragraph}</p>
                 ))}
             </div>
+          )}
+          {item.edition_code && (
+            <EditionConnections key={item.edition_code} code={item.edition_code} />
           )}
           {item.media?.some((m) => m.image) && (
             <section aria-label="Imágenes y cartas de la noticia" className={styles.articleGallery}>

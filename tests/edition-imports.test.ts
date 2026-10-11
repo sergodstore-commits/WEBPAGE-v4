@@ -15,7 +15,7 @@ test('Ediciones: preparación reanudable, español oficial, publicación revisad
   const { getDb, closeDb } = await import('../lib/server/db');
   const imports = await import('../lib/server/edition-imports');
   const { getWebNews } = await import('../lib/server/web-news');
-  const { getProducts, saveProduct } = await import('../lib/server/catalog');
+  const { getProducts, saveProduct, editionProducts } = await import('../lib/server/catalog');
   const { spanishPlain, spanishCard, sourceBytes, editionManifest } =
     await import('../lib/server/ygo-source');
   t.after(closeDb);
@@ -172,6 +172,73 @@ test('Ediciones: preparación reanudable, español oficial, publicación revisad
     (await getProducts()).find((item) => item.id === product.id)?.edition_guide?.url,
     '/noticias/ediciones/test',
   );
+  const variant = await saveProduct(
+    { id: null },
+    {
+      name: 'Sobre inglés',
+      sku: 'related-pack',
+      price: 5000,
+      stock: 0,
+      kind: 'store',
+      catalog_group: 'another-group',
+      catalog_name: ' Test Edition ',
+    },
+  );
+  const privateProduct = await saveProduct(
+    { id: null },
+    {
+      name: 'Token box privado',
+      sku: 'related-private',
+      price: 22000,
+      stock: 3,
+      kind: 'store',
+      catalog_group: 'ygo-test-edition',
+      catalog_name: 'Test Edition',
+    },
+  );
+  const unrelated = await saveProduct(
+    { id: null },
+    {
+      name: 'Tapete Test Edition',
+      sku: 'unrelated-title',
+      price: 10000,
+      stock: 1,
+      kind: 'store',
+      catalog_group: 'other-edition',
+      catalog_name: 'Other Edition',
+    },
+  );
+  await (
+    await getDb()
+  ).query("UPDATE products SET status='published' WHERE id=ANY($1::uuid[])", [
+    [variant.id, unrelated.id],
+  ]);
+  const sourceRequests = requests.length;
+  const related = await editionProducts('test');
+  assert.deepEqual(new Set(related.products.map((p) => p.id)), new Set([product.id, variant.id]));
+  assert.equal(
+    related.products.find((p) => p.id === variant.id)?.available,
+    0,
+    'Sold-out published presentations remain visible',
+  );
+  assert.equal(
+    related.products.some((p) => p.id === privateProduct.id),
+    false,
+  );
+  assert.equal('description' in related.products[0], false);
+  assert.equal('source_url' in related.products[0], false);
+  assert.equal(requests.length, sourceRequests, 'Related products do not contact external sources');
+  assert.equal(
+    (await getProducts()).find((p) => p.id === variant.id)?.edition_guide?.code,
+    'test',
+    'Both directions share the association',
+  );
+  await (await getDb()).query('UPDATE products SET deleted_at=now() WHERE id=$1', [variant.id]);
+  assert.deepEqual(
+    (await editionProducts('test')).products.map((p) => p.id),
+    [product.id],
+  );
+  await assert.rejects(() => editionProducts('../test'), /no está disponible/);
   await imports.editEdition('test', {
     title: 'Título del borrador actualizado',
     summary: 'Resumen nuevo reservado hasta publicar.',
@@ -185,6 +252,7 @@ test('Ediciones: preparación reanudable, español oficial, publicación revisad
   await imports.publishEdition('test', true);
   assert.equal((await imports.publicEdition('test')).title, 'Título del borrador actualizado');
   await imports.publishEdition('test', false);
+  await assert.rejects(() => editionProducts('test'), /no está disponible/);
   assert.deepEqual(
     (await imports.communityEditions()).map((edition) => edition.code),
     ['betb'],

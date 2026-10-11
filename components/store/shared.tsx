@@ -134,7 +134,7 @@ export function ProductImage({
     </div>
   );
 }
-export function availability(p: Product) {
+export function availability(p: Pick<Product, 'kind' | 'opens_at' | 'closes_at' | 'available'>) {
   const now = Date.now();
   if (
     p.kind === 'preorder' &&

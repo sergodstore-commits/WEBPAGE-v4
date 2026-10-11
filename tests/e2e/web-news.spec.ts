@@ -236,9 +236,15 @@ test('Admin: selección web protegida, editar español, ocultar y persistir', as
       .getByLabel('Título en español', { exact: true })
       .fill('Beyond the Brave: cartas y rarezas');
     await section
+      .getByLabel('Edición relacionada (opcional)', { exact: true })
+      .selectOption('betb');
+    await section
       .getByRole('button', { name: 'Guardar cambios de la noticia', exact: true })
       .click();
     await expect(section.getByRole('status').filter({ hasText: 'Noticia guardada' })).toBeVisible();
+    expect(
+      (await (await page.request.get('/api/news/tcg/beyond-the-brave')).json()).edition_code,
+    ).toBe('betb');
     await section.getByRole('button', { name: 'Retirar noticia', exact: true }).click();
     await expect(section.getByRole('status').filter({ hasText: 'Noticia retirada' })).toBeVisible();
     await page.reload();

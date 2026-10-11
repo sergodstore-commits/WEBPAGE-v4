@@ -9,7 +9,7 @@ Object.assign(process.env, { NODE_ENV: 'test' });
 
 test('Noticias web: selección persistente, enlaces seguros y aislamiento de configuración', async (t) => {
   const { closeDb } = await import('../lib/server/db');
-  const { getWebNews, saveWebNews } = await import('../lib/server/web-news');
+  const { getWebNews, saveWebNews, publicWebArticle } = await import('../lib/server/web-news');
   const { getSettings, saveSettings } = await import('../lib/server/catalog');
   const { initialWebNews, yugiohMetaArticle } = await import('../lib/web-news');
   t.after(closeDb);
@@ -29,6 +29,27 @@ test('Noticias web: selección persistente, enlaces seguros y aislamiento de con
   await saveSettings(settings);
   assert.equal((await getWebNews(true))[0].visible, false);
   await saveWebNews([{ ...hidden, visible: true }]);
+  await saveWebNews([{ ...hidden, visible: true, edition_code: 'betb' }]);
+  assert.equal((await publicWebArticle(hidden.id)).edition_code, 'betb');
+  assert.equal((await getWebNews())[0].edition_code, 'betb');
+  await assert.rejects(() => saveWebNews([{ ...hidden, edition_code: '../private' }]));
+  await saveWebNews([{ ...hidden, visible: true, edition_code: 'unpublished' }]);
+  assert.equal(
+    (await publicWebArticle(hidden.id)).edition_code,
+    undefined,
+    'Unpublished guides never get public connections',
+  );
+  assert.equal(
+    (await getWebNews(true))[0].edition_code,
+    'unpublished',
+    'The admin keeps its association for later publication',
+  );
+  await saveWebNews([{ ...hidden, visible: true, edition_code: '' }]);
+  assert.equal(
+    (await getWebNews(true))[0].edition_code,
+    undefined,
+    'An association can be removed',
+  );
   await closeDb();
   assert.equal((await getWebNews())[0].title, hidden.title);
   await saveWebNews([]);

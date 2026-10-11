@@ -9,7 +9,7 @@ import {
   type WebNewsItem,
 } from '../web-news';
 import { validDay } from '../tournament-schedule';
-import { publishedEditions, withLease } from './edition-imports';
+import { communityEditions, publishedEditions, withLease } from './edition-imports';
 import {
   archiveMetaNewsCover,
   articleImages,
@@ -43,6 +43,10 @@ const schema = z
         published_on: z.string().refine(validDay, 'Indica una fecha válida.'),
         visible: z.boolean(),
         category: z.enum(['news', 'reveals', 'releases', 'tournaments', 'banlist']).default('news'),
+        edition_code: z
+          .union([z.literal(''), z.string().regex(/^[a-z0-9-]{2,20}$/)])
+          .optional()
+          .transform((value) => value || undefined),
         boards: z
           .array(z.enum(['yugioh', 'myl-first-era', 'myl-first-block']))
           .min(1)
@@ -80,6 +84,11 @@ const schema = z
       })
       .superRefine((item, context) => {
         const isMyl = Boolean(mylArticle(item.url));
+        if (isMyl && item.edition_code)
+          context.addIssue({
+            code: 'custom',
+            message: 'Las guías de ediciones disponibles corresponden a Yu-Gi-Oh! TCG.',
+          });
         if (
           new Set(item.boards).size !== item.boards.length ||
           item.boards.some((board) => isMyl === (board === 'yugioh'))
@@ -115,6 +124,7 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
       source_label: 'YGOPRODeck',
       format: 'TCG' as const,
       category: 'releases' as const,
+      edition_code: edition.code,
       cover_cards: edition.cover_cards,
     })),
     ...items
@@ -138,6 +148,12 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
           ...item
         }) => ({
           ...item,
+          edition_code:
+            item.edition_code &&
+            (item.edition_code === 'betb' ||
+              editions.some((edition) => edition.code === item.edition_code))
+              ? item.edition_code
+              : undefined,
           format: mylArticle(item.url) ? undefined : ('TCG' as const),
           category: item.category || 'releases',
           article_path:
@@ -259,6 +275,11 @@ export async function publicWebArticle(id: string) {
   } = item;
   return {
     ...publicItem,
+    edition_code:
+      item.edition_code &&
+      (await communityEditions()).some((edition) => edition.code === item.edition_code)
+        ? item.edition_code
+        : undefined,
     source_label: mylArticle(item.url) ? 'Blog oficial Mitos y Leyendas' : 'Yu-Gi-Oh! Meta',
     format: mylArticle(item.url) ? undefined : ('TCG' as const),
   };

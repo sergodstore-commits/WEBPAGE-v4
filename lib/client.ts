@@ -19,7 +19,8 @@ export const money = (value: number) =>
     currency: 'CLP',
     maximumFractionDigits: 0,
   }).format(value);
-export const price = (p: Product) => Math.round((p.price * (100 - p.discount_percent)) / 100);
+export const price = (p: Pick<Product, 'price' | 'discount_percent'>) =>
+  Math.round((p.price * (100 - p.discount_percent)) / 100);
 export const date = (value: string | null) =>
   value
     ? new Intl.DateTimeFormat('es-CL', {

@@ -1,4 +1,5 @@
 export type WebNewsItem = {
+  edition_code?: string;
   boards?: NewsBoard[];
   effective_dates?: Partial<Record<MylNewsBoard, string>>;
   id: string;

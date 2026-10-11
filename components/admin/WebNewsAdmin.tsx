@@ -11,6 +11,8 @@ import {
   type WebNewsCandidate,
 } from '@/lib/web-news';
 import styles from './NewsWorkspace.module.css';
+import type { EditionChoice } from '@/lib/edition-gallery';
+import { useRemote } from '../store/shared';
 
 const blank = (): WebNewsItem => ({
   id: '',
@@ -31,6 +33,9 @@ const blank = (): WebNewsItem => ({
 export function WebNewsAdmin() {
   const [items, setItems] = useState<WebNewsItem[] | null>(null);
   const [draft, setDraft] = useState(blank);
+  const editions = useRemote<EditionChoice[]>(
+    draft.id && !mylArticle(draft.url) ? '/community/editions' : null,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -460,6 +465,7 @@ export function WebNewsAdmin() {
                           ...draft,
                           url: e.target.value,
                           boards: mylArticle(e.target.value) ? ['myl-first-era'] : ['yugioh'],
+                          edition_code: mylArticle(e.target.value) ? undefined : draft.edition_code,
                         })
                       }
                       placeholder="https://www.yugiohmeta.com/articles/…"
@@ -480,6 +486,47 @@ export function WebNewsAdmin() {
                       ))}
                     </select>
                   </label>
+                  {!mylArticle(draft.url) && (
+                    <label className="admin-field">
+                      <span>Edición relacionada (opcional)</span>
+                      <select
+                        aria-label="Edición relacionada (opcional)"
+                        value={draft.edition_code || ''}
+                        disabled={editions.loading}
+                        onChange={(event) =>
+                          setDraft({ ...draft, edition_code: event.target.value || undefined })
+                        }
+                      >
+                        <option value="">Sin edición relacionada</option>
+                        {(editions.data || []).map((edition) => (
+                          <option key={edition.code} value={edition.code}>
+                            {edition.name}
+                          </option>
+                        ))}
+                        {draft.edition_code &&
+                          !editions.data?.some(
+                            (edition) => edition.code === draft.edition_code,
+                          ) && (
+                            <option value={draft.edition_code}>
+                              {draft.edition_code.toUpperCase()} · guía no disponible
+                            </option>
+                          )}
+                      </select>
+                      <small className="admin-help">
+                        Conecta esta noticia con sus cartas y productos. Solo las guías publicadas
+                        se muestran al público.
+                      </small>
+                      {editions.error && (
+                        <button
+                          type="button"
+                          className="admin-button secondary"
+                          onClick={editions.reload}
+                        >
+                          Reintentar ediciones
+                        </button>
+                      )}
+                    </label>
+                  )}
                   {mylArticle(draft.url) && (
                     <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
                       <legend>Mostrar en los formatos seleccionados</legend>

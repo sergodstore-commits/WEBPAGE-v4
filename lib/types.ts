@@ -1,5 +1,5 @@
 export type Product = {
-  edition_guide?: { name: string; url: string };
+  edition_guide?: { name: string; url: string; code?: string };
   id: string;
   name: string;
   slug: string;

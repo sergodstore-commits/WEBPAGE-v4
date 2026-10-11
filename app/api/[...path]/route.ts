@@ -30,6 +30,7 @@ import {
   deleteProduct,
   getProduct,
   getProducts,
+  editionProducts,
   getSettings,
   inventory,
   publishProduct,
@@ -249,6 +250,14 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       return NextResponse.json(await communityEditions(), {
         headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
       });
+    if (
+      path[0] === 'community' &&
+      path[1] === 'editions' &&
+      path.length === 4 &&
+      path[3] === 'products' &&
+      method === 'GET'
+    )
+      return json(await editionProducts(path[2]));
     if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());
     if (
       path[0] === 'news' &&

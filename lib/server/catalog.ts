@@ -3,23 +3,48 @@ import { getDb, type Db } from './db';
 import { fail, integer, slugify, uuid } from './core';
 import type { Settings, Product } from '../types';
 import { moveReleasedPreorders } from './preorder-release';
-import { publishedEditions } from './edition-imports';
+import { communityEditions } from './edition-imports';
+import {
+  editionCatalogKeys,
+  productEdition,
+  editionArticlePath,
+  type EditionProduct,
+  type EditionProducts,
+} from '../edition-connections';
 
 async function withEditionGuides(products: Product[]) {
-  const editions = await publishedEditions();
+  const editions = await communityEditions();
   return products.map((product) => {
-    const edition = editions.find(
-      (item) =>
-        product.catalog_group === `ygo-${slugify(item.name)}` ||
-        product.catalog_name?.toLowerCase() === item.name.toLowerCase(),
-    );
+    const edition = productEdition(product, editions);
     return edition
       ? {
           ...product,
-          edition_guide: { name: edition.name, url: `/noticias/ediciones/${edition.code}` },
+          edition_guide: {
+            name: edition.name,
+            url: editionArticlePath(edition.code),
+            code: edition.code,
+          },
         }
       : product;
   });
+}
+export async function editionProducts(code: string): Promise<EditionProducts> {
+  if (!/^[a-z0-9-]{2,20}$/.test(code)) fail(404, 'Esta edición no está disponible.');
+  const edition = (await communityEditions()).find((item) => item.code === code);
+  if (!edition) fail(404, 'Esta edición no está disponible.');
+  await moveReleasedPreorders();
+  const keys = editionCatalogKeys(edition);
+  const { rows } = await (
+    await getDb()
+  ).query<EditionProduct>(
+    `SELECT id,slug,name,price,discount_percent,images,options,kind,
+      stock-reserved AS available,opens_at,closes_at,release_date
+     FROM products WHERE status='published' AND deleted_at IS NULL
+      AND (catalog_group=ANY($1::text[]) OR lower(btrim(catalog_name))=ANY($2::text[]))
+     ORDER BY release_date DESC NULLS LAST,name,sku`,
+    [keys.groups, keys.names],
+  );
+  return { edition: { code: edition.code, name: edition.name }, products: rows };
 }
 const nullableDate = z
   .union([z.iso.datetime({ offset: true }), z.literal(''), z.null()])

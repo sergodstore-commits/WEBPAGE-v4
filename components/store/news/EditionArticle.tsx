@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Search, X, Layers3 } from 'lucide-react';
 import styles from './EditionArticle.module.css';
 import type { EditionDocument, EditionCard as Card } from '@/lib/edition-gallery';
+import { EditionConnections } from '../catalog/EditionConnections';
 
 const defaultDocument: EditionDocument = {
   name: 'Beyond the Brave',
@@ -186,12 +187,12 @@ export default function EditionArticle({
                 caja. Las variantes de rareza se reúnen en una sola ficha por carta. Los extras
                 promocionales de otros productos pueden ser diferentes.
               </p>
-              <Link href={`/tienda?busqueda=${encodeURIComponent(documentData.name)}`}>
-                Ver productos en la tienda →
-              </Link>
             </aside>
           </div>
         </>
+      )}
+      {!preview && (
+        <EditionConnections key={documentData.code} code={documentData.code} explorer={explorer} />
       )}
       <section className={styles.catalog} aria-labelledby="edition-gallery-heading">
         <div className={styles.catalogHeading}>

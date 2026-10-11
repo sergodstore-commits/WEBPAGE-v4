@@ -2,6 +2,7 @@ import { ArrowUpRight, Layers3 } from 'lucide-react';
 import Link from 'next/link';
 import { localWebArticle } from '@/lib/web-news';
 import { editionLink } from '@/lib/edition-links';
+import { editionExplorerPath } from '@/lib/edition-connections';
 import type { Product } from '@/lib/types';
 import styles from './EditionLink.module.css';
 
@@ -10,12 +11,11 @@ export function EditionLink({ product, detail = false }: { product: Product; det
   if (!edition) return null;
   const local = edition.internal ? edition.url : localWebArticle(edition.url);
   const code =
-    local === '/noticias/beyond-the-brave'
+    product.edition_guide?.code ||
+    (local === '/noticias/beyond-the-brave'
       ? 'betb'
-      : local?.match(/^\/noticias\/ediciones\/([a-z0-9-]{2,20})$/)?.[1];
-  const destination = code
-    ? `/comunidad?vista=ediciones&edicion=${encodeURIComponent(code)}`
-    : (local ?? edition.url);
+      : local?.match(/^\/noticias\/ediciones\/([a-z0-9-]{2,20})$/)?.[1]);
+  const destination = code ? editionExplorerPath(code) : (local ?? edition.url);
   return (
     <div className={detail ? styles.detail : styles.compact}>
       <Link
