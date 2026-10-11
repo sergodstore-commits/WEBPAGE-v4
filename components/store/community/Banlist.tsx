@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ShieldCheck, Search, X, ArrowLeft } from 'lucide-react';
 import {
@@ -254,12 +254,19 @@ function BanlistDialog({ close }: { close: () => void }) {
   );
 }
 
-export function Banlist() {
+export function Banlist({
+  className,
+  children,
+}: { className?: string; children?: ReactNode } = {}) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className={styles.trigger} onClick={() => setOpen(true)}>
-        <ShieldCheck size={18} aria-hidden="true" /> Banlist TCG
+      <button type="button" className={className || styles.trigger} onClick={() => setOpen(true)}>
+        {children || (
+          <>
+            <ShieldCheck size={18} aria-hidden="true" /> Banlist TCG
+          </>
+        )}
       </button>
       {open && createPortal(<BanlistDialog close={() => setOpen(false)} />, document.body)}
     </>

@@ -1,0 +1,157 @@
+.panel {
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky;
+  top: 24px;
+  border: 1px solid #385966;
+  border-radius: 16px;
+  padding: 22px 18px 18px;
+  background: radial-gradient(ellipse at 100% 0, #2ab5cf14, transparent 70%), #101f2b;
+  color: #edf8fc;
+}
+.panel header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #66d6e84d;
+  border-radius: 12px;
+  color: #7ce0ed;
+  background: #63dced0c;
+}
+.panel h2 {
+  margin: 0;
+  font-size: 25px;
+}
+.panel header p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #b3c9d6;
+}
+.formats {
+  display: grid;
+  gap: 10px;
+}
+.format {
+  min-width: 0;
+  padding: 14px 12px;
+  border: 1px solid #385261;
+  border-radius: 10px;
+  background: #0a1823;
+}
+.access {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: #edf8fc;
+  cursor: pointer;
+  text-decoration: none;
+}
+.access > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #7bd9e7;
+}
+.access > svg:last-child {
+  margin-left: auto;
+  width: 15px;
+}
+.access span {
+  min-width: 0;
+}
+.access strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.access small {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #b3c9d6;
+}
+.access:hover strong {
+  color: #7ce0ed;
+}
+.access:focus-visible,
+.next:focus-visible,
+.note button:focus-visible {
+  outline: 2px solid #7ce0ed;
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+.next {
+  display: block;
+  margin: 12px 0 0 29px;
+  padding-top: 10px;
+  border-top: 1px solid #365665;
+  color: #8fe0ed;
+  font-size: 11px;
+  line-height: 1.7;
+  text-decoration: none;
+}
+a.next:hover {
+  text-decoration: underline;
+}
+.note {
+  margin: 18px 0 0;
+  color: #a5bdcc;
+  font-size: 10px;
+  line-height: 1.8;
+}
+.note button {
+  color: #8fe0ed;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+@media (max-width: 1050px) {
+  .panel {
+    grid-column: 1;
+    grid-row: 1;
+    position: static;
+  }
+  .formats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .panel {
+    padding: 16px;
+  }
+  .panel header {
+    margin-bottom: 14px;
+  }
+  .formats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .format {
+    padding: 12px;
+  }
+  .access {
+    align-items: center;
+  }
+  .access small {
+    margin-top: 2px;
+  }
+  .note {
+    margin-top: 12px;
+  }
+}

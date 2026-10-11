@@ -35,10 +35,16 @@ export function WebNewsCover({ item }: { item: WebNewsItem }) {
     </div>
   );
 }
-export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
+export function WebNewsColumn({
+  board = 'yugioh',
+  initialCategory = '',
+}: {
+  board?: NewsBoard;
+  initialCategory?: WebNewsCategory | '';
+}) {
   const title = newsBoards[board];
   const remote = useRemote<WebNewsItem[]>('/news/web-sources');
-  const [category, setCategory] = useState<WebNewsCategory | ''>('');
+  const [category, setCategory] = useState<WebNewsCategory | ''>(initialCategory);
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(8);
   const items = (remote.data || []).filter(

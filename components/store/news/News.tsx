@@ -10,6 +10,7 @@ import { useRemote, Loading, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './News.module.css';
 import { WebNewsColumn } from './WebNewsColumn';
+import { NewsBanlist } from './NewsBanlist';
 
 export function NewsMedia({ assets, permalink = '' }: { assets: NewsAsset[]; permalink?: string }) {
   const [index, setIndex] = useState(0),
@@ -197,8 +198,14 @@ export function News() {
           </button>
         ))}
       </nav>
-      <div className={styles.columns}>
-        {active === 'yugioh' && <WebNewsColumn />}
+      <div className={`${styles.columns} ${styles.withBanlist}`}>
+        <NewsBanlist />
+        {active === 'yugioh' && (
+          <WebNewsColumn
+            key={`${active}-${params.get('categoria')}`}
+            initialCategory={params.get('categoria') === 'banlist' ? 'banlist' : undefined}
+          />
+        )}
         {active === 'sergod' && (
           <section className={styles.storeNews} aria-labelledby="store-news-heading">
             <h2 id="store-news-heading" className={styles.storeHeading}>
@@ -363,7 +370,11 @@ export function News() {
           </section>
         )}
         {(active === 'myl-first-era' || active === 'myl-first-block') && (
-          <WebNewsColumn key={active} board={active} />
+          <WebNewsColumn
+            key={`${active}-${params.get('categoria')}`}
+            board={active}
+            initialCategory={params.get('categoria') === 'banlist' ? 'banlist' : undefined}
+          />
         )}
       </div>
     </div>

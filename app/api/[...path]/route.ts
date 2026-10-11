@@ -48,6 +48,7 @@ import { reviewMetaNews } from '@/lib/server/meta-news-source';
 import { reviewMylNews } from '@/lib/server/myl-news-source';
 import { prepareNewsDraft } from '@/lib/server/news-translation';
 import { getBanlist, refreshBanlist, banlistPanel, importBanlistCard } from '@/lib/server/banlist';
+import { getNewsBanlistOverview } from '@/lib/server/news-banlist';
 import {
   editionPanel,
   searchEditions,
@@ -235,6 +236,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         ),
       );
     if (route === 'news' && method === 'GET') return json(await publicNews());
+    if (route === 'news/banlist' && method === 'GET')
+      return NextResponse.json(await getNewsBanlistOverview(), {
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
+      });
     if (route === 'community/banlist' && method === 'GET')
       return NextResponse.json(await getBanlist(), {
         headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
