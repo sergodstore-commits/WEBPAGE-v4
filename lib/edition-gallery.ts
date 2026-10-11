@@ -23,6 +23,13 @@ export type EditionDocument = {
   updated: string;
   cards: EditionCard[];
 };
+export type EditionChoice = {
+  code: string;
+  name: string;
+  release_date: string;
+  total: number;
+  cover_cards: string[];
+};
 export type EditionSummary = {
   code: string;
   name: string;

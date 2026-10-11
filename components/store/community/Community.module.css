@@ -14,6 +14,38 @@
   border-radius: 14px;
   background: var(--sg-surface-soft);
 }
+.views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 28px 0;
+}
+.views a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 12px 18px;
+  border: 1px solid var(--sg-line);
+  border-radius: 9px;
+  color: var(--sg-ink);
+  background: var(--sg-surface);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+.views a[aria-current] {
+  border-color: var(--sg-link);
+  background: var(--sg-surface-selected);
+  box-shadow: inset 0 -2px 0 var(--sg-link);
+}
+.views a:hover {
+  border-color: var(--sg-link);
+}
+.views a:focus-visible {
+  outline: 2px solid var(--sg-link);
+  outline-offset: 4px;
+}
 .navigation h2 {
   color: var(--sg-muted);
   font-size: 13px;

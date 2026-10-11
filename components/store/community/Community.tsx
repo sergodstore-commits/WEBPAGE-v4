@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import { Trophy, Medal, ArrowRight } from 'lucide-react';
+import { Trophy, Medal, ArrowRight, Layers3 } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { date } from '@/lib/client';
 import { academyHouses, duelHouse } from '@/lib/duel-academy';
@@ -11,6 +12,13 @@ import { useRemote, Loading, Empty, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import { Banlist } from './Banlist';
 import styles from './Community.module.css';
+
+const EditionExplorer = dynamic(
+  () => import('./EditionExplorer').then((module) => module.EditionExplorer),
+  {
+    loading: () => <Loading />,
+  },
+);
 
 const day = (v: string) =>
   new Date(v + 'T15:00:00Z').toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
@@ -174,6 +182,34 @@ function RankingTable({
   );
 }
 export function Community() {
+  const params = useSearchParams();
+  const explore = params.get('vista') === 'ediciones';
+  const ranking = params.get('ranking');
+  const rankingQuery = ranking && Object.hasOwn(boards, ranking) ? `?ranking=${ranking}` : '';
+  return (
+    <div className={`store-page ${styles.page}`}>
+      <SectionHeader section="community" title="Comunidad" />
+      <nav className={styles.views} aria-label="Secciones de Comunidad">
+        <Link
+          href={`/comunidad${rankingQuery}`}
+          scroll={false}
+          aria-current={!explore ? 'page' : undefined}
+        >
+          <Trophy size={18} aria-hidden="true" /> Rankings
+        </Link>
+        <Link
+          href={`/comunidad?vista=ediciones${rankingQuery ? `&ranking=${ranking}` : ''}`}
+          scroll={false}
+          aria-current={explore ? 'page' : undefined}
+        >
+          <Layers3 size={18} aria-hidden="true" /> Explorar cartas
+        </Link>
+      </nav>
+      {explore ? <EditionExplorer /> : <CommunityRankings />}
+    </div>
+  );
+}
+function CommunityRankings() {
   const params = useSearchParams(),
     key = params.get('ranking') || 'myl-first-era';
   const board: RankingBoard = Object.hasOwn(boards, key) ? (key as RankingBoard) : 'myl-first-era';
@@ -217,8 +253,7 @@ export function Community() {
     </Link>
   );
   return (
-    <div className={`store-page ${styles.page}`}>
-      <SectionHeader section="community" title="Comunidad" />
+    <>
       <nav className={styles.navigation} aria-label="Elegir ranking">
         <div>
           <h2>Mitos y Leyendas · Puntos de liga</h2>
@@ -484,6 +519,6 @@ export function Community() {
           </section>
         )
       )}
-    </div>
+    </>
   );
 }

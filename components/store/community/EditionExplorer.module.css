@@ -1,0 +1,230 @@
+.explorer {
+  border: 1px solid #385563;
+  border-radius: 18px;
+  padding: 28px;
+  color: #edf5fa;
+  background: radial-gradient(ellipse at 100% 0, #1d728c22, transparent 50%), #101d29;
+}
+.heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+.icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  color: #86dfed;
+  border: 1px solid #48828f;
+  background: #173441;
+}
+.eyebrow {
+  color: #86dce9;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.heading h2 {
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.15;
+  margin: 8px 0;
+}
+.heading p,
+.note {
+  color: #b0c4d3;
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 0;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border: 1px solid #405c6e;
+  border-radius: 9px;
+  color: #8db5c8;
+  margin: 0 0 24px;
+  max-width: 540px;
+  background: #152735;
+}
+.search input {
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: #edf5fa;
+  min-width: 0;
+  width: 100%;
+  padding: 14px 0;
+}
+.search:focus-within {
+  outline: 2px solid #84dce9;
+  outline-offset: 3px;
+}
+.search input:focus-visible {
+  outline: none;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 22px;
+}
+.edition {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #3e5c6b;
+  border-radius: 12px;
+  background: #152633;
+  color: inherit;
+  text-decoration: none;
+}
+.edition:hover {
+  border-color: #84dce9;
+}
+.art {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 215px;
+  padding: 30px 22px 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 100%, #25647a, transparent 75%),
+    repeating-linear-gradient(135deg, transparent 0 28px, #68d8ed0a 29px 30px), #091924;
+}
+.art img {
+  display: block;
+  width: 34%;
+  max-width: 120px;
+  height: 175px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 6px #0008);
+}
+.art img:first-child {
+  transform: rotate(-13deg) translate(12px, 8px);
+}
+.art img:nth-child(2) {
+  z-index: 1;
+  transform: translateY(-4px);
+}
+.art img:nth-child(3) {
+  transform: rotate(13deg) translate(-12px, 8px);
+}
+.art > span {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 5px 8px;
+  border: 1px solid #69c5d85c;
+  border-radius: 4px;
+  background: #112c3de8;
+  color: #b0eaf4;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  z-index: 2;
+}
+.caption {
+  padding: 20px;
+}
+.metadata {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #adc3d2;
+  font-size: 10px;
+}
+.caption h3 {
+  font-size: 26px;
+  line-height: 1.15;
+  margin: 14px 0 18px;
+}
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #89e0ec;
+}
+.note {
+  border-top: 1px solid #35505f;
+  padding-top: 18px;
+  margin-top: 26px;
+  font-size: 11px;
+}
+.selection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 0 0 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #35505f;
+}
+.selection a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #89dfed;
+  font-size: 13px;
+  text-decoration: none;
+}
+.selection label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: #b4cbd8;
+}
+.selection select {
+  font: inherit;
+  background: #152735;
+  color: #edf5fa;
+  border: 1px solid #405c6e;
+  border-radius: 7px;
+  padding: 12px;
+  max-width: 100%;
+}
+.message {
+  padding: 20px 0;
+}
+.edition:focus-visible,
+.selection a:focus-visible {
+  outline: 2px solid #84dce9;
+  outline-offset: 4px;
+}
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .explorer {
+    padding: 18px 14px;
+  }
+  .heading {
+    gap: 12px;
+  }
+  .icon {
+    width: 40px;
+    height: 40px;
+  }
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .selection label {
+    width: 100%;
+  }
+  .selection select {
+    width: 100%;
+  }
+}

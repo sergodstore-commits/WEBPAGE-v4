@@ -51,8 +51,11 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-export default function EditionArticle({ code }: { code?: string } = {}) {
-  const preview = useSearchParams().get('vista') === 'admin';
+export default function EditionArticle({
+  code,
+  explorer = false,
+}: { code?: string; explorer?: boolean } = {}) {
+  const preview = useSearchParams().get('vista') === 'admin' && !explorer;
   const [documentData, setDocumentData] = useState<EditionDocument | null>(
     code ? null : defaultDocument,
   );
@@ -105,11 +108,11 @@ export default function EditionArticle({ code }: { code?: string } = {}) {
   );
   if (!documentData)
     return (
-      <article className={styles.article}>
-        <Link href="/noticias">Volver a Noticias</Link>
+      <article className={`${styles.article} ${explorer ? styles.explorer : ''}`}>
+        {!explorer && <Link href="/noticias">Volver a Noticias</Link>}
         {error ? (
           <div role="alert">
-            <h1>Guía no disponible</h1>
+            <h2>Guía no disponible</h2>
             <p>Puede que aún no esté publicada o que no tengas acceso a su vista previa.</p>
             <button onClick={() => setVersion((value) => value + 1)}>Reintentar</button>
           </div>
@@ -119,62 +122,77 @@ export default function EditionArticle({ code }: { code?: string } = {}) {
       </article>
     );
   return (
-    <article className={styles.article}>
-      <Link className={styles.back} href="/noticias">
-        <ArrowLeft size={16} /> Volver a Noticias
-      </Link>
-      <header className={styles.header}>
-        <div className={styles.eyebrow}>
-          {preview && code ? 'VISTA PREVIA · SIN PUBLICAR' : 'GUÍA DE EDICIÓN · YU-GI-OH! TCG'}
-        </div>
-        <h1>
-          {code ? (
-            documentData.title
-          ) : (
-            <>
-              Beyond the <em>Brave</em>
-            </>
-          )}
-        </h1>
-        <p>{documentData.summary}</p>
-        <div className={styles.meta}>
-          <span>
-            <Layers3 size={16} /> {cards.length || (code ? 0 : 100)} cartas distintas
-          </span>
-          <span>Textos en español</span>
-          <time dateTime={documentData.updated}>
-            Revisado el{' '}
-            {new Intl.DateTimeFormat('es-CL', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-              timeZone: 'UTC',
-            }).format(new Date(`${documentData.updated}T12:00:00Z`))}
-          </time>
-        </div>
-      </header>
-      <div className={styles.intro}>
-        <section>
-          <h2>Explora antes de abrir</h2>
-          {documentData.body
-            .split(/\n+/)
-            .filter(Boolean)
-            .map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-        </section>
-        <aside>
-          <strong>¿Qué puede salir en un sobre?</strong>
+    <article className={`${styles.article} ${explorer ? styles.explorer : ''}`}>
+      {explorer ? (
+        <div className={styles.explorerHeading}>
+          <div>
+            <span className={styles.eyebrow}>{documentData.code.toUpperCase()} · TCG</span>
+            <h3>{documentData.name}</h3>
+          </div>
           <p>
-            Esta galería muestra las cartas de la edición, no el contenido garantizado de una caja.
-            Las variantes de rareza se reúnen en una sola ficha por carta. Los extras promocionales
-            de otros productos pueden ser diferentes.
+            Cartas posibles de la edición. El contenido de cada sobre es aleatorio; los extras
+            promocionales pueden variar según el producto.
           </p>
-          <Link href={`/tienda?busqueda=${encodeURIComponent(documentData.name)}`}>
-            Ver productos en la tienda →
+        </div>
+      ) : (
+        <>
+          <Link className={styles.back} href="/noticias">
+            <ArrowLeft size={16} /> Volver a Noticias
           </Link>
-        </aside>
-      </div>
+          <header className={styles.header}>
+            <div className={styles.eyebrow}>
+              {preview && code ? 'VISTA PREVIA · SIN PUBLICAR' : 'GUÍA DE EDICIÓN · YU-GI-OH! TCG'}
+            </div>
+            <h1>
+              {code ? (
+                documentData.title
+              ) : (
+                <>
+                  Beyond the <em>Brave</em>
+                </>
+              )}
+            </h1>
+            <p>{documentData.summary}</p>
+            <div className={styles.meta}>
+              <span>
+                <Layers3 size={16} /> {cards.length || (code ? 0 : 100)} cartas distintas
+              </span>
+              <span>Textos en español</span>
+              <time dateTime={documentData.updated}>
+                Revisado el{' '}
+                {new Intl.DateTimeFormat('es-CL', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  timeZone: 'UTC',
+                }).format(new Date(`${documentData.updated}T12:00:00Z`))}
+              </time>
+            </div>
+          </header>
+          <div className={styles.intro}>
+            <section>
+              <h2>Explora antes de abrir</h2>
+              {documentData.body
+                .split(/\n+/)
+                .filter(Boolean)
+                .map((paragraph, index) => (
+                  <p key={index}>{paragraph}</p>
+                ))}
+            </section>
+            <aside>
+              <strong>¿Qué puede salir en un sobre?</strong>
+              <p>
+                Esta galería muestra las cartas de la edición, no el contenido garantizado de una
+                caja. Las variantes de rareza se reúnen en una sola ficha por carta. Los extras
+                promocionales de otros productos pueden ser diferentes.
+              </p>
+              <Link href={`/tienda?busqueda=${encodeURIComponent(documentData.name)}`}>
+                Ver productos en la tienda →
+              </Link>
+            </aside>
+          </div>
+        </>
+      )}
       <section className={styles.catalog} aria-labelledby="edition-gallery-heading">
         <div className={styles.catalogHeading}>
           <div>

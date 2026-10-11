@@ -13,6 +13,35 @@
   margin-bottom: 24px;
   text-decoration: none;
 }
+.explorer {
+  padding: 0;
+  max-width: none;
+}
+.explorerHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.explorerHeading h3 {
+  margin: 8px 0 0;
+  font-size: 34px;
+  line-height: 1.1;
+}
+.explorerHeading p {
+  max-width: 400px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #b5c1ce;
+}
+@media (max-width: 720px) {
+  .explorerHeading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
 .header {
   border: 1px solid #34424e;
   border-radius: 20px;

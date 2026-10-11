@@ -134,7 +134,22 @@ test('Ediciones: preparación reanudable, español oficial, publicación revisad
   assert.equal((await imports.previewEdition('rpt')).cards[0].printings[0].code, 'RPT-EN001');
   assert.equal((await imports.editionPanel()).storage_bytes, bytes);
   assert.equal((await imports.publishedEditions()).length, 0);
+  const indexRequests = requests.length;
+  assert.deepEqual(
+    (await imports.communityEditions()).map((edition) => edition.code),
+    ['betb'],
+  );
+  assert.equal(requests.length, indexRequests, 'Browsing only reads prepared local data');
   await imports.publishEdition('test', true);
+  const explorer = await imports.communityEditions();
+  assert.deepEqual(
+    explorer.map((edition) => edition.code),
+    ['test', 'betb'],
+  );
+  assert.equal(explorer[0].total, 2);
+  assert.equal(explorer[0].cover_cards.length, 2);
+  assert.ok(!JSON.stringify(explorer).includes('effects'));
+  assert.ok(!JSON.stringify(explorer).includes('last_error'));
   const published = await imports.publicEdition('test');
   assert.equal(
     (await getWebNews()).find((news) => news.id === 'edition-test')?.article_path,
@@ -170,6 +185,10 @@ test('Ediciones: preparación reanudable, español oficial, publicación revisad
   await imports.publishEdition('test', true);
   assert.equal((await imports.publicEdition('test')).title, 'Título del borrador actualizado');
   await imports.publishEdition('test', false);
+  assert.deepEqual(
+    (await imports.communityEditions()).map((edition) => edition.code),
+    ['betb'],
+  );
   await assert.rejects(() => imports.publicEdition('test'), /no está publicada/);
   assert.deepEqual(
     await imports.publishedEditions(),

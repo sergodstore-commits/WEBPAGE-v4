@@ -8,6 +8,7 @@ import type {
   EditionDocument,
   EditionPanel,
   EditionSummary,
+  EditionChoice,
 } from '../edition-gallery';
 import { getDb, dataDir } from './db';
 import { AppError, fail, hash, isProd, token } from './core';
@@ -396,4 +397,30 @@ export async function publishedEditions() {
     published_on: string;
     cover_cards: string[];
   }[];
+}
+
+// Lightweight index: no full card documents, drafts or source requests.
+export async function communityEditions(): Promise<EditionChoice[]> {
+  const { rows } = await (
+    await getDb()
+  ).query(`SELECT code,
+    published->>'name' AS name, release_date,
+    jsonb_array_length(published->'cards') AS total,
+    (SELECT jsonb_agg(card->>'thumbnail') FROM
+      (SELECT value AS card FROM jsonb_array_elements(published->'cards') LIMIT 3) previews
+    ) AS cover_cards
+    FROM ygo_editions WHERE published IS NOT NULL`);
+  const editions = rows as EditionChoice[];
+  if (!editions.some((edition) => edition.code === 'betb'))
+    editions.push({
+      code: 'betb',
+      name: 'Beyond the Brave',
+      release_date: '2026-09-26',
+      total: staticBetb.cards.length,
+      cover_cards: staticBetb.cards.slice(0, 3).map((card) => card.thumbnail),
+    });
+  return editions.sort(
+    (a, b) =>
+      (b.release_date || '').localeCompare(a.release_date || '') || a.name.localeCompare(b.name),
+  );
 }

@@ -51,6 +51,7 @@ import { getBanlist, refreshBanlist, banlistPanel, importBanlistCard } from '@/l
 import { getNewsBanlistOverview } from '@/lib/server/news-banlist';
 import {
   editionPanel,
+  communityEditions,
   searchEditions,
   prepareEdition,
   importEditionBatch,
@@ -242,6 +243,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       });
     if (route === 'community/banlist' && method === 'GET')
       return NextResponse.json(await getBanlist(), {
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
+      });
+    if (route === 'community/editions' && method === 'GET')
+      return NextResponse.json(await communityEditions(), {
         headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
       });
     if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());

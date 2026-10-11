@@ -9,19 +9,32 @@ export function EditionLink({ product, detail = false }: { product: Product; det
   const edition = editionLink(product);
   if (!edition) return null;
   const local = edition.internal ? edition.url : localWebArticle(edition.url);
+  const code =
+    local === '/noticias/beyond-the-brave'
+      ? 'betb'
+      : local?.match(/^\/noticias\/ediciones\/([a-z0-9-]{2,20})$/)?.[1];
+  const destination = code
+    ? `/comunidad?vista=ediciones&edicion=${encodeURIComponent(code)}`
+    : (local ?? edition.url);
   return (
     <div className={detail ? styles.detail : styles.compact}>
       <Link
         className={styles.link}
-        href={local ?? edition.url}
+        href={destination}
         target={local ? undefined : '_blank'}
         rel={local ? undefined : 'noopener noreferrer'}
         aria-label={`Ver cartas de ${edition.name}${local ? ' en español' : ` en ${edition.source} (abre una pestaña nueva)`}`}
       >
         <Layers3 size={17} aria-hidden="true" />
         <span>
-          Ver cartas de esta edición{' '}
-          <small>{local ? 'Galería y efectos en español' : `en ${edition.source}`}</small>
+          Explorar esta edición{' '}
+          <small>
+            {code
+              ? 'Herramienta de Comunidad · Cartas y efectos'
+              : local
+                ? 'Galería y efectos en español'
+                : `en ${edition.source}`}
+          </small>
         </span>
         <ArrowUpRight size={17} aria-hidden="true" />
       </Link>
