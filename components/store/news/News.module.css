@@ -172,6 +172,51 @@
   flex-wrap: wrap;
   margin: 24px 0 12px;
 }
+.topicPicker {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.filterLabel {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sg-muted);
+}
+.newsFilters button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.newsFilters small {
+  display: inline-grid;
+  place-items: center;
+  min-width: 21px;
+  min-height: 21px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: rgb(137 191 214 / 12%);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.newsFilters button:focus-visible {
+  outline: 3px solid var(--sg-link);
+  outline-offset: 3px;
+}
+.resultsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0;
+}
+.resultsBar .newsCount {
+  margin: 0;
+}
+.resultsBar button {
+  min-height: 44px;
+}
 .newsFilters {
   display: flex;
   gap: 8px;

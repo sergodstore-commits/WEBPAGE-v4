@@ -150,8 +150,8 @@ export function News() {
   );
   const selected = list.find((p) => p.id === params.get('publicacion'));
   const sections = [
-    ['yugioh', 'Yu-Gi-Oh! TCG'],
     ['sergod', 'SERGOD STORE'],
+    ['yugioh', 'Yu-Gi-Oh! TCG'],
     ['myl-first-era', 'MyL Primera Era'],
     ['myl-first-block', 'MyL Primer Bloque'],
   ] as const;
@@ -164,7 +164,7 @@ export function News() {
   function navigate(section: string, publication?: string) {
     const query = new URLSearchParams({ seccion: section });
     if (publication) query.set('publicacion', publication);
-    router.replace(`/noticias?${query}`, { scroll: false });
+    router.push(`/noticias?${query}`, { scroll: false });
   }
   function close() {
     navigate('sergod');
@@ -200,12 +200,7 @@ export function News() {
       </nav>
       <div className={`${styles.columns} ${styles.withBanlist}`}>
         <NewsBanlist />
-        {active === 'yugioh' && (
-          <WebNewsColumn
-            key={`${active}-${params.get('categoria')}`}
-            initialCategory={params.get('categoria') === 'banlist' ? 'banlist' : undefined}
-          />
-        )}
+        {active === 'yugioh' && <WebNewsColumn key={active} />}
         {active === 'sergod' && (
           <section className={styles.storeNews} aria-labelledby="store-news-heading">
             <h2 id="store-news-heading" className={styles.storeHeading}>
@@ -370,11 +365,7 @@ export function News() {
           </section>
         )}
         {(active === 'myl-first-era' || active === 'myl-first-block') && (
-          <WebNewsColumn
-            key={`${active}-${params.get('categoria')}`}
-            board={active}
-            initialCategory={params.get('categoria') === 'banlist' ? 'banlist' : undefined}
-          />
+          <WebNewsColumn key={active} board={active} />
         )}
       </div>
     </div>

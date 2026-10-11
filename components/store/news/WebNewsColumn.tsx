@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { ArrowRight, BookOpen, Search, Newspaper } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   localWebArticle,
   newsBoards,
@@ -35,23 +36,35 @@ export function WebNewsCover({ item }: { item: WebNewsItem }) {
     </div>
   );
 }
-export function WebNewsColumn({
-  board = 'yugioh',
-  initialCategory = '',
-}: {
-  board?: NewsBoard;
-  initialCategory?: WebNewsCategory | '';
-}) {
+export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
   const title = newsBoards[board];
+  const router = useRouter();
+  const params = useSearchParams();
   const remote = useRemote<WebNewsItem[]>('/news/web-sources');
-  const [category, setCategory] = useState<WebNewsCategory | ''>(initialCategory);
+  const requestedCategory = params.get('categoria');
+  const category: WebNewsCategory | '' = Object.hasOwn(webNewsCategories, requestedCategory || '')
+    ? (requestedCategory as WebNewsCategory)
+    : '';
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(8);
-  const items = (remote.data || []).filter(
-    (item) =>
-      (item.boards || ['yugioh']).includes(board) &&
-      (board !== 'yugioh' || item.format === undefined || item.format === 'TCG'),
-  );
+  const items = (remote.data || [])
+    .filter(
+      (item) =>
+        (item.boards || ['yugioh']).includes(board) &&
+        (board !== 'yugioh' || item.format === undefined || item.format === 'TCG'),
+    )
+    .sort((a, b) => b.published_on.localeCompare(a.published_on) || a.id.localeCompare(b.id));
+  function chooseCategory(value: WebNewsCategory | '') {
+    setLimit(8);
+    if (value === category) return;
+    const query = new URLSearchParams({ seccion: board });
+    if (value) query.set('categoria', value);
+    router.push(`/noticias?${query}`, { scroll: false });
+  }
+  function clearFilters() {
+    setQuery('');
+    chooseCategory('');
+  }
   const normalize = (s: string) =>
     s
       .normalize('NFD')
@@ -59,7 +72,7 @@ export function WebNewsColumn({
       .toLowerCase();
   const visible = items.filter(
     (item) =>
-      (!category || item.category === category) &&
+      (!category || (item.category || 'news') === category) &&
       normalize(item.title + ' ' + item.summary).includes(normalize(query)),
   );
   return (
@@ -72,34 +85,39 @@ export function WebNewsColumn({
         </div>
       </div>
       <div className={styles.newsToolbar}>
-        <div
-          className={styles.newsFilters}
-          role="group"
-          aria-label={`Categoría de noticias ${board === 'yugioh' ? 'TCG' : title}`}
-        >
-          <button
-            type="button"
-            aria-pressed={!category}
-            onClick={() => {
-              setCategory('');
-              setLimit(8);
-            }}
+        <div className={styles.topicPicker}>
+          <span className={styles.filterLabel}>Filtrar por tema</span>
+          <div
+            className={styles.newsFilters}
+            role="group"
+            aria-label={`Categoría de noticias ${board === 'yugioh' ? 'TCG' : title}`}
           >
-            Todas
-          </button>
-          {Object.entries(webNewsCategories).map(([key, label]) => (
             <button
               type="button"
-              key={key}
-              aria-pressed={category === key}
-              onClick={() => {
-                setCategory(key as WebNewsCategory);
-                setLimit(8);
-              }}
+              aria-label="Todas"
+              aria-pressed={!category}
+              onClick={() => chooseCategory('')}
             >
-              {label}
+              Todas
+              {!remote.loading && !remote.error && <small aria-hidden="true">{items.length}</small>}
             </button>
-          ))}
+            {Object.entries(webNewsCategories).map(([key, label]) => (
+              <button
+                type="button"
+                key={key}
+                aria-label={label}
+                aria-pressed={category === key}
+                onClick={() => chooseCategory(key as WebNewsCategory)}
+              >
+                {label}
+                {!remote.loading && !remote.error && (
+                  <small aria-hidden="true">
+                    {items.filter((item) => (item.category || 'news') === key).length}
+                  </small>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
         <label className={styles.newsSearch}>
           <Search size={17} aria-hidden="true" />
@@ -131,9 +149,17 @@ export function WebNewsColumn({
         </div>
       ) : (
         <>
-          <p className={styles.newsCount} role="status">
-            {visible.length} {visible.length === 1 ? 'noticia' : 'noticias'}
-          </p>
+          <div className={styles.resultsBar}>
+            <p className={styles.newsCount} role="status">
+              {visible.length} {visible.length === 1 ? 'noticia' : 'noticias'} · Más recientes
+              primero
+            </p>
+            {(category || query) && (
+              <button type="button" className="store-text-link" onClick={clearFilters}>
+                Quitar filtros
+              </button>
+            )}
+          </div>
           {visible.length ? (
             <div className={styles.tcgGrid}>
               {visible.slice(0, limit).map((item) => (
@@ -177,7 +203,7 @@ export function WebNewsColumn({
               className="store-button store-button-secondary"
               onClick={() => setLimit((n) => n + 8)}
             >
-              Ver más noticias TCG
+              Ver más noticias
             </button>
           )}
         </>

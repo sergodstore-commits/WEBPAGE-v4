@@ -110,6 +110,84 @@ test('Noticias: pestañas por comunidad, galería TCG con filtros y lectura inte
   await expect(page.getByRole('dialog')).not.toBeVisible();
 });
 
+test('Noticias: temas persistentes, fechas originales y formatos separados', async ({ page }) => {
+  const make = (id: string, published_on: string, category: string, boards = ['yugioh']) => ({
+    ...initialWebNews[0],
+    id,
+    title: id,
+    published_on,
+    category,
+    boards,
+    article_path: `/noticias/tcg/${id}`,
+  });
+  await page.route('**/api/news/web-sources', (route) =>
+    route.fulfill({
+      json: [
+        make('Antigua importada hoy', '2026-09-01', 'reveals'),
+        make('Lanzamiento reciente', '2026-10-10', 'releases'),
+        make('Revelación más reciente', '2026-10-09', 'reveals'),
+        make('Noticia Primera Era', '2026-10-08', 'news', ['myl-first-era']),
+        make('Torneo Primer Bloque', '2026-10-07', 'tournaments', ['myl-first-block']),
+        { ...make('Excluir OCG', '2026-10-11', 'reveals'), format: 'OCG' },
+      ],
+    }),
+  );
+  await page.goto('/noticias?seccion=yugioh');
+  const world = page.getByRole('region', { name: 'Yu-Gi-Oh! TCG', exact: true });
+  await expect(world.locator('article h3')).toHaveText([
+    'Lanzamiento reciente',
+    'Revelación más reciente',
+    'Antigua importada hoy',
+  ]);
+  await expect(world.getByRole('button', { name: 'Revelaciones', exact: true })).toContainText('2');
+  await world.getByRole('button', { name: 'Revelaciones', exact: true }).click();
+  await expect(page).toHaveURL(/seccion=yugioh&categoria=reveals$/);
+  await expect(world.locator('article h3')).toHaveText([
+    'Revelación más reciente',
+    'Antigua importada hoy',
+  ]);
+  await page.reload();
+  await expect(world.getByRole('button', { name: 'Revelaciones', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await world.getByRole('button', { name: 'Lanzamientos', exact: true }).click();
+  await expect(page).toHaveURL(/categoria=releases$/);
+  await page.goBack();
+  await expect(world.getByRole('button', { name: 'Revelaciones', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await world.getByRole('searchbox').fill('sin resultados');
+  await expect(world).toContainText('No hay noticias con estos filtros');
+  await world.getByRole('button', { name: 'Quitar filtros', exact: true }).click();
+  await expect(world.getByRole('searchbox')).toHaveValue('');
+  await expect(world.locator('article')).toHaveCount(3);
+  await expect(page).toHaveURL(/seccion=yugioh$/);
+  await page.getByRole('button', { name: 'MyL Primera Era', exact: true }).click();
+  const era = page.getByRole('region', { name: 'MyL Primera Era', exact: true });
+  await expect(era.locator('article h3')).toHaveText(['Noticia Primera Era']);
+  await era.getByRole('button', { name: 'Actualidad', exact: true }).click();
+  await expect(page).toHaveURL(/seccion=myl-first-era&categoria=news$/);
+  await page.reload();
+  await expect(era.getByRole('button', { name: 'Actualidad', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
+  const block = page.getByRole('region', { name: 'MyL Primer Bloque', exact: true });
+  await expect(block.locator('article h3')).toHaveText(['Torneo Primer Bloque']);
+  await expect(page.getByRole('complementary', { name: 'Banlist', exact: true })).toBeVisible();
+  await page.goto('/noticias?seccion=myl-first-block&categoria=desconocida');
+  await expect(block.getByRole('button', { name: 'Todas', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.setViewportSize({ width: 320, height: 740 });
+  await expect(block.getByRole('button', { name: 'Torneos', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('Admin: selección web protegida, editar español, ocultar y persistir', async ({ page }) => {
   expect(
     (
