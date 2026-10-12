@@ -53,7 +53,7 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
     page.getByText('El archivo comienza con la próxima transmisión', { exact: true }),
   ).toHaveCount(0);
   await expect(page.getByText('Próximas fechas por anunciar', { exact: true })).toHaveCount(0);
-  await expect(page.getByRole('link', { name: /Ver detalles de/ })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Ver detalles de/ })).toHaveCount(4);
   const day = calendar.getByRole('button', { name: /29 de febrero de 2032:/ });
   await expect(day).toContainText('Liga Yu-Gi-Oh!');
   await expect(day).toContainText('+2 más');

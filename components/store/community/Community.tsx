@@ -220,6 +220,14 @@ function CommunityRankings() {
     [selected, setSelected] = useState<string | null>(null),
     [eventsLimit, setEventsLimit] = useState(10);
   const [player, setPlayer] = useState<PublicRanking['rows'][number] | null>(null);
+  const history = useRef<HTMLDetailsElement>(null);
+  const showResults = params.get('resultados') === '1';
+  useEffect(() => {
+    if (showResults && history.current && !ranking.loading && ranking.data?.board === board) {
+      history.current.open = true;
+      history.current.scrollIntoView({ block: 'start' });
+    }
+  }, [showResults, board, ranking.loading, ranking.data]);
   const selectedBoard = boards[board];
   const limits = ranking.data?.academy;
   const duelHouses = academyHouses(limits);
@@ -449,7 +457,7 @@ function CommunityRankings() {
                 </p>
               )}
               {ranking.data.tournaments.length > 0 && (
-                <details key={board} className={styles.history}>
+                <details key={board} ref={history} id="torneos-ranking" className={styles.history}>
                   <summary>
                     Torneos que aportan al ranking · {ranking.data.tournaments.length}
                   </summary>

@@ -11,6 +11,8 @@ import {
   X,
   Radio,
   Video,
+  ArrowRight,
+  Clock3,
 } from 'lucide-react';
 import { api, date, money } from '@/lib/client';
 import type { Post, TournamentMedia, YouTubeVideo } from '@/lib/types';
@@ -18,6 +20,14 @@ import { useRemote, Loading, RemoteError, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './Tournaments.module.css';
 import { TournamentCalendar } from './TournamentCalendar';
+import { UpcomingTournaments } from './UpcomingTournaments';
+import { addDays, chileLocal } from '@/lib/tournament-schedule';
+import { tournamentDay, tournamentTime } from '@/lib/tournament-display';
+import { boards, type RankingBoard } from '@/lib/rankings';
+
+const resultBoards: RankingBoard[] = ['yugioh', 'myl-first-era', 'myl-first-block'];
+const resultsPath = (board: RankingBoard) =>
+  `/comunidad?ranking=${board}&resultados=1#torneos-ranking`;
 function Thumbnail({ video }: { video: YouTubeVideo }) {
   const sources = [
     video.custom_thumbnail,
@@ -97,7 +107,13 @@ function VideoDialog({ video, close }: { video: YouTubeVideo; close: () => void 
   );
 }
 export function Tournaments() {
-  const posts = useRemote<Post[]>('/posts?kind=tournament'),
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const today = chileLocal(new Date(now)).slice(0, 10);
+  const posts = useRemote<Post[]>(`/posts?kind=tournament&from=${today}&to=${addDays(today, 45)}`),
     media = useRemote<TournamentMedia>('/tournaments');
   const [selected, setSelected] = useState<YouTubeVideo | null>(null),
     [extra, setExtra] = useState<YouTubeVideo[]>([]),
@@ -119,22 +135,46 @@ export function Tournaments() {
   return (
     <div className={`store-page ${styles.page}`}>
       <SectionHeader section="tournaments" title="Torneos" />
+      <nav className={styles.jumpLinks} aria-label="Secciones de Torneos">
+        <a href="#calendario">
+          Calendario <CalendarDays size={16} aria-hidden="true" />
+        </a>
+        <a href="#transmision">
+          Transmisión <Radio size={16} aria-hidden="true" />
+        </a>
+        <a href="#resultados">
+          Resultados <Trophy size={16} aria-hidden="true" />
+        </a>
+        <a href="#grabaciones">
+          Grabaciones <Play size={16} aria-hidden="true" />
+        </a>
+      </nav>
       <section className={styles.section} aria-labelledby="upcoming-heading">
         <div className={styles.sectionHeading}>
           <CalendarDays />
           <h2 id="upcoming-heading">Próximos torneos</h2>
         </div>
+        {posts.loading ? (
+          <Loading />
+        ) : posts.error ? (
+          <RemoteError error={posts.error} reload={posts.reload} />
+        ) : (
+          <UpcomingTournaments posts={posts.data || []} now={now} />
+        )}
+        <a className={styles.agendaLink} href="#calendario">
+          Ver agenda mensual <ArrowRight size={16} aria-hidden="true" />
+        </a>
+      </section>
+      <section id="calendario" className={styles.section} aria-labelledby="calendar-heading">
+        <div className={styles.sectionHeading}>
+          <CalendarDays />
+          <h2 id="calendar-heading">Calendario y transmisión</h2>
+        </div>
         <div className={styles.scheduleLayout}>
           <div className={styles.calendarPanel}>
-            {posts.loading ? (
-              <Loading />
-            ) : posts.error ? (
-              <RemoteError error={posts.error} reload={posts.reload} />
-            ) : (
-              <TournamentCalendar posts={posts.data || []} />
-            )}
+            <TournamentCalendar posts={posts.data || []} />
           </div>
-          <section className={styles.live} aria-labelledby="live-heading">
+          <section id="transmision" className={styles.live} aria-labelledby="live-heading">
             <div className={styles.panelHeading}>
               <Radio size={20} aria-hidden="true" />
               <h2 id="live-heading">Transmisión en vivo</h2>
@@ -175,7 +215,28 @@ export function Tournaments() {
           </section>
         </div>
       </section>
-      <section className={styles.section} aria-labelledby="archive-heading">
+      <section id="resultados" className={styles.section} aria-labelledby="results-heading">
+        <div className={styles.sectionHeading}>
+          <Trophy />
+          <h2 id="results-heading">Resultados de liga</h2>
+        </div>
+        <p className={styles.sectionNote}>
+          Consulta los torneos publicados y sus puntos en Comunidad.
+        </p>
+        <div className={styles.resultLinks}>
+          {resultBoards.map((board) => (
+            <Link key={board} href={resultsPath(board)}>
+              <div>
+                <span>{boards[board].game}</span>
+                <h3>{board === 'yugioh' ? 'Yu-Gi-Oh!' : boards[board].name}</h3>
+                <p>Ver torneos y resultados</p>
+              </div>
+              <ArrowRight size={20} aria-hidden="true" />
+            </Link>
+          ))}
+        </div>
+      </section>
+      <section id="grabaciones" className={styles.section} aria-labelledby="archive-heading">
         <div className={styles.sectionHeading}>
           <Play />
           <h2 id="archive-heading">Transmisiones anteriores</h2>
@@ -239,21 +300,56 @@ export function TournamentDetail({ post: p }: { post: Post }) {
       </header>
       <div className={styles.meta}>
         {p.event_at && (
-          <span>
-            <CalendarDays size={18} />
-            {date(p.event_at)}
-          </span>
+          <>
+            <div>
+              <CalendarDays size={18} aria-hidden="true" />
+              <span>
+                Fecha
+                <time dateTime={p.event_at}>
+                  {tournamentDay(p.event_at)}, {chileLocal(p.event_at).slice(0, 4)}
+                </time>
+              </span>
+            </div>
+            <div>
+              <Clock3 size={18} aria-hidden="true" />
+              <span>
+                Horario<strong>{tournamentTime(p.event_at)} h · Chile</strong>
+              </span>
+            </div>
+          </>
         )}
         {p.location && (
-          <span>
-            <MapPin size={18} />
-            {p.location}
-          </span>
+          <div>
+            <MapPin size={18} aria-hidden="true" />
+            <span>
+              Lugar<strong>{p.location}</strong>
+            </span>
+          </div>
+        )}
+        {p.entry_price != null && (
+          <div>
+            <Trophy size={18} aria-hidden="true" />
+            <span>
+              Inscripción<strong>{money(p.entry_price)}</strong>
+            </span>
+          </div>
         )}
       </div>
-      {p.entry_price != null && <p>Inscripción: {money(p.entry_price)}</p>}
       {p.image && <ProductImage className={styles.poster} src={p.image} name={p.title} />}
-      <div className={styles.body}>{p.body}</div>
+      {p.body && (
+        <section className={styles.eventBody} aria-labelledby="event-information">
+          <h2 id="event-information">Información del torneo</h2>
+          <div className={styles.body}>{p.body}</div>
+        </section>
+      )}
+      <nav className={styles.detailLinks} aria-label="Más sobre nuestros torneos">
+        <Link href="/torneos#transmision">
+          <Radio size={18} aria-hidden="true" /> Ver transmisiones
+        </Link>
+        <Link href="/torneos#resultados">
+          <Trophy size={18} aria-hidden="true" /> Consultar resultados de liga
+        </Link>
+      </nav>
     </article>
   );
 }

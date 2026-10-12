@@ -9,7 +9,7 @@ Esta pauta continúa las mejoras visuales, sin animaciones de banners. Los núme
 | 3     | Separar las áreas de Comunidad           | Completado junto al punto 2: accesos a Rankings y Explorar cartas, sin añadir una pestaña principal.                                                                                 | Sol 6.1 / Medio                   |
 | 4     | Noticias por juego y tema                | Cuatro secciones: SERGOD STORE, Yu-Gi-Oh! TCG, MyL Primera Era y Primer Bloque. Temas con contadores, filtros en la URL, búsqueda y orden por fecha original. Banlist independiente. | Sol 6.1 / Medio                   |
 | 5     | Conectar noticias, ediciones y productos | Completado: guías y noticias relacionadas → cartas y productos; explorador → guía y productos. Cada presentación conserva su ficha, precio e idioma.                                 | Sol 6.1 / Alto                    |
-| 6     | Torneos con una entrada más útil         | Pendiente: próximos eventos antes del calendario, detalle con horario, formato, precio cuando corresponda, transmisión y resultados existentes.                                      | Sol 6.1 / Medio                   |
+| 6     | Torneos con una entrada más útil         | Completado: seis próximas fechas antes del calendario, accesos a transmisión, grabaciones y resultados de liga; detalle con datos y descripción del evento.                           | Sol 6.1 / Medio                   |
 | 7     | Tienda por decisiones de compra          | Pendiente: juego/línea antes de presentación; cada sobre, display, token box, single y accesorio mantiene su artículo propio.                                                        | Sol 6.1 / Medio                   |
 | 8     | Administración por contenido             | Pendiente: fuentes/actualizaciones separadas de revisión/publicación, progreso claro; ligas en su propia área.                                                                       | Sol 6.1 / Alto                    |
 
@@ -28,3 +28,11 @@ Las guías y el explorador comparten el bloque «Cartas y productos de esta edic
 La asociación utiliza los campos de catálogo de cada producto (`catalog_group` / `catalog_name`), con los mismos criterios para enlazar producto → edición y edición → productos. No depende de palabras coincidentes en una descripción ni descarga contenido externo durante la visita.
 
 En el editor de noticias TCG, «Edición relacionada (opcional)» permite conectar un artículo con una guía publicada. Las noticias de MyL no ofrecen esta asociación mientras no exista un catálogo de ediciones MyL. Al retirar una guía, su asociación se conserva para administración pero deja de mostrarse públicamente.
+
+## Torneos: entrada y navegación
+
+La cartelera muestra hasta seis fechas publicadas por comenzar, ordenadas por la hora real del evento. Consulta los siguientes 45 días; el calendario mantiene su consulta mensual independiente. Las programaciones semanales, excepciones y traslados siguen usando las fechas resueltas por la agenda existente. Los eventos que ya comenzaron salen de la cartelera; siguen consultables desde el calendario. La hora y el día se presentan en `America/Santiago`.
+
+Cada tarjeta abre la ficha del evento, donde fecha, hora, lugar y precio se distinguen de la descripción con sus reglas y formato. Un precio ausente no genera un importe ni un aviso pendiente. Las transmisiones y grabaciones conservan su publicación administrada y el reproductor sin reproducción automática.
+
+«Resultados de liga» enlaza al historial de la categoría elegida en Comunidad mediante `?ranking={grupo}&resultados=1#torneos-ranking`. El historial se abre cuando llegan sus datos, también al recargar el enlace. Se reutilizan los resultados publicados por la tienda; no se asocia un resultado o video a un evento solo por su nombre. Esta reorganización no crea imágenes ni copia datos de ligas.

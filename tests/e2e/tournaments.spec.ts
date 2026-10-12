@@ -354,7 +354,12 @@ test('Agenda semanal: publicar desde Admin, cambiar una fecha, recargar y pausar
   await expect(calendar.getByText('Actualizando agenda…')).toHaveCount(0);
   await expect(calendar.getByRole('button', { name: new RegExp(title) })).toHaveCount(4);
   await calendar.getByRole('button', { name: new RegExp(changedTitle) }).click();
-  await expect(calendar.getByText('Inscripción: $6.000', { exact: true })).toBeVisible();
+  await expect(
+    calendar
+      .getByRole('listitem')
+      .filter({ hasText: changedTitle })
+      .getByText('Inscripción: $6.000', { exact: true }),
+  ).toBeVisible();
   await calendar.getByRole('link', { name: changedTitle, exact: true }).click();
   await expect(visitor.getByRole('heading', { name: changedTitle, exact: true })).toBeVisible();
   await visitor.goto('http://localhost:3100/torneos');
@@ -369,7 +374,12 @@ test('Agenda semanal: publicar desde Admin, cambiar una fecha, recargar y pausar
   await expect(calendar.getByRole('button', { name: new RegExp(title) })).toHaveCount(0);
   await visitor.setViewportSize({ width: 375, height: 812 });
   await calendar.getByRole('button', { name: new RegExp(changedTitle) }).click();
-  await expect(calendar.getByText('Inscripción: $6.000', { exact: true })).toBeVisible();
+  await expect(
+    calendar
+      .getByRole('listitem')
+      .filter({ hasText: changedTitle })
+      .getByText('Inscripción: $6.000', { exact: true }),
+  ).toBeVisible();
   expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
     true,
   );
