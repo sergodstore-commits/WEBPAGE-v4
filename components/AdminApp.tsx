@@ -1183,7 +1183,8 @@ function ProductEditor({ productId }: { productId?: string }) {
                 </Field>
                 <p className="admin-help">
                   La tienda se ordena por el lanzamiento original. Los artículos sin fecha aparecen
-                  al final.
+                  al final. Una presentación nueva sin fecha utiliza la del grupo si sus fechas
+                  conocidas coinciden; puedes indicar una fecha distinta por idioma o región.
                 </p>
               </section>
             )}
@@ -1226,6 +1227,10 @@ function ProductEditor({ productId }: { productId?: string }) {
                       value={form.release_date}
                       onChange={(e) => update('release_date', e.target.value)}
                     />
+                    <span className="admin-help">
+                      Ordena las preventas por lanzamiento. Una presentación nueva sin fecha puede
+                      usar la fecha del grupo si sus fechas conocidas coinciden.
+                    </span>
                   </Field>
                   <div className="admin-span-all">
                     <label className="admin-check">

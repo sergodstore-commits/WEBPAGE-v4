@@ -163,6 +163,29 @@ test('Preventas: estados, fechas por opción, filtros persistentes y responsive'
   await expect(page.locator('.store-product-card')).toHaveCount(2);
   await expect(page).toHaveURL(/disponibles=1/);
 });
+test('Lanzamientos de preventa: más cercanos primero, sin fecha al final y orden persistente', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.goto('/preventas');
+  const cards = page.locator('.store-product-card');
+  await expect(cards).toHaveCount(6);
+  await expect(cards.nth(0)).toContainText('reserva-es');
+  await expect(cards.nth(1)).toContainText('reserva-en');
+  const order = page.getByRole('combobox', { name: 'Ordenar artículos', exact: true });
+  await expect(order).toHaveValue('soon');
+  await order.selectOption('recent');
+  await expect(cards.nth(0)).toContainText('reserva-en');
+  await expect(cards.nth(1)).toContainText('reserva-es');
+  await expect(page).toHaveURL(/orden=recent/);
+  await page.reload();
+  await expect(order).toHaveValue('recent');
+  await expect(cards.nth(0)).toContainText('reserva-en');
+  await order.selectOption('soon');
+  await expect(page).not.toHaveURL(/orden=/);
+  await expect(cards.nth(0)).toContainText('reserva-es');
+});
+
 test('Reserva: límites e idioma actualizan fechas, precio, condiciones y carrito', async ({
   page,
 }, info) => {

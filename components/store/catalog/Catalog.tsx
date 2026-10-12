@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { money, price } from '@/lib/client';
 import type { Product } from '@/lib/types';
+import { compareCatalogLaunch } from '@/lib/catalog-order';
 import {
   catalogPresentation,
   catalogPresentations,
@@ -77,8 +78,9 @@ const filterParams: Record<keyof Filters, string> = {
   sort: 'orden',
   available: 'disponibles',
 };
-function readFilters(query: URLSearchParams): Filters {
-  const sort = query.get('orden') || 'recent';
+function readFilters(query: URLSearchParams, preorder: boolean): Filters {
+  const defaultSort = preorder ? 'soon' : 'recent';
+  const sort = query.get('orden') || defaultSort;
   const amount = (key: string) => {
     const value = query.get(key) || '';
     return /^\d+$/.test(value) ? value : '';
@@ -92,7 +94,9 @@ function readFilters(query: URLSearchParams): Filters {
     tag: query.get('caracteristica') || '',
     minimumPrice: amount('desde'),
     maximumPrice: amount('hasta'),
-    sort: ['recent', 'price-asc', 'price-desc', 'name'].includes(sort) ? sort : 'recent',
+    sort: ['recent', preorder ? 'soon' : 'oldest', 'price-asc', 'price-desc', 'name'].includes(sort)
+      ? sort
+      : defaultSort,
     available: query.get('disponibles') === '1',
   };
 }
@@ -105,7 +109,9 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   const preorder = kind === 'preorder';
   const queryString = query.toString();
   const products = useRemote<Product[]>(`/products?kind=${kind}`),
-    [filters, setFilters] = useState<Filters>(() => readFilters(new URLSearchParams(queryString))),
+    [filters, setFilters] = useState<Filters>(() =>
+      readFilters(new URLSearchParams(queryString), preorder),
+    ),
     [page, setPage] = useState(() => readPage(new URLSearchParams(queryString))),
     [mobile, setMobile] = useState(false),
     [filtersOpen, setFiltersOpen] = useState(false),
@@ -124,9 +130,9 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   } = filters;
   useEffect(() => {
     const params = new URLSearchParams(queryString);
-    setFilters(readFilters(params));
+    setFilters(readFilters(params, preorder));
     setPage(readPage(params));
-  }, [queryString]);
+  }, [queryString, preorder]);
   useEffect(() => {
     const media = window.matchMedia('(max-width: 900px)');
     const sync = () => setMobile(media.matches);
@@ -140,7 +146,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     const params = new URLSearchParams(window.location.search);
     for (const key of Object.keys(update) as (keyof Filters)[]) {
       const value = update[key];
-      if (value && !(key === 'sort' && value === 'recent')) {
+      if (value && !(key === 'sort' && value === (preorder ? 'soon' : 'recent'))) {
         params.set(filterParams[key], value === true ? '1' : String(value));
       } else params.delete(filterParams[key]);
     }
@@ -252,8 +258,11 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           ? Math.max(...b.map(price)) - Math.max(...a.map(price))
           : sort === 'name'
             ? familyName(a[0]).localeCompare(familyName(b[0]), 'es')
-            : (b[0].release_date || '').localeCompare(a[0].release_date || '') ||
-              a[0].name.localeCompare(b[0].name, 'es'),
+            : compareCatalogLaunch(
+                a[0],
+                b[0],
+                sort === 'soon' || sort === 'oldest' ? 'asc' : 'desc',
+              ),
     );
   }, [
     products.data,
@@ -353,7 +362,17 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
             value={sort}
             onChange={(e) => setSort(e.target.value)}
           >
-            <option value="recent">Lanzamientos: más recientes</option>
+            {preorder ? (
+              <>
+                <option value="soon">Lanzamientos: más cercanos</option>
+                <option value="recent">Lanzamientos: más lejanos</option>
+              </>
+            ) : (
+              <>
+                <option value="recent">Lanzamientos: más recientes</option>
+                <option value="oldest">Lanzamientos: más antiguos</option>
+              </>
+            )}
             <option value="price-asc">Menor precio</option>
             <option value="price-desc">Mayor precio</option>
             <option value="name">Nombre: A–Z</option>

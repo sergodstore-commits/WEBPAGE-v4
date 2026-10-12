@@ -43,6 +43,14 @@ Primero se elige el juego o línea; después la presentación. Las opciones mues
 
 La clasificación da prioridad a Formato/Presentación en opciones o especificaciones; después utiliza el nombre y la categoría. Nunca interpreta las descripciones, donde pueden mencionarse otros productos. Los productos sin formato reconocido quedan en Otros productos y siguen visibles en el catálogo completo. No se agrupan idiomas, sobres, displays ni token box. Se mantiene el orden por fecha de lanzamiento; no hay consultas nuevas ni imágenes duplicadas.
 
+### Lanzamientos y presentaciones — 12 de octubre de 2026
+
+Tienda abre con lanzamientos recientes primero; Preventas, con los más cercanos primero. Se puede invertir el orden y conservarlo en la URL al recargar. Los artículos sin fecha siempre van al final. En una misma fecha se mantiene cada edición junta, con singles, sobres, token box/mazos, displays y packs; español antes de inglés dentro de cada presentación. Cada SKU conserva su tarjeta y precio.
+
+Se verificaron siete ediciones con las [fuentes oficiales registradas](../data/catalogs/release-dates-2026-10.json). Yu-Gi-Oh! utiliza el lanzamiento general TCG de América; MyL, el lanzamiento oficial de Chile. Se corrigieron 21 productos publicados y cinco borradores relacionados, además de la guía de Chaos Origins. Los accesorios sin fecha verificada permanecen sin fecha. Precios, stock, reservas, imágenes, estado y condiciones de preventa se comprobaron sin cambios.
+
+Una presentación nueva sin fecha puede heredar la única fecha conocida de su grupo. Si hay fechas distintas, se deja sin fecha para revisión; una fecha explícita por idioma o región tiene prioridad. No modifica automáticamente otras presentaciones existentes. La validación impide lanzar una preventa antes del cierre de sus reservas. Las fechas de producto se entregan como día de calendario, sin convertirlas en instantes que puedan cambiar de día según el servidor. Las tres ediciones YGO verificadas también conservan su fecha oficial al volver a preparar sus guías.
+
 ## Administración: revisión y fuentes
 
 Noticias web abre en Revisar y publicar: muestra los borradores y artículos publicados, con búsqueda por título/resumen, juego/formato y estado. Buscar y preparar conserva la consulta a Yu-Gi-Oh! Meta y MyL en otra vista; preparar abre automáticamente el borrador para revisarlo. La preparación y la publicación mantienen sus verificaciones existentes, mensajes de error y confirmación pública. MyL no necesita traducción; la traducción TCG conserva sus límites gratuitos actuales.

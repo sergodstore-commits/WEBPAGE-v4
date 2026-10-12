@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import staticBetb from '../../public/editions/betb/cards.json';
+import verifiedReleases from '../../data/catalogs/release-dates-2026-10.json';
 import type {
   EditionCard,
   EditionDocument,
@@ -21,6 +22,13 @@ import {
 } from './ygo-source';
 
 export const EDITION_STORAGE_LIMIT = 100_000_000;
+const verifiedYgoGroups: Record<string, string> = {
+  cori: 'ygo-chaos-origins',
+  betb: 'ygo-beyond-the-brave',
+  imph: 'ygo-immortal-phoenix',
+};
+const verifiedEditionDate = (code: string) =>
+  verifiedReleases.releases.find((release) => release.group === verifiedYgoGroups[code])?.date;
 const codeSchema = z.string().regex(/^[a-z0-9-]{2,20}$/);
 const nowDay = () => new Date().toISOString().slice(0, 10);
 const jsonValue = (value: unknown) => JSON.stringify(value);
@@ -136,7 +144,7 @@ export async function prepareEdition(code: string) {
         code,
         set.name,
         set.expected,
-        set.release_date,
+        verifiedEditionDate(code) || set.release_date,
         `${set.name}: guía de cartas`,
         `Explora las cartas de ${set.name}, consulta sus rarezas y lee los efectos en español.`,
         `${set.name} reúne cartas para descubrir nuevas combinaciones. En esta guía de SERGOD puedes explorar la edición y consultar sus textos oficiales en español.\n\nBusca por nombre en español, en inglés o por código. Pulsa una carta para ampliar su imagen y leer su efecto.`,
@@ -415,7 +423,7 @@ export async function communityEditions(): Promise<EditionChoice[]> {
     editions.push({
       code: 'betb',
       name: 'Beyond the Brave',
-      release_date: '2026-09-26',
+      release_date: verifiedEditionDate('betb')!,
       total: staticBetb.cards.length,
       cover_cards: staticBetb.cards.slice(0, 3).map((card) => card.thumbnail),
     });

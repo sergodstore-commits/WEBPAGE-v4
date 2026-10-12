@@ -4,6 +4,7 @@ import { fail, integer, slugify, uuid } from './core';
 import type { Settings, Product } from '../types';
 import { moveReleasedPreorders } from './preorder-release';
 import { communityEditions } from './edition-imports';
+import { catalogReleaseDay, compareCatalogLaunch } from '../catalog-order';
 import {
   editionCatalogKeys,
   productEdition,
@@ -38,13 +39,19 @@ export async function editionProducts(code: string): Promise<EditionProducts> {
     await getDb()
   ).query<EditionProduct>(
     `SELECT id,slug,name,price,discount_percent,images,options,kind,
-      stock-reserved AS available,opens_at,closes_at,release_date
+      stock-reserved AS available,opens_at,closes_at,release_date::text AS release_date
      FROM products WHERE status='published' AND deleted_at IS NULL
       AND (catalog_group=ANY($1::text[]) OR lower(btrim(catalog_name))=ANY($2::text[]))
      ORDER BY release_date DESC NULLS LAST,name,sku`,
     [keys.groups, keys.names],
   );
-  return { edition: { code: edition.code, name: edition.name }, products: rows };
+  return {
+    edition: { code: edition.code, name: edition.name },
+    products: rows.map((p) => ({
+      ...p,
+      release_date: catalogReleaseDay(p.release_date) || null,
+    })),
+  };
 }
 const nullableDate = z
   .union([z.iso.datetime({ offset: true }), z.literal(''), z.null()])
@@ -206,7 +213,8 @@ export async function getProducts(
   query = new URLSearchParams(),
 ): Promise<Product[]> {
   await moveReleasedPreorders();
-  let sql = 'SELECT *,stock-reserved AS available FROM products WHERE deleted_at IS NULL';
+  let sql =
+    'SELECT *,release_date::text AS release_date,stock-reserved AS available FROM products WHERE deleted_at IS NULL';
   const params: any[] = [];
   const add = (condition: string, value: any) => {
     params.push(value);
@@ -225,17 +233,27 @@ export async function getProducts(
   if (query.get('tag')) add('tags @> ?::jsonb', JSON.stringify([query.get('tag')]));
   sql += admin
     ? ' ORDER BY created_at DESC LIMIT 1000'
-    : ' ORDER BY release_date DESC NULLS LAST,name,sku LIMIT 1000';
-  const products = (await (await getDb()).query<Product>(sql, params)).rows;
-  return admin ? products : withEditionGuides(products);
+    : ` ORDER BY products.release_date ${query.get('kind') === 'preorder' ? 'ASC' : 'DESC'} NULLS LAST,catalog_group,name,sku LIMIT 1000`;
+  const products = (await (await getDb()).query<Product>(sql, params)).rows.map((p) => ({
+    ...p,
+    release_date: catalogReleaseDay(p.release_date) || null,
+  }));
+  return admin
+    ? products
+    : withEditionGuides(
+        products.sort((a, b) =>
+          compareCatalogLaunch(a, b, query.get('kind') === 'preorder' ? 'asc' : 'desc'),
+        ),
+      );
 }
 export async function getProduct(slug: string, admin = false): Promise<Product> {
   await moveReleasedPreorders();
   const sql = admin
-    ? 'SELECT *,stock-reserved AS available FROM products WHERE (slug=$1 OR id::text=$1) AND deleted_at IS NULL'
-    : "SELECT *,stock-reserved AS available FROM products WHERE slug=$1 AND status='published' AND deleted_at IS NULL";
+    ? 'SELECT *,release_date::text AS release_date,stock-reserved AS available FROM products WHERE (slug=$1 OR id::text=$1) AND deleted_at IS NULL'
+    : "SELECT *,release_date::text AS release_date,stock-reserved AS available FROM products WHERE slug=$1 AND status='published' AND deleted_at IS NULL";
   const p = (await (await getDb()).query<Product>(sql, [slug])).rows[0];
   if (!p) fail(404, 'Este artículo no está disponible.');
+  p.release_date = catalogReleaseDay(p.release_date) || null;
   return admin ? p : (await withEditionGuides([p]))[0];
 }
 export async function saveProduct(user: any, input: unknown, id?: string): Promise<Product> {
@@ -250,9 +268,10 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
   await db.transaction(async (tx) => {
     const old = id
       ? (
-          await tx.query('SELECT * FROM products WHERE id=$1 AND deleted_at IS NULL FOR UPDATE', [
-            id,
-          ])
+          await tx.query(
+            'SELECT *,release_date::text AS release_date FROM products WHERE id=$1 AND deleted_at IS NULL FOR UPDATE',
+            [id],
+          )
         ).rows[0]
       : null;
     if (id && !old) fail(404, 'Artículo no encontrado.');
@@ -269,9 +288,24 @@ export async function saveProduct(user: any, input: unknown, id?: string): Promi
       tags: d.tags ?? old?.tags ?? [],
       specifications: d.specifications ?? old?.specifications ?? [],
       source_url: d.source_url ?? old?.source_url ?? '',
-      release_date: d.release_date === undefined ? old?.release_date || null : d.release_date,
+      release_date:
+        d.release_date === undefined
+          ? catalogReleaseDay(old?.release_date) || null
+          : d.release_date,
       auto_move_to_store: d.auto_move_to_store ?? old?.auto_move_to_store ?? true,
     };
+    // A new presentation may reuse its group's single verified date. Different regional
+    // dates remain explicit; ambiguous groups never choose one by import order.
+    if (!old && !metadata.release_date && metadata.catalog_group) {
+      const dates = (
+        await tx.query<{ day: string }>(
+          `SELECT DISTINCT to_char(release_date,'YYYY-MM-DD') AS day FROM products
+         WHERE catalog_group=$1 AND deleted_at IS NULL AND release_date IS NOT NULL LIMIT 2`,
+          [metadata.catalog_group],
+        )
+      ).rows;
+      if (dates.length === 1) metadata.release_date = dates[0].day;
+    }
     if (d.kind === 'preorder' && metadata.release_date && d.closes_at) {
       const closingDay = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'America/Santiago',

@@ -457,4 +457,11 @@ test('Lanzamientos: fecha original primero y artículos sin fecha al final', asy
   await expect(cards.nth(0)).toContainText('Lanzamiento reciente');
   await expect(cards.nth(1)).toContainText('Lanzamiento antiguo');
   await expect(cards.nth(2)).toContainText('Sin fecha');
+  const order = page.getByRole('combobox', { name: 'Ordenar artículos', exact: true });
+  await order.selectOption('oldest');
+  await expect(cards.nth(0)).toContainText('Lanzamiento antiguo');
+  await expect(cards.nth(2)).toContainText('Sin fecha');
+  await page.reload();
+  await expect(order).toHaveValue('oldest');
+  await expect(cards.nth(0)).toContainText('Lanzamiento antiguo');
 });

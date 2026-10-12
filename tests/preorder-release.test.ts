@@ -140,3 +140,62 @@ test('Lanzamiento: remanente real pasa una sola vez y conserva reservas, pedidos
     );
   }
 });
+
+test('Fecha compartida: una presentación nueva hereda solo una fecha inequívoca y respeta excepciones regionales', async (t) => {
+  const { getDb, closeDb } = await import('../lib/server/db');
+  const { saveProduct } = await import('../lib/server/catalog');
+  const db = await getDb();
+  t.after(async () => {
+    await closeDb();
+    assert.equal(path.dirname(dir), root);
+    await rm(dir, { recursive: true, force: true });
+  });
+  const input = {
+    name: 'Presentación de prueba',
+    description: 'Edición con diferentes presentaciones',
+    category: 'Yu-Gi-Oh!',
+    price: 5000,
+    stock: 0,
+    kind: 'store',
+    catalog_group: 'edicion-fecha-compartida',
+    catalog_name: 'Edición de prueba',
+  };
+  const first = await saveProduct({}, { ...input, sku: randomUUID(), release_date: '2040-01-20' });
+  const second = await saveProduct({}, { ...input, sku: randomUUID(), release_date: '' });
+  assert.equal(second.release_date, '2040-01-20');
+  const changed = await saveProduct(
+    {},
+    { ...input, sku: first.sku, expected_version: first.version },
+    first.id,
+  );
+  assert.equal(changed.release_date, '2040-01-20');
+  const regional = await saveProduct(
+    {},
+    { ...input, sku: randomUUID(), release_date: '2040-02-20' },
+  );
+  assert.equal(regional.release_date, '2040-02-20');
+  const ambiguous = await saveProduct({}, { ...input, sku: randomUUID() });
+  assert.equal(ambiguous.release_date, null);
+  const unrelated = await saveProduct(
+    {},
+    { ...input, catalog_group: 'otra-edicion', sku: randomUUID() },
+  );
+  assert.equal(unrelated.release_date, null);
+  await assert.rejects(
+    () =>
+      saveProduct(
+        {},
+        {
+          ...input,
+          catalog_group: 'otra-edicion',
+          sku: randomUUID(),
+          kind: 'preorder',
+          opens_at: '2041-01-01T12:00:00Z',
+          closes_at: '2041-01-10T12:00:00Z',
+          release_date: '2040-01-01',
+        },
+      ),
+    /lanzamiento/,
+  );
+  assert.equal((await db.query('SELECT count(*)::int AS count FROM products')).rows[0].count, 5);
+});

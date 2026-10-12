@@ -1,0 +1,48 @@
+{
+  "verified_on": "2026-10-12",
+  "scope": "Fecha de lanzamiento de la edición: TCG América para Yu-Gi-Oh!, lanzamiento oficial en Chile para MyL. Las presentaciones con fecha regional propia pueden sobrescribirla.",
+  "releases": [
+    {
+      "group": "ygo-chaos-origins",
+      "date": "2026-07-03",
+      "source": "https://www.yugioh-card.com/en/products/cori/",
+      "evidence": "Launch Date 07/03/2026; la fecha OTS es distinta."
+    },
+    {
+      "group": "ygo-beyond-the-brave",
+      "date": "2026-10-09",
+      "source": "https://www.yugioh-card.com/en/products/betb/",
+      "evidence": "Launch Date 10/09/2026; la fecha OTS es distinta."
+    },
+    {
+      "group": "ygo-immortal-phoenix",
+      "date": "2027-01-29",
+      "source": "https://www.yugioh-card.com/en/products/imph/",
+      "evidence": "Launch Date 01/29/2027; la fecha OTS es distinta."
+    },
+    {
+      "group": "myl-leyendas-primer-bloque-4-0",
+      "date": "2026-06-12",
+      "source": "https://blog.myl.cl/oraculo-leyendas-pb-4-0/",
+      "evidence": "Publicado el 12/06/2026: Hoy es el lanzamiento de la edición. La presentación inicial fue aplazada del 05 al 12 de junio."
+    },
+    {
+      "group": "myl-leyendas-primera-era-4-0",
+      "date": "2025-09-05",
+      "source": "https://blog.myl.cl/leyendas-pe-4-0/",
+      "evidence": "Torneos de Lanzamiento fechados a partir del 05 de Septiembre de 2025; se distingue del adelanto en Raciales 2025."
+    },
+    {
+      "group": "myl-relatos-dominios-de-ra",
+      "date": "2026-09-10",
+      "source": "https://blog.myl.cl/relatos-de-dominios-de-ra/",
+      "evidence": "Lanzamientos de los productos desde el Jueves 10 de Septiembre de 2026 a las 18:00."
+    },
+    {
+      "group": "myl-halloween-leyendas-ultratumba",
+      "date": "2026-10-16",
+      "source": "https://blog.myl.cl/leyendas-de-ultratumba-primera-era/",
+      "evidence": "Los productos Tinieblas y Abismo se lanzan el 16 de Octubre; artículo de septiembre de 2026."
+    }
+  ]
+}
