@@ -109,6 +109,9 @@ test('MyL: tablas completas, imágenes, correcciones posteriores y publicación 
     const base = parseMylBanlist(html, mylBanlistSources[board]);
     assert.equal(base.effective_on, '2026-09-05');
     assert.equal(base.images.length, board === 'myl-first-era' ? 14 : 4);
+    assert.ok(base.rules.includes('Ediciones incluidas en el formato:'));
+    assert.ok(!base.rules.some((r) => /con cartas de cualquier edición/.test(r)));
+    assert.equal(new Set(base.images.map((i) => i.name)).size, base.images.length);
     const current = applyMylNotice(
       base,
       notice,

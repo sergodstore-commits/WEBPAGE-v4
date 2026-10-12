@@ -114,7 +114,9 @@ function MylBanlistDialog({ board, close }: { board: MylNewsBoard; close: () => 
                 tabIndex={0}
                 aria-label="Cartas y restricciones MyL"
               >
-                <p className={styles.note}>{cards.length} cartas · Racial Edición</p>
+                <p className={styles.note}>
+                  {cards.length} {cards.length === 1 ? 'carta' : 'cartas'} · Racial Edición
+                </p>
                 <ul className={own.cards}>
                   {cards.map((c) => (
                     <li key={c.name}>

@@ -103,15 +103,22 @@ export function parseMylBanlist(html: string, url: string): MylBanlistSnapshot {
           b.text,
         ),
     )
-    .map((b) => b.text);
+    .map((b) =>
+      /complementarla con cartas de cualquier edición del Formato/i.test(b.text)
+        ? 'Ediciones incluidas en el formato:'
+        : b.text,
+    );
   return {
     effective_on: validDay(effective) ? effective : null,
     cards,
     rules,
-    images: mylImageManifest(html).map((image, i) => ({
-      ...image,
-      name: blocks.find((b) => b.source === image.source)?.text || `Aclaración ilustrada ${i + 1}`,
-    })),
+    images: mylImageManifest(html).map((image, i) => {
+      const label = blocks.find((b) => b.source === image.source)?.text;
+      return {
+        ...image,
+        name: label && !/^Formato Racial/i.test(label) ? label : `Aclaración ilustrada ${i + 1}`,
+      };
+    }),
     sources: [url],
     notes: [],
   };
