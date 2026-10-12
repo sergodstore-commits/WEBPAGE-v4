@@ -330,7 +330,7 @@ test('Liga: TOR dinámico, snapshots, duplicados, correcciones, aislamiento y pe
     const ygo = await league.publicRanking('yugioh');
     assert.equal(ygo.rows[0].points, 15);
     assert.equal(ygo.rows[0].position, 1);
-    assert.equal(ygo.rows[1].position, 1);
+    assert.equal(ygo.rows[1].position, 2);
     assert.equal(ygo.rows[0].tournaments, 1);
     assert.deepEqual(
       ygo.rows[0].contributions?.map((c) => [c.played_on, c.points]),

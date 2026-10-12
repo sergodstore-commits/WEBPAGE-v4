@@ -7,6 +7,7 @@ import styles from './LeagueAdmin.module.css';
 import { obtainKonamiReport } from '@/lib/konami-connector';
 import {
   boards,
+  rankingOrderRule,
   type LeaguePreview,
   type LeagueTournament,
   type TorCandidate,
@@ -101,6 +102,14 @@ function RankingSelection({
           Ver ranking
         </Link>
       </div>
+      <details className="admin-help">
+        <summary>Regla de desempate de la liga</summary>
+        <p>{rankingOrderRule}</p>
+        <p>
+          Una igualdad completa conserva un orden estable y aparece marcada como provisional (†) en
+          el ranking público.
+        </p>
+      </details>
       {!list.length ? (
         <p>Todavía no hay ligas guardadas para este ranking.</p>
       ) : (

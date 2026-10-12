@@ -53,6 +53,14 @@ En la revisión pública posterior se corrigió también el año escrito en las 
 
 Una presentación nueva sin fecha puede heredar la única fecha conocida de su grupo. Si hay fechas distintas, se deja sin fecha para revisión; una fecha explícita por idioma o región tiene prioridad. No modifica automáticamente otras presentaciones existentes. La validación impide lanzar una preventa antes del cierre de sus reservas. Las fechas de producto se entregan como día de calendario, sin convertirlas en instantes que puedan cambiar de día según el servidor. Las tres ediciones YGO verificadas también conservan su fecha oficial al volver a preparar sus guías.
 
+## Comunidad: orden de las ligas — 12 de octubre de 2026
+
+Primera Era, Primer Bloque y Yu-Gi-Oh! comparten la misma regla: puntos totales descendentes; a igualdad de puntos, más primeros puestos, luego segundos, terceros y siguientes. Si el perfil acumulado coincide, se comparan los standings de cada jugador del más reciente al más antiguo. Los resultados del mismo día se comparan por mejor puesto; no se inventa una hora ni se usa la fecha de importación.
+
+Solo cuentan torneos seleccionados, no archivados y de la liga correspondiente. El ranking tiene puestos únicos y consecutivos, también dentro de las casas de Yu-Gi-Oh!, donde se mantiene la posición general. Buscar o paginar no renumera a los jugadores. Una igualdad deportiva completa conserva un orden estable por identidad interna y marca ambos puestos como provisionales (†); no publica identificadores ni atribuye un mejor resultado a ese orden. La explicación está plegada bajo el ranking y disponible también al seleccionar torneos en Administración.
+
+El cálculo se realiza al consultar los resultados existentes, sin modificar sus puntos ni standings, sin migraciones ni almacenamiento nuevo. La auditoría previa de los 65 jugadores de las tres ligas comprobó puntos idénticos; encontró dos parejas con igualdad completa, señaladas como provisionales. Los resultados individuales de cada torneo mantienen su standing externo original.
+
 ## Administración: revisión y fuentes
 
 Noticias web abre en Revisar y publicar: muestra los borradores y artículos publicados, con búsqueda por título/resumen, juego/formato y estado. Buscar y preparar conserva la consulta a Yu-Gi-Oh! Meta y MyL en otra vista; preparar abre automáticamente el borrador para revisarlo. La preparación y la publicación mantienen sus verificaciones existentes, mensajes de error y confirmación pública. MyL no necesita traducción; la traducción TCG conserva sus límites gratuitos actuales.

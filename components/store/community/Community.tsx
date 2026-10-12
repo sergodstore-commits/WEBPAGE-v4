@@ -7,7 +7,7 @@ import { Trophy, Medal, ArrowRight, Layers3 } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { date } from '@/lib/client';
 import { academyHouses, duelHouse } from '@/lib/duel-academy';
-import { boards, type RankingBoard, type PublicRanking } from '@/lib/rankings';
+import { boards, rankingOrderRule, type RankingBoard, type PublicRanking } from '@/lib/rankings';
 import { useRemote, Loading, Empty, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './Community.module.css';
@@ -160,9 +160,17 @@ function RankingTable({
                   aria-label={`Ver puntos por torneo de ${r.name}`}
                 >
                   {r.position}°
+                  {r.provisional && (
+                    <sup aria-label="Puesto provisional por igualdad completa">†</sup>
+                  )}
                 </button>
               ) : (
-                `${r.position}°`
+                <>
+                  {r.position}°
+                  {r.provisional && (
+                    <sup aria-label="Puesto provisional por igualdad completa">†</sup>
+                  )}
+                </>
               )}
             </td>
             <td>
@@ -317,6 +325,9 @@ function CommunityRankings() {
                             <span>
                               <Medal size={18} aria-hidden="true" />
                               {r.position}°
+                              {r.provisional && (
+                                <sup aria-label="Puesto provisional por igualdad completa">†</sup>
+                              )}
                             </span>
                             <h3>{r.name}</h3>
                             <strong>
@@ -438,13 +449,26 @@ function CommunityRankings() {
                       Ver más jugadores
                     </button>
                   )}
-                  <p className={styles.note}>
-                    {board === 'yugioh' && (
-                      <>Pulsa el puesto de un jugador para ver sus puntos por torneo. </>
-                    )}
-                    Los jugadores con los mismos puntos comparten posición. Se muestran en orden
-                    alfabético dentro del empate.
-                  </p>
+                  {board === 'yugioh' && (
+                    <p className={styles.note}>
+                      Pulsa el puesto de un jugador para ver sus puntos por torneo.
+                    </p>
+                  )}
+                  <details className={styles.rankingRules}>
+                    <summary>Cómo se ordena el ranking</summary>
+                    <p>{rankingOrderRule}</p>
+                    <p>
+                      Los puestos son únicos y consecutivos. En una igualdad completa se conserva un
+                      orden estable, marcado como provisional (†); ese orden no representa un mejor
+                      resultado deportivo.
+                    </p>
+                  </details>
+                  {ranking.data.rows.some((r) => r.provisional) && (
+                    <p className={styles.note}>
+                      † Puesto provisional: los puntos y standings usados para desempatar son
+                      idénticos.
+                    </p>
+                  )}
                 </>
               )}
               {ranking.data.updated_at && (

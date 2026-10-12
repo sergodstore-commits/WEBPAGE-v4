@@ -47,7 +47,9 @@ El blog oficial ya publica ejemplos útiles: [Toolkit Primera Era 2026](https://
 
 En cada torneo se respeta el standing final de Konami/TOR. Para una liga que suma varios torneos no existe un único standing externo que determine automáticamente su desempate.
 
-Propuesta por confirmar antes de cambiar resultados públicos: puntos acumulados → más primeros puestos → más segundos puestos → siguientes posiciones → mejor posición en el último torneo compartido. Si todavía no existe un resultado que separe a los jugadores, registrar un desempate administrativo explícito con motivo; no atribuir mérito deportivo al orden alfabético. Publicar la regla y aplicarla igual a las tres ligas. Los números mostrados deben ser únicos y consecutivos; las casas de Yu-Gi-Oh! no alteran la clasificación general.
+Regla confirmada y aplicada: puntos acumulados → más primeros puestos → más segundos puestos → siguientes posiciones → standings de cada jugador, del más reciente al más antiguo. Los torneos de un mismo día se comparan por mejor puesto, porque los reportes no ofrecen una cronología fiable dentro de ese día. No se usan el nombre ni la fecha de importación como mérito deportivo.
+
+Los puestos son únicos y consecutivos. Si todos los criterios deportivos coinciden, se conserva un orden estable por identidad interna, marcado como provisional (†), sin publicar esa identidad ni atribuir superioridad deportiva. Las casas de Yu-Gi-Oh! conservan los puestos generales. La regla se puede consultar tanto en Comunidad como en la selección administrativa de las tres ligas. No se modifican puntos ni standings originales, ni se crea un mecanismo de desempate manual.
 
 ## Noticias y Banlists
 
@@ -88,7 +90,7 @@ Ligas y banlists mantienen flujos propios: importar un torneo no equivale a incl
 
 ## Secuencia de ejecución
 
-Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados). Tienda muestra recientes primero y Preventas cercanos primero, con las presentaciones separadas. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. Los desempates y los demás puntos de esta revisión siguen pendientes.
+Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados), junto con los desempates y puestos únicos de las tres ligas. Tienda muestra recientes primero y Preventas cercanos primero, con las presentaciones separadas. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. El siguiente punto es definir la biblioteca compartida de cartas y sus destinos administrativos.
 
 1. Corregir fechas y acordar desempates: afectan al orden real y a la confianza en resultados.
 2. Definir la biblioteca compartida y los destinos administrativos, antes de añadir más importadores.

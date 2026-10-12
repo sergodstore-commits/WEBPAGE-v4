@@ -4,6 +4,7 @@ import { getDb } from './db';
 import { fail, uuid } from './core';
 import { discoverTor, torFinal } from './tor';
 import { parseRankingFile } from './ranking-files';
+import { orderLeaguePlayers, type RankingCandidate } from './ranking-order';
 import type { LeaguePreview, LeagueTournament, RankingBoard, PublicRanking } from '../rankings';
 export const rankingBoardSchema = z.enum(['myl-first-era', 'myl-first-block', 'yugioh']);
 const tournamentId = z.number().int().positive().max(2147483647);
@@ -233,8 +234,8 @@ export async function publicRanking(board: RankingBoard): Promise<PublicRanking>
   count(*)::int tournaments,sum(r.points)::int points,
   jsonb_agg(jsonb_build_object('tournament_id',t.id,'title',t.title,'played_on',t.played_on::text,'points',r.points,'position',r.position) ORDER BY t.played_on DESC,t.id) contributions
   FROM league_results r JOIN selected t ON t.id=r.tournament_id GROUP BY r.player_key
- ), ranked AS (SELECT dense_rank() OVER(ORDER BY points DESC)::int position,* FROM players)
- SELECT coalesce((SELECT jsonb_agg(jsonb_build_object('position',position,'name',name,'tournaments',tournaments,'points',points) || CASE WHEN $1='yugioh' THEN jsonb_build_object('contributions',contributions) ELSE '{}'::jsonb END ORDER BY points DESC,lower(name),player_key) FROM ranked),'[]'::jsonb) rows,
+ )
+ SELECT coalesce((SELECT jsonb_agg(jsonb_build_object('player_key',player_key,'name',name,'tournaments',tournaments,'points',points,'contributions',contributions)) FROM players),'[]'::jsonb) rows,
  coalesce((SELECT jsonb_agg(jsonb_build_object('id',id,'title',title,'played_on',played_on::text,'source_url',source_url,'final_round',final_round) ORDER BY played_on DESC,id) FROM selected),'[]'::jsonb) tournaments,
  (SELECT max(updated_at) FROM league_tournaments WHERE board=$1) updated_at`,
       [board],
@@ -243,6 +244,7 @@ export async function publicRanking(board: RankingBoard): Promise<PublicRanking>
   return {
     board,
     ...result,
+    rows: orderLeaguePlayers(result.rows as RankingCandidate[], board === 'yugioh'),
     ...(board === 'yugioh' ? { academy: await getDuelThresholds() } : {}),
   };
 }

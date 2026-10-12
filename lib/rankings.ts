@@ -39,6 +39,8 @@ export type PlayerContribution = {
   points: number;
   position: number;
 };
+export const rankingOrderRule =
+  'Puntos acumulados; a igualdad de puntos, más primeros puestos, luego segundos, terceros y siguientes. Si siguen iguales, se comparan los standings de cada jugador del más reciente al más antiguo. Los torneos del mismo día se comparan por su mejor puesto, sin usar la fecha de importación.';
 export type PublicRanking = {
   academy?: import('./duel-academy').DuelThresholds;
   board: RankingBoard;
@@ -49,6 +51,7 @@ export type PublicRanking = {
     tournaments: number;
     points: number;
     contributions?: PlayerContribution[];
+    provisional?: boolean;
   }[];
   tournaments: Pick<
     LeagueTournament,

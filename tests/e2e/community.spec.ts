@@ -129,7 +129,7 @@ test('Botón Konami: recolectar todos, seleccionar después y recargar sin subir
   await expect(page.locator('.admin-feedback.success')).toContainText('eliminado');
 });
 const rows = Array.from({ length: 60 }, (_, i) => ({
-  position: i < 4 ? 1 : i + 1,
+  position: i + 1,
   name: i === 0 ? 'Andrés Competidor' : `Jugador ${String(i).padStart(2, '0')}`,
   tournaments: 2,
   points: i < 4 ? 120 : 120 - i,
@@ -205,8 +205,8 @@ test('Comunidad: rankings separados, búsqueda, más jugadores y lectura adaptab
     const table = page.getByRole('table', { name: 'Clasificación Primera Era' });
     await expect(table.getByRole('row')).toHaveCount(51);
     const leaders = page.getByLabel('Primeros lugares', { exact: true });
-    await expect(leaders.locator('article')).toHaveCount(4);
-    await expect(leaders.locator('article[data-position="1"]')).toHaveCount(4);
+    await expect(leaders.locator('article')).toHaveCount(3);
+    await expect(leaders.locator('article[data-position="1"]')).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Ver resultados', exact: true })).toBeHidden();
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))
@@ -251,6 +251,46 @@ test('Comunidad: error recuperable y parámetro desconocido seguro', async ({ pa
   ).toBeVisible();
   await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
   await expect(page.getByRole('table', { name: 'Clasificación Primera Era' })).toBeVisible();
+});
+
+test('Comunidad: puestos únicos y explicación accesible de igualdad completa', async ({ page }) => {
+  await publicMock(page);
+  await page.route('**/api/rankings?*', (route) =>
+    route.fulfill({
+      json: {
+        ...fixture('myl-first-era'),
+        rows: [
+          { position: 1, name: 'Jugadora líder', points: 30, tournaments: 2 },
+          { position: 2, name: 'Jugador A', points: 12, tournaments: 1, provisional: true },
+          { position: 3, name: 'Jugador B', points: 12, tournaments: 1, provisional: true },
+        ],
+      },
+    }),
+  );
+  await page.goto('/comunidad');
+  const table = page.getByRole('table', { name: 'Clasificación Primera Era' });
+  await expect(
+    table.getByRole('row').filter({ hasText: 'Jugador A' }).getByRole('cell').first(),
+  ).toHaveText('2°†');
+  await expect(
+    table.getByRole('row').filter({ hasText: 'Jugador B' }).getByRole('cell').first(),
+  ).toHaveText('3°†');
+  await expect(
+    page.getByText(
+      '† Puesto provisional: los puntos y standings usados para desempatar son idénticos.',
+      { exact: true },
+    ),
+  ).toBeVisible();
+  const explanation = page.getByText('Cómo se ordena el ranking', { exact: true });
+  await explanation.focus();
+  await explanation.press('Enter');
+  await expect(
+    page.getByText(/Puntos acumulados; a igualdad de puntos, más primeros puestos/),
+  ).toBeVisible();
+  await explanation.press('Enter');
+  await expect(
+    page.getByText(/Puntos acumulados; a igualdad de puntos, más primeros puestos/),
+  ).toBeHidden();
 });
 test('Liga real local: subir reporte, previsualizar, guardar, recargar, corregir y eliminar', async ({
   page,
