@@ -59,6 +59,15 @@ const products = [
   ]),
   fixture('section-other', 'Fundas de otra marca', 'Protectores', 'Otra marca', ['Japanese']),
 ];
+products[0].options = { Formato: 'Sobre' };
+products.push({
+  ...products[0],
+  id: 'section-display',
+  slug: 'section-display',
+  sku: 'section-display',
+  name: 'Display Yu-Gi-Oh! de prueba',
+  options: { Formato: 'Display' },
+});
 
 test('Tienda y Preventas: accesos por juego y marca, búsqueda, regreso, recarga y celular', async ({
   page,
@@ -85,7 +94,7 @@ test('Tienda y Preventas: accesos por juego y marca, búsqueda, regreso, recarga
     await page.goto(path);
     const sections = page.getByRole('navigation', { name: 'Juegos y accesorios', exact: true });
     await expect(sections.getByRole('button')).toHaveCount(5);
-    await expect(page.locator('.store-product-card')).toHaveCount(5);
+    await expect(page.locator('.store-product-card')).toHaveCount(6);
     const category = page.getByRole('combobox', { name: 'Categoría', exact: true });
     await expect(category.locator('option')).toHaveText([
       'Todas las categorías',
@@ -99,10 +108,17 @@ test('Tienda y Preventas: accesos por juego y marca, búsqueda, regreso, recarga
     await expect(category).toHaveValue('Accesorios');
     await expect(page.locator('.store-product-card')).toHaveCount(2);
     await category.selectOption('');
-    await expect(page.locator('.store-product-card')).toHaveCount(5);
+    await expect(page.locator('.store-product-card')).toHaveCount(6);
     await sections.getByRole('button', { name: 'Yu-Gi-Oh!', exact: true }).click();
+    await expect(page.locator('.store-product-card')).toHaveCount(2);
+    const presentations = page.getByRole('navigation', { name: 'Presentaciones', exact: true });
+    await presentations.getByRole('button', { name: /^Sobres/ }).click();
+    await expect(page.locator('.store-product-title')).toHaveText(['Cartas Yu-Gi-Oh! de prueba']);
+    await page.reload();
+    await expect(page).toHaveURL((url) => url.searchParams.get('presentacion') === 'packs');
     await expect(page.locator('.store-product-title')).toHaveText(['Cartas Yu-Gi-Oh! de prueba']);
     await sections.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
+    await expect(page).toHaveURL((url) => !url.searchParams.has('presentacion'));
     await expect(page.locator('.store-product-title')).toHaveText([
       'Mitos y Leyendas · Leyendas Primer Bloque',
     ]);
@@ -141,7 +157,7 @@ test('Tienda y Preventas: accesos por juego y marca, búsqueda, regreso, recarga
     await page.screenshot({ path: info.outputPath(`${kind}-sections-375.png`), fullPage: true });
     await page.getByRole('button', { name: 'Mostrar filtros', exact: true }).click();
     await page.getByRole('button', { name: 'Limpiar filtros', exact: true }).click();
-    await expect(page.locator('.store-product-card')).toHaveCount(5);
+    await expect(page.locator('.store-product-card')).toHaveCount(6);
     await expect(page).toHaveURL((url) => !url.searchParams.has('grupo'));
   }
 });

@@ -12,6 +12,12 @@ import {
 } from 'lucide-react';
 import { money, price } from '@/lib/client';
 import type { Product } from '@/lib/types';
+import {
+  catalogPresentation,
+  catalogPresentations,
+  readCatalogPresentation,
+  type CatalogPresentation,
+} from '@/lib/catalog-presentations';
 import { catalogCategory, matchesCatalogCategory } from '@/lib/catalog-categories';
 import {
   catalogSections,
@@ -37,6 +43,7 @@ import styles from './Catalog.module.css';
 
 type Filters = {
   section: CatalogSection;
+  presentation: CatalogPresentation;
   search: string;
   category: string;
   brand: string;
@@ -48,6 +55,7 @@ type Filters = {
 };
 const emptyFilters: Filters = {
   section: '',
+  presentation: '',
   search: '',
   category: '',
   brand: '',
@@ -59,6 +67,7 @@ const emptyFilters: Filters = {
 };
 const filterParams: Record<keyof Filters, string> = {
   section: 'grupo',
+  presentation: 'presentacion',
   search: 'busqueda',
   category: 'categoria',
   brand: 'marca',
@@ -76,6 +85,7 @@ function readFilters(query: URLSearchParams): Filters {
   };
   return {
     section: readCatalogSection(query.get('grupo')),
+    presentation: readCatalogPresentation(query.get('presentacion')),
     search: query.get('busqueda') || '',
     category: query.get('categoria') || '',
     brand: query.get('marca') || '',
@@ -100,8 +110,18 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     [mobile, setMobile] = useState(false),
     [filtersOpen, setFiltersOpen] = useState(false),
     [quickProduct, setQuickProduct] = useState<Product | null>(null);
-  const { section, search, category, brand, tag, minimumPrice, maximumPrice, sort, available } =
-    filters;
+  const {
+    section,
+    presentation,
+    search,
+    category,
+    brand,
+    tag,
+    minimumPrice,
+    maximumPrice,
+    sort,
+    available,
+  } = filters;
   useEffect(() => {
     const params = new URLSearchParams(queryString);
     setFilters(readFilters(params));
@@ -161,11 +181,18 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     const list = (products.data || []).filter((p) => matchesCatalogSection(p, next));
     updateFilters({
       section: next,
+      presentation: list.some((p) => catalogPresentation(p) === presentation) ? presentation : '',
       category: next && list.some((p) => matchesCatalogCategory(p, category)) ? category : '',
       brand: next && list.some((p) => p.brand === brand) ? brand : '',
       tag: next && list.some((p) => p.tags?.includes(tag)) ? tag : '',
     });
   }
+  const presentations = catalogPresentations
+    .map((item) => ({
+      ...item,
+      count: sectionProducts.filter((p) => catalogPresentation(p) === item.id).length,
+    }))
+    .filter((item) => item.count > 0 || item.id === presentation);
   const categories = useMemo(
     () => [...new Set(sectionProducts.map(catalogCategory))].sort(),
     [sectionProducts],
@@ -182,6 +209,10 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     section && {
       name: catalogSections.find((s) => s.id === section)!.label,
       clear: () => chooseSection(''),
+    },
+    presentation && {
+      name: catalogPresentations.find((item) => item.id === presentation)!.label,
+      clear: () => updateFilters({ presentation: '' }),
     },
     search && { name: `Búsqueda: ${search}`, clear: () => setSearch('') },
     category && { name: category, clear: () => setCategory('') },
@@ -202,6 +233,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
     const matches = (products.data || []).filter(
       (p) =>
         matchesCatalogSection(p, section) &&
+        (!presentation || catalogPresentation(p) === presentation) &&
         (!q ||
           `${p.name} ${p.catalog_name || ''} ${p.description} ${p.sku} ${p.brand || ''} ${Object.values(p.options || {}).join(' ')} ${(p.tags || []).join(' ')}`
             .toLocaleLowerCase('es')
@@ -226,6 +258,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
   }, [
     products.data,
     section,
+    presentation,
     search,
     category,
     brand,
@@ -256,6 +289,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           reservar. La entrega se informa en cada ficha.
         </p>
       )}
+      <h2 className={styles.choiceTitle}>Elige tu juego o línea</h2>
       <nav className={styles.categories} aria-label="Juegos y accesorios">
         <button type="button" aria-pressed={!section} onClick={() => chooseSection('')}>
           {preorder ? 'Todas las preventas' : 'Todo el catálogo'}
@@ -272,6 +306,31 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
           </button>
         ))}
       </nav>
+      <section className={styles.presentationSection} aria-labelledby="catalog-presentation-title">
+        <h2 id="catalog-presentation-title" className={styles.choiceTitle}>
+          ¿Qué estás buscando?
+        </h2>
+        <nav className={`${styles.categories} ${styles.presentations}`} aria-label="Presentaciones">
+          <button
+            type="button"
+            aria-pressed={!presentation}
+            onClick={() => updateFilters({ presentation: '' })}
+          >
+            Todas las presentaciones <span>{sectionProducts.length}</span>
+          </button>
+          {presentations.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={presentation === item.id}
+              onClick={() => updateFilters({ presentation: item.id })}
+            >
+              {item.label}
+              <span>{item.count}</span>
+            </button>
+          ))}
+        </nav>
+      </section>
       <div className="store-catalog-toolbar">
         <label className="store-search">
           <Search size={18} />
@@ -397,6 +456,7 @@ export function Catalog({ kind, add }: { kind: 'store' | 'preorder'; add: AddToC
                 Solo disponibles
               </label>
               {(section ||
+                presentation ||
                 search ||
                 category ||
                 brand ||

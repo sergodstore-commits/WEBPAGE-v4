@@ -457,3 +457,37 @@
     gap: 20px;
   }
 }
+
+.choiceTitle {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sg-ink);
+}
+.presentationSection {
+  margin-bottom: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sg-line);
+}
+:global(.store-app) .catalog .presentations {
+  margin-bottom: 0;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+}
+:global(.store-app) .catalog .presentations button {
+  padding: 8px 12px;
+  gap: 10px;
+  min-height: 42px;
+  border-radius: 24px;
+}
+.presentations button span {
+  color: var(--sg-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 700px) {
+  :global(.store-app) .catalog .presentations button:last-child {
+    grid-column: auto;
+  }
+}
