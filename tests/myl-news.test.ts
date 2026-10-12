@@ -23,29 +23,50 @@ const fixture = (id: number, title: string, categories: number[]) => ({
   _embedded: { 'wp:featuredmedia': [{ source_url: image }] },
 });
 
-test('MyL: clasificación por formato, banlist general, fechas originales y fuentes acotadas', () => {
+test('MyL: solo productos y revelaciones, formatos por título, fechas originales y fuentes acotadas', () => {
   const items = parseMylNews(
     [
-      fixture(1, 'Torneo Primera Era', [728]), // Bad source tag must not override the title.
-      fixture(2, 'Torneo Primer Bloque', [614]),
+      fixture(1, 'Nuevo toolkit Primera Era', [728]), // Bad source tag must not override the title.
+      fixture(2, 'Leyendas Primer Bloque 4.0', [614]),
       fixture(3, 'Banlist General Mitos y Leyendas', [728]),
+      fixture(8, 'Torneo Premier Primer Bloque', [767, 728]),
+      fixture(9, 'Amadís: Historia, monstruos y leyendas', [614, 7, 860]),
+      fixture(10, 'Relatos de Dominios de Ra', [728, 767, 770]),
+      fixture(11, 'Nuevas cartas de Primera Era', [614]),
+      fixture(12, 'Oráculo Leyendas PB 4.0', [728, 767]),
+      fixture(13, 'Nueva Temporada de Juego Organizado PE', [614, 772, 4]),
+      fixture(14, 'Novedades de nuestra comunidad Primera Era', [614]),
       fixture(4, 'Imperio tiene a su campeón', [728]),
       fixture(5, 'Furia Extendido', [614]),
       fixture(3, 'Banlist General Mitos y Leyendas', [728]),
       { ...fixture(6, 'Primera Era', [614]), link: 'http://localhost/private' },
       { ...fixture(7, 'Primera Era', [614]), date: '2026-02-31' },
     ],
-    { era: new Set([614]), block: new Set([728]) },
+    {
+      era: new Set([614]),
+      block: new Set([728]),
+      products: new Set([767, 772]),
+      reveals: new Set([4]),
+      excluded: new Set([7]),
+    },
   );
-  assert.equal(items.length, 3);
-  assert.deepEqual(items.find((p) => p.title === 'Torneo Primera Era')?.boards, ['myl-first-era']);
-  assert.deepEqual(items.find((p) => p.title === 'Torneo Primer Bloque')?.boards, [
-    'myl-first-block',
-  ]);
-  assert.deepEqual(items.find((p) => p.category === 'banlist')?.boards, [
+  assert.equal(items.length, 4);
+  assert.deepEqual(items.find((p) => p.title === 'Nuevo toolkit Primera Era')?.boards, [
     'myl-first-era',
+  ]);
+  assert.deepEqual(items.find((p) => p.title === 'Leyendas Primer Bloque 4.0')?.boards, [
     'myl-first-block',
   ]);
+  assert.equal(items.find((p) => p.title === 'Nuevas cartas de Primera Era')?.category, 'reveals');
+  assert.equal(items.find((p) => p.title === 'Relatos de Dominios de Ra')?.category, 'releases');
+  assert.deepEqual(
+    parseMylNews([fixture(15, 'Banlist General', [614])], {
+      era: new Set([614]),
+      block: new Set([728]),
+    }),
+    [],
+  );
+  assert.throws(() => parseMylNews([{}], { era: new Set([614]), block: new Set([728]) }), /Cambió/);
   assert.equal(items[0].published_on, '2026-10-07');
   assert.equal(
     mylText('<script>bad()</script><b>Primera</b> Era &#8211; edici&oacute;n'),
@@ -106,7 +127,7 @@ test('MyL: discovery cached, protected publication, resumable WebP, shared stora
       ]);
     if (url.pathname.endsWith('/posts')) {
       reviews++;
-      return Response.json([fixture(3, 'Banlist General Mitos y Leyendas', [728])]);
+      return Response.json([fixture(3, 'Nuevo toolkit Primer Bloque', [728])]);
     }
     if (url.toString() === image) {
       downloads++;
@@ -118,10 +139,25 @@ test('MyL: discovery cached, protected publication, resumable WebP, shared stora
     globalThis.fetch = originalFetch;
     await closeDb();
   });
+  const db = await getDb();
+  await db.query(
+    "UPDATE settings SET data=jsonb_set(data,'{myl_news_discovery}',$1::jsonb,true) WHERE id=1",
+    [
+      JSON.stringify({
+        checked_at: new Date().toISOString(),
+        items: [{ id: 'old-banlist', category: 'banlist' }],
+      }),
+    ],
+  );
   const discovery = await reviewMylNews();
   assert.equal(discovery.items.length, 1);
+  assert.equal(
+    discovery.items[0].category,
+    'releases',
+    'A fresh old policy cache does not leak banlist notices',
+  );
   await reviewMylNews();
-  assert.equal(reviews, 3, 'Repeated discovery reuses the five-minute result');
+  assert.equal(reviews, 2, 'Repeated discovery reuses the five-minute result; no banlist search');
   const c = discovery.items[0];
   const draft = {
     ...c,

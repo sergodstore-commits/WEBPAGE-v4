@@ -12,6 +12,7 @@ import {
 import { validDay } from '../tournament-schedule';
 import { newsText, newsHtmlTree, extractNewsBlocks, contentBody } from './news-content';
 import type { WebNewsBlock, WebNewsItem } from '../web-news';
+import { editorialText, NEWS_DISCOVERY_POLICY_VERSION } from './news-editorial';
 
 // WordPress's public API supplies dates and category IDs; never fetch a caller's URL.
 const API = 'https://blog.myl.cl/wp-json/wp/v2/';
@@ -45,12 +46,38 @@ const post = z.object({
     .passthrough()
     .optional(),
 });
-export function parseMylNews(
-  input: unknown,
-  categories: { era: Set<number>; block: Set<number> },
-): WebNewsCandidate[] {
+type MylNewsCategories = {
+  era: Set<number>;
+  block: Set<number>;
+  products?: Set<number>;
+  reveals?: Set<number>;
+  excluded?: Set<number>;
+};
+
+function mylEditorialCategory(title: string, categoryIds: number[], categories: MylNewsCategories) {
+  const text = editorialText(title);
+  if (
+    /ban\s*list|\b(?:torneos?|premier|nacional|campeon|oraculo|juego organizado|metajuego|decklists?)\b/.test(
+      text,
+    )
+  )
+    return null;
+  if (categoryIds.some((id) => categories.excluded?.has(id))) return null;
+  if (/\brevela|\bspoiler|primer vistazo|\bnuevas? cartas?\b/.test(text)) return 'reveals';
+  const product =
+    /\b(?:lanzamiento|producto|toolkit|kit|contenido|display|sobres?|preventa|coleccion|edicion|relatos)\b|\bleyendas (?:de |del |primera era|primer bloque|pe\b|pb\b|\d)/.test(
+      text,
+    );
+  if (product) return /[:–]|\s-\s/.test(title) ? 'reveals' : 'releases';
+  if (categoryIds.some((id) => categories.reveals?.has(id))) return 'reveals';
+  if (categoryIds.some((id) => categories.products?.has(id))) return 'releases';
+  return null;
+}
+
+export function parseMylNews(input: unknown, categories: MylNewsCategories): WebNewsCandidate[] {
   if (!Array.isArray(input) || input.length > 100) fail(502, 'Cambió el listado del blog de MyL.');
   const items = new Map<string, WebNewsCandidate>();
+  let verified = 0;
   for (const raw of input) {
     const result = post.safeParse(raw);
     if (!result.success) continue;
@@ -59,10 +86,12 @@ export function parseMylNews(
       title = mylText(p.title.rendered);
     const published_on = p.date.slice(0, 10);
     if (!url || !validDay(published_on) || !title) continue;
-    const banlist = /ban\s*list/i.test(title);
+    verified++;
+    const category = mylEditorialCategory(title, p.categories, categories);
+    if (!category) continue;
     const eraTitle = /primera era|\bPE\b/i.test(title),
       blockTitle = /primer bloque|\bPB\b/i.test(title);
-    if (!banlist && /\bimperio\b|furia extendido|nueva era/i.test(title)) continue;
+    if (/\bimperio\b|furia extendido|nueva era/i.test(title)) continue;
     let boards: MylNewsBoard[] = [];
     if (eraTitle) boards.push('myl-first-era');
     if (blockTitle) boards.push('myl-first-block');
@@ -70,8 +99,6 @@ export function parseMylNews(
       if (p.categories.some((id) => categories.era.has(id))) boards.push('myl-first-era');
       if (p.categories.some((id) => categories.block.has(id))) boards.push('myl-first-block');
     }
-    // A general banlist can cover both formats even if WordPress only tags one.
-    if (banlist && /general/i.test(title)) boards = ['myl-first-era', 'myl-first-block'];
     if (!boards.length) continue;
     items.set(url, {
       id: `myl-${hash(url).slice(0, 24)}`,
@@ -80,16 +107,12 @@ export function parseMylNews(
       summary: mylText(p.excerpt.rendered).slice(0, 600),
       published_on,
       boards,
-      category: banlist
-        ? 'banlist'
-        : /torneo|premier|nacional/i.test(title)
-          ? 'tournaments'
-          : /lanzamiento|producto|toolkit/i.test(title)
-            ? 'releases'
-            : 'news',
+      category,
       source_image: mylNewsImage(p._embedded?.['wp:featuredmedia']?.[0]?.source_url || '') || '',
     });
   }
+  if (input.length && !verified)
+    fail(502, 'Cambió el listado del blog de MyL. Tu selección se conserva.');
   return [...items.values()].sort(
     (a, b) => b.published_on.localeCompare(a.published_on) || a.id.localeCompare(b.id),
   );
@@ -100,32 +123,54 @@ export async function reviewMylNews() {
     const old = (
       await db.query("SELECT data->'myl_news_discovery' AS discovery FROM settings WHERE id=1")
     ).rows[0]?.discovery;
-    if (old && Date.now() - Date.parse(old.checked_at) < 5 * 60_000) return old;
+    if (
+      old?.policy_version === NEWS_DISCOVERY_POLICY_VERSION &&
+      Date.now() - Date.parse(old.checked_at) < 5 * 60_000
+    )
+      return old;
     const raw = await read('categories?per_page=100&_fields=id,slug,parent');
     const cats = z
       .array(z.object({ id: z.number().int(), slug: z.string(), parent: z.number().int() }))
       .max(100)
       .parse(raw);
-    function descendants(slug: string) {
+    function descendants(slug: string, required = true) {
       const root = cats.find((c) => c.slug === slug);
-      if (!root) fail(502, 'No se encontró el formato en el blog de MyL.');
+      if (!root) {
+        if (required) fail(502, 'No se encontró el formato en el blog de MyL.');
+        return new Set<number>();
+      }
       const ids = new Set([root.id]);
       for (let depth = 0; depth < cats.length; depth++)
         for (const c of cats) if (ids.has(c.parent)) ids.add(c.id);
       return ids;
     }
-    const categories = { era: descendants('primera-era'), block: descendants('primer-bloque') };
+    const categories: MylNewsCategories = {
+      era: descendants('primera-era'),
+      block: descendants('primer-bloque'),
+      products: new Set([
+        ...descendants('productos-pex', false),
+        ...descendants('productos-pbx', false),
+      ]),
+      reveals: descendants('spoiler', false),
+      excluded: descendants('literatura', false),
+    };
     const fields =
       '&_embed=wp:featuredmedia&_fields=id,link,date,title,excerpt,categories,_links,_embedded';
     const responses = await Promise.all([
       read(`posts?per_page=30&categories=${[...categories.era].join(',')}${fields}`),
       read(`posts?per_page=30&categories=${[...categories.block].join(',')}${fields}`),
-      read(`posts?per_page=10&search=banlist${fields}`),
+      ...(categories.products!.size
+        ? [read(`posts?per_page=20&categories=${[...categories.products!].join(',')}${fields}`)]
+        : []),
     ]);
+    if (!responses.every(Array.isArray))
+      fail(502, 'Cambió el listado del blog de MyL. Tu selección se conserva.');
     const items = parseMylNews(responses.flat(), categories);
-    if (!items.length)
-      fail(502, 'No pudimos verificar noticias de estos formatos. Tu selección se conserva.');
-    const result = { checked_at: new Date().toISOString(), items };
+    const result = {
+      checked_at: new Date().toISOString(),
+      policy_version: NEWS_DISCOVERY_POLICY_VERSION,
+      items,
+    };
     await db.query(
       "UPDATE settings SET data=jsonb_set(data,'{myl_news_discovery}',$1::jsonb,true) WHERE id=1",
       [JSON.stringify(result)],

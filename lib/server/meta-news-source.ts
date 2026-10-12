@@ -6,6 +6,7 @@ import { dataDir, getDb } from './db';
 import { boundedBytes, fail, hash, isProd } from './core';
 import { withLease } from './edition-imports';
 import { extractNewsBlocks, contentBody, type NewsNode } from './news-content';
+import { NEWS_DISCOVERY_POLICY_VERSION } from './news-editorial';
 import {
   metaNewsImage,
   newsSourceImage,
@@ -20,7 +21,6 @@ sourceUrl.search = new URLSearchParams({
   'hidden[$ne]': 'true',
   'category[$in][0]': 'tcg-news',
   'category[$in][1]': 'tcg-set-release',
-  'category[$in][2]': 'tcg-tournament',
   'sort[date]': '-1',
   'fields[markdown]': '0',
   'fields[authors]': '0',
@@ -49,15 +49,45 @@ const entry = z.object({
   description: z.string().max(3000).nullish(),
   date: z.string().max(40),
   category: z.string().max(50),
-  subCategory: z.string().max(50).optional(),
+  subCategory: z.string().max(50).nullish(),
   image: z.string().max(1000).optional(),
   ocg: z.boolean().optional(),
   hidden: z.boolean().optional(),
 });
-export function parseMetaNews(input: unknown): WebNewsCandidate[] {
+function metaEditorialCategory(item: z.infer<typeof entry>) {
+  const text = `${item.title} ${item.url}`;
+  if (
+    /ban[\s-]*list|forbidden[\s\S]*list|balance-update|genesys|point[\s-]*(?:adjust|update)/i.test(
+      text,
+    )
+  )
+    return null;
+  if (item.category === 'tcg-set-release') return 'releases';
+  if (item.category !== 'tcg-news') return null;
+  if (/\/product-news\//i.test(item.url)) return 'releases';
+  if (
+    item.subCategory === 'card-reveals' ||
+    /^TCG:\s*[A-Z0-9]{3,6}\s*[-–]/i.test(item.title) ||
+    /world[\s-]*premiere.*(?:cards?|theme)|(?:cards?|rarit(?:y|ies)|arts?)\b.*reveal|reveal.*\bcards?\b/i.test(
+      text,
+    )
+  )
+    return 'reveals';
+  if (
+    /\b(?:announced|first look|revealed)\b/i.test(item.title) &&
+    !/\b(?:events?|schedule|game mats?|playmats?|sleeves?|decklists?|top decks?)\b/i.test(text) &&
+    (!/\b(?:ycs|wcq|regionals?|championship)\b/i.test(item.title) ||
+      /\b(?:pack|deck|booster|box)\b/i.test(item.title))
+  )
+    return 'releases';
+  return null;
+}
+
+export function parseMetaNews(input: unknown, editorialOnly = true): WebNewsCandidate[] {
   if (!Array.isArray(input) || input.length > 100)
     fail(502, 'El listado de la fuente cambió de formato.');
   const found = new Map<string, WebNewsCandidate>();
+  let verified = 0;
   for (const raw of input) {
     const parsed = entry.safeParse(raw);
     if (!parsed.success) continue;
@@ -66,7 +96,8 @@ export function parseMetaNews(input: unknown): WebNewsCandidate[] {
       item.ocg === true ||
       item.hidden === true ||
       !['tcg-news', 'tcg-set-release', 'tcg-tournament'].includes(item.category) ||
-      /^OCG\b/i.test(item.title)
+      /^OCG\b/i.test(item.title) ||
+      /\/(?:ocg|master-duel|duel-links)\//i.test(item.url)
     )
       continue;
     const url = yugiohMetaArticle(`https://www.yugiohmeta.com/articles${item.url}`);
@@ -77,6 +108,9 @@ export function parseMetaNews(input: unknown): WebNewsCandidate[] {
       !Number.isFinite(Date.parse(item.date))
     )
       continue;
+    verified++;
+    const editorialCategory = metaEditorialCategory(item);
+    if (editorialOnly && !editorialCategory) continue;
     found.set(url, {
       id: `meta-${hash(url).slice(0, 24)}`,
       url,
@@ -84,19 +118,22 @@ export function parseMetaNews(input: unknown): WebNewsCandidate[] {
       summary: (item.description || '').slice(0, 600),
       published_on,
       category:
-        item.subCategory === 'card-reveals'
+        editorialCategory ||
+        (item.subCategory === 'card-reveals'
           ? 'reveals'
           : item.category === 'tcg-set-release'
             ? 'releases'
             : item.category === 'tcg-tournament'
               ? 'tournaments'
-              : 'news',
+              : 'news'),
       source_image: metaNewsImage(item.image || '') || '',
     });
   }
-  if (input.length && !found.size)
+  if (input.length && !verified)
     fail(502, 'No pudimos verificar noticias TCG en el listado. No se modificó tu selección.');
-  return [...found.values()].sort((a, b) => b.published_on.localeCompare(a.published_on));
+  return [...found.values()].sort(
+    (a, b) => b.published_on.localeCompare(a.published_on) || a.id.localeCompare(b.id),
+  );
 }
 
 export async function reviewMetaNews() {
@@ -105,11 +142,19 @@ export async function reviewMetaNews() {
     const saved = (
       await db.query("SELECT data->'web_news_discovery' AS discovery FROM settings WHERE id=1")
     ).rows[0]?.discovery;
-    if (saved && Date.now() - Date.parse(saved.checked_at) < 5 * 60_000) return saved;
+    if (
+      saved?.policy_version === NEWS_DISCOVERY_POLICY_VERSION &&
+      Date.now() - Date.parse(saved.checked_at) < 5 * 60_000
+    )
+      return saved;
     const items = parseMetaNews(
       JSON.parse((await source(sourceUrl.toString(), 800_000)).toString()),
     );
-    const result = { checked_at: new Date().toISOString(), items };
+    const result = {
+      checked_at: new Date().toISOString(),
+      policy_version: NEWS_DISCOVERY_POLICY_VERSION,
+      items,
+    };
     await db.query(
       "UPDATE settings SET data=jsonb_set(data,'{web_news_discovery}',$1::jsonb,true) WHERE id=1",
       [JSON.stringify(result)],
@@ -203,7 +248,7 @@ export async function articleContent(url: string) {
   if (
     !Array.isArray(data) ||
     data.length !== 1 ||
-    !parseMetaNews(data).some((item) => item.url === canonical)
+    !parseMetaNews(data, false).some((item) => item.url === canonical)
   )
     fail(409, 'No se pudo verificar esta noticia como TCG.');
   const media = articleImageManifest(data[0]);

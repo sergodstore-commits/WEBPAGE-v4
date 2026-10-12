@@ -4,6 +4,7 @@ import { getDb } from './db';
 import { mylText } from './myl-news-source';
 import { newsArticle, type WebNewsCandidate } from '../web-news';
 import { getWebNews, saveWebNews } from './web-news';
+import { isEditorialNewsCandidate, NEWS_DISCOVERY_POLICY_VERSION } from './news-editorial';
 
 // MyMemory accepts at most 500 UTF-8 bytes per request. No keys or paid fallback.
 export function translationChunks(text: string): string[] {
@@ -69,11 +70,21 @@ export async function prepareNewsDraft(input: unknown) {
   if (previous.some((item) => item.id === value.id)) return previous;
   const key = value.source === 'myl' ? 'myl_news_discovery' : 'web_news_discovery';
   const row = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0];
-  const candidate = (row?.data?.[key]?.items as WebNewsCandidate[] | undefined)?.find(
+  const discovery = row?.data?.[key];
+  const candidate = (discovery?.items as WebNewsCandidate[] | undefined)?.find(
     (item) => item.id === value.id,
   );
-  if (!candidate || !newsArticle(candidate.url))
+  if (
+    !candidate ||
+    !newsArticle(candidate.url) ||
+    discovery.policy_version !== NEWS_DISCOVERY_POLICY_VERSION
+  )
     fail(409, 'Busca las novedades otra vez antes de preparar esta noticia.');
+  if (!isEditorialNewsCandidate(candidate))
+    fail(
+      409,
+      'Solo se preparan revelaciones y contenido de productos. Las restricciones se actualizan en Banlists.',
+    );
   const title = mylText(candidate.title).slice(0, 160);
   const summary = mylText(candidate.summary).slice(0, 600);
   if (summary.length < 10)

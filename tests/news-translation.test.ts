@@ -7,6 +7,7 @@ import {
   translateNewsText,
   prepareNewsDraft,
 } from '../lib/server/news-translation';
+import { NEWS_DISCOVERY_POLICY_VERSION } from '../lib/server/news-editorial';
 
 process.env.LOCAL_DATA_DIR = path.resolve('.data', `test-translation-${randomUUID()}`);
 delete process.env.DATABASE_URL;
@@ -46,7 +47,7 @@ test('Traducción: límite UTF-8, cuota y noticias MyL sin enviar texto al tradu
     url: 'https://blog.myl.cl/primera-era-test/',
     published_on: '2026-10-07',
     boards: ['myl-first-era'],
-    category: 'news',
+    category: 'reveals',
     source_image: '',
   };
   const tcg = {
@@ -59,8 +60,8 @@ test('Traducción: límite UTF-8, cuota y noticias MyL sin enviar texto al tradu
   };
   await db.query('UPDATE settings SET data=data || $1::jsonb WHERE id=1', [
     JSON.stringify({
-      myl_news_discovery: { items: [myl] },
-      web_news_discovery: { items: [tcg] },
+      myl_news_discovery: { policy_version: NEWS_DISCOVERY_POLICY_VERSION, items: [myl] },
+      web_news_discovery: { policy_version: NEWS_DISCOVERY_POLICY_VERSION, items: [tcg] },
     }),
   ]);
   calls = 0;
@@ -76,6 +77,28 @@ test('Traducción: límite UTF-8, cuota y noticias MyL sin enviar texto al tradu
   await prepareNewsDraft({ id: tcg.id, source: 'tcg' });
   assert.equal(calls, 2, 'An existing draft must not consume translation quota again');
   assert.ok(!(await getWebNews()).some((i) => i.id === tcg.id));
+  await db.query(
+    "UPDATE settings SET data=jsonb_set(data,'{web_news_discovery}',$1::jsonb,true) WHERE id=1",
+    [
+      JSON.stringify({
+        policy_version: NEWS_DISCOVERY_POLICY_VERSION,
+        items: [{ ...tcg, id: 'old-topic', category: 'tournaments' }],
+      }),
+    ],
+  );
+  await assert.rejects(
+    () => prepareNewsDraft({ id: 'old-topic', source: 'tcg' }),
+    /Solo se preparan/,
+  );
+  assert.equal(calls, 2, 'Excluded topics never consume translation quota');
+  await db.query(
+    "UPDATE settings SET data=jsonb_set(data,'{web_news_discovery}',$1::jsonb,true) WHERE id=1",
+    [JSON.stringify({ items: [{ ...tcg, id: 'stale-cache' }] })],
+  );
+  await assert.rejects(
+    () => prepareNewsDraft({ id: 'stale-cache', source: 'tcg' }),
+    /Busca las novedades/,
+  );
   const saved = (await getWebNews(true)).find((i) => i.id === myl.id)!;
   await saveWebNews({ ...saved, title: 'Título actualizado por separado' }, myl.id);
   assert.ok(

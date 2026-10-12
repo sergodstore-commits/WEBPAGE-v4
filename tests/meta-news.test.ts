@@ -43,6 +43,50 @@ const article = {
   },
 };
 
+test('TCG editorial: admite subcategorías nulas y productos, excluye OCG, reglas y torneos', async () => {
+  const { parseMetaNews } = await import('../lib/server/meta-news-source');
+  const make = (title: string, url: string, extra = {}) => ({
+    ...article,
+    title,
+    url,
+    subCategory: null,
+    ...extra,
+  });
+  const entries = [
+    make('Beyond the Brave', '/sets/tcg/betb/', { category: 'tcg-set-release' }),
+    make('TCG: Immortal Phoenix Announced', '/product-news/2026/september/imph-tcg/'),
+    make('TCG: CRC1 - Crocodile', '/news/aug-25-2026/crc1/'),
+    make('TCG: CORI - New World Premiere Theme & More!', '/news/cori-tcg-world-premieres/'),
+    make('TCG: New 2026-2027 YCS Prize Cards Revealed!', '/quick-news/ycs-prize-cards/'),
+    make('TCG: Ultimate Tournament Pack 2 Announced', '/product-news/up02/'),
+    make('TCG: Forbidden & Limited List Update', '/news/forbidden-list/', {
+      subCategory: 'balance-update',
+    }),
+    make('TCG: GENESYS Beyond the Brave Pre-Release Points', '/news/genesys-point-adjustment/'),
+    make('YCS Guayaquil 2026', '/tournaments/tcg/ycs-guayaquil/', { category: 'tcg-tournament' }),
+    make('TCG: OTS Demo Events Announced', '/news/tcg-demo-events/'),
+    make('TCG: New WCQ Game Mats Announced', '/news/wcq-prizing/'),
+    make('OCG: RV02 - Marincess', '/news/rv02/', { subCategory: 'card-reveals' }),
+    make('Original Artwork Collection', '/sets/ocg/yac1/', { category: 'tcg-set-release' }),
+    make('TCG: New card', '/news/hidden/', { subCategory: 'card-reveals', hidden: true }),
+  ];
+  const found = parseMetaNews(entries);
+  assert.equal(found.length, 6);
+  assert.equal(found.find((i) => i.title.includes('Crocodile'))?.category, 'reveals');
+  assert.equal(found.find((i) => i.title.includes('Immortal Phoenix'))?.category, 'releases');
+  assert.deepEqual(
+    parseMetaNews([entries[6], entries[7], entries[8]]),
+    [],
+    'No eligible news is a successful empty result',
+  );
+  assert.equal(
+    parseMetaNews([entries[6]], false).length,
+    1,
+    'Existing articles remain available for refresh',
+  );
+  assert.throws(() => parseMetaNews([{}]), /verificar/);
+});
+
 test('TCG news: selection, resumable complete gallery, reuse, quota and private drafts', async (t) => {
   const { parseMetaNews, articleImageManifest, reviewMetaNews, newsMediaUsage } =
     await import('../lib/server/meta-news-source');
@@ -98,6 +142,7 @@ test('TCG news: selection, resumable complete gallery, reuse, quota and private 
     const url = new URL(String(input));
     if (url.hostname === 'www.yugiohmeta.com') {
       if (url.searchParams.has('url')) return Response.json([article]);
+      assert.ok(![...url.searchParams.values()].includes('tcg-tournament'));
       reviews++;
       return Response.json([article]);
     }
@@ -106,7 +151,22 @@ test('TCG news: selection, resumable complete gallery, reuse, quota and private 
     downloads++;
     return new Response(new Uint8Array(jpeg));
   });
-  await reviewMetaNews();
+  const db = await getDb();
+  await db.query(
+    "UPDATE settings SET data=jsonb_set(data,'{web_news_discovery}',$1::jsonb,true) WHERE id=1",
+    [
+      JSON.stringify({
+        checked_at: new Date().toISOString(),
+        items: [{ ...found[0], category: 'tournaments' }],
+      }),
+    ],
+  );
+  const discovery = await reviewMetaNews();
+  assert.equal(
+    discovery.items[0].category,
+    'reveals',
+    'A fresh cache from the old policy is replaced',
+  );
   await reviewMetaNews();
   assert.equal(reviews, 1, 'Repeated refresh reuses the five minute discovery cache');
   const draft = {
@@ -170,7 +230,6 @@ test('TCG news: selection, resumable complete gallery, reuse, quota and private 
   await prepareWebNewsImages(draft.id);
   for (let i = 0; i < 3; i++) await prepareWebNewsImages(draft.id, true);
   assert.equal(downloads, 3, 'Restored articles reuse persisted downloads');
-  const db = await getDb();
   await db.query(
     "UPDATE settings SET data=jsonb_set(data,'{web_news_media_cache,quota}', $1::jsonb,true) WHERE id=1",
     [JSON.stringify({ image: '/test.webp', image_bytes: 15000000 })],

@@ -89,7 +89,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
       );
       setCandidates(result.items);
       setNotice(
-        `${result.items.length} noticias ${source === 'myl' ? 'MyL' : 'TCG'} disponibles. Preparar una noticia no la publica.`,
+        result.items.length
+          ? `${result.items.length} revelaciones y novedades de productos ${source === 'myl' ? 'MyL' : 'TCG'} disponibles. Preparar una noticia no la publica.`
+          : `La fuente no ofrece revelaciones ni novedades de productos ${source === 'myl' ? 'MyL de estos formatos' : 'TCG'} en la consulta actual. Tus noticias guardadas se conservan.`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos consultar la fuente.');
@@ -316,8 +318,10 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
           <div className={styles.workflow}>
             <strong>1. Buscar → 2. Preparar y revisar → 3. Publicar noticia</strong>
             <p>
-              Preparar guarda una nota breve con el título y resumen de la fuente y descarga sus
-              imágenes. No publica nada.
+              Buscamos revelaciones de cartas y contenido de productos: solo TCG para Yu-Gi-Oh!,
+              Primera Era y Primer Bloque para MyL. Las restricciones se actualizan en Banlists.
+              Preparar guarda el contenido y sus imágenes como borrador para revisar; no publica
+              nada.
             </p>
             <label className="admin-check">
               <input
@@ -331,8 +335,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
             <small>
               {' '}
               MyMemory gratuito: cuota externa de 5.000 caracteres/día, compartida por la conexión
-              del servidor. Solo se envían título y resumen públicos. Revisa nombres y traducción;
-              no traduce efectos oficiales ni redacta artículos completos. MyL ya viene en español.
+              del servidor. Se envían título, resumen y bloques públicos del artículo. Revisa
+              nombres y traducción; no sustituye los efectos oficiales ni redacta información nueva.
+              MyL ya viene en español.
             </small>
           </div>
           <p>

@@ -295,7 +295,7 @@ test('MyL: pestañas separadas, banlist y vigencia dentro de la noticia', async 
   );
 });
 
-test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vigencia', async ({
+test('Admin MyL: buscar y preparar productos conserva fecha, formato y confirmación pública', async ({
   page,
 }) => {
   await page.goto('/admin');
@@ -305,16 +305,17 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
   await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible();
   const candidate = {
     id: 'myl-admin-example',
-    title: 'Banlist General MyL',
+    title: 'Leyendas Primera Era: nuevas cartas',
     summary: 'Referencia breve oficial del blog.',
-    url: 'https://blog.myl.cl/banlist-de-prueba/',
+    url: 'https://blog.myl.cl/leyendas-de-prueba/',
     published_on: '2026-10-07',
     boards: ['myl-first-era', 'myl-first-block'],
-    category: 'banlist',
+    category: 'reveals',
     source_image: '',
   };
   let saved: any[] = [];
   let rejectPublication = true;
+  let noCandidates = false;
   await page.route('**/api/admin/news/web-sources', (r) => r.fulfill({ json: saved }));
   await page.route('**/api/admin/news/web-sources/*', (r) => {
     if (r.request().method() === 'PATCH') {
@@ -347,11 +348,13 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
     r.fulfill({ json: saved.filter((i) => i.visible) }),
   );
   await page.route('**/api/admin/news/web-sources/review-myl', (r) =>
-    r.fulfill({ json: { items: [candidate] } }),
+    r.fulfill({ json: { items: noCandidates ? [] : [candidate] } }),
   );
   await page.goto('/admin/noticias');
   const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh! y MyL', exact: true });
   await section.getByRole('button', { name: /Buscar y preparar/ }).click();
+  await expect(section).toContainText('solo TCG para Yu-Gi-Oh!');
+  await expect(section).toContainText('Las restricciones se actualizan en Banlists.');
   await section.getByRole('button', { name: 'Buscar novedades MyL', exact: true }).click();
   await expect(section.getByRole('region', { name: 'Noticias MyL disponibles' })).toContainText(
     candidate.title,
@@ -365,12 +368,11 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
     .getByRole('textbox', { name: 'Resumen propio en español', exact: true })
     .fill('Resumen preparado por la tienda para sus jugadores.');
   await section.getByRole('checkbox', { name: 'MyL Primer Bloque', exact: true }).uncheck();
-  await section.getByLabel('MyL Primera Era · vigente desde', { exact: true }).fill('2026-10-08');
   await section.getByRole('button', { name: 'Guardar cambios de la noticia', exact: true }).click();
   await expect.poll(() => saved.length).toBe(1);
   expect(saved[0].boards).toEqual(['myl-first-era']);
   expect(saved[0].visible).toBe(false);
-  expect(saved[0].effective_dates['myl-first-era']).toBe('2026-10-08');
+  expect(saved[0].category).toBe('reveals');
   await section.getByRole('button', { name: 'Editar', exact: true }).click();
   const publishRow = section.getByRole('row').filter({ hasText: saved[0].title });
   await expect(
@@ -403,6 +405,12 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
   await expect(section.getByRole('row').filter({ hasText: saved[0].title })).toContainText(
     'Publicada',
   );
+  noCandidates = true;
+  await section.getByRole('button', { name: /Buscar y preparar/ }).click();
+  await section.getByRole('button', { name: 'Buscar novedades MyL', exact: true }).click();
+  await expect(section.getByRole('status')).toContainText('La fuente no ofrece revelaciones');
+  await expect(section.getByRole('region', { name: 'Noticias MyL disponibles' })).toHaveCount(0);
+  expect(saved[0].visible).toBe(true);
   await page
     .getByRole('navigation', { name: 'Herramientas de contenido' })
     .getByRole('button', { name: 'Banlists' })
