@@ -24,6 +24,8 @@ export type EditionDocument = {
   cards: EditionCard[];
 };
 export type EditionChoice = {
+  game?: 'yugioh' | 'myl-first-era' | 'myl-first-block';
+  expected?: number;
   code: string;
   name: string;
   release_date: string;

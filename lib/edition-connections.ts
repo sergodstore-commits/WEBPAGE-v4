@@ -1,4 +1,5 @@
 import type { Product } from './types';
+import { mylDefinition } from './myl-library';
 
 export type EditionReference = { code: string; name: string };
 export type EditionProduct = Pick<
@@ -34,6 +35,8 @@ const aliases: Record<string, string[]> = {
 // Match curated catalog metadata, never words appearing in descriptions or titles.
 // These same keys serve product → guide and guide → products.
 export function editionCatalogKeys(edition: EditionReference) {
+  const myl = mylDefinition(edition.code);
+  if (myl) return { names: [myl.name.toLowerCase()], groups: [myl.group] };
   const names = [
     ...new Set(
       [edition.name, ...(aliases[edition.code] || [])]
@@ -58,6 +61,8 @@ export function productEdition(
 export const editionExplorerPath = (code: string) =>
   `/comunidad?vista=ediciones&edicion=${encodeURIComponent(code)}`;
 export const editionArticlePath = (code: string) =>
-  code === 'betb'
-    ? '/noticias/beyond-the-brave'
-    : `/noticias/ediciones/${encodeURIComponent(code)}`;
+  mylDefinition(code)
+    ? editionExplorerPath(code)
+    : code === 'betb'
+      ? '/noticias/beyond-the-brave'
+      : `/noticias/ediciones/${encodeURIComponent(code)}`;

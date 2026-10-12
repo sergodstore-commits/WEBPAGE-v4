@@ -9,7 +9,7 @@ import type { LeagueTournament } from '@/lib/rankings';
 import { boards } from '@/lib/rankings';
 import { NewsMedia } from '../store/news/News';
 import { WebNewsAdmin } from './WebNewsAdmin';
-import { EditionImportAdmin } from './EditionImportAdmin';
+import { CardLibraryAdmin } from './CardLibraryAdmin';
 import { BanlistAdmin } from './BanlistAdmin';
 import styles from './NewsWorkspace.module.css';
 
@@ -638,7 +638,7 @@ export function InstagramNewsPage() {
         {visited.includes('web') && <WebNewsAdmin onBusyChange={onBusyChange} />}
       </div>
       <div hidden={workspace !== 'editions'}>
-        {visited.includes('editions') && <EditionImportAdmin onBusyChange={onBusyChange} />}
+        {visited.includes('editions') && <CardLibraryAdmin onBusyChange={onBusyChange} />}
       </div>
       <div hidden={workspace !== 'banlist'}>
         {visited.includes('banlist') && <BanlistAdmin onBusyChange={onBusyChange} />}

@@ -9,6 +9,7 @@ import {
   type WebNewsItem,
 } from '../web-news';
 import { validDay } from '../tournament-schedule';
+import { mylDefinition } from '../myl-library';
 import { communityEditions, publishedEditions, withLease } from './edition-imports';
 import {
   archiveMetaNewsCover,
@@ -103,10 +104,15 @@ const schema = z
       })
       .superRefine((item, context) => {
         const isMyl = Boolean(mylArticle(item.url));
-        if (isMyl && item.edition_code)
+        const linkedMyl = item.edition_code ? mylDefinition(item.edition_code) : undefined;
+        if (
+          item.edition_code &&
+          (isMyl ? !linkedMyl || !item.boards.includes(linkedMyl.board) : Boolean(linkedMyl))
+        )
           context.addIssue({
             code: 'custom',
-            message: 'Las guías de ediciones disponibles corresponden a Yu-Gi-Oh! TCG.',
+            message:
+              'La biblioteca relacionada debe corresponder al juego y formato de la noticia.',
           });
         if (
           new Set(item.boards).size !== item.boards.length ||
@@ -131,6 +137,7 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
   const items = schema.parse(row?.data?.web_news ?? initialWebNews);
   if (admin) return items;
   const editions = await publishedEditions();
+  const library = await communityEditions();
   return [
     ...editions.map((edition) => ({
       id: `edition-${edition.code}`,
@@ -173,7 +180,7 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
           edition_code:
             item.edition_code &&
             (item.edition_code === 'betb' ||
-              editions.some((edition) => edition.code === item.edition_code))
+              library.some((edition) => edition.code === item.edition_code))
               ? item.edition_code
               : undefined,
           format: mylArticle(item.url) ? undefined : ('TCG' as const),

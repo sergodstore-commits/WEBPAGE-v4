@@ -15,7 +15,12 @@ export function EditionLink({ product, detail = false }: { product: Product; det
     (local === '/noticias/beyond-the-brave'
       ? 'betb'
       : local?.match(/^\/noticias\/ediciones\/([a-z0-9-]{2,20})$/)?.[1]);
-  const destination = code ? editionExplorerPath(code) : (local ?? edition.url);
+  const destination = code
+    ? editionExplorerPath(code) +
+      (product.edition_guide?.presentation
+        ? `&presentacion=${encodeURIComponent(product.edition_guide.presentation)}`
+        : '')
+    : (local ?? edition.url);
   return (
     <div className={detail ? styles.detail : styles.compact}>
       <Link

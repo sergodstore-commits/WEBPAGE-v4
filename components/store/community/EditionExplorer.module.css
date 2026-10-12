@@ -11,6 +11,30 @@
   gap: 16px;
   margin-bottom: 26px;
 }
+.formats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 20px;
+}
+.formats a {
+  display: inline-flex;
+  padding: 10px 14px;
+  color: #c7e1ed;
+  border: 1px solid #405c6e;
+  border-radius: 8px;
+  font-size: 13px;
+  text-decoration: none;
+}
+.formats a[aria-current='page'] {
+  color: #ecfcff;
+  background: #16475c;
+  border-color: #84dce9;
+}
+.formats a:focus-visible {
+  outline: 2px solid #84dce9;
+  outline-offset: 3px;
+}
 .icon {
   display: grid;
   place-items: center;

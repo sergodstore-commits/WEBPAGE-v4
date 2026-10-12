@@ -90,7 +90,7 @@ Ligas y banlists mantienen flujos propios: importar un torneo no equivale a incl
 
 ## Secuencia de ejecución
 
-Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados), junto con los desempates y puestos únicos de las tres ligas. Tienda muestra recientes primero y Preventas cercanos primero, con las presentaciones separadas. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. El siguiente punto es definir la biblioteca compartida de cartas y sus destinos administrativos.
+Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados), junto con los desempates y puestos únicos de las tres ligas. También se implementó la biblioteca compartida MyL para cuatro referencias oficiales, con cobertura explícita, contenido por presentación y actualización administrativa. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. El siguiente punto es separar el acceso global a Banlists y ajustar la selección editorial de Noticias.
 
 1. Corregir fechas y acordar desempates: afectan al orden real y a la confianza en resultados.
 2. Definir la biblioteca compartida y los destinos administrativos, antes de añadir más importadores.

@@ -221,7 +221,12 @@ export async function articleImages(url: string) {
 }
 
 export const NEWS_MEDIA_LIMIT = 15_000_000;
-type CachedImage = { image: string; image_bytes: number };
+type CachedImage = {
+  image: string;
+  thumbnail?: string;
+  image_bytes: number;
+  scope?: 'myl-library';
+};
 async function mediaCache(): Promise<Record<string, CachedImage>> {
   const row = (
     await (
@@ -231,12 +236,20 @@ async function mediaCache(): Promise<Record<string, CachedImage>> {
   return row?.media || {};
 }
 export async function newsMediaUsage() {
-  return Object.values(await mediaCache()).reduce((sum, item) => sum + item.image_bytes, 0);
+  return Object.values(await mediaCache())
+    .filter((item) => item.scope !== 'myl-library')
+    .reduce((sum, item) => sum + item.image_bytes, 0);
+}
+export const MYL_LIBRARY_MEDIA_LIMIT = 60_000_000;
+export async function mylLibraryMediaUsage() {
+  return Object.values(await mediaCache())
+    .filter((item) => item.scope === 'myl-library')
+    .reduce((sum, item) => sum + item.image_bytes, 0);
 }
 
 // Persisted keys also account for archived images whose articles were later removed.
 // Callers hold the shared import lease while checking the quota and saving the image.
-export async function archiveMetaNewsCover(value: string) {
+export async function archiveMetaNewsCover(value: string, scope?: 'myl-library') {
   const url = newsSourceImage(value);
   if (!url) fail(400, 'La portada no pertenece a la fuente autorizada.');
   const cache = await mediaCache();
@@ -244,61 +257,89 @@ export async function archiveMetaNewsCover(value: string) {
   if (cache[cacheKey]) return cache[cacheKey];
   const input = await source(url, 4_000_000);
   let output: Buffer | undefined;
+  const imageLimit = scope ? 128_000 : 160_000;
   try {
     const info = await sharp(input, { limitInputPixels: 24_000_000 }).metadata();
     if (!['jpeg', 'png', 'webp', 'avif'].includes(info.format || '')) throw Error();
-    for (const width of [960, 800, 640, 480]) {
-      for (const quality of [78, 64, 48, 44]) {
+    for (const width of scope ? [700, 640, 600] : [960, 800, 640, 480]) {
+      for (const quality of scope ? [68, 60, 54] : [78, 64, 48, 44]) {
         output = await sharp(input, { limitInputPixels: 24_000_000 })
           .rotate()
           .resize(width, width * 1.5, { fit: 'inside', withoutEnlargement: true })
           .webp({ quality, alphaQuality: 80 })
           .toBuffer();
-        if (output.length <= 160_000) break;
+        if (output.length <= imageLimit) break;
       }
-      if (output!.length <= 160_000) break;
+      if (output!.length <= imageLimit) break;
     }
   } catch {
     fail(409, 'No pudimos preparar esta portada. La selección anterior se conserva.');
   }
-  if (!output || output.length > 160_000)
+  if (!output || output.length > imageLimit)
     fail(409, 'La portada supera el límite de 160 KB después de comprimirla.');
+  const thumbnailBytes = scope
+    ? await sharp(output)
+        .resize({ width: 220, withoutEnlargement: true })
+        .webp({ quality: 72 })
+        .toBuffer()
+    : undefined;
+  const imageBytes = output.length + (thumbnailBytes?.length || 0);
+  if (imageBytes > 160_000)
+    fail(409, 'La carta supera el tamaño admitido tras comprimirla. El avance se conserva.');
   if (
-    Object.values(cache).reduce((sum, item) => sum + item.image_bytes, 0) + output.length >
-    NEWS_MEDIA_LIMIT
+    Object.values(cache)
+      .filter((item) => (scope ? item.scope === scope : item.scope !== 'myl-library'))
+      .reduce((sum, item) => sum + item.image_bytes, 0) +
+      imageBytes >
+    (scope ? MYL_LIBRARY_MEDIA_LIMIT : NEWS_MEDIA_LIMIT)
   )
     fail(
       409,
-      'Noticias alcanzó su límite de 15 MB. El avance está guardado; no se contrató almacenamiento.',
+      scope
+        ? 'La biblioteca MyL alcanzó su límite de 60 MB. El avance está guardado; no se contrató almacenamiento.'
+        : 'Noticias alcanzó su límite de 15 MB. El avance está guardado; no se contrató almacenamiento.',
     );
   const digest = hash(url).slice(0, 32);
   const key = `${digest.slice(0, 8)}-${digest.slice(8, 12)}-${digest.slice(12, 16)}-${digest.slice(16, 20)}-${digest.slice(20)}.webp`;
-  let image: string;
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    const base = process.env.SUPABASE_URL.replace(/\/$/, '');
-    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'product-images';
-    const response = await fetch(`${base}/storage/v1/object/${encodeURIComponent(bucket)}/${key}`, {
-      method: 'POST',
-      signal: AbortSignal.timeout(15000),
-      headers: {
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        'Content-Type': 'image/webp',
-        'Cache-Control': 'max-age=31536000',
-        'x-upsert': 'true',
-      },
-      body: new Uint8Array(output),
-    });
-    if (!response.ok)
-      fail(502, 'No se pudo guardar la portada. La selección anterior se conserva.');
-    image = `${base}/storage/v1/object/public/${encodeURIComponent(bucket)}/${key}`;
-  } else {
-    if (isProd()) fail(503, 'Falta configurar el almacenamiento de imágenes.');
-    await mkdir(path.join(dataDir(), 'objects'), { recursive: true });
-    await writeFile(path.join(dataDir(), 'objects', key), output);
-    image = `/api/media/${key}`;
+  async function storeAsset(key: string, bytes: Buffer) {
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const base = process.env.SUPABASE_URL.replace(/\/$/, '');
+      const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'product-images';
+      const response = await fetch(
+        `${base}/storage/v1/object/${encodeURIComponent(bucket)}/${key}`,
+        {
+          method: 'POST',
+          signal: AbortSignal.timeout(15000),
+          headers: {
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+            'Content-Type': 'image/webp',
+            'Cache-Control': 'max-age=31536000',
+            'x-upsert': 'true',
+          },
+          body: new Uint8Array(bytes),
+        },
+      );
+      if (!response.ok)
+        fail(502, 'No se pudo guardar la portada. La selección anterior se conserva.');
+      return `${base}/storage/v1/object/public/${encodeURIComponent(bucket)}/${key}`;
+    } else {
+      if (isProd()) fail(503, 'Falta configurar el almacenamiento de imágenes.');
+      await mkdir(path.join(dataDir(), 'objects'), { recursive: true });
+      await writeFile(path.join(dataDir(), 'objects', key), bytes);
+      return `/api/media/${key}`;
+    }
   }
-  const saved = { image, image_bytes: output.length };
+  const image = await storeAsset(key, output);
+  const thumbDigest = hash(`${url}:thumbnail`).slice(0, 32);
+  const thumbKey = `${thumbDigest.slice(0, 8)}-${thumbDigest.slice(8, 12)}-${thumbDigest.slice(12, 16)}-${thumbDigest.slice(16, 20)}-${thumbDigest.slice(20)}.webp`;
+  const thumbnail = thumbnailBytes ? await storeAsset(thumbKey, thumbnailBytes) : undefined;
+  const saved: CachedImage = {
+    image,
+    image_bytes: imageBytes,
+    ...(thumbnail ? { thumbnail } : {}),
+    ...(scope ? { scope } : {}),
+  };
   await (
     await getDb()
   ).query(

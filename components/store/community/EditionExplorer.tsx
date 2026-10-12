@@ -6,6 +6,8 @@ import { ArrowLeft, ArrowRight, Layers3, Search } from 'lucide-react';
 import type { EditionChoice } from '@/lib/edition-gallery';
 import { useRemote, Loading } from '../shared';
 import EditionArticle from '../news/EditionArticle';
+import { MylLibraryArticle } from './MylLibraryArticle';
+import { libraryFormats } from '@/lib/myl-library';
 import styles from './EditionExplorer.module.css';
 
 const normalize = (text: string) =>
@@ -26,16 +28,23 @@ export function EditionExplorer() {
   const params = useSearchParams(),
     router = useRouter();
   const code = params.get('edicion');
+  const formatValue = params.get('juego') || 'todos';
+  const format = ['todos', ...Object.keys(libraryFormats)].includes(formatValue)
+    ? formatValue
+    : 'todos';
   const [query, setQuery] = useState('');
   const selected = remote.data?.find((edition) => edition.code === code);
-  const filtered = (remote.data || []).filter((edition) =>
-    normalize(`${edition.name} ${edition.code}`).includes(normalize(query.trim())),
+  const filtered = (remote.data || []).filter(
+    (edition) =>
+      (format === 'todos' || (edition.game || 'yugioh') === format) &&
+      normalize(`${edition.name} ${edition.code}`).includes(normalize(query.trim())),
   );
   function href(edition?: string) {
     const next = new URLSearchParams(params.toString());
     next.set('vista', 'ediciones');
     if (edition) next.set('edicion', edition);
     else next.delete('edicion');
+    next.delete('presentacion');
     return `/comunidad?${next}`;
   }
   return (
@@ -45,9 +54,9 @@ export function EditionExplorer() {
           <Layers3 size={25} aria-hidden="true" />
         </span>
         <div>
-          <span className={styles.eyebrow}>BIBLIOTECA DEL DUELISTA · YU-GI-OH! TCG</span>
-          <h2 id="edition-explorer-title">¿Qué cartas trae esta edición?</h2>
-          <p>Elige una edición y descubre sus cartas, rarezas y efectos en español.</p>
+          <span className={styles.eyebrow}>BIBLIOTECA DE CARTAS · SERGOD STORE</span>
+          <h2 id="edition-explorer-title">¿Qué cartas trae este producto?</h2>
+          <p>Explora ediciones y kits de Yu-Gi-Oh!, Primera Era y Primer Bloque.</p>
         </div>
       </header>
       {remote.loading ? (
@@ -81,7 +90,11 @@ export function EditionExplorer() {
                 </select>
               </label>
             </div>
-            <EditionArticle key={code} code={code === 'betb' ? undefined : code} explorer />
+            {selected.game && selected.game !== 'yugioh' ? (
+              <MylLibraryArticle key={code} code={code} />
+            ) : (
+              <EditionArticle key={code} code={code === 'betb' ? undefined : code} explorer />
+            )}
           </>
         ) : (
           <div className={styles.message} role="alert">
@@ -93,12 +106,32 @@ export function EditionExplorer() {
         )
       ) : (
         <>
+          <nav className={styles.formats} aria-label="Juego de la biblioteca">
+            {[['todos', 'Todos'], ...Object.entries(libraryFormats)].map(([id, label]) => (
+              <Link
+                key={id}
+                aria-current={format === id ? 'page' : undefined}
+                href={(() => {
+                  const next = new URLSearchParams(params.toString());
+                  next.set('vista', 'ediciones');
+                  if (id === 'todos') next.delete('juego');
+                  else next.set('juego', id);
+                  next.delete('edicion');
+                  next.delete('presentacion');
+                  return `/comunidad?${next}`;
+                })()}
+                scroll={false}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
           <label className={styles.search}>
             <Search size={18} aria-hidden="true" />
             <input
               type="search"
               aria-label="Buscar edición"
-              placeholder="Nombre o código de la edición…"
+              placeholder="Nombre o código de edición o producto…"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -124,11 +157,14 @@ export function EditionExplorer() {
                       decoding="async"
                     />
                   ))}
-                  <span>{edition.code.toUpperCase()} · TCG</span>
+                  <span>{libraryFormats[edition.game || 'yugioh']}</span>
                 </div>
                 <div className={styles.caption}>
                   <div className={styles.metadata}>
                     <span>{edition.total} cartas</span>
+                    {edition.expected && edition.total < edition.expected && (
+                      <span>Revelación parcial</span>
+                    )}
                     {edition.release_date && (
                       <time dateTime={edition.release_date}>
                         {releaseDay(edition.release_date)}

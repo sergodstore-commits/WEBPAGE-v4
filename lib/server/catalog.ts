@@ -4,6 +4,7 @@ import { fail, integer, slugify, uuid } from './core';
 import type { Settings, Product } from '../types';
 import { moveReleasedPreorders } from './preorder-release';
 import { communityEditions } from './edition-imports';
+import { mylPresentationForProduct } from '../myl-library';
 import { catalogReleaseDay, compareCatalogLaunch } from '../catalog-order';
 import {
   editionCatalogKeys,
@@ -24,6 +25,7 @@ async function withEditionGuides(products: Product[]) {
             name: edition.name,
             url: editionArticlePath(edition.code),
             code: edition.code,
+            presentation: mylPresentationForProduct(product),
           },
         }
       : product;
@@ -133,17 +135,15 @@ const productSchema = z.object({
   delivery_terms: z.string().max(3000).default(''),
 });
 export async function getSettings(): Promise<Settings> {
-  const {
-    web_news: _webNews,
-    web_news_discovery: _webNewsDiscovery,
-    web_news_media_cache: _webNewsMedia,
-    ygo_banlist: _banlist,
-    myl_banlists: _mylBanlists,
-    myl_banlist_draft: _mylBanlistDraft,
-    myl_news_discovery: _mylNewsDiscovery,
-    ...settings
-  } = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0].data;
-  return settings;
+  // Exclude catalogs and import drafts in PostgreSQL, before transferring settings.
+  return (
+    await (
+      await getDb()
+    ).query(`SELECT data - ARRAY[
+    'web_news','web_news_discovery','web_news_media_cache','ygo_banlist',
+    'myl_banlists','myl_banlist_draft','myl_news_discovery','myl_library'
+  ]::text[] AS data FROM settings WHERE id=1`)
+  ).rows[0].data;
 }
 export async function saveSettings(input: unknown) {
   const d = z

@@ -10,6 +10,7 @@ import {
 import { money, price } from '@/lib/client';
 import { useRemote, availability, ProductImage, Loading } from '../shared';
 import styles from './EditionConnections.module.css';
+import { mylDefinition } from '@/lib/myl-library';
 
 export function EditionConnections({
   code,
@@ -30,15 +31,17 @@ export function EditionConnections({
           <span>{code.toUpperCase()} · SERGOD STORE</span>
           <h3 id={heading}>Cartas y productos de esta edición</h3>
         </div>
-        <Link href={explorer ? editionArticlePath(code) : editionExplorerPath(code)}>
-          {explorer ? (
-            <BookOpen size={18} aria-hidden="true" />
-          ) : (
-            <Layers3 size={18} aria-hidden="true" />
-          )}
-          {explorer ? 'Leer guía de la edición' : 'Explorar cartas en Comunidad'}
-          <ArrowRight size={16} aria-hidden="true" />
-        </Link>
+        {!(explorer && mylDefinition(code)) && (
+          <Link href={explorer ? editionArticlePath(code) : editionExplorerPath(code)}>
+            {explorer ? (
+              <BookOpen size={18} aria-hidden="true" />
+            ) : (
+              <Layers3 size={18} aria-hidden="true" />
+            )}
+            {explorer ? 'Leer guía de la edición' : 'Explorar cartas en Comunidad'}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        )}
       </div>
       <details
         onToggle={(event) => {

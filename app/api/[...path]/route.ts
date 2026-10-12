@@ -2,6 +2,13 @@ import { after, NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
 import { getMylBanlists, mylBanlistPanel, refreshMylBanlists } from '@/lib/server/myl-banlist';
 import { getDb } from '@/lib/server/db';
+import {
+  mylLibraryPanel,
+  prepareMylLibrary,
+  publishMylLibrary,
+  publicMylLibrary,
+  previewMylLibrary,
+} from '@/lib/server/myl-library';
 import { moveReleasedPreorders } from '@/lib/server/preorder-release';
 import {
   appUrl,
@@ -253,6 +260,15 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       });
     if (
       path[0] === 'community' &&
+      path[1] === 'myl-library' &&
+      path.length === 3 &&
+      method === 'GET'
+    )
+      return NextResponse.json(await publicMylLibrary(path[2]), {
+        headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60' },
+      });
+    if (
+      path[0] === 'community' &&
       path[1] === 'editions' &&
       path.length === 4 &&
       path[3] === 'products' &&
@@ -339,6 +355,28 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await importBanlistCard(3));
       }
       if (route === 'admin/news/editions' && method === 'GET') return json(await editionPanel());
+      if (route === 'admin/news/myl-library' && method === 'GET')
+        return json(await mylLibraryPanel());
+      if (
+        path[1] === 'news' &&
+        path[2] === 'myl-library' &&
+        path.length === 5 &&
+        path[4] === 'preview' &&
+        method === 'GET'
+      )
+        return json(await previewMylLibrary(path[3]));
+      if (
+        path[1] === 'news' &&
+        path[2] === 'myl-library' &&
+        path.length === 5 &&
+        method === 'POST'
+      ) {
+        await rateLimit(`myl-library:${user.id}`, 600, 15);
+        if (path[4] === 'prepare') return json(await prepareMylLibrary(path[3], true));
+        if (path[4] === 'batch') return json(await prepareMylLibrary(path[3]));
+        if (path[4] === 'publish') return json(await publishMylLibrary(path[3], true));
+        if (path[4] === 'withdraw') return json(await publishMylLibrary(path[3], false));
+      }
       if (route === 'admin/news/editions/search' && method === 'POST') {
         await rateLimit(`edition-search:${user.id}`, 30, 60);
         return json(await searchEditions());

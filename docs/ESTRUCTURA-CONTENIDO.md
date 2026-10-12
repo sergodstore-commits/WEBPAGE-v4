@@ -27,7 +27,7 @@ Las guías y el explorador comparten el bloque «Cartas y productos de esta edic
 
 La asociación utiliza los campos de catálogo de cada producto (`catalog_group` / `catalog_name`), con los mismos criterios para enlazar producto → edición y edición → productos. No depende de palabras coincidentes en una descripción ni descarga contenido externo durante la visita.
 
-En el editor de noticias TCG, «Edición relacionada (opcional)» permite conectar un artículo con una guía publicada. Las noticias de MyL no ofrecen esta asociación mientras no exista un catálogo de ediciones MyL. Al retirar una guía, su asociación se conserva para administración pero deja de mostrarse públicamente.
+En el editor de noticias, «Edición relacionada (opcional)» permite conectar un artículo con una biblioteca publicada de su juego y formato, tanto TCG como MyL. Al retirar una guía, su asociación se conserva para administración pero deja de mostrarse públicamente.
 
 ## Torneos: entrada y navegación
 
@@ -52,6 +52,20 @@ Se verificaron siete ediciones con las [fuentes oficiales registradas](../data/c
 En la revisión pública posterior se corrigió también el año escrito en las condiciones de entrega de los dos displays Immortal Phoenix: enero de 2027, en lugar de 2026. Se conservaron el día, la modalidad y el resto de sus condiciones.
 
 Una presentación nueva sin fecha puede heredar la única fecha conocida de su grupo. Si hay fechas distintas, se deja sin fecha para revisión; una fecha explícita por idioma o región tiene prioridad. No modifica automáticamente otras presentaciones existentes. La validación impide lanzar una preventa antes del cierre de sus reservas. Las fechas de producto se entregan como día de calendario, sin convertirlas en instantes que puedan cambiar de día según el servidor. Las tres ediciones YGO verificadas también conservan su fecha oficial al volver a preparar sus guías.
+
+## Comunidad: biblioteca MyL — 12 de octubre de 2026
+
+Explorar cartas permite elegir Todos, Yu-Gi-Oh! TCG, MyL Primera Era y MyL Primer Bloque. Se reutiliza el índice de ediciones publicado: los borradores quedan fuera. Cada galería MyL se solicita solo al abrirla, muestra hasta 48 cartas por bloque y usa miniaturas; la imagen ampliada se descarga al pulsar una carta. Seleccionar una presentación conserva su identificador en la URL.
+
+La biblioteca incorpora cuatro referencias verificadas del blog oficial: [Leyendas Primer Bloque 4.0](https://blog.myl.cl/leyendas-primer-bloque-4-0/) (320 cartas regulares y 80 del Set Clásico); [Leyendas Primera Era 4.0](https://blog.myl.cl/leyendas-pe-4-0/) (55 cartas mostradas de una colección anunciada de 400, contando su Set Clásico); [Relatos de Dominios de Ra](https://blog.myl.cl/relatos-de-dominios-de-ra/) (12 cartas fijas por cada uno de sus tres relatos); y [Leyendas de Ultratumba](https://blog.myl.cl/leyendas-de-ultratumba-primera-era/) (cinco revelaciones de Tinieblas y cinco de Abismo, de sus 24 cartas respectivas). La cobertura parcial es visible; no se publica como una lista completa.
+
+Las promociones de reserva se consultan aparte de las cartas regulares y no cuentan para la cobertura de la colección. El contenido fijo, los sobres aleatorios y los beneficios condicionales se distinguen al elegir cada presentación. Cada producto publicado conserva su tarjeta, idioma, precio y stock; el vínculo abre la misma biblioteca y, cuando se identifica, su presentación correspondiente. Las noticias MyL pueden asociarse con una biblioteca del mismo formato.
+
+Las habilidades se leen en la imagen oficial en español. La fuente no ofrece nombres o habilidades como texto para todas las imágenes: en esos casos se conserva una referencia de imagen buscable; no se inventan nombres, habilidades ni resultados de OCR. Los nombres presentes en la fuente se conservan. No se usa un traductor ni una IA para MyL.
+
+Administración → Noticias → Guías de cartas → Mitos y Leyendas permite Actualizar contenido, pausar/reanudar, previsualizar, publicar y retirar. La actualización de la fuente prepara un borrador y una imagen por solicitud, conservando la versión pública hasta Publicar. La operación comprueba la lectura pública. Una consulta fallida conserva el avance y la publicación anterior. Las fuentes están registradas en código y no se admiten destinos arbitrarios.
+
+Las imágenes se reutilizan por URL con Noticias y Banlists. Las nuevas imágenes MyL se comprimen a WebP de hasta 700 px, con miniatura de 220 px y un máximo conjunto de 160 KB por carta. La biblioteca tiene un límite de 60 MB, separado del presupuesto de 15 MB de Noticias; reutilizar un archivo no lo vuelve a cobrar ni a descargar. Los índices y estados administrativos se calculan en PostgreSQL sin transmitir todas las cartas en cada lote. No hay migraciones, servicios de pago, consultas externas por visita ni modificación del stock. Los borradores y cachés se excluyen de la configuración pública.
 
 ## Comunidad: orden de las ligas — 12 de octubre de 2026
 

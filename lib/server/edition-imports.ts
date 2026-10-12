@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import staticBetb from '../../public/editions/betb/cards.json';
+import { mylLibraryChoices } from './myl-library';
 import verifiedReleases from '../../data/catalogs/release-dates-2026-10.json';
 import type {
   EditionCard,
@@ -427,6 +428,7 @@ export async function communityEditions(): Promise<EditionChoice[]> {
       total: staticBetb.cards.length,
       cover_cards: staticBetb.cards.slice(0, 3).map((card) => card.thumbnail),
     });
+  editions.push(...(await mylLibraryChoices()));
   return editions.sort(
     (a, b) =>
       (b.release_date || '').localeCompare(a.release_date || '') || a.name.localeCompare(b.name),

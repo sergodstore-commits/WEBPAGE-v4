@@ -13,6 +13,7 @@ import {
 } from '@/lib/web-news';
 import styles from './NewsWorkspace.module.css';
 import type { EditionChoice } from '@/lib/edition-gallery';
+import { mylDefinition } from '@/lib/myl-library';
 import { useRemote } from '../store/shared';
 
 const blank = (): WebNewsItem => ({
@@ -531,7 +532,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                           ...draft,
                           url: e.target.value,
                           boards: mylArticle(e.target.value) ? ['myl-first-era'] : ['yugioh'],
-                          edition_code: mylArticle(e.target.value) ? undefined : draft.edition_code,
+                          edition_code: undefined,
                         })
                       }
                       placeholder="https://www.yugiohmeta.com/articles/…"
@@ -552,7 +553,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                       ))}
                     </select>
                   </label>
-                  {!mylArticle(draft.url) && (
+                  {
                     <label className="admin-field">
                       <span>Edición relacionada (opcional)</span>
                       <select
@@ -564,11 +565,17 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                         }
                       >
                         <option value="">Sin edición relacionada</option>
-                        {(editions.data || []).map((edition) => (
-                          <option key={edition.code} value={edition.code}>
-                            {edition.name}
-                          </option>
-                        ))}
+                        {(editions.data || [])
+                          .filter((edition) =>
+                            mylArticle(draft.url)
+                              ? draft.boards?.includes(mylDefinition(edition.code)?.board!)
+                              : !mylDefinition(edition.code),
+                          )
+                          .map((edition) => (
+                            <option key={edition.code} value={edition.code}>
+                              {edition.name}
+                            </option>
+                          ))}
                         {draft.edition_code &&
                           !editions.data?.some(
                             (edition) => edition.code === draft.edition_code,
@@ -592,7 +599,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                         </button>
                       )}
                     </label>
-                  )}
+                  }
                   {mylArticle(draft.url) && (
                     <fieldset style={{ border: '1px solid #365464', borderRadius: 8, padding: 12 }}>
                       <legend>Mostrar en los formatos seleccionados</legend>
@@ -607,6 +614,11 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                                 boards: e.target.checked
                                   ? [...(draft.boards || []), board]
                                   : (draft.boards || []).filter((b) => b !== board),
+                                edition_code:
+                                  !e.target.checked &&
+                                  mylDefinition(draft.edition_code || '')?.board === board
+                                    ? undefined
+                                    : draft.edition_code,
                                 effective_dates: Object.fromEntries(
                                   Object.entries(draft.effective_dates || {}).filter(
                                     ([key]) => e.target.checked || key !== board,
