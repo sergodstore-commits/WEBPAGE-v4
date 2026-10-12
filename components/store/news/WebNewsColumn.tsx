@@ -83,14 +83,10 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
     <section className={styles.worldNews} aria-labelledby="world-news-heading">
       <div className={styles.worldHeading}>
         <BookOpen size={23} aria-hidden="true" />
-        <div>
-          <span>ACTUALIDAD DEL JUEGO</span>
-          <h2 id="world-news-heading">{title}</h2>
-        </div>
+        <h2 id="world-news-heading">{title}</h2>
       </div>
       <div className={styles.newsToolbar}>
         <div className={styles.topicPicker}>
-          <span className={styles.filterLabel}>Filtrar por tema</span>
           <div
             className={styles.newsFilters}
             role="group"
@@ -172,29 +168,28 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
                 <article key={item.id} className={styles.tcgCard}>
                   <Link
                     className={styles.newsPoster}
+                    aria-labelledby={`news-title-${item.id}`}
                     href={
                       item.article_path || localWebArticle(item.url) || `/noticias/tcg/${item.id}`
                     }
                   >
                     <WebNewsCover item={item} />
-                    <div className={styles.posterTitle}>
-                      <h3>{item.title}</h3>
-                      <span>
+                    <div className={styles.newsCardText}>
+                      <time dateTime={item.published_on}>
+                        {new Intl.DateTimeFormat('es-CL', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          timeZone: 'UTC',
+                        }).format(new Date(`${item.published_on}T12:00:00Z`))}
+                      </time>
+                      <h3 id={`news-title-${item.id}`}>{item.title}</h3>
+                      <p>{item.summary}</p>
+                      <span className={styles.read}>
                         Leer en español <ArrowRight size={16} aria-hidden="true" />
                       </span>
                     </div>
                   </Link>
-                  <div className={styles.newsCardText}>
-                    <time dateTime={item.published_on}>
-                      {new Intl.DateTimeFormat('es-CL', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                        timeZone: 'UTC',
-                      }).format(new Date(`${item.published_on}T12:00:00Z`))}
-                    </time>
-                    <p>{item.summary}</p>
-                  </div>
                 </article>
               ))}
             </div>

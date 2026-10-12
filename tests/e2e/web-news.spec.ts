@@ -83,6 +83,30 @@ test('Noticias: pestañas por comunidad, galería TCG con filtros y lectura inte
   );
   await page.getByRole('button', { name: 'Yu-Gi-Oh! TCG', exact: true }).click();
   await expect(world).toContainText(initialWebNews[0].summary);
+  // The banner stays complete; the controls share rows and article titles never cover artwork.
+  const sectionsBox = await page
+    .getByRole('navigation', { name: 'Secciones de noticias' })
+    .boundingBox();
+  const banlistsBox = await page
+    .getByRole('group', { name: 'Herramientas de noticias' })
+    .boundingBox();
+  expect(Math.abs(sectionsBox!.y - banlistsBox!.y)).toBeLessThan(5);
+  const filtersBox = await world
+    .getByRole('group', { name: 'Categoría de noticias TCG' })
+    .boundingBox();
+  const searchBox = await world.getByRole('searchbox').boundingBox();
+  expect(Math.abs(filtersBox!.y - searchBox!.y)).toBeLessThan(5);
+  for (const card of await world.locator('article').all()) {
+    const headingBox = await card.getByRole('heading', { level: 3 }).boundingBox();
+    const coverBox = await card.locator('[data-category]').boundingBox();
+    expect(headingBox!.y).toBeGreaterThanOrEqual(coverBox!.y + coverBox!.height);
+    expect((await card.boundingBox())!.height).toBeLessThan(430);
+    for (const image of await card.locator('[data-category] > img').all()) {
+      const imageBox = await image.boundingBox();
+      expect(imageBox!.height).toBeLessThanOrEqual(coverBox!.height + 1);
+      expect(imageBox!.y).toBeGreaterThanOrEqual(coverBox!.y);
+    }
+  }
   await expect(world.getByRole('link', { name: /Beyond the Brave/ })).toHaveAttribute(
     'href',
     '/noticias/beyond-the-brave',
@@ -98,6 +122,9 @@ test('Noticias: pestañas por comunidad, galería TCG con filtros y lectura inte
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(own).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const mobileTitle = await world.getByRole('heading', { level: 3 }).boundingBox();
+  const mobileCover = await world.locator('[data-category]').boundingBox();
+  expect(mobileTitle!.y).toBeGreaterThanOrEqual(mobileCover!.y + mobileCover!.height);
   expect(external).toEqual([]);
   await world.getByRole('link', { name: /Nuevas cartas reveladas/ }).click();
   await expect(

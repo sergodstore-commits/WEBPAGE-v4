@@ -201,36 +201,47 @@ export function News() {
           .map((asset) => asset.url)
           .slice(0, 1)}
       />
-      <div className={styles.globalTools} role="group" aria-label="Herramientas de noticias">
-        <span>Noticias de la tienda y los juegos</span>
-        <button
-          type="button"
-          aria-expanded={showBanlists}
-          aria-controls="global-banlists"
-          onClick={toggleBanlists}
-        >
-          <ListChecks size={20} aria-hidden="true" />
-          Banlists
-          <small>Los 3 formatos</small>
-        </button>
+      <div className={styles.newsNavigation}>
+        <nav className={styles.sectionTabs} aria-label="Secciones de noticias">
+          {sections.map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={active === id}
+              onClick={() => navigate(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+        <div className={styles.globalTools} role="group" aria-label="Herramientas de noticias">
+          <button
+            type="button"
+            aria-expanded={showBanlists}
+            aria-controls="global-banlists"
+            onClick={toggleBanlists}
+          >
+            <ListChecks size={20} aria-hidden="true" />
+            Banlists
+            <small>Los 3 formatos</small>
+          </button>
+        </div>
       </div>
       <div id="global-banlists" hidden={!showBanlists} className={styles.banlistsSlot}>
         {showBanlists && <NewsBanlist />}
       </div>
-      <nav className={styles.sectionTabs} aria-label="Secciones de noticias">
-        {sections.map(([id, label]) => (
-          <button key={id} type="button" aria-pressed={active === id} onClick={() => navigate(id)}>
-            {label}
-          </button>
-        ))}
-      </nav>
       <div className={styles.columns}>
         {active === 'yugioh' && <WebNewsColumn key={active} />}
         {active === 'sergod' && (
           <section className={styles.storeNews} aria-labelledby="store-news-heading">
-            <h2 id="store-news-heading" className={styles.storeHeading}>
-              SERGOD STORE
-            </h2>
+            <div className={styles.heading}>
+              <h2 id="store-news-heading">SERGOD STORE</h2>
+              {!remote.loading && !remote.error && (
+                <span>
+                  {list.length} {list.length === 1 ? 'publicación' : 'publicaciones'}
+                </span>
+              )}
+            </div>
             {remote.loading ? (
               <Loading />
             ) : remote.error ? (
@@ -322,15 +333,7 @@ export function News() {
                   </dialog>
                 )}
                 {list.length > 0 && (
-                  <section className={styles.archive} aria-labelledby="news-archive-heading">
-                    <div className={styles.heading}>
-                      <div>
-                        <h2 id="news-archive-heading">Publicaciones</h2>
-                      </div>
-                      <span>
-                        {list.length} {list.length === 1 ? 'publicación' : 'publicaciones'}
-                      </span>
-                    </div>
+                  <div className={styles.archive}>
                     <div className={styles.grid}>
                       {list.slice(0, limit).map((p) => (
                         <button
@@ -383,7 +386,7 @@ export function News() {
                         Ver más noticias
                       </button>
                     )}
-                  </section>
+                  </div>
                 )}
               </>
             )}

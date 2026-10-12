@@ -57,7 +57,7 @@ Barra superior de Noticias: título y acceso global «Banlists» con icono, fuer
 
 En las secciones de juegos, la línea editorial solicitada pasa a Revelaciones y contenido de productos. Banlist es una herramienta separada. Implementado el 12 de octubre: las búsquedas TCG y MyL limitan los candidatos a esos temas, conservando fechas originales, caché y selección manual. Se invalidan cachés de reglas anteriores antes de preparar novedades; los artículos históricos siguen editables. La verificación de fuentes reales encontró 24 candidatos TCG y 16 MyL en la consulta del día, sin descargar imágenes. Los detalles y límites están en `ESTRUCTURA-CONTENIDO.md`.
 
-Recomendación: tarjetas de noticia de altura comparable, resumen breve, fecha original, formato y acceso a lectura. Quitar el gran contenedor exterior de toda la cuadrícula y conservar bordes sutiles solo en cada artículo. El editor debe mostrar destino público y estado real de preparación/publicación.
+Composición implementada: banner completo, navegación de juegos y acceso global a Banlists en una misma barra cuando hay espacio. Se retiraron los contenedores exteriores de las cuadrículas y los subtítulos repetidos. Los filtros y el buscador comparten fila en escritorio; las tarjetas conservan bordes sutiles, imagen completa, fecha original, título debajo de la imagen, resumen de dos líneas y acceso a lectura. La cuadrícula usa dos columnas en escritorio y una en móvil. Instagram mantiene miniaturas compactas y abre el contenido completo solo al seleccionar una publicación. No se añaden imágenes, descargas, servicios ni datos almacenados para este ajuste.
 
 ## Torneos y transmisión
 
@@ -90,7 +90,7 @@ Ligas y banlists mantienen flujos propios: importar un torneo no equivale a incl
 
 ## Secuencia de ejecución
 
-Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados), junto con los desempates y puestos únicos de las tres ligas. También se implementó la biblioteca compartida MyL para cuatro referencias oficiales, con cobertura explícita, contenido por presentación y actualización administrativa. Se separó el acceso global a Banlists en Noticias y se ajustó la selección editorial de novedades. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. Sigue compactar la composición de Noticias y dar prioridad al directo de Torneos.
+Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados), junto con los desempates y puestos únicos de las tres ligas. También se implementó la biblioteca compartida MyL para cuatro referencias oficiales, con cobertura explícita, contenido por presentación y actualización administrativa. Se separó el acceso global a Banlists en Noticias, se ajustó la selección editorial de novedades y se compactó la composición pública. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. Sigue dar prioridad al directo de Torneos.
 
 1. Corregir fechas y acordar desempates: afectan al orden real y a la confianza en resultados.
 2. Definir la biblioteca compartida y los destinos administrativos, antes de añadir más importadores.
