@@ -49,6 +49,8 @@ Tienda abre con lanzamientos recientes primero; Preventas, con los más cercanos
 
 Se verificaron siete ediciones con las [fuentes oficiales registradas](../data/catalogs/release-dates-2026-10.json). Yu-Gi-Oh! utiliza el lanzamiento general TCG de América; MyL, el lanzamiento oficial de Chile. Se corrigieron 21 productos publicados y cinco borradores relacionados, además de la guía de Chaos Origins. Los accesorios sin fecha verificada permanecen sin fecha. Precios, stock, reservas, imágenes, estado y condiciones de preventa se comprobaron sin cambios.
 
+En la revisión pública posterior se corrigió también el año escrito en las condiciones de entrega de los dos displays Immortal Phoenix: enero de 2027, en lugar de 2026. Se conservaron el día, la modalidad y el resto de sus condiciones.
+
 Una presentación nueva sin fecha puede heredar la única fecha conocida de su grupo. Si hay fechas distintas, se deja sin fecha para revisión; una fecha explícita por idioma o región tiene prioridad. No modifica automáticamente otras presentaciones existentes. La validación impide lanzar una preventa antes del cierre de sus reservas. Las fechas de producto se entregan como día de calendario, sin convertirlas en instantes que puedan cambiar de día según el servidor. Las tres ediciones YGO verificadas también conservan su fecha oficial al volver a preparar sus guías.
 
 ## Administración: revisión y fuentes
