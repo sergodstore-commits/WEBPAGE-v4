@@ -168,3 +168,17 @@
     padding: 12px;
   }
 }
+
+.libraryTable td:first-child {
+  min-width: 150px;
+}
+.libraryTable td:last-child {
+  min-width: 170px;
+}
+.libraryTable td a {
+  display: block;
+  margin-top: 8px;
+}
+.libraryTable td button {
+  margin-bottom: 6px;
+}

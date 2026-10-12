@@ -286,7 +286,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
             <strong>Revisar y publicar</strong>
             <small>
               {items
-                ? `${items.filter((i) => !i.visible).length} borradores · ${items.filter((i) => i.visible).length} publicadas`
+                ? `${items.filter((i) => !i.visible).length} ${items.filter((i) => !i.visible).length === 1 ? 'borrador' : 'borradores'} · ${items.filter((i) => i.visible).length} ${items.filter((i) => i.visible).length === 1 ? 'publicada' : 'publicadas'}`
                 : 'Cargando noticias guardadas…'}
             </small>
           </button>
@@ -788,7 +788,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
               {savedItems.length}{' '}
               {savedItems.length === 1 ? 'noticia encontrada' : 'noticias encontradas'}
             </p>
-            <div className="admin-table-scroll" style={{ marginTop: 20 }}>
+            <div className={`admin-table-scroll ${styles.libraryTable}`} style={{ marginTop: 20 }}>
               <table className="admin-table">
                 <thead>
                   <tr>
