@@ -106,6 +106,7 @@ test('MyL: filtro por formato, contenido fijo, sobres, reservas, imagen ampliada
   await expect(
     page.getByRole('button', { name: 'Ver carta MyL: Sobek', exact: true }),
   ).toBeVisible();
+  await expect(page.getByText('1 promoción disponible', { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByLabel('Contenido del producto', { exact: true })).toHaveValue('amanecer');
   await expect(page.getByRole('button', { name: /^Ver carta MyL:/ })).toHaveCount(12);

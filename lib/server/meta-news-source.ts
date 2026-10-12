@@ -261,8 +261,8 @@ export async function archiveMetaNewsCover(value: string, scope?: 'myl-library')
   try {
     const info = await sharp(input, { limitInputPixels: 24_000_000 }).metadata();
     if (!['jpeg', 'png', 'webp', 'avif'].includes(info.format || '')) throw Error();
-    for (const width of scope ? [700, 640, 600] : [960, 800, 640, 480]) {
-      for (const quality of scope ? [68, 60, 54] : [78, 64, 48, 44]) {
+    for (const width of scope ? [700, 640, 600, 540, 480] : [960, 800, 640, 480]) {
+      for (const quality of scope ? [68, 60, 54, 44] : [78, 64, 48, 44]) {
         output = await sharp(input, { limitInputPixels: 24_000_000 })
           .rotate()
           .resize(width, width * 1.5, { fit: 'inside', withoutEnlargement: true })

@@ -150,7 +150,9 @@ export function MylLibraryArticle({ code, preview = false }: { code: string; pre
             </h2>
           </div>
           <span role="status">
-            {available} de {expected} cartas mostradas por la fuente
+            {role === 'reserve'
+              ? `${cards.length} ${cards.length === 1 ? 'promoción disponible' : 'promociones disponibles'}`
+              : `${available} de ${expected} cartas mostradas por la fuente`}
           </span>
         </div>
         <div className={styles.filters}>
@@ -179,7 +181,8 @@ export function MylLibraryArticle({ code, preview = false }: { code: string; pre
             : 'Pulsa una carta para ampliar la imagen y leer su habilidad en español. Si la fuente no publica el nombre como texto, se conserva su código de referencia.'}
         </p>
         <p role="status" className={own.notice}>
-          {cards.length} resultados{cards.length > limit ? ` · mostrando ${limit}` : ''}
+          {cards.length} {cards.length === 1 ? 'resultado' : 'resultados'}
+          {cards.length > limit ? ` · mostrando ${limit}` : ''}
         </p>
         <div className={styles.grid}>
           {cards.slice(0, limit).map((card) => (
