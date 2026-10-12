@@ -172,7 +172,8 @@ test('Noticias: temas persistentes, fechas originales y formatos separados', asy
   await page.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
   const block = page.getByRole('region', { name: 'MyL Primer Bloque', exact: true });
   await expect(block.locator('article h3')).toHaveText(['Torneo Primer Bloque']);
-  await expect(block.getByRole('button', { name: 'Banlist', exact: true })).toBeVisible();
+  await expect(block.getByRole('button', { name: /Banlist/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Banlists/ })).toBeVisible();
   await page.goto('/noticias?seccion=myl-first-block&categoria=desconocida');
   await expect(block.getByRole('button', { name: 'Todas', exact: true })).toHaveAttribute(
     'aria-pressed',
@@ -278,8 +279,9 @@ test('MyL: pestañas separadas, banlist y vigencia dentro de la noticia', async 
   const era = page.getByRole('region', { name: 'MyL Primera Era', exact: true });
   await expect(era.getByRole('link', { name: /Cambios revisados/ })).toHaveCount(0);
   await expect(era.getByRole('link', { name: /Beyond the Brave/ })).toHaveCount(0);
-  await era.getByRole('button', { name: 'Banlist', exact: true }).click();
-  await expect(era.getByRole('region', { name: 'Banlist por formato' })).toBeVisible();
+  await page.getByRole('button', { name: /Banlists/ }).click();
+  await expect(era.getByRole('region', { name: 'Banlist por formato' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Banlist por formato' })).toBeVisible();
   await page.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
   const block = page.getByRole('region', { name: 'MyL Primer Bloque', exact: true });
   await expectReadable(page);

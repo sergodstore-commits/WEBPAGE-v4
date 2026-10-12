@@ -12,6 +12,56 @@
   gap: 56px;
   align-items: start;
 }
+.globalTools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 20px;
+  color: var(--sg-muted);
+  font-size: 13px;
+}
+.globalTools button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid var(--sg-line);
+  border-radius: 12px;
+  background: var(--sg-surface-soft);
+  color: var(--sg-link);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.globalTools button small {
+  color: var(--sg-muted);
+  font-weight: 400;
+}
+.globalTools button:hover,
+.globalTools button[aria-expanded='true'] {
+  border-color: var(--sg-link);
+  background: var(--sg-surface);
+}
+.globalTools button:focus-visible {
+  outline: 2px solid var(--sg-link);
+  outline-offset: 4px;
+}
+.banlistsSlot:not([hidden]) {
+  margin-bottom: 24px;
+}
+@media (max-width: 600px) {
+  .globalTools {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .globalTools button {
+    width: 100%;
+  }
+}
 .storeNews,
 .worldNews {
   min-width: 0;

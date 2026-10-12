@@ -54,10 +54,34 @@ test('Noticias: Banlist directa, formatos, búsqueda MyL, imágenes y acceso mó
   await expect(page.getByRole('button', { name: 'Actualidad', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Torneos', exact: true })).toHaveCount(0);
   expect(tcgRequests + mylRequests).toBe(0);
-  await page.getByRole('button', { name: 'Banlist', exact: true }).click();
-  await expect(page).toHaveURL(/categoria=banlist/);
+  const access = page.getByRole('button', { name: 'Banlists', exact: false });
+  await expect(access).toHaveCount(1);
+  await expect(access).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('button', { name: 'SERGOD STORE', exact: true }).click();
+  await access.click();
+  await expect(page).toHaveURL(/vista=banlists/);
   const hub = page.getByRole('region', { name: 'Banlist por formato' });
   await expect(hub).toBeVisible();
+  expect(tcgRequests + mylRequests).toBe(0);
+  await page.getByRole('button', { name: 'MyL Primera Era', exact: true }).click();
+  await expect(hub).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', { name: 'MyL Primera Era', exact: true })
+      .getByRole('button', { name: /Banlist/ }),
+  ).toHaveCount(0);
+  await page.reload();
+  await expect(hub).toBeVisible();
+  await page.getByRole('button', { name: 'Revelaciones', exact: true }).click();
+  await expect(hub).toBeVisible();
+  await access.click();
+  await expect(page).toHaveURL(/categoria=reveals/);
+  await expect(hub).toHaveCount(0);
+  await page.goBack();
+  await expect(hub).toBeVisible();
+  await page.goForward();
+  await expect(hub).toHaveCount(0);
+  await access.click();
   const tcg = hub.getByRole('button', { name: /Yu-Gi-Oh! TCG/ });
   await tcg.click();
   await expect(page.getByRole('dialog', { name: 'Banlist Yu-Gi-Oh!' })).toBeVisible();

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Camera, Newspaper, Play, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Camera, ListChecks, Newspaper, Play, X } from 'lucide-react';
 import { date } from '@/lib/client';
 import type { NewsAsset, NewsItem } from '@/lib/news';
 import { instagramEmbedUrl } from '@/lib/news';
@@ -10,6 +10,7 @@ import { useRemote, Loading, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './News.module.css';
 import { WebNewsColumn } from './WebNewsColumn';
+import { NewsBanlist } from './NewsBanlist';
 
 export function NewsMedia({ assets, permalink = '' }: { assets: NewsAsset[]; permalink?: string }) {
   const [index, setIndex] = useState(0),
@@ -155,6 +156,7 @@ export function News() {
     ['myl-first-block', 'MyL Primer Bloque'],
   ] as const;
   const requested = params.get('seccion');
+  const showBanlists = params.get('vista') === 'banlists' || params.get('categoria') === 'banlist';
   const active = selected
     ? 'sergod'
     : sections.some(([id]) => id === requested)
@@ -162,6 +164,7 @@ export function News() {
       : 'yugioh';
   function navigate(section: string, publication?: string) {
     const query = new URLSearchParams({ seccion: section });
+    if (showBanlists && !publication) query.set('vista', 'banlists');
     if (publication) query.set('publicacion', publication);
     router.push(`/noticias?${query}`, { scroll: false });
   }
@@ -180,6 +183,14 @@ export function News() {
   function choose(id: string) {
     navigate('sergod', id);
   }
+  function toggleBanlists() {
+    const query = new URLSearchParams(params.toString());
+    query.delete('publicacion');
+    if (query.get('categoria') === 'banlist') query.delete('categoria');
+    if (showBanlists) query.delete('vista');
+    else query.set('vista', 'banlists');
+    router.push(`/noticias${query.size ? `?${query}` : ''}`, { scroll: false });
+  }
   return (
     <div className={`store-page ${styles.page}`}>
       <SectionHeader
@@ -190,6 +201,22 @@ export function News() {
           .map((asset) => asset.url)
           .slice(0, 1)}
       />
+      <div className={styles.globalTools} role="group" aria-label="Herramientas de noticias">
+        <span>Noticias de la tienda y los juegos</span>
+        <button
+          type="button"
+          aria-expanded={showBanlists}
+          aria-controls="global-banlists"
+          onClick={toggleBanlists}
+        >
+          <ListChecks size={20} aria-hidden="true" />
+          Banlists
+          <small>Los 3 formatos</small>
+        </button>
+      </div>
+      <div id="global-banlists" hidden={!showBanlists} className={styles.banlistsSlot}>
+        {showBanlists && <NewsBanlist />}
+      </div>
       <nav className={styles.sectionTabs} aria-label="Secciones de noticias">
         {sections.map(([id, label]) => (
           <button key={id} type="button" aria-pressed={active === id} onClick={() => navigate(id)}>
