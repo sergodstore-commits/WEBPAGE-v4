@@ -354,6 +354,7 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
   );
   await page.goto('/admin/noticias');
   const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh! y MyL', exact: true });
+  await section.getByRole('button', { name: /Buscar y preparar/ }).click();
   await section.getByRole('button', { name: 'Buscar novedades MyL', exact: true }).click();
   await expect(section.getByRole('region', { name: 'Noticias MyL disponibles' })).toContainText(
     candidate.title,
@@ -415,4 +416,99 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
   await expect(page.getByRole('navigation', { name: 'Herramientas de contenido' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.data/admin-news-workspace-mobile.png', fullPage: true });
+});
+
+test('Admin: biblioteca separada de fuentes, filtros, historial y herramientas bajo demanda', async ({
+  page,
+}) => {
+  const login = await page.request.post('/api/auth/login', {
+    headers: { Origin: 'http://localhost:3100' },
+    data: { email: 'e2e@example.test', password: 'E2e-Prueba-Sergod-2026!' },
+  });
+  expect(login.ok()).toBeTruthy();
+  const items = [
+    {
+      id: 'workflow-tcg',
+      title: 'Nueva edición TCG',
+      summary: 'Cartas de prueba',
+      body: 'Texto revisado',
+      url: 'https://www.yugiohmeta.com/articles/test-workflow',
+      published_on: '2026-10-10',
+      category: 'news',
+      boards: ['yugioh'],
+      visible: false,
+      media_checked: true,
+    },
+    {
+      id: 'workflow-myl',
+      title: 'Liga Primera Era',
+      summary: 'Noticias de MyL',
+      body: 'Texto original español',
+      url: 'https://blog.myl.cl/test-workflow/',
+      published_on: '2026-10-09',
+      category: 'news',
+      boards: ['myl-first-era'],
+      visible: true,
+      media_checked: true,
+    },
+  ];
+  const requests: string[] = [];
+  await page.route('**/api/admin/news/web-sources', (route) => route.fulfill({ json: items }));
+  await page.route('**/api/admin/news/editions', (route) => {
+    requests.push('editions');
+    return route.fulfill({
+      json: { editions: [], discoveries: [], storage_bytes: 0, storage_limit: 15000000 },
+    });
+  });
+  await page.route('**/api/admin/news/banlist', (route) => {
+    requests.push('banlist');
+    return route.fulfill({
+      json: { state: null, ready: 0, total: 0, storage_bytes: 0, storage_limit: 15000000 },
+    });
+  });
+  await page.route('**/api/admin/integrations/instagram', (route) => {
+    requests.push('instagram');
+    return route.fulfill({ json: { configured: false, connected: false } });
+  });
+  await page.goto('/admin/noticias');
+  const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh! y MyL', exact: true });
+  await expect(section.getByRole('row').filter({ hasText: 'Nueva edición TCG' })).toBeVisible();
+  expect(requests).toEqual([]);
+  await expect(
+    section.getByRole('button', { name: 'Buscar novedades TCG', exact: true }),
+  ).not.toBeVisible();
+  await section
+    .getByRole('combobox', { name: 'Juego o formato', exact: true })
+    .selectOption('myl-first-era');
+  await expect(section.getByRole('row').filter({ hasText: 'Nueva edición TCG' })).toHaveCount(0);
+  await expect(section.getByRole('row').filter({ hasText: 'Liga Primera Era' })).toBeVisible();
+  await section.getByLabel('Buscar noticias guardadas', { exact: true }).fill('sin coincidencias');
+  await expect(section).toContainText('No hay noticias con estos filtros');
+  await section.getByLabel('Buscar noticias guardadas', { exact: true }).fill('');
+  await section.getByRole('combobox', { name: 'Juego o formato', exact: true }).selectOption('all');
+  await section
+    .getByRole('row')
+    .filter({ hasText: 'Nueva edición TCG' })
+    .getByRole('button', { name: 'Editar', exact: true })
+    .click();
+  await section.getByLabel('Título en español', { exact: true }).fill('Borrador sin perder');
+  const tools = page.getByRole('navigation', { name: 'Herramientas de contenido', exact: true });
+  await tools.getByRole('button', { name: 'Guías de cartas' }).click();
+  await expect(page.getByRole('heading', { name: 'Guías de nuevas ediciones' })).toBeVisible();
+  expect(requests).toEqual(['editions']);
+  await tools.getByRole('button', { name: 'Noticias web' }).click();
+  await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
+    'Borrador sin perder',
+  );
+  await section.getByRole('button', { name: /Buscar y preparar/ }).click();
+  await expect(page).toHaveURL(/paso=fuentes/);
+  await expect(
+    section.getByRole('button', { name: 'Buscar novedades TCG', exact: true }),
+  ).toBeVisible();
+  await page.goBack();
+  await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
+    'Borrador sin perder',
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

@@ -11,7 +11,7 @@ Esta pauta continúa las mejoras visuales, sin animaciones de banners. Los núme
 | 5     | Conectar noticias, ediciones y productos | Completado: guías y noticias relacionadas → cartas y productos; explorador → guía y productos. Cada presentación conserva su ficha, precio e idioma.                                 | Sol 6.1 / Alto                    |
 | 6     | Torneos con una entrada más útil         | Completado: seis próximas fechas antes del calendario, accesos a transmisión, grabaciones y resultados de liga; detalle con datos y descripción del evento.                          | Sol 6.1 / Medio                   |
 | 7     | Tienda por decisiones de compra          | Completado: juego/línea → presentación, con contadores y filtros conservados en la URL; cada SKU conserva su tarjeta, precio y disponibilidad.                                       | Sol 6.1 / Medio                   |
-| 8     | Administración por contenido             | Pendiente: fuentes/actualizaciones separadas de revisión/publicación, progreso claro; ligas en su propia área.                                                                       | Sol 6.1 / Alto                    |
+| 8     | Administración por contenido             | Completado: biblioteca de noticias separada de consulta de fuentes; filtros por juego, estado y búsqueda; herramientas bajo demanda, con ligas en su propia área.                    | Sol 6.1 / Alto                    |
 
 No contratar servicios ni duplicar imágenes por cambiar la organización. Los modelos son recomendaciones de trabajo, no cambios automáticos en la aplicación.
 
@@ -42,3 +42,11 @@ Cada tarjeta abre la ficha del evento, donde fecha, hora, lugar y precio se dist
 Primero se elige el juego o línea; después la presentación. Las opciones muestran el número de artículos del grupo, antes de aplicar búsqueda, precio o disponibilidad. Los formatos sin artículos se omiten, salvo si están seleccionados mediante un enlace. Cambiar de juego conserva una presentación compatible o la limpia si no existe en el nuevo grupo. `presentacion` se conserva al recargar y se elimina con Limpiar filtros. Los enlaces anteriores con `categoria` siguen funcionando.
 
 La clasificación da prioridad a Formato/Presentación en opciones o especificaciones; después utiliza el nombre y la categoría. Nunca interpreta las descripciones, donde pueden mencionarse otros productos. Los productos sin formato reconocido quedan en Otros productos y siguen visibles en el catálogo completo. No se agrupan idiomas, sobres, displays ni token box. Se mantiene el orden por fecha de lanzamiento; no hay consultas nuevas ni imágenes duplicadas.
+
+## Administración: revisión y fuentes
+
+Noticias web abre en Revisar y publicar: muestra los borradores y artículos publicados, con búsqueda por título/resumen, juego/formato y estado. Buscar y preparar conserva la consulta a Yu-Gi-Oh! Meta y MyL en otra vista; preparar abre automáticamente el borrador para revisarlo. La preparación y la publicación mantienen sus verificaciones existentes, mensajes de error y confirmación pública. MyL no necesita traducción; la traducción TCG conserva sus límites gratuitos actuales.
+
+La vista de fuentes se enlaza con `paso=fuentes`; cada herramienta con `herramienta`. El historial permite volver entre vistas. Las herramientas se montan solo al abrirlas por primera vez y permanecen montadas para conservar ediciones y resultados al cambiar de sección. Mientras una herramienta prepara o guarda contenido, sus botones de navegación se deshabilitan. El progreso y Pausar preparación permanecen visibles también al preparar imágenes desde una noticia guardada. Recargar la página descarta las ediciones todavía sin guardar; los borradores guardados se conservan en el servidor.
+
+Instagram mantiene su selección y su biblioteca guardada; Guías y Banlist conservan sus procesos independientes. Los accesos a ligas, contenido manual y Noticias públicas están arriba del espacio de trabajo. Esta organización no crea tablas, descargas ni servicios externos adicionales; evita cargar guías, banlist y conexión de Instagram al entrar solo a Noticias web.

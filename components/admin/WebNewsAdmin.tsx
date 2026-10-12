@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/client';
 import {
   newsArticle,
@@ -30,13 +31,26 @@ const blank = (): WebNewsItem => ({
   body: '',
 });
 
-export function WebNewsAdmin() {
+export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) => void } = {}) {
+  const query = useSearchParams();
+  const stage = query.get('paso') === 'fuentes' ? 'sources' : 'review';
+  function chooseStage(next: 'sources' | 'review') {
+    const url = new URL(window.location.href);
+    if (next === 'sources') url.searchParams.set('paso', 'fuentes');
+    else url.searchParams.delete('paso');
+    window.history.pushState(null, '', url);
+  }
+  const [boardFilter, setBoardFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [items, setItems] = useState<WebNewsItem[] | null>(null);
   const [draft, setDraft] = useState(blank);
   const editions = useRemote<EditionChoice[]>(
     draft.id && !mylArticle(draft.url) ? '/community/editions' : null,
   );
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    onBusyChange?.(Boolean(busy));
+  }, [busy, onBusyChange]);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [translate, setTranslate] = useState(true);
@@ -194,10 +208,12 @@ export function WebNewsAdmin() {
       savedDraft = saved.find((item) => item.id === candidate.id);
       const prepared = await prepareImages(candidate.id);
       setDraft({ ...(prepared || saved).find((i) => i.id === candidate.id)! });
+      chooseStage('review');
       editor.current?.scrollIntoView({ block: 'center' });
     } catch (e) {
       if (savedDraft) setDraft({ ...savedDraft });
       else editCandidate(candidate);
+      chooseStage('review');
       setError(e instanceof Error ? e.message : 'No pudimos preparar la noticia.');
     } finally {
       setBusy(false);
@@ -236,6 +252,17 @@ export function WebNewsAdmin() {
       setWorkingId('');
     }
   }
+  const savedItems = (items || [])
+    .filter(
+      (item) =>
+        (filter === 'all' || item.visible === (filter === 'published')) &&
+        (boardFilter === 'all' ||
+          (item.boards || ['yugioh']).includes(boardFilter as keyof typeof newsBoards)) &&
+        `${item.title} ${item.summary}`
+          .toLocaleLowerCase('es')
+          .includes(search.trim().toLocaleLowerCase('es')),
+    )
+    .sort((a, b) => b.published_on.localeCompare(a.published_on));
   function articlePath(item: WebNewsItem) {
     return item.id === 'beyond-the-brave'
       ? '/noticias/beyond-the-brave'
@@ -249,106 +276,129 @@ export function WebNewsAdmin() {
           Yu-Gi-Oh! solo TCG; MyL Primera Era, Primer Bloque y banlist. Busca novedades y decide qué
           aparece en Noticias. Cada noticia se guarda por separado.
         </p>
-        <div className={styles.workflow}>
-          <strong>1. Buscar → 2. Preparar y revisar → 3. Publicar noticia</strong>
+        <nav className={styles.stages} aria-label="Flujo de noticias web">
+          <button
+            type="button"
+            aria-pressed={stage === 'review'}
+            disabled={busy}
+            onClick={() => chooseStage('review')}
+          >
+            <strong>Revisar y publicar</strong>
+            <small>
+              {items
+                ? `${items.filter((i) => !i.visible).length} borradores · ${items.filter((i) => i.visible).length} publicadas`
+                : 'Cargando noticias guardadas…'}
+            </small>
+          </button>
+          <button
+            type="button"
+            aria-pressed={stage === 'sources'}
+            disabled={busy}
+            onClick={() => chooseStage('sources')}
+          >
+            <strong>Buscar y preparar</strong>
+            <small>Consultar fuentes y crear borradores</small>
+          </button>
+        </nav>
+        <div hidden={stage !== 'sources'}>
+          <div className={styles.workflow}>
+            <strong>1. Buscar → 2. Preparar y revisar → 3. Publicar noticia</strong>
+            <p>
+              Preparar guarda una nota breve con el título y resumen de la fuente y descarga sus
+              imágenes. No publica nada.
+            </p>
+            <label className="admin-check">
+              <input
+                type="checkbox"
+                checked={translate}
+                disabled={busy}
+                onChange={(e) => setTranslate(e.target.checked)}
+              />{' '}
+              Traducir notas TCG al español al preparar
+            </label>
+            <small>
+              {' '}
+              MyMemory gratuito: cuota externa de 5.000 caracteres/día, compartida por la conexión
+              del servidor. Solo se envían título y resumen públicos. Revisa nombres y traducción;
+              no traduce efectos oficiales ni redacta artículos completos. MyL ya viene en español.
+            </small>
+          </div>
           <p>
-            Preparar guarda una nota breve con el título y resumen de la fuente y descarga sus
-            imágenes. No publica nada.
-          </p>
-          <label className="admin-check">
-            <input
-              type="checkbox"
-              checked={translate}
-              disabled={busy}
-              onChange={(e) => setTranslate(e.target.checked)}
-            />{' '}
-            Traducir notas TCG al español al preparar
-          </label>
-          <small>
-            {' '}
-            MyMemory gratuito: cuota externa de 5.000 caracteres/día, compartida por la conexión del
-            servidor. Solo se envían título y resumen públicos. Revisa nombres y traducción; no
-            traduce efectos oficiales ni redacta artículos completos. MyL ya viene en español.
-          </small>
-        </div>
-        <p>
-          <button className="admin-button" disabled={busy} onClick={() => void review()}>
-            Buscar novedades TCG
-          </button>{' '}
-          <button className="admin-button" disabled={busy} onClick={() => void review('myl')}>
-            Buscar novedades MyL
-          </button>{' '}
-          <a
-            href="https://www.yugiohmeta.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="admin-button secondary"
-          >
-            Consultar Yu-Gi-Oh! Meta ↗
-          </a>
-        </p>
-        {progress && (
-          <p role="status">
-            {progress}{' '}
-            <button
-              type="button"
+            <button className="admin-button" disabled={busy} onClick={() => void review()}>
+              Buscar novedades TCG
+            </button>{' '}
+            <button className="admin-button" disabled={busy} onClick={() => void review('myl')}>
+              Buscar novedades MyL
+            </button>{' '}
+            <a
+              href="https://www.yugiohmeta.com/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="admin-button secondary"
-              onClick={() => {
-                stop.current = true;
-              }}
             >
-              Pausar preparación
-            </button>
+              Consultar Yu-Gi-Oh! Meta ↗
+            </a>
           </p>
-        )}
-        {candidates.length > 0 && (
-          <section
-            aria-label={`Noticias ${candidates.some((c) => c.boards?.some((b) => b !== 'yugioh')) ? 'MyL' : 'TCG'} disponibles`}
-            className="admin-table-scroll"
-            style={{ maxHeight: 460, overflow: 'auto' }}
-          >
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Fuente · novedades</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidates.map((candidate) => (
-                  <tr key={candidate.id}>
-                    <td>
-                      <strong>{candidate.title}</strong>
-                      <p>
-                        {(candidate.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
-                        {webNewsCategories[candidate.category]} · {candidate.published_on}
-                      </p>
-                      <a href={candidate.url} target="_blank" rel="noopener noreferrer">
-                        Consultar original ↗
-                      </a>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="admin-button secondary"
-                        disabled={busy || Boolean(items?.some((i) => i.url === candidate.url))}
-                        onClick={() => void prepareCandidate(candidate)}
-                      >
-                        {items?.some((i) => i.url === candidate.url)
-                          ? 'Ya está en la lista'
-                          : 'Preparar noticia'}
-                      </button>
-                    </td>
+          {candidates.length > 0 && (
+            <section
+              aria-label={`Noticias ${candidates.some((c) => c.boards?.some((b) => b !== 'yugioh')) ? 'MyL' : 'TCG'} disponibles`}
+              className="admin-table-scroll"
+              style={{ maxHeight: 460, overflow: 'auto' }}
+            >
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Fuente · novedades</th>
+                    <th>Acción</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        )}
+                </thead>
+                <tbody>
+                  {candidates.map((candidate) => (
+                    <tr key={candidate.id}>
+                      <td>
+                        <strong>{candidate.title}</strong>
+                        <p>
+                          {(candidate.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
+                          {webNewsCategories[candidate.category]} · {candidate.published_on}
+                        </p>
+                        <a href={candidate.url} target="_blank" rel="noopener noreferrer">
+                          Consultar original ↗
+                        </a>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-button secondary"
+                          disabled={busy || Boolean(items?.some((i) => i.url === candidate.url))}
+                          onClick={() => void prepareCandidate(candidate)}
+                        >
+                          {items?.some((i) => i.url === candidate.url)
+                            ? 'Ya está en la lista'
+                            : 'Preparar noticia'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
+        </div>
         <div ref={feedback} className={styles.feedback}>
           {busy && (
             <p role="status" className="admin-feedback">
               {progress || 'Procesando noticia. Espera la confirmación antes de volver a pulsar.'}
+              {progress && (
+                <button
+                  type="button"
+                  className="admin-button secondary"
+                  onClick={() => {
+                    stop.current = true;
+                  }}
+                >
+                  Pausar preparación
+                </button>
+              )}
             </p>
           )}
           {error && (
@@ -378,7 +428,12 @@ export function WebNewsAdmin() {
         {items === null ? (
           <p>Cargando selección…</p>
         ) : (
-          <>
+          <div hidden={stage !== 'review'}>
+            <h3>Noticias guardadas</h3>
+            <p className="admin-muted">
+              Revisa el contenido y sus imágenes antes de publicar. Buscar novedades solo consulta
+              la fuente; preparar crea un borrador.
+            </p>
             <details open={Boolean(draft.id)} className={styles.editor}>
               <summary>
                 {draft.id ? 'Revisar noticia seleccionada' : 'Crear una noticia manualmente'}
@@ -692,7 +747,30 @@ export function WebNewsAdmin() {
                 </fieldset>
               </form>
             </details>
-            <div className="admin-actions" style={{ marginTop: 20 }}>
+            <div className={styles.libraryFilters}>
+              <label className="admin-field">
+                <span>Buscar noticias guardadas</span>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Título o resumen…"
+                />
+              </label>
+              <label className="admin-field">
+                <span>Juego o formato</span>
+                <select
+                  value={boardFilter}
+                  onChange={(event) => setBoardFilter(event.target.value)}
+                >
+                  <option value="all">Todos los juegos</option>
+                  {Object.entries(newsBoards).map(([id, name]) => (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label className="admin-field">
                 <span>Ver noticias guardadas</span>
                 <select value={filter} onChange={(e) => setFilter(e.target.value)}>
@@ -706,6 +784,10 @@ export function WebNewsAdmin() {
                 </select>
               </label>
             </div>
+            <p role="status">
+              {savedItems.length}{' '}
+              {savedItems.length === 1 ? 'noticia encontrada' : 'noticias encontradas'}
+            </p>
             <div className="admin-table-scroll" style={{ marginTop: 20 }}>
               <table className="admin-table">
                 <thead>
@@ -716,86 +798,88 @@ export function WebNewsAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items
-                    .filter((item) => filter === 'all' || item.visible === (filter === 'published'))
-                    .sort((a, b) => b.published_on.localeCompare(a.published_on))
-                    .map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <span className={styles.status}>
-                            {item.visible ? 'Publicada' : 'Borrador'}
-                          </span>
-                          <button
-                            type={draft.id === item.id && !item.visible ? 'submit' : 'button'}
-                            form={
-                              draft.id === item.id && !item.visible ? 'web-news-editor' : undefined
-                            }
-                            value="publish"
-                            className="admin-button"
-                            disabled={busy || (draft.id === item.id && item.visible)}
-                            onClick={
-                              draft.id === item.id && !item.visible
-                                ? undefined
-                                : () => void publish(item)
-                            }
-                          >
-                            {busy && workingId === item.id
-                              ? 'Procesando noticia…'
-                              : item.visible
-                                ? 'Retirar noticia'
-                                : 'Publicar noticia'}
-                          </button>
-                          {item.visible && (
-                            <a href={articlePath(item)} target="_blank" rel="noopener noreferrer">
-                              Ver publicada ↗
-                            </a>
-                          )}
-                        </td>
-                        <td>
-                          <strong>{item.title}</strong>
-                          <p>{item.summary}</p>
-                          <small>
-                            {(item.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
-                            {webNewsCategories[item.category || 'news']} ·{' '}
-                            {item.media_checked
-                              ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`
-                              : 'Imágenes sin preparar'}
-                          </small>
-                          <a href={item.url} target="_blank" rel="noopener noreferrer">
-                            Ver fuente ↗
+                  {savedItems.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <span className={styles.status}>
+                          {item.visible ? 'Publicada' : 'Borrador'}
+                        </span>
+                        <button
+                          type={draft.id === item.id && !item.visible ? 'submit' : 'button'}
+                          form={
+                            draft.id === item.id && !item.visible ? 'web-news-editor' : undefined
+                          }
+                          value="publish"
+                          className="admin-button"
+                          disabled={busy || (draft.id === item.id && item.visible)}
+                          onClick={
+                            draft.id === item.id && !item.visible
+                              ? undefined
+                              : () => void publish(item)
+                          }
+                        >
+                          {busy && workingId === item.id
+                            ? 'Procesando noticia…'
+                            : item.visible
+                              ? 'Retirar noticia'
+                              : 'Publicar noticia'}
+                        </button>
+                        {item.visible && (
+                          <a href={articlePath(item)} target="_blank" rel="noopener noreferrer">
+                            Ver publicada ↗
                           </a>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="admin-button secondary"
-                            disabled={busy || draft.id === item.id}
-                            onClick={() => void prepareImages(item.id).catch(() => {})}
-                          >
-                            {item.media_checked ? 'Actualizar imágenes' : 'Preparar imágenes'}
-                          </button>{' '}
-                          <button
-                            className="admin-button secondary"
-                            disabled={busy}
-                            onClick={() => {
-                              setDraft({ ...item });
-                              editor.current?.scrollIntoView({ block: 'center' });
-                            }}
-                          >
-                            Editar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                        )}
+                      </td>
+                      <td>
+                        <strong>{item.title}</strong>
+                        <p>{item.summary}</p>
+                        <small>
+                          {(item.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
+                          {webNewsCategories[item.category || 'news']} ·{' '}
+                          {item.media_checked
+                            ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`
+                            : 'Imágenes sin preparar'}
+                        </small>
+                        <a href={item.url} target="_blank" rel="noopener noreferrer">
+                          Ver fuente ↗
+                        </a>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="admin-button secondary"
+                          disabled={busy || draft.id === item.id}
+                          onClick={() => void prepareImages(item.id).catch(() => {})}
+                        >
+                          {item.media_checked ? 'Actualizar imágenes' : 'Preparar imágenes'}
+                        </button>{' '}
+                        <button
+                          className="admin-button secondary"
+                          disabled={busy}
+                          onClick={() => {
+                            setDraft({ ...item });
+                            editor.current?.scrollIntoView({ block: 'center' });
+                          }}
+                        >
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-            {!items.length && <p>No hay artículos seleccionados.</p>}
+            {items.length > 0 && !savedItems.length && (
+              <p>No hay noticias con estos filtros. Cambia el juego, el estado o la búsqueda.</p>
+            )}
+            {!items.length && (
+              <p>No hay noticias guardadas. Abre «Buscar y preparar» para consultar las fuentes.</p>
+            )}
             <p className="admin-muted">
               Preparar y guardar conserva un borrador. Publicar noticia comprueba que aparece en la
               web. Imágenes WebP: presupuesto compartido de 15 MB y máximo 160 KB por archivo.
             </p>
-          </>
+          </div>
         )}
       </section>
     </>

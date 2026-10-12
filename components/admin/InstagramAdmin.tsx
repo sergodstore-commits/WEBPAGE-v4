@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { api, date } from '@/lib/client';
 import type { InstagramCandidate, InstagramStatus, NewsItem } from '@/lib/news';
 import type { Post } from '@/lib/types';
@@ -161,7 +162,8 @@ function NewsEditor({
 export function InstagramIntegration({
   news = false,
   onSaved,
-}: { news?: boolean; onSaved?: () => void } = {}) {
+  onBusyChange,
+}: { news?: boolean; onSaved?: () => void; onBusyChange?: (busy: boolean) => void } = {}) {
   const [status, setStatus] = useState<InstagramStatus | null>(null),
     [candidates, setCandidates] = useState<InstagramCandidate[]>([]),
     [selected, setSelected] = useState<InstagramCandidate | null>(null),
@@ -170,6 +172,9 @@ export function InstagramIntegration({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
   const [known, setKnown] = useState<NewsItem[]>([]),
     [included, setIncluded] = useState<string[]>([]);
   const existing = (p: InstagramCandidate) => known.find((n) => n.media_id === p.media_id);
@@ -526,11 +531,15 @@ export function InstagramIntegration({
   );
 }
 export function InstagramNewsPage() {
-  const [workspace, setWorkspace] = useState('web');
+  const [working, setWorking] = useState(false);
+  const onBusyChange = useCallback((busy: boolean) => setWorking(busy), []);
+  const query = useSearchParams();
+  const tab = query.get('herramienta');
+  const workspace = tab && ['web', 'instagram', 'editions', 'banlist'].includes(tab) ? tab : 'web';
+  const [visited, setVisited] = useState<string[]>([workspace]);
   useEffect(() => {
-    const tab = new URLSearchParams(window.location.search).get('herramienta');
-    if (tab && ['web', 'instagram', 'editions', 'banlist'].includes(tab)) setWorkspace(tab);
-  }, []);
+    setVisited((old) => (old.includes(workspace) ? old : [...old, workspace]));
+  }, [workspace]);
   const [list, setList] = useState<NewsItem[]>([]),
     [selected, setSelected] = useState<NewsItem | null>(null),
     [loading, setLoading] = useState(true),
@@ -540,10 +549,11 @@ export function InstagramNewsPage() {
     setList(await api<NewsItem[]>('/admin/news'));
   }
   useEffect(() => {
+    if (workspace !== 'instagram') return;
     load()
       .catch((e) => setError(message(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [workspace]);
   async function remove(item: NewsItem) {
     if (
       !window.confirm(
@@ -580,11 +590,11 @@ export function InstagramNewsPage() {
             type="button"
             className={styles.tab}
             aria-pressed={workspace === id}
+            disabled={working}
             onClick={() => {
-              setWorkspace(id);
               const url = new URL(window.location.href);
               url.searchParams.set('herramienta', id);
-              window.history.replaceState(null, '', url);
+              window.history.pushState(null, '', url);
             }}
           >
             <strong>{title}</strong>
@@ -592,6 +602,13 @@ export function InstagramNewsPage() {
           </button>
         ))}
       </nav>
+      <div className={styles.shortcuts} aria-label="Otros contenidos">
+        <Link href="/admin/liga">Resultados y ligas →</Link>
+        <Link href="/admin/publicaciones">Contenido manual →</Link>
+        <Link href="/noticias" target="_blank" rel="noopener noreferrer">
+          Ver Noticias en la tienda ↗
+        </Link>
+      </div>
       <details className={styles.inventory}>
         <summary>¿Qué importa cada herramienta?</summary>
         <ul>
@@ -607,7 +624,10 @@ export function InstagramNewsPage() {
             Guías de cartas: obtiene ediciones de YGOPRODeck, efectos oficiales en español de Konami
             y guarda imágenes WebP.
           </li>
-          <li>Banlist TCG: actualiza la lista oficial de Konami y su galería para Comunidad.</li>
+          <li>
+            Banlist TCG: actualiza la lista oficial de Konami y su galería, disponible desde
+            Noticias.
+          </li>
           <li>
             <Link href="/admin/liga">Ligas: resultados de Konami y TOR</Link>. Importa torneos;
             eliges cuáles suman puntos.
@@ -615,21 +635,25 @@ export function InstagramNewsPage() {
         </ul>
       </details>
       <div hidden={workspace !== 'web'}>
-        <WebNewsAdmin />
+        {visited.includes('web') && <WebNewsAdmin onBusyChange={onBusyChange} />}
       </div>
       <div hidden={workspace !== 'editions'}>
-        <EditionImportAdmin />
+        {visited.includes('editions') && <EditionImportAdmin onBusyChange={onBusyChange} />}
       </div>
       <div hidden={workspace !== 'banlist'}>
-        <BanlistAdmin />
+        {visited.includes('banlist') && <BanlistAdmin onBusyChange={onBusyChange} />}
       </div>
       <div hidden={workspace !== 'instagram'}>
-        <InstagramIntegration
-          news
-          onSaved={() => {
-            void load().catch((e) => setError(message(e)));
-          }}
-        />
+        {visited.includes('instagram') && (
+          <InstagramIntegration
+            news
+            onBusyChange={onBusyChange}
+            onSaved={() => {
+              void load().catch((e) => setError(message(e)));
+            }}
+          />
+        )}
+        <h2>Noticias de SERGOD STORE guardadas</h2>
         <p>
           Las publicaciones manuales existentes siguen en{' '}
           <Link

@@ -377,7 +377,7 @@ function DashboardPage() {
               <Newspaper size={20} />
               <span>
                 <strong>Compartir una novedad</strong>
-                <small>Revisa y publica noticias de Instagram</small>
+                <small>Fuentes, borradores y publicaciones</small>
               </span>
               <ChevronRight size={16} />
             </Link>

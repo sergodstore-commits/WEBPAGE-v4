@@ -5,10 +5,15 @@ import type { EditionPanel, EditionSummary } from '@/lib/edition-gallery';
 import styles from './EditionImportAdmin.module.css';
 
 const emptyDraft = { title: '', summary: '', body: '' };
-export function EditionImportAdmin() {
+export function EditionImportAdmin({
+  onBusyChange,
+}: { onBusyChange?: (busy: boolean) => void } = {}) {
   const [panel, setPanel] = useState<EditionPanel | null>(null);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState('');
+  useEffect(() => {
+    onBusyChange?.(Boolean(busy));
+  }, [busy, onBusyChange]);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [draft, setDraft] = useState(emptyDraft);

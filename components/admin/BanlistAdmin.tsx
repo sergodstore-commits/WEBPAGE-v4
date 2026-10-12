@@ -3,11 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import { api, date } from '@/lib/client';
 import { banlistDay, type BanlistPanel } from '@/lib/banlist';
 
-export function BanlistAdmin() {
+export function BanlistAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) => void } = {}) {
   const [panel, setPanel] = useState<BanlistPanel | null>(null);
   const state = panel?.state;
   const stopped = useRef(false);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    onBusyChange?.(Boolean(busy));
+  }, [busy, onBusyChange]);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   async function load() {
