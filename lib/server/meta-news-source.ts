@@ -240,7 +240,7 @@ export async function newsMediaUsage() {
     .filter((item) => item.scope !== 'myl-library')
     .reduce((sum, item) => sum + item.image_bytes, 0);
 }
-export const MYL_LIBRARY_MEDIA_LIMIT = 60_000_000;
+export const MYL_LIBRARY_MEDIA_LIMIT = 75_000_000;
 export async function mylLibraryMediaUsage() {
   return Object.values(await mediaCache())
     .filter((item) => item.scope === 'myl-library')
@@ -296,7 +296,7 @@ export async function archiveMetaNewsCover(value: string, scope?: 'myl-library')
     fail(
       409,
       scope
-        ? 'La biblioteca MyL alcanzó su límite de 60 MB. El avance está guardado; no se contrató almacenamiento.'
+        ? 'La biblioteca MyL alcanzó su límite de 75 MB. El avance está guardado; no se contrató almacenamiento.'
         : 'Noticias alcanzó su límite de 15 MB. El avance está guardado; no se contrató almacenamiento.',
     );
   const digest = hash(url).slice(0, 32);

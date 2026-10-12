@@ -275,7 +275,13 @@ export async function publishMylLibrary(code: string, published: boolean) {
 }
 export async function publicMylLibrary(code: string): Promise<MylLibraryDocument> {
   if (!mylDefinition(code)) fail(404, 'Producto MyL no disponible.');
-  const doc = (await itemFor(code)).published;
+  const doc = (
+    await (
+      await getDb()
+    ).query("SELECT data->'myl_library'->$1->'published' AS document FROM settings WHERE id=1", [
+      code,
+    ])
+  ).rows[0]?.document as MylLibraryDocument | undefined;
   if (!doc) fail(404, 'Esta biblioteca MyL no está publicada.');
   return doc;
 }
