@@ -8,6 +8,7 @@ import {
   webNewsCategories,
   mylArticle,
   newsBoards,
+  newsContentBody,
 } from '@/lib/web-news';
 import { useRemote, Loading } from '../shared';
 import styles from './News.module.css';
@@ -20,6 +21,14 @@ export default function WebNewsArticle({ id }: { id: string }) {
   const [selected, setSelected] = useState<WebNewsMedia | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const item = remote.data;
+  const blocks =
+    item?.content_blocks && item.body?.trim() === newsContentBody(item.content_blocks).trim()
+      ? item.content_blocks
+      : undefined;
+  const openImage = (media: WebNewsMedia) => {
+    setSelected(media);
+    dialog.current?.showModal();
+  };
   return (
     <div className={`store-page ${styles.page}`}>
       <Link
@@ -71,25 +80,64 @@ export default function WebNewsArticle({ id }: { id: string }) {
           {item.image && (
             <img className={styles.articleCover} src={item.image} alt="Portada de la noticia" />
           )}
-          {item.body && item.body.trim() !== item.summary.trim() && (
+          {blocks ? (
             <div className={styles.articleBody}>
-              {item.body
-                .split(/\n\s*\n/)
-                .filter(Boolean)
-                .map((paragraph, i) => (
-                  <p key={i}>{paragraph}</p>
-                ))}
+              {blocks.map((block, index) => {
+                if (block.kind === 'heading') return <h2 key={index}>{block.text}</h2>;
+                if (block.kind === 'list')
+                  return (
+                    <ul key={index}>
+                      {block.text.split('\n').map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
+                    </ul>
+                  );
+                if (block.kind === 'image') {
+                  const media = item.media?.find((m) => m.source === block.source && m.image);
+                  return media ? (
+                    <figure className={styles.articleInlineImage} key={index}>
+                      <button
+                        type="button"
+                        onClick={() => openImage(media)}
+                        aria-label={`Ampliar ${media.name}`}
+                      >
+                        <img src={media.image} alt={media.name} loading="lazy" />
+                      </button>
+                      <figcaption>{media.name}</figcaption>
+                      {media.caption && <p>{media.caption}</p>}
+                    </figure>
+                  ) : null;
+                }
+                return <p key={index}>{block.text}</p>;
+              })}
             </div>
+          ) : (
+            item.body &&
+            item.body.trim() !== item.summary.trim() && (
+              <div className={styles.articleBody}>
+                {item.body
+                  .split(/\n\s*\n/)
+                  .filter(Boolean)
+                  .map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+              </div>
+            )
           )}
           {item.edition_code && (
             <EditionConnections key={item.edition_code} code={item.edition_code} />
           )}
-          {item.media?.some((m) => m.image) && (
+          {item.media?.some(
+            (m) => m.image && !blocks?.some((b) => b.kind === 'image' && b.source === m.source),
+          ) && (
             <section aria-label="Imágenes y cartas de la noticia" className={styles.articleGallery}>
               <h2>En detalle</h2>
               <div>
                 {item.media
-                  .filter((m) => m.image)
+                  .filter(
+                    (m) =>
+                      m.image && !blocks?.some((b) => b.kind === 'image' && b.source === m.source),
+                  )
                   .map((m) => (
                     <button
                       type="button"

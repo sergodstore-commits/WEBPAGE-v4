@@ -1,5 +1,6 @@
 import { after, NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
+import { getMylBanlists, mylBanlistPanel, refreshMylBanlists } from '@/lib/server/myl-banlist';
 import { getDb } from '@/lib/server/db';
 import { moveReleasedPreorders } from '@/lib/server/preorder-release';
 import {
@@ -259,6 +260,7 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     )
       return json(await editionProducts(path[2]));
     if (route === 'news/web-sources' && method === 'GET') return json(await getWebNews());
+    if (route === 'news/banlist/myl' && method === 'GET') return json(await getMylBanlists());
     if (
       path[0] === 'news' &&
       ['tcg', 'myl'].includes(path[1]) &&
@@ -394,6 +396,15 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await reviewInstagram(user.id, input.cursor));
       }
       if (route === 'admin/news' && method === 'GET') return json(await listInstagramNews());
+      if (route === 'admin/news/banlist/myl' && method === 'GET')
+        return json(await mylBanlistPanel());
+      if (
+        ['admin/news/banlist/myl', 'admin/news/banlist/myl/images'].includes(route) &&
+        method === 'POST'
+      ) {
+        await rateLimit(`myl-banlist:${user.id}`, 60, 60);
+        return json(await refreshMylBanlists(route.endsWith('/images')));
+      }
       if (route === 'admin/news/web-sources' && method === 'GET')
         return json(await getWebNews(true));
       if (route === 'admin/news/web-sources' && method === 'PATCH')
@@ -425,7 +436,20 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         method === 'POST'
       ) {
         await rateLimit(`meta-news-images:${user.id}`, 300, 60);
-        return json(await prepareWebNewsImages(path[3], path[4] === 'images'));
+        const options = z
+          .object({
+            refresh_content: z.boolean().default(false),
+            translate: z.boolean().default(true),
+          })
+          .parse(await body(request));
+        return json(
+          await prepareWebNewsImages(
+            path[3],
+            path[4] === 'images',
+            options.refresh_content,
+            options.translate,
+          ),
+        );
       }
       if (route === 'admin/news' && method === 'POST') {
         await rateLimit(`instagram-import:${user.id}`, 30, 15);

@@ -10,7 +10,6 @@ import { academyHouses, duelHouse } from '@/lib/duel-academy';
 import { boards, type RankingBoard, type PublicRanking } from '@/lib/rankings';
 import { useRemote, Loading, Empty, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
-import { Banlist } from './Banlist';
 import styles from './Community.module.css';
 
 const EditionExplorer = dynamic(
@@ -272,10 +271,7 @@ function CommunityRankings() {
         </div>
         <div>
           <h2>Yu-Gi-Oh! Ranking</h2>
-          <div>
-            {link('yugioh')}
-            <Banlist />
-          </div>
+          <div>{link('yugioh')}</div>
         </div>
       </nav>
       <section className={styles.ranking} aria-labelledby="ranking-title">

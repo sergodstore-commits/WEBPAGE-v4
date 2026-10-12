@@ -13,6 +13,7 @@ import {
 } from '@/lib/web-news';
 import { useRemote, Loading } from '../shared';
 import styles from './News.module.css';
+import { NewsBanlist } from './NewsBanlist';
 
 export function WebNewsCover({ item }: { item: WebNewsItem }) {
   const [failed, setFailed] = useState(false);
@@ -42,7 +43,9 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
   const params = useSearchParams();
   const remote = useRemote<WebNewsItem[]>('/news/web-sources');
   const requestedCategory = params.get('categoria');
-  const category: WebNewsCategory | '' = Object.hasOwn(webNewsCategories, requestedCategory || '')
+  const category: WebNewsCategory | '' = ['reveals', 'releases', 'banlist'].includes(
+    requestedCategory || '',
+  )
     ? (requestedCategory as WebNewsCategory)
     : '';
   const [query, setQuery] = useState('');
@@ -50,6 +53,7 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
   const items = (remote.data || [])
     .filter(
       (item) =>
+        item.category !== 'banlist' &&
         (item.boards || ['yugioh']).includes(board) &&
         (board !== 'yugioh' || item.format === undefined || item.format === 'TCG'),
     )
@@ -101,39 +105,45 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
               Todas
               {!remote.loading && !remote.error && <small aria-hidden="true">{items.length}</small>}
             </button>
-            {Object.entries(webNewsCategories).map(([key, label]) => (
-              <button
-                type="button"
-                key={key}
-                aria-label={label}
-                aria-pressed={category === key}
-                onClick={() => chooseCategory(key as WebNewsCategory)}
-              >
-                {label}
-                {!remote.loading && !remote.error && (
-                  <small aria-hidden="true">
-                    {items.filter((item) => (item.category || 'news') === key).length}
-                  </small>
-                )}
-              </button>
-            ))}
+            {Object.entries(webNewsCategories)
+              .filter(([key]) => ['reveals', 'releases', 'banlist'].includes(key))
+              .map(([key, label]) => (
+                <button
+                  type="button"
+                  key={key}
+                  aria-label={label}
+                  aria-pressed={category === key}
+                  onClick={() => chooseCategory(key as WebNewsCategory)}
+                >
+                  {label}
+                  {key !== 'banlist' && !remote.loading && !remote.error && (
+                    <small aria-hidden="true">
+                      {items.filter((item) => (item.category || 'news') === key).length}
+                    </small>
+                  )}
+                </button>
+              ))}
           </div>
         </div>
-        <label className={styles.newsSearch}>
-          <Search size={17} aria-hidden="true" />
-          <input
-            type="search"
-            aria-label={`Buscar noticias ${board === 'yugioh' ? 'TCG' : title}`}
-            placeholder="Buscar noticia…"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setLimit(8);
-            }}
-          />
-        </label>
+        {category !== 'banlist' && (
+          <label className={styles.newsSearch}>
+            <Search size={17} aria-hidden="true" />
+            <input
+              type="search"
+              aria-label={`Buscar noticias ${board === 'yugioh' ? 'TCG' : title}`}
+              placeholder="Buscar noticia…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setLimit(8);
+              }}
+            />
+          </label>
+        )}
       </div>
-      {remote.loading ? (
+      {category === 'banlist' ? (
+        <NewsBanlist />
+      ) : remote.loading ? (
         <Loading />
       ) : remote.error ? (
         <div role="alert">

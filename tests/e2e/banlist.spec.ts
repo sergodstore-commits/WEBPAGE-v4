@@ -2,86 +2,112 @@ import { test, expect } from '@playwright/test';
 import type { BanlistState } from '../../lib/banlist';
 import baseline from '../../public/editions/betb/cards.json';
 
-test('Noticias: Banlist permanente, fechas por formato, carga ligera y acceso en móvil', async ({
+test('Noticias: Banlist directa, formatos, búsqueda MyL, imágenes y acceso móvil', async ({
   page,
 }) => {
-  let cardRequests = 0;
+  let tcgRequests = 0,
+    mylRequests = 0;
   await page.route('**/api/news', (r) => r.fulfill({ json: [] }));
   await page.route('**/api/news/web-sources', (r) => r.fulfill({ json: [] }));
   await page.route('**/api/news/banlist', (r) =>
     r.fulfill({
-      json: {
-        yugioh: {
-          checked_at: '2026-10-11T12:00:00Z',
-          current: { effective_on: '2026-09-21' },
-          upcoming: { effective_on: '2026-10-20' },
-        },
-        myl: {
-          'myl-first-era': {
-            current: {
-              title: 'Lista vigente de Primera Era',
-              href: '/noticias/myl/current-era',
-              published_on: '2026-10-07',
-              effective_on: '2026-10-08',
-            },
-            upcoming: null,
-            unconfirmed: null,
-          },
-          'myl-first-block': { current: null, upcoming: null, unconfirmed: null },
-        },
-      },
+      json: { yugioh: { current: { effective_on: '2026-09-21' }, upcoming: null }, myl: {} },
     }),
   );
   await page.route('**/api/community/banlist', (r) => {
-    cardRequests++;
+    tcgRequests++;
     return r.fulfill({
       json: {
-        checked_at: '2026-10-11T12:00:00Z',
+        checked_at: '2026-10-12T12:00:00Z',
         current: { effective_on: '2026-09-21', cards: [] },
         upcoming: null,
       },
     });
   });
+  const snapshot = {
+    effective_on: '2026-10-08',
+    cards: [
+      { name: 'Kanillu', edition: 'La Ira del Nahual', copies: 1, change: 'Antes: 0 → Ahora: 1' },
+      { name: 'Mosquete Puritano', edition: 'Mundo Gótico', copies: 0 },
+    ],
+    rules: ['Mínimo de Aliados: 16'],
+    images: [
+      {
+        source: 'https://blog.myl.cl/wp-content/uploads/2026/10/test.png',
+        name: 'Aclaración de formato',
+        image: baseline.cards[0].image,
+      },
+    ],
+    sources: ['https://blog.myl.cl/ban-list-primera-era-formato-racial-edicion/'],
+    notes: ['Lista contrastada con el aviso oficial más reciente.'],
+  };
+  await page.route('**/api/news/banlist/myl', (r) => {
+    mylRequests++;
+    return r.fulfill({
+      json: {
+        checked_at: '2026-10-12T12:00:00Z',
+        formats: { 'myl-first-era': snapshot, 'myl-first-block': snapshot },
+      },
+    });
+  });
   await page.goto('/noticias');
-  const panel = page.getByRole('complementary', { name: 'Banlist', exact: true });
-  await expect(panel).toBeVisible();
-  await expect(panel).toContainText('Vigente desde 21 de septiembre de 2026');
-  await expect(panel).toContainText('Próximo cambio: 20 de octubre de 2026');
-  await expect(panel.getByRole('link', { name: /MyL Primera Era/ })).toHaveAttribute(
-    'href',
-    '/noticias/myl/current-era',
-  );
-  await expect(panel.getByRole('link', { name: /MyL Primer Bloque/ })).toContainText(
-    'Aún sin aviso publicado',
-  );
-  expect(cardRequests).toBe(0);
-  const world = page.getByRole('region', { name: 'Yu-Gi-Oh! TCG', exact: true });
-  const desktopPanel = await panel.boundingBox();
-  const desktopWorld = await world.boundingBox();
-  expect(desktopPanel!.x).toBeGreaterThan(desktopWorld!.x + desktopWorld!.width);
-  await page.screenshot({ path: '.data/news-banlist-desktop.png', fullPage: true });
-  const tcg = panel.getByRole('button', { name: /Yu-Gi-Oh! TCG/ });
+  await expect(page.getByRole('button', { name: 'Actualidad', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Torneos', exact: true })).toHaveCount(0);
+  expect(tcgRequests + mylRequests).toBe(0);
+  await page.getByRole('button', { name: 'Banlist', exact: true }).click();
+  await expect(page).toHaveURL(/categoria=banlist/);
+  const hub = page.getByRole('region', { name: 'Banlist por formato' });
+  await expect(hub).toBeVisible();
+  const tcg = hub.getByRole('button', { name: /Yu-Gi-Oh! TCG/ });
   await tcg.click();
-  const dialog = page.getByRole('dialog', { name: 'Banlist Yu-Gi-Oh!' });
-  await expect(dialog).toBeVisible();
-  await expect.poll(() => cardRequests).toBe(1);
+  await expect(page.getByRole('dialog', { name: 'Banlist Yu-Gi-Oh!' })).toBeVisible();
+  expect(tcgRequests).toBe(1);
   await page.keyboard.press('Escape');
   await expect(tcg).toBeFocused();
-  await page.getByRole('button', { name: 'SERGOD STORE', exact: true }).click();
-  await expect(panel).toBeVisible();
+  const era = hub.getByRole('button', { name: /MyL Primera Era/ });
+  await era.click();
+  const dialog = page.getByRole('dialog', { name: 'Banlist MyL Primera Era' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('Kanillu', { exact: true })).toBeVisible();
+  expect(mylRequests).toBe(1);
+  await dialog.getByRole('searchbox').fill('mosquete');
+  await expect(dialog.getByText('Kanillu', { exact: true })).toHaveCount(0);
+  await expect(dialog.getByText('Mosquete Puritano', { exact: true })).toBeVisible();
+  await dialog.getByRole('searchbox').fill('');
+  await dialog.getByRole('button', { name: '1 copia', exact: true }).click();
+  await expect(dialog.getByText('Kanillu', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Mosquete Puritano', { exact: true })).toHaveCount(0);
+  await dialog.getByText('Reglas y aclaraciones del formato', { exact: true }).click();
+  await expect(dialog.getByText('Mínimo de Aliados: 16')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Ampliar Aclaración de formato' }).click();
+  await expect(dialog.getByRole('img', { name: 'Aclaración de formato' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Volver a restricciones' }).click();
+  await page.keyboard.press('Escape');
+  await expect(era).toBeFocused();
   await page.setViewportSize({ width: 390, height: 844 });
-  await panel.getByRole('link', { name: /MyL Primer Bloque/ }).click();
-  await expect(page).toHaveURL(/seccion=myl-first-block&categoria=banlist/);
-  const block = page.getByRole('region', { name: 'MyL Primer Bloque', exact: true });
-  await expect(block.getByRole('button', { name: 'Banlist', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
-  const mobilePanel = await panel.boundingBox();
-  const mobileWorld = await block.boundingBox();
-  expect(mobilePanel!.y + mobilePanel!.height).toBeLessThan(mobileWorld!.y);
+  await hub.getByRole('button', { name: /MyL Primer Bloque/ }).click();
+  const mobile = page.getByRole('dialog', { name: 'Banlist MyL Primer Bloque' });
+  await expect(mobile).toBeVisible();
+  expect((await mobile.boundingBox())!.width).toBeLessThan(390);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.screenshot({ path: '.data/news-banlist-mobile.png', fullPage: true });
+  await page.screenshot({ path: '.data/news-myl-banlist-mobile.png' });
+  await page.keyboard.press('Escape');
+  await page.goto('/comunidad?ranking=yugioh');
+  await expect(page.getByRole('button', { name: /Banlist/ })).toHaveCount(0);
+  expect(
+    (
+      await page.request.post('/api/admin/news/banlist/myl', {
+        headers: { Origin: 'http://localhost:3100' },
+      })
+    ).status(),
+  ).toBe(401);
+  expect(
+    (
+      await page.request.post('/api/admin/news/banlist/myl/images', {
+        headers: { Origin: 'http://localhost:3100' },
+      })
+    ).status(),
+  ).toBe(401);
 });
 
 test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actualización', async ({
@@ -125,8 +151,10 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
     upcoming: null,
   };
   await page.route('**/api/community/banlist', (route) => route.fulfill({ json: state }));
-  await page.goto('/comunidad?ranking=yugioh');
-  const trigger = page.getByRole('button', { name: 'Banlist TCG', exact: true });
+  await page.goto('/noticias?seccion=yugioh&categoria=banlist');
+  const trigger = page
+    .getByRole('region', { name: 'Banlist por formato' })
+    .getByRole('button', { name: /Yu-Gi-Oh! TCG/ });
   await trigger.click();
   const dialog = page.getByRole('dialog', { name: 'Banlist Yu-Gi-Oh!' });
   await expect(dialog).toBeVisible();
@@ -206,7 +234,7 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
   await page.goto('/admin/noticias');
   await page
     .getByRole('navigation', { name: 'Herramientas de contenido' })
-    .getByRole('button', { name: 'Banlist TCG' })
+    .getByRole('button', { name: 'Banlists' })
     .click();
   await page.getByRole('button', { name: 'Actualizar banlist TCG', exact: true }).click();
   await expect(page.getByText(/Lista verificada. Galería completa/)).toBeVisible();

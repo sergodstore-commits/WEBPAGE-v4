@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { initialWebNews } from '../../lib/web-news';
+import { initialWebNews, newsContentBody, type WebNewsBlock } from '../../lib/web-news';
 import { expectReadable } from './helpers/readability';
 
 test('Noticias: pestañas por comunidad, galería TCG con filtros y lectura interna', async ({
@@ -167,24 +167,19 @@ test('Noticias: temas persistentes, fechas originales y formatos separados', asy
   await page.getByRole('button', { name: 'MyL Primera Era', exact: true }).click();
   const era = page.getByRole('region', { name: 'MyL Primera Era', exact: true });
   await expect(era.locator('article h3')).toHaveText(['Noticia Primera Era']);
-  await era.getByRole('button', { name: 'Actualidad', exact: true }).click();
-  await expect(page).toHaveURL(/seccion=myl-first-era&categoria=news$/);
+  await expect(era.getByRole('button', { name: 'Actualidad', exact: true })).toHaveCount(0);
   await page.reload();
-  await expect(era.getByRole('button', { name: 'Actualidad', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
   await page.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
   const block = page.getByRole('region', { name: 'MyL Primer Bloque', exact: true });
   await expect(block.locator('article h3')).toHaveText(['Torneo Primer Bloque']);
-  await expect(page.getByRole('complementary', { name: 'Banlist', exact: true })).toBeVisible();
+  await expect(block.getByRole('button', { name: 'Banlist', exact: true })).toBeVisible();
   await page.goto('/noticias?seccion=myl-first-block&categoria=desconocida');
   await expect(block.getByRole('button', { name: 'Todas', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
   await page.setViewportSize({ width: 320, height: 740 });
-  await expect(block.getByRole('button', { name: 'Torneos', exact: true })).toBeVisible();
+  await expect(block.getByRole('button', { name: 'Torneos', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -281,14 +276,14 @@ test('MyL: pestañas separadas, banlist y vigencia dentro de la noticia', async 
   await expect(page.getByRole('link', { name: /Cambios revisados/ })).toHaveCount(0);
   await page.getByRole('button', { name: 'MyL Primera Era', exact: true }).click();
   const era = page.getByRole('region', { name: 'MyL Primera Era', exact: true });
-  await expect(era.getByRole('link', { name: /Cambios revisados/ })).toBeVisible();
+  await expect(era.getByRole('link', { name: /Cambios revisados/ })).toHaveCount(0);
   await expect(era.getByRole('link', { name: /Beyond the Brave/ })).toHaveCount(0);
   await era.getByRole('button', { name: 'Banlist', exact: true }).click();
-  await expect(era.getByRole('link')).toHaveCount(1);
+  await expect(era.getByRole('region', { name: 'Banlist por formato' })).toBeVisible();
   await page.getByRole('button', { name: 'MyL Primer Bloque', exact: true }).click();
   const block = page.getByRole('region', { name: 'MyL Primer Bloque', exact: true });
   await expectReadable(page);
-  await block.getByRole('link', { name: /Cambios revisados/ }).click();
+  await page.goto('/noticias/myl/myl-example');
   await expect(page.getByRole('heading', { name: myl.title, exact: true })).toBeVisible();
   await expect(page.getByLabel('Vigencia de la banlist')).toContainText('8 de octubre de 2026');
   await expect(page.getByLabel('Vigencia de la banlist')).toContainText('11 de octubre de 2026');
@@ -408,7 +403,7 @@ test('Admin MyL: buscar y preparar conserva fecha y permite elegir formato y vig
   );
   await page
     .getByRole('navigation', { name: 'Herramientas de contenido' })
-    .getByRole('button', { name: 'Banlist TCG' })
+    .getByRole('button', { name: 'Banlists' })
     .click();
   await expect(section).not.toBeVisible();
   await expect(page.getByRole('heading', { name: 'Banlist Yu-Gi-Oh! TCG' })).toBeVisible();
@@ -509,6 +504,56 @@ test('Admin: biblioteca separada de fuentes, filtros, historial y herramientas b
   await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
     'Borrador sin perder',
   );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('Artículo completo: secciones, condiciones e imágenes en contexto con ampliación', async ({
+  page,
+}) => {
+  const blocks: WebNewsBlock[] = [
+    { kind: 'heading', text: 'Amadís' },
+    {
+      kind: 'paragraph',
+      text: 'Puedes jugar el Aliado sin pagar su Coste si controlas un Aliado del mismo Coste. Solo una vez por turno.',
+    },
+    {
+      kind: 'image',
+      text: 'Amadís',
+      source: 'https://blog.myl.cl/wp-content/uploads/2026/10/test.png',
+    },
+    { kind: 'heading', text: 'Espada Verde' },
+    {
+      kind: 'paragraph',
+      text: 'Si hace daño de combate, busca una carta que no sea Oro en el Mazo Castillo oponente y destiérrala.',
+    },
+  ];
+  await page.route('**/api/news/myl/myl-complete', (r) =>
+    r.fulfill({
+      json: {
+        id: 'myl-complete',
+        title: 'Cartas de Amadís: detalles',
+        summary: 'Información de las cartas y sus condiciones.',
+        url: 'https://blog.myl.cl/amadis-test/',
+        published_on: '2026-10-07',
+        body: newsContentBody(blocks),
+        content_blocks: blocks,
+        media: [{ source: blocks[2].source, name: 'Amadís', image: '/art/hero/yugioh-front.webp' }],
+      },
+    }),
+  );
+  await page.goto('/noticias/myl/myl-complete');
+  await expect(page.getByRole('heading', { name: 'Amadís', exact: true })).toBeVisible();
+  await expect(page.getByText(/Solo una vez por turno/)).toBeVisible();
+  const position = await page
+    .locator('article')
+    .evaluate((el) =>
+      Array.from(el.querySelectorAll('h2,figure')).map((n) => n.tagName + ':' + n.textContent),
+    );
+  expect(position).toEqual(['H2:Amadís', 'FIGURE:Amadís', 'H2:Espada Verde']);
+  await page.getByRole('button', { name: 'Ampliar Amadís', exact: true }).click();
+  await expect(page.getByRole('dialog').getByRole('img', { name: 'Amadís' })).toBeVisible();
+  await page.keyboard.press('Escape');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

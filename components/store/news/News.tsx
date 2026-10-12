@@ -10,7 +10,6 @@ import { useRemote, Loading, ProductImage } from '../shared';
 import { SectionHeader } from '../SectionHeader';
 import styles from './News.module.css';
 import { WebNewsColumn } from './WebNewsColumn';
-import { NewsBanlist } from './NewsBanlist';
 
 export function NewsMedia({ assets, permalink = '' }: { assets: NewsAsset[]; permalink?: string }) {
   const [index, setIndex] = useState(0),
@@ -198,8 +197,7 @@ export function News() {
           </button>
         ))}
       </nav>
-      <div className={`${styles.columns} ${styles.withBanlist}`}>
-        <NewsBanlist />
+      <div className={styles.columns}>
         {active === 'yugioh' && <WebNewsColumn key={active} />}
         {active === 'sergod' && (
           <section className={styles.storeNews} aria-labelledby="store-news-heading">

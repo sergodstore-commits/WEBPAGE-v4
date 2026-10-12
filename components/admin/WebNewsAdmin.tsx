@@ -96,7 +96,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
       setBusy(false);
     }
   }
-  async function prepareImages(id: string) {
+  async function prepareImages(id: string, refreshContent = false) {
     setBusy(true);
     setError('');
     stop.current = false;
@@ -110,11 +110,11 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
     try {
       let result = await api<Result>(`/admin/news/web-sources/${id}/prepare`, {
         method: 'POST',
-        body: '{}',
+        body: JSON.stringify({ refresh_content: refreshContent, translate }),
       });
       setItems(result.items);
       setProgress(
-        `Imágenes: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
+        `Preparación: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
       );
       while (result.ready < result.total && !stop.current) {
         const previous = result.ready;
@@ -126,7 +126,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
         if (result.ready <= previous && result.ready < result.total)
           throw Error('La preparación no avanzó. El borrador se conserva; vuelve a intentar.');
         setProgress(
-          `Imágenes: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
+          `Preparación: ${result.ready} de ${result.total} · ${(result.storage_bytes / 1_000_000).toFixed(1)} de 15 MB`,
         );
       }
       setNotice(
@@ -134,6 +134,15 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
           ? 'Preparación pausada. Puedes reanudar con el mismo botón.'
           : 'Borrador e imágenes guardados. Revisa el español y pulsa Publicar noticia.',
       );
+      if (refreshContent) {
+        setDraft({ ...result.items.find((i) => i.id === id)! });
+        chooseStage('review');
+        setNotice(
+          stop.current
+            ? 'Actualización pausada. El avance se conserva.'
+            : 'Contenido e imágenes actualizados. Revisa los datos antes de publicar; las imágenes guardadas se reutilizan.',
+        );
+      }
       return result.items;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos preparar las imágenes.');
@@ -229,7 +238,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
       let ready = item;
       if (
         !item.visible &&
-        ((item.original_title && !item.media_checked) || item.media?.some((m) => !m.image))
+        ((item.original_title && !item.media_checked) ||
+          item.media?.some((m) => !m.image) ||
+          item.content_blocks?.some((b) => b.original_text))
       ) {
         const prepared = await prepareImages(item.id);
         if (stop.current) return false;
@@ -643,12 +654,24 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                     <span>Artículo en español</span>
                     <textarea
                       rows={7}
-                      maxLength={12000}
+                      maxLength={60000}
                       value={draft.body || ''}
-                      onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          body: e.target.value,
+                          content_blocks: undefined,
+                          content_language: 'es',
+                        })
+                      }
                       placeholder="Redacta los detalles de la noticia. Separa los párrafos con una línea en blanco."
                     />
                   </label>
+                  <p className="admin-help">
+                    El importador conserva los detalles y las imágenes de la fuente. Revisa nombres,
+                    condiciones y traducción antes de publicar. Actualizar contenido e imágenes
+                    vuelve a extraer el artículo; reutiliza las imágenes ya guardadas.
+                  </p>
                   {draft.media?.length ? (
                     <details>
                       <summary>Textos de las imágenes y cartas ({draft.media.length})</summary>
@@ -849,9 +872,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                           type="button"
                           className="admin-button secondary"
                           disabled={busy || draft.id === item.id}
-                          onClick={() => void prepareImages(item.id).catch(() => {})}
+                          onClick={() => void prepareImages(item.id, true).catch(() => {})}
                         >
-                          {item.media_checked ? 'Actualizar imágenes' : 'Preparar imágenes'}
+                          Actualizar contenido e imágenes
                         </button>{' '}
                         <button
                           className="admin-button secondary"

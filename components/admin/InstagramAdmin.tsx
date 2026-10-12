@@ -583,7 +583,7 @@ export function InstagramNewsPage() {
           ['web', 'Noticias web', 'Yu-Gi-Oh! TCG y MyL'],
           ['instagram', 'SERGOD STORE', 'Publicaciones de Instagram'],
           ['editions', 'Guías de cartas', 'Contenido de sobres y cajas'],
-          ['banlist', 'Banlist TCG', 'Lista oficial de Konami'],
+          ['banlist', 'Banlists', 'Yu-Gi-Oh! y MyL'],
         ].map(([id, title, help]) => (
           <button
             key={id}
@@ -625,8 +625,8 @@ export function InstagramNewsPage() {
             y guarda imágenes WebP.
           </li>
           <li>
-            Banlist TCG: actualiza la lista oficial de Konami y su galería, disponible desde
-            Noticias.
+            Banlists: actualiza Yu-Gi-Oh! TCG desde Konami y Primera Era / Primer Bloque desde el
+            blog oficial MyL. Consulta las listas en Noticias → Banlist.
           </li>
           <li>
             <Link href="/admin/liga">Ligas: resultados de Konami y TOR</Link>. Importa torneos;

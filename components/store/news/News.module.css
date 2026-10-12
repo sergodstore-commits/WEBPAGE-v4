@@ -447,6 +447,42 @@
   max-width: 72ch;
   margin: 36px auto;
 }
+.articleBody h2 {
+  margin: 36px 0 16px;
+  color: var(--sg-ink);
+  font-size: clamp(22px, 3vw, 30px);
+}
+.articleBody ul {
+  margin: 12px 0;
+  padding-left: 24px;
+  color: var(--sg-ink);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.articleInlineImage {
+  margin: 28px auto;
+  text-align: center;
+}
+.articleInlineImage button {
+  max-width: 100%;
+  border: 1px solid var(--sg-line);
+  background: var(--sg-surface-soft);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: zoom-in;
+}
+.articleInlineImage img {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  max-height: 540px;
+  object-fit: contain;
+}
+.articleInlineImage figcaption {
+  color: var(--sg-ink-muted);
+  margin-top: 10px;
+  font-size: 14px;
+}
 .page .articleBody p {
   white-space: pre-wrap;
   color: var(--sg-ink);

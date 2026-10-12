@@ -2,15 +2,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, date } from '@/lib/client';
 import { banlistDay, type BanlistPanel } from '@/lib/banlist';
+import { MylBanlistAdmin } from './MylBanlistAdmin';
 
 export function BanlistAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) => void } = {}) {
   const [panel, setPanel] = useState<BanlistPanel | null>(null);
   const state = panel?.state;
   const stopped = useRef(false);
   const [busy, setBusy] = useState(false);
+  const [mylBusy, setMylBusy] = useState(false);
   useEffect(() => {
-    onBusyChange?.(Boolean(busy));
-  }, [busy, onBusyChange]);
+    onBusyChange?.(Boolean(busy || mylBusy));
+  }, [busy, mylBusy, onBusyChange]);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   async function load() {
@@ -48,7 +50,7 @@ export function BanlistAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
       setNotice(
         stopped.current
           ? 'Preparación pausada. El avance se conserva.'
-          : 'Lista verificada. Galería completa disponible en Comunidad.',
+          : 'Lista verificada. Galería completa disponible en Noticias → Banlist.',
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo actualizar la lista.');
@@ -60,66 +62,73 @@ export function BanlistAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
     }
   }
   return (
-    <section className="admin-card admin-card-body" aria-labelledby="banlist-admin-heading">
-      <h2 id="banlist-admin-heading">Banlist Yu-Gi-Oh! TCG</h2>
-      <p>
-        Consulta la lista y los efectos oficiales de Konami en español. Prepara imágenes WebP y
-        reutiliza las cartas de las guías. No utiliza IA.
-      </p>
-      {state && (
+    <>
+      <section className="admin-card admin-card-body" aria-labelledby="banlist-admin-heading">
+        <h2 id="banlist-admin-heading">Banlist Yu-Gi-Oh! TCG</h2>
         <p>
-          Lista vigente: <strong>{banlistDay(state.current.effective_on)}</strong> ·{' '}
-          {state.current.total} cartas · Última consulta: {date(state.checked_at)}.
+          Consulta la lista y los efectos oficiales de Konami en español. Prepara imágenes WebP y
+          reutiliza las cartas de las guías. No utiliza IA.
         </p>
-      )}
-      {state?.upcoming && (
-        <p>
-          Próxima lista: {banlistDay(state.upcoming.effective_on)}. Se mostrará como vigente a
-          partir de esa fecha.
-        </p>
-      )}
-      {panel && (
-        <p role="status">
-          Galería: {panel.ready} de {panel.total} cartas listas · Almacenamiento compartido:{' '}
-          {(panel.storage_bytes / 1_000_000).toFixed(1)} de {panel.storage_limit / 1_000_000} MB.
-        </p>
-      )}
-      {error && (
-        <p className="admin-feedback error" role="alert">
-          {error}{' '}
-          <button className="admin-button secondary" onClick={() => void load()}>
-            Reintentar carga
-          </button>
-        </p>
-      )}
-      {notice && (
-        <p className="admin-feedback success" role="status">
-          {notice}
-        </p>
-      )}
-      <div className="admin-actions">
-        <button className="admin-button" disabled={busy} onClick={() => void refresh()}>
-          {busy ? 'Preparando galería…' : 'Actualizar banlist TCG'}
-        </button>
-        {busy && (
-          <button
-            className="admin-button secondary"
-            onClick={() => {
-              stopped.current = true;
-            }}
-          >
-            Pausar preparación
-          </button>
+        {state && (
+          <p>
+            Lista vigente: <strong>{banlistDay(state.current.effective_on)}</strong> ·{' '}
+            {state.current.total} cartas · Última consulta: {date(state.checked_at)}.
+          </p>
         )}
-        <a
-          className="admin-button secondary"
-          href="/comunidad?ranking=yugioh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Ver en Comunidad ↗
-        </a>
-      </div>
-    </section>
+        {state?.upcoming && (
+          <p>
+            Próxima lista: {banlistDay(state.upcoming.effective_on)}. Se mostrará como vigente a
+            partir de esa fecha.
+          </p>
+        )}
+        {panel && (
+          <p role="status">
+            Galería: {panel.ready} de {panel.total} cartas listas · Almacenamiento compartido:{' '}
+            {(panel.storage_bytes / 1_000_000).toFixed(1)} de {panel.storage_limit / 1_000_000} MB.
+          </p>
+        )}
+        {error && (
+          <p className="admin-feedback error" role="alert">
+            {error}{' '}
+            <button className="admin-button secondary" onClick={() => void load()}>
+              Reintentar carga
+            </button>
+          </p>
+        )}
+        {notice && (
+          <p className="admin-feedback success" role="status">
+            {notice}
+          </p>
+        )}
+        <div className="admin-actions">
+          <button
+            className="admin-button"
+            disabled={busy || mylBusy}
+            onClick={() => void refresh()}
+          >
+            {busy ? 'Preparando galería…' : 'Actualizar banlist TCG'}
+          </button>
+          {busy && (
+            <button
+              className="admin-button secondary"
+              onClick={() => {
+                stopped.current = true;
+              }}
+            >
+              Pausar preparación
+            </button>
+          )}
+          <a
+            className="admin-button secondary"
+            href="/noticias?seccion=yugioh&categoria=banlist"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Ver en Noticias ↗
+          </a>
+        </div>
+      </section>
+      <MylBanlistAdmin disabled={busy} onBusyChange={setMylBusy} />
+    </>
   );
 }

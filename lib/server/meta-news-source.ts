@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { dataDir, getDb } from './db';
 import { boundedBytes, fail, hash, isProd } from './core';
 import { withLease } from './edition-imports';
+import { extractNewsBlocks, contentBody, type NewsNode } from './news-content';
 import {
   metaNewsImage,
   newsSourceImage,
@@ -189,7 +190,7 @@ export function articleImageManifest(article: unknown): WebNewsMedia[] {
   return [...media.values()];
 }
 
-export async function articleImages(url: string) {
+export async function articleContent(url: string) {
   const canonical = yugiohMetaArticle(url);
   if (!canonical) fail(400, 'Artículo no válido.');
   const query = new URL('https://www.yugiohmeta.com/api/v1/articles');
@@ -205,7 +206,18 @@ export async function articleImages(url: string) {
     !parseMetaNews(data).some((item) => item.url === canonical)
   )
     fail(409, 'No se pudo verificar esta noticia como TCG.');
-  return articleImageManifest(data[0]);
+  const media = articleImageManifest(data[0]);
+  const blocks = extractNewsBlocks(
+    data[0].parsedMarkdown.htmlTree as NewsNode[],
+    metaNewsImage,
+    data[0].parsedMarkdown.customComponents,
+  );
+  if (!contentBody(blocks).trim() && !media.length)
+    fail(409, 'La noticia no contiene información verificable.');
+  return { blocks, media };
+}
+export async function articleImages(url: string) {
+  return (await articleContent(url)).media;
 }
 
 export const NEWS_MEDIA_LIMIT = 15_000_000;
@@ -235,13 +247,16 @@ export async function archiveMetaNewsCover(value: string) {
   try {
     const info = await sharp(input, { limitInputPixels: 24_000_000 }).metadata();
     if (!['jpeg', 'png', 'webp', 'avif'].includes(info.format || '')) throw Error();
-    for (const quality of [78, 64, 48]) {
-      output = await sharp(input, { limitInputPixels: 24_000_000 })
-        .rotate()
-        .resize(960, 640, { fit: 'inside', withoutEnlargement: true })
-        .webp({ quality })
-        .toBuffer();
-      if (output.length <= 160_000) break;
+    for (const width of [960, 800, 640, 480]) {
+      for (const quality of [78, 64, 48, 44]) {
+        output = await sharp(input, { limitInputPixels: 24_000_000 })
+          .rotate()
+          .resize(width, width * 1.5, { fit: 'inside', withoutEnlargement: true })
+          .webp({ quality, alphaQuality: 80 })
+          .toBuffer();
+        if (output.length <= 160_000) break;
+      }
+      if (output!.length <= 160_000) break;
     }
   } catch {
     fail(409, 'No pudimos preparar esta portada. La selección anterior se conserva.');

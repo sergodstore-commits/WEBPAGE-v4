@@ -9,6 +9,48 @@
   background: radial-gradient(ellipse at 100% 0, #2ab5cf14, transparent 70%), #101f2b;
   color: #edf8fc;
 }
+.hub {
+  border: 1px solid #385966;
+  border-radius: 16px;
+  padding: 24px;
+  color: #edf8fc;
+  background: radial-gradient(ellipse at 100% 0, #2ab5cf14, transparent 70%), #101f2b;
+}
+.hub header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.hub h2 {
+  margin: 0;
+  font-size: 25px;
+}
+.hub header p {
+  margin: 6px 0 0;
+  color: #b3c9d6;
+  font-size: 14px;
+}
+.hub .formats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.hub .format {
+  padding: 22px 18px;
+}
+.hub .access strong {
+  font-size: 18px;
+}
+.hub .access small {
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .hub .formats {
+    grid-template-columns: 1fr;
+  }
+  .hub {
+    padding: 16px;
+  }
+}
 .panel header {
   display: flex;
   align-items: center;

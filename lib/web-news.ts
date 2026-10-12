@@ -17,11 +17,35 @@ export type WebNewsItem = {
   original_title?: string;
   original_summary?: string;
   body?: string;
+  content_blocks?: WebNewsBlock[];
+  content_version?: number;
+  content_language?: 'es' | 'en';
   format?: 'TCG';
   cover_cards?: string[];
   media?: WebNewsMedia[];
   media_checked?: boolean;
 };
+export type WebNewsBlock = {
+  kind: 'heading' | 'paragraph' | 'list' | 'image';
+  text: string;
+  source?: string;
+  original_text?: string;
+};
+export function newsContentBody(blocks: WebNewsBlock[]) {
+  return blocks
+    .filter((b) => b.kind !== 'image')
+    .map((b) =>
+      b.kind === 'heading'
+        ? `## ${b.text}`
+        : b.kind === 'list'
+          ? b.text
+              .split('\n')
+              .map((s) => `• ${s}`)
+              .join('\n')
+          : b.text,
+    )
+    .join('\n\n');
+}
 export type WebNewsMedia = {
   source: string;
   name: string;

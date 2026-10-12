@@ -131,6 +131,9 @@ export async function getSettings(): Promise<Settings> {
     web_news_discovery: _webNewsDiscovery,
     web_news_media_cache: _webNewsMedia,
     ygo_banlist: _banlist,
+    myl_banlists: _mylBanlists,
+    myl_banlist_draft: _mylBanlistDraft,
+    myl_news_discovery: _mylNewsDiscovery,
     ...settings
   } = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0].data;
   return settings;
