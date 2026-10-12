@@ -287,8 +287,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
       <section className="admin-card admin-card-body" aria-labelledby="web-news-admin-heading">
         <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh! y MyL</h2>
         <p>
-          Yu-Gi-Oh! solo TCG; MyL Primera Era, Primer Bloque y banlist. Busca novedades y decide qué
-          aparece en Noticias. Cada noticia se guarda por separado.
+          Revelaciones y contenido de productos de Yu-Gi-Oh! TCG, MyL Primera Era y Primer Bloque.
+          Busca novedades y decide qué aparece en Noticias. Las restricciones tienen su herramienta
+          en Banlists.
         </p>
         <nav className={styles.stages} aria-label="Flujo de noticias web">
           <button
