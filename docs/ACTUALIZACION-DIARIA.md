@@ -8,6 +8,8 @@ YGOrganization consulta tres páginas (hasta 60 publicaciones) de las categoría
 
 Las noticias nuevas se preparan, traducen cuando corresponde, descargan sus imágenes optimizadas y se publican únicamente cuando están completas. MyL no pasa por el traductor. Un fallo de una fuente no detiene las otras. Los borradores manuales preexistentes no se publican automáticamente.
 
+El panel muestra publicaciones y pendientes por formato, avance de imágenes/traducción y errores por noticia. En la sección de recuperación, un administrador puede reanudar excepcionalmente un día parcial sin esperar al siguiente. La recuperación conserva la cuota diaria, excluye ejecuciones simultáneas y nunca repite un día completado. También puede incorporar borradores completos anteriores a la automatización si vuelven a aparecer en la fuente, conservan su título original y tienen texto español e imágenes verificados; los trabajos retirados no se recuperan. El cron normal sigue siendo una ejecución diaria. La ruta de recuperación exige sesión administrativa, mismo origen y producción, con un máximo de tres intentos por hora.
+
 ## Límites y continuidad
 
 - Máximo público de 10 noticias Yu-Gi-Oh! y 10 MyL, sumando ambos formatos MyL. Las guías de ediciones también cuentan en el listado público, pero siguen disponibles en Explorar cartas.
