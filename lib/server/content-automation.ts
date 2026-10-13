@@ -313,7 +313,7 @@ export async function runDailyContent(
       (characters) => reserveDailyTranslation(day, token, characters),
       async () => {
         for (const game of ['myl', 'yugioh']) {
-          const until = Math.min(deadline, Date.now() + 60_000);
+          const until = Math.min(deadline, Date.now() + (game === 'myl' ? 90_000 : 60_000));
           const jobs = (
             await db.query<Job>(`SELECT * FROM content_news_jobs WHERE phase IN ('queued','prepared')
           AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
@@ -385,6 +385,7 @@ export async function contentAutomationStatus() {
     (await db.query('SELECT count(*) AS n FROM news_card_archives')).rows[0].n,
   );
   const items = await getWebNews(true);
+  const publicItems = (await getWebNews()).filter((item) => item.category !== 'banlist');
   const jobs = (
     await db.query<
       Job & { last_error: string | null }
@@ -413,7 +414,7 @@ export async function contentAutomationStatus() {
     boards: Object.entries(newsBoards).map(([board, label]) => ({
       board,
       label,
-      published: items.filter(
+      published: publicItems.filter(
         (i) => i.visible && (i.boards || ['yugioh']).includes(board as keyof typeof newsBoards),
       ).length,
       pending: pendingJobs.filter((j) => j.boards.includes(board as keyof typeof newsBoards))
