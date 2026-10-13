@@ -182,8 +182,100 @@ export function mylNewsImage(value: string): string | null {
   }
 }
 export function newsArticle(value: string) {
-  return yugiohMetaArticle(value) || mylArticle(value);
+  return yugiohMetaArticle(value) || mylArticle(value) || ygorganizationArticle(value);
 }
 export function newsSourceImage(value: string) {
-  return metaNewsImage(value) || mylNewsImage(value);
+  return metaNewsImage(value) || mylNewsImage(value) || ygorganizationImage(value);
+}
+
+export function ygorganizationArticle(value: string): string | null {
+  try {
+    const u = new URL(value);
+    if (
+      u.protocol !== 'https:' ||
+      u.hostname !== 'ygorganization.com' ||
+      u.username ||
+      u.password ||
+      u.port ||
+      u.search ||
+      u.hash ||
+      !/^\/[a-z0-9_-]+\/?$/i.test(u.pathname) ||
+      /^\/(?:api|feed|category|tag|search|login|wp-admin|wp-json)\/?$/i.test(u.pathname)
+    )
+      return null;
+    return `https://ygorganization.com${u.pathname.replace(/\/$/, '')}`;
+  } catch {
+    return null;
+  }
+}
+
+export function ygorganizationImage(value: string): string | null {
+  try {
+    const u = new URL(value);
+    if (
+      u.protocol !== 'https:' ||
+      u.hostname !== 'cdn.ygorganization.com' ||
+      u.username ||
+      u.password ||
+      u.port ||
+      u.search ||
+      u.hash ||
+      !/^\/\d{4}\/\d{2}\/[a-z0-9%_.()'-]+\.(?:png|jpe?g|webp)$/i.test(u.pathname) ||
+      decodeURIComponent(u.pathname).split('/').includes('..')
+    )
+      return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+export function newsSourceLabel(url: string) {
+  return mylArticle(url)
+    ? 'Blog oficial Mitos y Leyendas'
+    : ygorganizationArticle(url)
+      ? 'YGOrganization'
+      : 'Yu-Gi-Oh! Meta';
+}
+
+// Advisory only: different reports about the same set must remain selectable.
+export function possibleNewsDuplicate(candidate: WebNewsCandidate, items: WebNewsItem[]) {
+  const words = (text: string) =>
+    new Set(
+      text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]/g, ' ')
+        .split(/\s+/)
+        .filter(
+          (word) =>
+            word.length > 2 &&
+            ![
+              'tcg',
+              'the',
+              'and',
+              'new',
+              'cards',
+              'revealed',
+              'first',
+              'look',
+              'news',
+              'announced',
+            ].includes(word),
+        ),
+    );
+  const left = words(candidate.title);
+  return items.find((item) => {
+    if (
+      item.url === candidate.url ||
+      mylArticle(item.url) ||
+      newsSourceLabel(item.url) === newsSourceLabel(candidate.url) ||
+      Math.abs(Date.parse(item.published_on) - Date.parse(candidate.published_on)) > 7 * 86400000
+    )
+      return false;
+    const right = words(item.original_title || item.title);
+    const common = [...left].filter((word) => right.has(word)).length;
+    return common >= 3 && common / Math.max(left.size, right.size) >= 0.65;
+  });
 }

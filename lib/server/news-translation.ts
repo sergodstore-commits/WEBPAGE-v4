@@ -62,13 +62,18 @@ export async function prepareNewsDraft(input: unknown) {
   const value = z
     .object({
       id: z.string().regex(/^[a-zA-Z0-9-]{1,80}$/),
-      source: z.enum(['tcg', 'myl']),
+      source: z.enum(['tcg', 'myl', 'ygorganization']),
       translate: z.boolean().default(true),
     })
     .parse(input);
   const previous = await getWebNews(true);
   if (previous.some((item) => item.id === value.id)) return previous;
-  const key = value.source === 'myl' ? 'myl_news_discovery' : 'web_news_discovery';
+  const key =
+    value.source === 'myl'
+      ? 'myl_news_discovery'
+      : value.source === 'ygorganization'
+        ? 'ygorganization_news_discovery'
+        : 'web_news_discovery';
   const row = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0];
   const discovery = row?.data?.[key];
   const candidate = (discovery?.items as WebNewsCandidate[] | undefined)?.find(
@@ -90,7 +95,7 @@ export async function prepareNewsDraft(input: unknown) {
   if (summary.length < 10)
     fail(409, 'La fuente no incluye un resumen suficiente. Prepara esta noticia manualmente.');
   // Brief sourced notice, not a mirrored full article or invented card effects.
-  const spanish = value.source === 'tcg' && value.translate;
+  const spanish = value.source !== 'myl' && value.translate;
   const translatedTitle = spanish ? await translateNewsText(title) : title;
   const translatedSummary = spanish ? await translateNewsText(summary) : summary;
   return saveWebNews(

@@ -220,7 +220,14 @@ test('Admin: selección web protegida, editar español, ocultar y persistir', as
       })
     ).status(),
   ).toBe(401);
-  for (const path of ['review', 'review-myl', 'draft', 'example/prepare', 'example/images'])
+  for (const path of [
+    'review',
+    'review-myl',
+    'review-ygorganization',
+    'draft',
+    'example/prepare',
+    'example/images',
+  ])
     expect(
       (
         await page.request.post(`/api/admin/news/web-sources/${path}`, {

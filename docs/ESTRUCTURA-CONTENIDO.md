@@ -95,6 +95,14 @@ Transmisiones reúne «Directo e incorporar» y «Grabaciones», conserva los fo
 
 ## Banlists directas y contenido completo
 
+### Fuente TCG adicional: YGOrganization
+
+En Noticias → Buscar y preparar, «Fuente TCG» permite elegir Yu-Gi-Oh! Meta o YGOrganization y usar el mismo botón «Buscar novedades TCG». YGOrganization consulta tres páginas públicas recientes (hasta 60 publicaciones), guarda el resultado privado durante cinco minutos y conserva la fecha original. Solo admite títulos explícitamente identificados como TCG y temas de revelaciones/productos; OCG, Rush Duel, videojuegos y banlists quedan fuera. No usa la API de X ni incorpora mensajes exclusivos de esa red.
+
+Buscar no descarga imágenes. Preparar crea un borrador, extrae los bloques del artículo y sus imágenes en contexto y reutiliza el proceso existente de traducción revisable, WebP, caché por URL y presupuesto compartido de 15 MB. Los visitantes leen el contenido publicado dentro de SERGOD STORE, con atribución a YGOrganization. Una estructura desconocida o imagen fuera del CDN admitido detiene la preparación; un fallo conserva noticias y avances anteriores. El listado de fuentes nunca se entrega con la configuración pública.
+
+Las noticias ya guardadas se abren sin descargar otra copia. Las coincidencias de títulos originales entre fuentes, con fechas cercanas, se marcan como posibles duplicados y permiten revisar el artículo existente; no se descarta automáticamente un anuncio diferente de la misma edición. La traducción sigue usando MyMemory con su cuota gratuita externa y revisión humana antes de publicar.
+
 La composición pública de Noticias alinea banner y contenido, reúne secciones y Banlists en una barra adaptable y retira los grandes contenedores exteriores. Las tarjetas web muestran las imágenes completas, con títulos debajo y resúmenes de dos líneas; el artículo conserva todo su contenido. Filtros y buscador comparten fila cuando el ancho lo permite. Instagram mantiene su cuadrícula de miniaturas, sin encabezados duplicados, y conserva el visor, carrusel y reproducción bajo demanda. Este cambio usa solo CSS y componentes existentes: no altera publicaciones, fechas, importadores ni almacenamiento.
 
 Noticias → Banlists ofrece Yu-Gi-Oh! TCG, MyL Primera Era y Primer Bloque desde cualquier sección, incluida SERGOD STORE. La herramienta se carga al desplegarla; las listas completas se solicitan solo al abrir un formato. La herramienta TCG conserva su consulta existente de cartas, imágenes y efectos oficiales. MyL muestra las tablas completas de Racial Edición, búsqueda por carta/edición, límites y cambios; las ilustraciones oficiales están en Reglas y aclaraciones. La fuente MyL incluye ejemplos de excepciones, no imágenes de todas las cartas restringidas. No se inventan ni sustituyen esas imágenes. Este cambio de ubicación no descarga archivos nuevos ni modifica datos, fuentes o publicaciones.

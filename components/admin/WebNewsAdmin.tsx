@@ -5,6 +5,9 @@ import { api } from '@/lib/client';
 import {
   newsArticle,
   mylArticle,
+  ygorganizationArticle,
+  newsSourceLabel,
+  possibleNewsDuplicate,
   newsBoards,
   type MylNewsBoard,
   webNewsCategories,
@@ -63,6 +66,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [translate, setTranslate] = useState(true);
+  const [tcgSource, setTcgSource] = useState('meta');
   const [filter, setFilter] = useState('all');
   const [candidates, setCandidates] = useState<WebNewsCandidate[]>([]);
   const [progress, setProgress] = useState('');
@@ -89,7 +93,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
     setNotice('');
     try {
       const result = await api<{ items: WebNewsCandidate[] }>(
-        `/admin/news/web-sources/${source === 'myl' ? 'review-myl' : 'review'}`,
+        `/admin/news/web-sources/${source === 'myl' ? 'review-myl' : tcgSource === 'ygorganization' ? 'review-ygorganization' : 'review'}`,
         {
           method: 'POST',
           body: '{}',
@@ -229,7 +233,11 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
         method: 'POST',
         body: JSON.stringify({
           id: candidate.id,
-          source: candidate.boards?.some((b) => b !== 'yugioh') ? 'myl' : 'tcg',
+          source: candidate.boards?.some((b) => b !== 'yugioh')
+            ? 'myl'
+            : ygorganizationArticle(candidate.url)
+              ? 'ygorganization'
+              : 'tcg',
           translate,
         }),
       });
@@ -356,14 +364,31 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
               </small>
             </details>
           </div>
-          <p>
+          <div className={styles.sourceActions}>
+            <label>
+              Fuente TCG{' '}
+              <select
+                aria-label="Fuente TCG"
+                value={tcgSource}
+                disabled={busy}
+                onChange={(e) => setTcgSource(e.target.value)}
+              >
+                <option value="meta">Yu-Gi-Oh! Meta</option>
+                <option value="ygorganization">YGOrganization</option>
+              </select>
+            </label>{' '}
             <button className="admin-button" disabled={busy} onClick={() => void review()}>
               Buscar novedades TCG
             </button>{' '}
             <button className="admin-button" disabled={busy} onClick={() => void review('myl')}>
               Buscar novedades MyL
             </button>{' '}
-          </p>
+          </div>
+          <small>
+            YGOrganization: consulta las 60 publicaciones recientes de su web, con caché de 5
+            minutos. Los mensajes exclusivos de X no se incluyen. Solo se descargan imágenes al
+            preparar una noticia.
+          </small>
           {candidates.length > 0 && (
             <section
               aria-label={`Noticias ${candidates.some((c) => c.boards?.some((b) => b !== 'yugioh')) ? 'MyL' : 'TCG'} disponibles`}
@@ -378,41 +403,64 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                   </tr>
                 </thead>
                 <tbody>
-                  {candidates.map((candidate) => (
-                    <tr key={candidate.id}>
-                      <td>
-                        <ContentStatus
-                          stage={
-                            items?.some((i) => i.url === candidate.url && i.visible)
-                              ? 'published'
-                              : items?.some((i) => i.url === candidate.url)
-                                ? 'review'
-                                : 'new'
-                          }
-                        />
-                        <strong>{candidate.title}</strong>
-                        <p>
-                          {(candidate.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
-                          {webNewsCategories[candidate.category]} · {candidate.published_on}
-                        </p>
-                        <a href={candidate.url} target="_blank" rel="noopener noreferrer">
-                          Consultar original ↗
-                        </a>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="admin-button secondary"
-                          disabled={busy}
-                          onClick={() => void prepareCandidate(candidate)}
-                        >
-                          {items?.some((i) => i.url === candidate.url)
-                            ? 'Revisar noticia guardada'
-                            : 'Preparar noticia'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {candidates.map((candidate) => {
+                    const duplicate = possibleNewsDuplicate(candidate, items || []);
+                    return (
+                      <tr key={candidate.id}>
+                        <td>
+                          <ContentStatus
+                            stage={
+                              items?.some((i) => i.url === candidate.url && i.visible)
+                                ? 'published'
+                                : items?.some((i) => i.url === candidate.url)
+                                  ? 'review'
+                                  : 'new'
+                            }
+                          />
+                          <strong>{candidate.title}</strong>
+                          <p>
+                            {newsSourceLabel(candidate.url)} ·{' '}
+                            {(candidate.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')}{' '}
+                            · {webNewsCategories[candidate.category]} · {candidate.published_on}
+                          </p>
+                          <a href={candidate.url} target="_blank" rel="noopener noreferrer">
+                            Consultar original ↗
+                          </a>
+                          {duplicate && (
+                            <p>
+                              Posible coincidencia con «{duplicate.title}».{' '}
+                              <button
+                                type="button"
+                                className="admin-button secondary"
+                                disabled={busy}
+                                onClick={() => {
+                                  setDraft({ ...duplicate });
+                                  chooseStage('review');
+                                  setNotice(
+                                    'Noticia relacionada abierta. Comprueba si aporta información distinta antes de preparar otra.',
+                                  );
+                                }}
+                              >
+                                Revisar coincidencia
+                              </button>
+                            </p>
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="admin-button secondary"
+                            disabled={busy}
+                            onClick={() => void prepareCandidate(candidate)}
+                          >
+                            {items?.some((i) => i.url === candidate.url)
+                              ? 'Revisar noticia guardada'
+                              : 'Preparar noticia'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </section>

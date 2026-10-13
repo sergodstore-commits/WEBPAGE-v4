@@ -6,6 +6,8 @@ import {
   newsArticle,
   newsSourceImage,
   mylArticle,
+  ygorganizationArticle,
+  newsSourceLabel,
   type WebNewsItem,
 } from '../web-news';
 import { validDay } from '../tournament-schedule';
@@ -19,6 +21,7 @@ import {
 } from './meta-news-source';
 import { fail } from './core';
 import { mylArticleContent } from './myl-news-source';
+import { ygorganizationArticleContent } from './ygorganization-news-source';
 import { contentBody } from './news-content';
 import { translateNewsText } from './news-translation';
 
@@ -37,7 +40,8 @@ const schema = z
             if (!url) {
               ctx.addIssue({
                 code: 'custom',
-                message: 'Usa un artículo HTTPS de Yu-Gi-Oh! Meta o del blog oficial MyL.',
+                message:
+                  'Usa un artículo HTTPS de Yu-Gi-Oh! Meta, YGOrganization o del blog oficial MyL.',
               });
               return z.NEVER;
             }
@@ -262,7 +266,9 @@ export async function prepareWebNewsImages(
       const myl = Boolean(mylArticle(item.url));
       const content = myl
         ? await mylArticleContent(item.url, item.published_on)
-        : await articleContent(item.url);
+        : ygorganizationArticle(item.url)
+          ? await ygorganizationArticleContent(item.url)
+          : await articleContent(item.url);
       const manifest = content.media;
       // Upgrade only the old excerpt-as-body imports automatically. A refresh is an explicit editor action.
       const legacy =
@@ -376,7 +382,7 @@ export async function publicWebArticle(id: string) {
       (await communityEditions()).some((edition) => edition.code === item.edition_code)
         ? item.edition_code
         : undefined,
-    source_label: mylArticle(item.url) ? 'Blog oficial Mitos y Leyendas' : 'Yu-Gi-Oh! Meta',
+    source_label: newsSourceLabel(item.url),
     format: mylArticle(item.url) ? undefined : ('TCG' as const),
   };
 }

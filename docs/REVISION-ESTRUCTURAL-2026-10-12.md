@@ -88,9 +88,9 @@ Flujo de noticias: Actualizar novedades → seleccionar y abrir vista previa (la
 
 Ligas y banlists mantienen flujos propios: importar un torneo no equivale a incluirlo en puntos; consultar una fuente no equivale a publicar una noticia; actualizar una banlist completa no requiere redactar un artículo. Usar estados coherentes: Nuevo, Preparando, Listo para revisar, Publicado y Error, con explicación de qué falta y un único botón principal contextual.
 
-## Nueva fuente: YGOrganization en X
+## Nueva fuente: web de YGOrganization
 
-[Perfil solicitado](https://x.com/ygorganization). Añadido a la propuesta para una fase posterior. Solo TCG; detectar publicaciones repetidas entre fuentes y separar publicación en X, anuncio de producto y fecha real de lanzamiento. La consulta automatizada del perfil devolvió 403 durante esta revisión; todavía no está comprobado un mecanismo gratuito de incorporación. No se ha conectado ni importado contenido desde X.
+[Perfil solicitado](https://x.com/ygorganization). El propietario aprobó incorporar su [sitio web](https://ygorganization.com/) como alternativa gratuita a la API de X. Se integra en el flujo de noticias con selector de fuente TCG, tres páginas recientes, caché de cinco minutos, preparación de artículos e imágenes solo por selección y avisos de posibles duplicados entre fuentes. La publicación requiere revisión. Los mensajes exclusivos de X no se incluyen. No se contrata una API ni una IA adicional.
 
 ## Secuencia de ejecución
 
@@ -102,6 +102,6 @@ Avance del 12 de octubre: completada la corrección de fechas y el orden de Tien
 4. Separar Banlists y ajustar la selección editorial de Noticias.
 5. Dar prioridad al directo y compactar la agenda.
 6. Aplicar la organización del panel y sus estados; retirar instrucciones y accesos redundantes.
-7. Incorporar X después de comprobar lectura gratuita y deduplicación.
+7. Incorporar la web de YGOrganization como fuente TCG adicional; X queda fuera del importador.
 
 Los cambios de composición se pueden realizar con CSS y los recursos existentes. Las nuevas cartas sí aumentan el almacenamiento: preparar solo lo seleccionado, reutilizar imágenes y medir el presupuesto antes de ampliar la biblioteca MyL. El proyecto gratuito no implica consumo cero, pero tampoco exige descargar videos, duplicar galerías o añadir una IA de pago.
