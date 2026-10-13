@@ -1,10 +1,12 @@
 'use client';
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { api, date } from '@/lib/client';
 import type { Post, YouTubeVideo } from '@/lib/types';
 import { TorIntegration } from './LeagueAdmin';
 import { InstagramIntegration } from './InstagramAdmin';
+import styles from './NewsWorkspace.module.css';
 
 type Candidate = Pick<YouTubeVideo, 'video_id' | 'title' | 'recorded_at' | 'youtube_thumbnail'>;
 type Live = {
@@ -219,6 +221,48 @@ function VideoEditor({
   );
 }
 export function YouTubeIntegrations() {
+  return (
+    <div>
+      <div className="admin-page-heading">
+        <div>
+          <h1>Integraciones</h1>
+          <p>Conexiones y permisos. Cada tarea se realiza en su área del panel.</p>
+        </div>
+      </div>
+      <section className="admin-card admin-card-body">
+        <h2>YouTube</h2>
+        <p>Canal: @SergodStore · Usa enlaces públicos, sin acceso privado a Google.</p>
+        <Link className="admin-button secondary" href="/admin/transmisiones">
+          Gestionar directo y grabaciones
+        </Link>
+      </section>
+      <InstagramIntegration />
+      <TorIntegration />
+      <section className="admin-card admin-card-body">
+        <h2>Fuentes públicas de cartas y noticias</h2>
+        <p>
+          No requieren una cuenta nueva. Actualiza solo el contenido que necesitas en cada
+          herramienta.
+        </p>
+        <div className="admin-actions">
+          <Link
+            className="admin-button secondary"
+            href="/admin/noticias?herramienta=web&paso=fuentes"
+          >
+            Buscar noticias
+          </Link>
+          <Link className="admin-button secondary" href="/admin/noticias?herramienta=editions">
+            Biblioteca de cartas
+          </Link>
+          <Link className="admin-button secondary" href="/admin/noticias?herramienta=banlist">
+            Actualizar banlists
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
+function YouTubeBroadcastControls() {
   const [live, setLive] = useState<Live | null>(null),
     [posts, setPosts] = useState<Post[]>([]),
     [url, setUrl] = useState(''),
@@ -255,12 +299,6 @@ export function YouTubeIntegrations() {
   }
   return (
     <div>
-      <div className="admin-page-heading">
-        <div>
-          <h1>Integraciones</h1>
-          <p>Elige el contenido que compartirá SERGOD STORE.</p>
-        </div>
-      </div>
       <Feedback value={error} error />
       <Feedback value={notice} />
       {!live ? (
@@ -291,7 +329,7 @@ export function YouTubeIntegrations() {
               >
                 Abrir YouTube Studio
               </a>
-              <Link className="admin-button secondary" href="/admin/transmisiones">
+              <Link className="admin-button secondary" href="/admin/transmisiones?vista=archivo">
                 Transmisiones guardadas
               </Link>
             </div>
@@ -459,12 +497,60 @@ export function YouTubeIntegrations() {
           }}
         />
       )}
-      <InstagramIntegration />
-      <TorIntegration />
     </div>
   );
 }
 export function YouTubeTransmissions() {
+  const params = useSearchParams();
+  const view = params.get('vista') === 'archivo' ? 'archivo' : 'directo';
+  const [visited, setVisited] = useState<Record<string, boolean>>({ [view]: true });
+  useEffect(() => {
+    setVisited((previous) => (previous[view] ? previous : { ...previous, [view]: true }));
+  }, [view]);
+  return (
+    <div>
+      <div className="admin-page-heading">
+        <div>
+          <h1>Transmisiones</h1>
+          <p>Gestiona el directo, incorpora videos y revisa el archivo de Torneos.</p>
+        </div>
+        <a
+          className="admin-button secondary"
+          href="/torneos#transmision"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ver transmisión en la tienda ↗
+        </a>
+      </div>
+      <nav className={`${styles.tabs} ${styles.newsTabs}`} aria-label="Gestión de transmisiones">
+        {[
+          ['directo', 'Directo e incorporar', 'Preparar la emisión o añadir un video'],
+          ['archivo', 'Grabaciones', 'Editar, publicar o retirar videos guardados'],
+        ].map(([id, label, help]) => (
+          <button
+            key={id}
+            className={styles.tab}
+            aria-pressed={view === id}
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('vista', id);
+              window.history.pushState(null, '', url);
+            }}
+          >
+            <strong>{label}</strong>
+            <small>{help}</small>
+          </button>
+        ))}
+      </nav>
+      <div hidden={view !== 'directo'}>{visited.directo && <YouTubeBroadcastControls />}</div>
+      <div hidden={view !== 'archivo'}>
+        {visited.archivo && <YouTubeArchive active={view === 'archivo'} />}
+      </div>
+    </div>
+  );
+}
+function YouTubeArchive({ active }: { active: boolean }) {
   const [videos, setVideos] = useState<YouTubeVideo[]>([]),
     [posts, setPosts] = useState<Post[]>([]),
     [selected, setSelected] = useState<YouTubeVideo | null>(null),
@@ -488,8 +574,8 @@ export function YouTubeTransmissions() {
     }
   }
   useEffect(() => {
-    void load();
-  }, []);
+    if (active) void load();
+  }, [active]);
   async function remove(v: YouTubeVideo) {
     if (
       !window.confirm(
@@ -508,15 +594,6 @@ export function YouTubeTransmissions() {
   }
   return (
     <div>
-      <div className="admin-page-heading">
-        <div>
-          <h1>Transmisiones</h1>
-          <p>Publica, edita o retira grabaciones de YouTube del archivo de Torneos.</p>
-        </div>
-        <Link className="admin-button" href="/admin/integraciones">
-          Incorporar video de YouTube
-        </Link>
-      </div>
       <Feedback value={notice} />
       <Feedback value={error} error />
       {selected && (
@@ -583,8 +660,8 @@ export function YouTubeTransmissions() {
           </div>
           {!videos.length && (
             <p className="admin-card-body">
-              Todavía no hay grabaciones guardadas. Incorpora un video de YouTube desde
-              Integraciones.
+              Todavía no hay grabaciones guardadas. Abre «Directo e incorporar» para añadir un video
+              de YouTube.
             </p>
           )}
         </section>

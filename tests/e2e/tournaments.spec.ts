@@ -97,7 +97,7 @@ test('Admin YouTube: revisar no importa; previsualizar, publicar, recargar y ret
     if (u.pathname === '/api/posts') return r.fulfill({ json: upcoming });
     return r.fulfill({ status: 404, json: { error: 'Fuera de esta prueba de interfaz.' } });
   });
-  await page.goto('/admin/integraciones');
+  await page.goto('/admin/transmisiones');
   await expect(page.getByText('Canal: @SergodStore', { exact: true })).toBeVisible();
   await page
     .getByLabel('Enlace del video de YouTube', { exact: true })
@@ -130,7 +130,7 @@ test('Admin YouTube: revisar no importa; previsualizar, publicar, recargar y ret
   await expect(
     page.locator('#grabaciones').getByRole('heading', { name: 'Liga revisada', exact: true }),
   ).toBeVisible();
-  await page.goto('/admin/transmisiones');
+  await page.goto('/admin/transmisiones?vista=archivo');
   await page.getByRole('button', { name: 'Editar transmisión Liga revisada', exact: true }).click();
   await page.setViewportSize({ width: 375, height: 900 });
   await expect

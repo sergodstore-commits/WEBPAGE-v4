@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ChevronRight,
   ClipboardList,
+  BookOpen,
   CreditCard,
   ExternalLink,
   LayoutDashboard,
@@ -13,6 +15,7 @@ import {
   Package,
   Plus,
   Settings,
+  ShieldCheck,
   ShoppingBag,
   Store,
   Trophy,
@@ -46,6 +49,12 @@ const groups = [
       { href: '/admin/liga', label: 'Liga SERGOD STORE', icon: Trophy },
       { href: '/admin/transmisiones', label: 'Transmisiones', icon: ExternalLink },
       { href: '/admin/noticias', label: 'Noticias', icon: Newspaper },
+      {
+        href: '/admin/noticias?herramienta=editions',
+        label: 'Biblioteca de cartas',
+        icon: BookOpen,
+      },
+      { href: '/admin/noticias?herramienta=banlist', label: 'Banlists', icon: ShieldCheck },
       { href: '/admin/publicaciones', label: 'Publicaciones', icon: Newspaper },
     ],
   },
@@ -65,11 +74,15 @@ export function AdminShell({
   user,
   pathname,
   children,
+  working = false,
 }: {
   user: User;
   pathname: string;
   children: ReactNode;
+  working?: boolean;
 }) {
+  const query = useSearchParams();
+  const tool = query.get('herramienta');
   const [open, setOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
   const sidebar = useRef<HTMLElement>(null);
@@ -77,8 +90,17 @@ export function AdminShell({
   const workspace = useRef<HTMLDivElement>(null);
   const previousPath = useRef(pathname);
   const wasOpen = useRef(false);
-  const active = (href: string) =>
-    pathname === href || (href !== '/admin' && pathname.startsWith(href + '/'));
+  const active = (href: string) => {
+    const [path, search] = href.split('?');
+    if (path === '/admin/noticias') {
+      const requested = new URLSearchParams(search).get('herramienta');
+      return (
+        pathname === path &&
+        (requested ? tool === requested : !['editions', 'banlist'].includes(tool || ''))
+      );
+    }
+    return pathname === path || (path !== '/admin' && pathname.startsWith(path + '/'));
+  };
   const current =
     groups.flatMap((group) => group.items).find((item) => active(item.href))?.label ||
     (pathname === '/admin/correos' ? 'Correos de prueba' : 'Resumen');
@@ -90,6 +112,14 @@ export function AdminShell({
         : pathname.startsWith('/admin/pedidos/')
           ? 'Detalle del pedido'
           : '';
+
+  useEffect(() => {
+    if (!mobile || open) {
+      sidebar.current
+        ?.querySelector<HTMLElement>('nav [aria-current="page"]')
+        ?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [pathname, tool, mobile, open]);
 
   useEffect(() => {
     const query = window.matchMedia('(max-width: 900px)');
@@ -161,6 +191,19 @@ export function AdminShell({
         href={href}
         aria-current={active(href) ? 'page' : undefined}
         className={active(href) ? 'active' : ''}
+        aria-disabled={working || undefined}
+        onClick={(event) => {
+          if (working) {
+            event.preventDefault();
+            return;
+          }
+          if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+          if (href.split('?')[0] === pathname) {
+            event.preventDefault();
+            window.history.pushState(null, '', href);
+            setOpen(false);
+          }
+        }}
       >
         <Icon size={18} />
         <span>{label}</span>
@@ -186,7 +229,7 @@ export function AdminShell({
           if (!mobile || !open || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
             return;
           const href = (event.target as Element).closest('a')?.getAttribute('href');
-          if (href?.startsWith('/admin')) pendingFocusPath = href;
+          if (!working && href?.startsWith('/admin')) pendingFocusPath = href.split('?')[0];
         }}
         id="admin-navigation"
         className={`admin-sidebar ${open ? 'open' : ''}`}

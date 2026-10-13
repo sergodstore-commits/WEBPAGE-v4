@@ -224,8 +224,8 @@ export function TorIntegration() {
           {error}
         </p>
       )}
-      <Link className="admin-button" href="/admin/liga?revisar=tor">
-        Actualizar torneos de MyL
+      <Link className="admin-button secondary" href="/admin/liga">
+        Gestionar resultados y selección de ligas
       </Link>
     </section>
   );

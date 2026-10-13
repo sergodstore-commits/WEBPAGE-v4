@@ -146,6 +146,7 @@ export default function AdminApp() {
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
   const [authError, setAuthError] = useState('');
+  const [working, setWorking] = useState(false);
   useEffect(() => {
     api<User | null>('/auth/me')
       .then(setUser)
@@ -195,7 +196,7 @@ export default function AdminApp() {
   else if (pathname === '/admin/pedidos') screen = <OrdersPage />;
   else if (pathname === '/admin/pos') screen = <PosPage />;
   else if (pathname === '/admin/publicaciones') screen = <PostsPage />;
-  else if (pathname === '/admin/noticias') screen = <InstagramNewsPage />;
+  else if (pathname === '/admin/noticias') screen = <InstagramNewsPage onBusyChange={setWorking} />;
   else if (pathname === '/admin/torneos') screen = <PostsPage tournaments />;
   else if (pathname === '/admin/liga') screen = <LeagueAdmin />;
   else if (pathname === '/admin/transmisiones') screen = <YouTubeTransmissions />;
@@ -210,7 +211,7 @@ export default function AdminApp() {
       </Empty>
     );
   return (
-    <AdminShell user={user} pathname={pathname}>
+    <AdminShell user={user} pathname={pathname} working={working}>
       {screen}
     </AdminShell>
   );

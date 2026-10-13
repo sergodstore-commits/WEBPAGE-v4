@@ -29,6 +29,7 @@ test('Admin YouTube: publicar directo, comprobar recarga y finalizar en archivo'
     if (u.pathname === '/api/admin/posts' || u.pathname === '/api/posts')
       return r.fulfill({ json: [] });
     if (u.pathname === '/api/admin/integrations/youtube') return r.fulfill({ json: live });
+    if (u.pathname === '/api/admin/youtube/transmissions') return r.fulfill({ json: archive });
     if (u.pathname === '/api/admin/integrations/youtube/live') {
       live = { ...live, ...req.postDataJSON(), video_id: 'SergodLive1' };
       return r.fulfill({ json: live });
@@ -63,11 +64,20 @@ test('Admin YouTube: publicar directo, comprobar recarga y finalizar en archivo'
   await page.route('https://www.youtube-nocookie.com/**', (r) =>
     r.fulfill({ contentType: 'text/html', body: '<p>Reproductor de prueba</p>' }),
   );
-  await page.goto('/admin/integraciones');
+  await page.goto('/admin/transmisiones');
   await page
     .getByLabel('Enlace del directo de YouTube', { exact: true })
     .fill('https://www.youtube.com/live/SergodLive1');
   await page.getByLabel('Título o contexto del directo', { exact: true }).fill('Liga YouTube');
+  const tools = page.getByRole('navigation', { name: 'Gestión de transmisiones' });
+  await tools.getByRole('button', { name: /Grabaciones/ }).click();
+  await expect(
+    page.getByText('Todavía no hay grabaciones guardadas.', { exact: false }),
+  ).toBeVisible();
+  await tools.getByRole('button', { name: /Directo e incorporar/ }).click();
+  await expect(page.getByLabel('Título o contexto del directo', { exact: true })).toHaveValue(
+    'Liga YouTube',
+  );
   await page.getByRole('combobox', { name: /^Estado del directo/ }).selectOption('live');
   await page.getByRole('combobox', { name: /^Mostrar directo en Torneos/ }).selectOption('yes');
   await page.getByRole('button', { name: 'Guardar directo', exact: true }).click();
@@ -84,7 +94,7 @@ test('Admin YouTube: publicar directo, comprobar recarga y finalizar en archivo'
     'src',
     /youtube-nocookie.com\/embed\/SergodLive1/,
   );
-  await page.goto('/admin/integraciones');
+  await page.goto('/admin/transmisiones');
   await page.getByRole('button', { name: 'Finalizar y guardar en archivo', exact: true }).click();
   await expect(
     page.getByText('Directo oculto y grabación publicada en Transmisiones anteriores.', {

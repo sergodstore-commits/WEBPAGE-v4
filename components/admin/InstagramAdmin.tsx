@@ -349,13 +349,15 @@ export function InstagramIntegration({
             {status?.connected ? 'Volver a conectar Instagram' : 'Conectar Instagram'}
           </button>
         )}
-        <button
-          className="admin-button secondary"
-          disabled={busy || pending || !status?.configured || !status.connected || status.expired}
-          onClick={() => void action(() => review())}
-        >
-          {busy ? 'Consultando…' : 'Actualizar publicaciones'}
-        </button>
+        {news && (
+          <button
+            className="admin-button secondary"
+            disabled={busy || pending || !status?.configured || !status.connected || status.expired}
+            onClick={() => void action(() => review())}
+          >
+            {busy ? 'Consultando…' : 'Actualizar publicaciones'}
+          </button>
+        )}
         {!news && (
           <>
             <button
@@ -378,8 +380,8 @@ export function InstagramIntegration({
             >
               Desconectar Instagram
             </button>
-            <Link className="admin-button secondary" href="/admin/noticias">
-              Noticias guardadas
+            <Link className="admin-button secondary" href="/admin/noticias?herramienta=instagram">
+              Gestionar noticias de Instagram
             </Link>{' '}
           </>
         )}
@@ -530,12 +532,19 @@ export function InstagramIntegration({
     </section>
   );
 }
-export function InstagramNewsPage() {
+export function InstagramNewsPage({
+  onBusyChange: reportBusy,
+}: { onBusyChange?: (busy: boolean) => void } = {}) {
   const [working, setWorking] = useState(false);
   const onBusyChange = useCallback((busy: boolean) => setWorking(busy), []);
+  useEffect(() => {
+    reportBusy?.(working);
+    return () => reportBusy?.(false);
+  }, [working, reportBusy]);
   const query = useSearchParams();
   const tab = query.get('herramienta');
   const workspace = tab && ['web', 'instagram', 'editions', 'banlist'].includes(tab) ? tab : 'web';
+  const isNews = workspace === 'web' || workspace === 'instagram';
   const [visited, setVisited] = useState<string[]>([workspace]);
   useEffect(() => {
     setVisited((old) => (old.includes(workspace) ? old : [...old, workspace]));
@@ -574,16 +583,48 @@ export function InstagramNewsPage() {
     <div>
       <div className="admin-page-heading">
         <div>
-          <h1>Noticias</h1>
-          <p>Busca contenido, revisa el borrador y publica en su sección.</p>
+          <h1>
+            {workspace === 'editions'
+              ? 'Biblioteca de cartas'
+              : workspace === 'banlist'
+                ? 'Banlists'
+                : 'Noticias'}
+          </h1>
+          <p>
+            {workspace === 'editions'
+              ? 'Prepara y revisa el contenido que alimenta Comunidad y los productos.'
+              : workspace === 'banlist'
+                ? 'Actualiza las listas completas de Konami y MyL que se consultan en Noticias.'
+                : 'Busca novedades, revisa el contenido y publica tu selección.'}
+          </p>
         </div>
+        <a
+          className="admin-button secondary"
+          href={
+            workspace === 'editions'
+              ? '/comunidad?vista=ediciones'
+              : workspace === 'banlist'
+                ? '/noticias?vista=banlists'
+                : '/noticias'
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {workspace === 'editions'
+            ? 'Ver cartas en la tienda ↗'
+            : workspace === 'banlist'
+              ? 'Ver banlists publicadas ↗'
+              : 'Ver Noticias en la tienda ↗'}
+        </a>
       </div>
-      <nav className={styles.tabs} aria-label="Herramientas de contenido">
+      <nav
+        hidden={!isNews}
+        className={`${styles.tabs} ${styles.newsTabs}`}
+        aria-label="Herramientas de contenido"
+      >
         {[
           ['web', 'Noticias web', 'Yu-Gi-Oh! TCG y MyL'],
           ['instagram', 'SERGOD STORE', 'Publicaciones de Instagram'],
-          ['editions', 'Guías de cartas', 'Contenido de sobres y cajas'],
-          ['banlist', 'Banlists', 'Yu-Gi-Oh! y MyL'],
         ].map(([id, title, help]) => (
           <button
             key={id}
@@ -602,14 +643,10 @@ export function InstagramNewsPage() {
           </button>
         ))}
       </nav>
-      <div className={styles.shortcuts} aria-label="Otros contenidos">
-        <Link href="/admin/liga">Resultados y ligas →</Link>
+      <div hidden={!isNews} className={styles.shortcuts} aria-label="Otros contenidos">
         <Link href="/admin/publicaciones">Contenido manual →</Link>
-        <Link href="/noticias" target="_blank" rel="noopener noreferrer">
-          Ver Noticias en la tienda ↗
-        </Link>
       </div>
-      <details className={styles.inventory}>
+      <details className={styles.inventory} hidden={!isNews}>
         <summary>¿Qué importa cada herramienta?</summary>
         <ul>
           <li>
@@ -621,12 +658,12 @@ export function InstagramNewsPage() {
             Instagram.
           </li>
           <li>
-            Guías de cartas: obtiene ediciones de YGOPRODeck, efectos oficiales en español de Konami
-            y guarda imágenes WebP.
+            Biblioteca de cartas: acceso propio en el menú. Prepara las guías de Yu-Gi-Oh! y MyL que
+            se comparten entre Comunidad y los productos; reutiliza imágenes WebP.
           </li>
           <li>
-            Banlists: actualiza Yu-Gi-Oh! TCG desde Konami y Primera Era / Primer Bloque desde el
-            blog oficial MyL. Consulta las listas en Noticias → Banlist.
+            Banlists: acceso propio en el menú. Actualiza las listas completas de los tres formatos;
+            no necesitas publicarlas como artículos.
           </li>
           <li>
             <Link href="/admin/liga">Ligas: resultados de Konami y TOR</Link>. Importa torneos;
@@ -714,37 +751,39 @@ export function InstagramNewsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {list.map((p) => (
-                      <tr key={p.id}>
-                        <td>{p.caption.slice(0, 150) || 'Publicación de Instagram'}</td>
-                        <td>{date(p.recorded_at)}</td>
-                        <td>
-                          {p.status === 'published'
-                            ? 'Publicado'
-                            : p.status === 'withdrawn'
-                              ? 'Retirado'
-                              : 'Borrador'}
-                        </td>
-                        <td>
-                          <div className="admin-actions">
-                            <button
-                              className="admin-button secondary"
-                              aria-label={`Editar noticia ${p.media_id}`}
-                              onClick={() => setSelected(p)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              className="admin-button secondary"
-                              aria-label={`Borrar noticia ${p.media_id}`}
-                              onClick={() => void remove(p)}
-                            >
-                              Borrar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {[...list]
+                      .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at))
+                      .map((p) => (
+                        <tr key={p.id}>
+                          <td>{p.caption.slice(0, 150) || 'Publicación de Instagram'}</td>
+                          <td>{date(p.recorded_at)}</td>
+                          <td>
+                            {p.status === 'published'
+                              ? 'Publicado'
+                              : p.status === 'withdrawn'
+                                ? 'Retirado'
+                                : 'Borrador'}
+                          </td>
+                          <td>
+                            <div className="admin-actions">
+                              <button
+                                className="admin-button secondary"
+                                aria-label={`Editar noticia ${p.media_id}`}
+                                onClick={() => setSelected(p)}
+                              >
+                                Editar
+                              </button>
+                              <button
+                                className="admin-button secondary"
+                                aria-label={`Borrar noticia ${p.media_id}`}
+                                onClick={() => void remove(p)}
+                              >
+                                Borrar
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>

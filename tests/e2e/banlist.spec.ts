@@ -256,10 +256,16 @@ test('Banlist: consulta interna, buscador, filtros, móvil y permisos de actuali
     });
   });
   await page.goto('/admin/noticias');
+  await page.getByRole('button', { name: 'Abrir menú', exact: true }).click();
   await page
-    .getByRole('navigation', { name: 'Herramientas de contenido' })
-    .getByRole('button', { name: 'Banlists' })
+    .getByRole('navigation', { name: 'Administración', exact: true })
+    .getByRole('link', { name: 'Banlists', exact: true })
     .click();
+  await expect(page.getByRole('button', { name: 'Abrir menú' })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
+  await expect(page.locator('main')).toBeFocused();
   await page.getByRole('button', { name: 'Actualizar banlist TCG', exact: true }).click();
   await expect(page.getByText(/Lista verificada. Galería completa/)).toBeVisible();
   expect(batches).toBe(1);

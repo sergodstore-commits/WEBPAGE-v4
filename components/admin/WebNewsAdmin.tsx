@@ -15,6 +15,14 @@ import styles from './NewsWorkspace.module.css';
 import type { EditionChoice } from '@/lib/edition-gallery';
 import { mylDefinition } from '@/lib/myl-library';
 import { useRemote } from '../store/shared';
+import { ContentStatus } from './ContentStatus';
+
+const needsPreparation = (item: WebNewsItem) =>
+  Boolean(
+    (item.original_title && !item.media_checked) ||
+    item.media?.some((m) => !m.image) ||
+    item.content_blocks?.some((b) => b.original_text),
+  );
 
 const blank = (): WebNewsItem => ({
   id: '',
@@ -203,6 +211,15 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
     editor.current?.scrollIntoView({ block: 'center' });
   }
   async function prepareCandidate(candidate: WebNewsCandidate) {
+    const existing = items?.find((item) => item.url === candidate.url);
+    if (existing) {
+      setError('');
+      setPublishedItem(null);
+      setDraft({ ...existing });
+      chooseStage('review');
+      setNotice('Noticia guardada abierta para revisar. No se ha vuelto a descargar.');
+      return;
+    }
     setBusy(true);
     setError('');
     setNotice('');
@@ -239,12 +256,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
     setNotice('');
     try {
       let ready = item;
-      if (
-        !item.visible &&
-        ((item.original_title && !item.media_checked) ||
-          item.media?.some((m) => !m.image) ||
-          item.content_blocks?.some((b) => b.original_text))
-      ) {
+      if (!item.visible && needsPreparation(item)) {
         const prepared = await prepareImages(item.id);
         if (stop.current) return false;
         ready = prepared!.find((i) => i.id === item.id)!;
@@ -333,13 +345,16 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
               />{' '}
               Traducir notas TCG al español al preparar
             </label>
-            <small>
-              {' '}
-              MyMemory gratuito: cuota externa de 5.000 caracteres/día, compartida por la conexión
-              del servidor. Se envían título, resumen y bloques públicos del artículo. Revisa
-              nombres y traducción; no sustituye los efectos oficiales ni redacta información nueva.
-              MyL ya viene en español.
-            </small>
+            <details>
+              <summary>Traducción gratuita y límites</summary>
+              <small>
+                {' '}
+                MyMemory gratuito: cuota externa de 5.000 caracteres/día, compartida por la conexión
+                del servidor. Se envían título, resumen y bloques públicos del artículo. Revisa
+                nombres y traducción; no sustituye los efectos oficiales ni redacta información
+                nueva. MyL ya viene en español.
+              </small>
+            </details>
           </div>
           <p>
             <button className="admin-button" disabled={busy} onClick={() => void review()}>
@@ -348,14 +363,6 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
             <button className="admin-button" disabled={busy} onClick={() => void review('myl')}>
               Buscar novedades MyL
             </button>{' '}
-            <a
-              href="https://www.yugiohmeta.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="admin-button secondary"
-            >
-              Consultar Yu-Gi-Oh! Meta ↗
-            </a>
           </p>
           {candidates.length > 0 && (
             <section
@@ -374,6 +381,15 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                   {candidates.map((candidate) => (
                     <tr key={candidate.id}>
                       <td>
+                        <ContentStatus
+                          stage={
+                            items?.some((i) => i.url === candidate.url && i.visible)
+                              ? 'published'
+                              : items?.some((i) => i.url === candidate.url)
+                                ? 'review'
+                                : 'new'
+                          }
+                        />
                         <strong>{candidate.title}</strong>
                         <p>
                           {(candidate.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
@@ -387,11 +403,11 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                         <button
                           type="button"
                           className="admin-button secondary"
-                          disabled={busy || Boolean(items?.some((i) => i.url === candidate.url))}
+                          disabled={busy}
                           onClick={() => void prepareCandidate(candidate)}
                         >
                           {items?.some((i) => i.url === candidate.url)
-                            ? 'Ya está en la lista'
+                            ? 'Revisar noticia guardada'
                             : 'Preparar noticia'}
                         </button>
                       </td>
@@ -842,9 +858,20 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                   {savedItems.map((item) => (
                     <tr key={item.id}>
                       <td>
-                        <span className={styles.status}>
-                          {item.visible ? 'Publicada' : 'Borrador'}
-                        </span>
+                        <ContentStatus
+                          stage={
+                            item.visible
+                              ? 'published'
+                              : busy && workingId === item.id
+                                ? 'preparing'
+                                : needsPreparation(item)
+                                  ? 'pending'
+                                  : 'review'
+                          }
+                        />
+                        <small className={styles.status}>
+                          {item.visible ? 'Visible en Noticias' : 'Borrador sin publicar'}
+                        </small>
                         <button
                           type={draft.id === item.id && !item.visible ? 'submit' : 'button'}
                           form={
@@ -877,9 +904,14 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                         <small>
                           {(item.boards || ['yugioh']).map((b) => newsBoards[b]).join(' / ')} ·{' '}
                           {webNewsCategories[item.category || 'news']} ·{' '}
-                          {item.media_checked
-                            ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`
-                            : 'Imágenes sin preparar'}
+                          {(item.edition_code || item.id === 'beyond-the-brave') &&
+                          !item.media?.length
+                            ? 'Galería de la edición compartida'
+                            : item.media_checked
+                              ? `${item.media?.filter((m) => m.image).length || 0}/${item.media?.length || 0} imágenes listas`
+                              : needsPreparation(item)
+                                ? 'Contenido por preparar'
+                                : 'Contenido editorial guardado'}
                         </small>
                         <a href={item.url} target="_blank" rel="noopener noreferrer">
                           Ver fuente ↗

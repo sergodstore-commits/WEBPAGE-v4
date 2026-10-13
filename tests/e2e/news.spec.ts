@@ -77,6 +77,10 @@ test('Instagram local: panel sin hashtag y operaciones protegidas sin conectar M
   ).toBeDisabled();
   await expect(
     page.getByRole('button', { name: 'Actualizar publicaciones', exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole('link', { name: 'Gestionar noticias de Instagram', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Actualizar publicaciones', exact: true }),
   ).toBeDisabled();
   const fake = await page.request.post('/api/admin/news', {
     headers: { Origin: 'http://localhost:3100' },

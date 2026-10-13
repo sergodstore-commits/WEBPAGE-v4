@@ -430,7 +430,7 @@ test('Admin MyL: buscar y preparar productos conserva fecha, formato y confirmac
   expect(saved[0].visible).toBe(true);
   await page.reload();
   await expect(section.getByRole('row').filter({ hasText: saved[0].title })).toContainText(
-    'Publicada',
+    'Publicado',
   );
   noCandidates = true;
   await section.getByRole('button', { name: /Buscar y preparar/ }).click();
@@ -439,13 +439,13 @@ test('Admin MyL: buscar y preparar productos conserva fecha, formato y confirmac
   await expect(section.getByRole('region', { name: 'Noticias MyL disponibles' })).toHaveCount(0);
   expect(saved[0].visible).toBe(true);
   await page
-    .getByRole('navigation', { name: 'Herramientas de contenido' })
-    .getByRole('button', { name: 'Banlists' })
+    .getByRole('navigation', { name: 'Administración', exact: true })
+    .getByRole('link', { name: 'Banlists', exact: true })
     .click();
   await expect(section).not.toBeVisible();
   await expect(page.getByRole('heading', { name: 'Banlist Yu-Gi-Oh! TCG' })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole('navigation', { name: 'Herramientas de contenido' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Banlists', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: '.data/admin-news-workspace-mobile.png', fullPage: true });
 });
@@ -486,6 +486,13 @@ test('Admin: biblioteca separada de fuentes, filtros, historial y herramientas b
   ];
   const requests: string[] = [];
   await page.route('**/api/admin/news/web-sources', (route) => route.fulfill({ json: items }));
+  await page.route('**/api/admin/news/web-sources/review', (route) =>
+    route.fulfill({ json: { items: [items[0]] } }),
+  );
+  await page.route('**/api/admin/news/web-sources/draft', (route) => {
+    requests.push('download');
+    return route.fulfill({ status: 500 });
+  });
   await page.route('**/api/admin/news/editions', (route) => {
     requests.push('editions');
     return route.fulfill({
@@ -524,11 +531,12 @@ test('Admin: biblioteca separada de fuentes, filtros, historial y herramientas b
     .getByRole('button', { name: 'Editar', exact: true })
     .click();
   await section.getByLabel('Título en español', { exact: true }).fill('Borrador sin perder');
-  const tools = page.getByRole('navigation', { name: 'Herramientas de contenido', exact: true });
-  await tools.getByRole('button', { name: 'Guías de cartas' }).click();
+  const navigation = page.getByRole('navigation', { name: 'Administración', exact: true });
+  await navigation.getByRole('link', { name: 'Biblioteca de cartas', exact: true }).click();
+  await expect(navigation.locator('[aria-current=page]')).toHaveCount(1);
   await expect(page.getByRole('heading', { name: 'Guías de nuevas ediciones' })).toBeVisible();
   expect(requests).toEqual(['editions']);
-  await tools.getByRole('button', { name: 'Noticias web' }).click();
+  await navigation.getByRole('link', { name: 'Noticias', exact: true }).click();
   await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
     'Borrador sin perder',
   );
@@ -541,6 +549,16 @@ test('Admin: biblioteca separada de fuentes, filtros, historial y herramientas b
   await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
     'Borrador sin perder',
   );
+  await section.getByRole('button', { name: /Buscar y preparar/ }).click();
+  await section.getByRole('button', { name: 'Buscar novedades TCG', exact: true }).click();
+  await section.getByRole('button', { name: 'Revisar noticia guardada', exact: true }).click();
+  await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
+    items[0].title,
+  );
+  await expect(
+    section.getByRole('status').filter({ hasText: 'No se ha vuelto a descargar' }),
+  ).toBeVisible();
+  expect(requests).toEqual(['editions']);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

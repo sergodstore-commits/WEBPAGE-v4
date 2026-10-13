@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/client';
 import type { EditionPanel, EditionSummary } from '@/lib/edition-gallery';
 import styles from './EditionImportAdmin.module.css';
+import { ContentStatus } from './ContentStatus';
 
 const emptyDraft = { title: '', summary: '', body: '' };
 export function EditionImportAdmin({
@@ -128,7 +129,7 @@ export function EditionImportAdmin({
       <div className={styles.heading}>
         <div>
           <h2 id="edition-import-heading">Guías de nuevas ediciones</h2>
-          <p>Busca, prepara la galería en español y publica después de revisarla.</p>
+          <p>Yu-Gi-Oh! TCG · Cartas y efectos oficiales en español para Comunidad y productos.</p>
         </div>
         <button
           className="admin-button"
@@ -215,7 +216,11 @@ export function EditionImportAdmin({
                 disabled={!code || Boolean(busy)}
                 onClick={() => void prepare()}
               >
-                {selected?.ready ? 'Reanudar / comprobar galería' : 'Preparar galería'}
+                {selected?.complete
+                  ? 'Comprobar actualización de la fuente'
+                  : selected?.ready
+                    ? 'Reanudar preparación'
+                    : 'Preparar galería'}
               </button>
               {busy === 'prepare' && (
                 <button
@@ -234,6 +239,19 @@ export function EditionImportAdmin({
           {selected && (
             <div className={styles.editor}>
               <div className={styles.progress} role="status">
+                <ContentStatus
+                  stage={
+                    busy === 'prepare'
+                      ? 'preparing'
+                      : selected.last_error
+                        ? 'error'
+                        : selected.published
+                          ? 'published'
+                          : selected.complete
+                            ? 'review'
+                            : 'pending'
+                  }
+                />
                 <strong>{selected.name}</strong>
                 <span>
                   {selected.ready} / {selected.total || selected.expected} cartas preparadas ·{' '}
@@ -329,7 +347,9 @@ export function EditionImportAdmin({
                         }),
                       );
                       setReviewed(false);
-                      setNotice('Guía publicada en la columna Yu-Gi-Oh! de Noticias.');
+                      setNotice(
+                        'Guía publicada. Disponible en Comunidad, los productos asociados y Noticias.',
+                      );
                     })
                   }
                 >

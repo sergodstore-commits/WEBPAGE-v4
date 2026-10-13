@@ -32,9 +32,22 @@ test('Admin: tareas agrupadas, ubicación y pantallas de trabajo adaptables', as
       '/admin/integraciones',
       '/admin/liga',
       '/admin/noticias',
+      '/admin/noticias?herramienta=editions',
+      '/admin/noticias?herramienta=banlist',
+      '/admin/transmisiones',
+      '/admin/transmisiones?vista=archivo',
     ]) {
       await page.goto(path);
       await expect(page.locator('main h1')).toBeVisible();
+      await expect(
+        page.locator('nav[aria-label="Administración"] [aria-current=page]'),
+      ).toHaveCount(1);
+      if (width > 900) {
+        const active = await navigation.locator('[aria-current=page]').boundingBox();
+        const area = await navigation.boundingBox();
+        expect(active!.y).toBeGreaterThanOrEqual(area!.y - 1);
+        expect(active!.y + active!.height).toBeLessThanOrEqual(area!.y + area!.height + 1);
+      }
       await expect(page.getByText('Cargando información…', { exact: true })).toHaveCount(0);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth,
@@ -42,7 +55,7 @@ test('Admin: tareas agrupadas, ubicación y pantallas de trabajo adaptables', as
       expect(overflow, `${path} a ${width}px`).toBeLessThanOrEqual(1);
       if (width === 1440 || width === 375) {
         await page.screenshot({
-          path: info.outputPath(`${width}-${path.replaceAll('/', '-')}.png`),
+          path: info.outputPath(`${width}-${path.replace(/[^a-zA-Z0-9-]/g, '-')}.png`),
           fullPage: true,
         });
       }

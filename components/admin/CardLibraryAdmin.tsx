@@ -4,6 +4,7 @@ import { api } from '@/lib/client';
 import { libraryFormats, type MylLibraryPanel } from '@/lib/myl-library';
 import { EditionImportAdmin } from './EditionImportAdmin';
 import { MylLibraryArticle } from '../store/community/MylLibraryArticle';
+import { ContentStatus } from './ContentStatus';
 
 export function CardLibraryAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) => void }) {
   const [game, setGame] = useState('yugioh'),
@@ -165,9 +166,22 @@ function MylLibraryAdmin({ onBusyChange }: { onBusyChange: (busy: boolean) => vo
       </label>
       {item && (
         <>
+          <ContentStatus
+            stage={
+              busy
+                ? 'preparing'
+                : error
+                  ? 'error'
+                  : item.published
+                    ? 'published'
+                    : item.total && item.ready === item.total
+                      ? 'review'
+                      : 'pending'
+            }
+          />
           <p role="status">
             {item.ready} de {item.total} imágenes preparadas ·{' '}
-            {item.published ? 'Publicado' : 'Sin publicar'}
+            {item.published ? 'Visible en Comunidad' : 'Sin publicar'}
           </p>
           <p className="admin-help">
             {item.expected} cartas anunciadas en la colección. La fuente puede mostrar una

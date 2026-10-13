@@ -79,8 +79,8 @@ test('Admin: búsqueda protegida, pausar, reanudar, revisar y publicar una guía
   });
   await page.goto('/admin/noticias');
   await page
-    .getByRole('navigation', { name: 'Herramientas de contenido' })
-    .getByRole('button', { name: 'Guías de cartas' })
+    .getByRole('navigation', { name: 'Administración', exact: true })
+    .getByRole('link', { name: 'Biblioteca de cartas', exact: true })
     .click();
   const section = page.getByRole('region', { name: 'Guías de nuevas ediciones' });
   await section.getByRole('button', { name: 'Buscar nuevas ediciones', exact: true }).click();
@@ -92,7 +92,7 @@ test('Admin: búsqueda protegida, pausar, reanudar, revisar y publicar una guía
   await expect(section).toContainText('Preparación pausada');
   await expect(section).toContainText('1 / 2 cartas preparadas');
   await expect(section.getByRole('button', { name: 'Publicar guía', exact: true })).toBeDisabled();
-  await section.getByRole('button', { name: 'Reanudar / comprobar galería', exact: true }).click();
+  await section.getByRole('button', { name: 'Reanudar preparación', exact: true }).click();
   await expect(section).toContainText('Galería completa');
   expect(batches).toBe(2);
   await section
