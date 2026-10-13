@@ -35,31 +35,45 @@ const post = z.object({
   featuredImage: z.object({ src: z.string().max(1000) }).nullish(),
 });
 
+const FORMAT_POLICY_VERSION = 2;
+export const ygorganizationListing =
+  'https://ygorganization.com/?categories=errata&categories=f-and-l&categories=ocg-tcg';
+type FormatCheck = { checked_at: string; tcg: boolean };
+const explicitTcg = (title: string) => /\bTCG\b/i.test(title);
+const excludedFormat = (text: string) =>
+  /\bOCG\b|rush duel|master duel|duel links|\b[A-Z0-9]{2,8}-(?:JP|AE)\d{2,3}\b|\[[A-Z0-9]{2,8}-(?:JP|AE)\]|\bRD\/[A-Z0-9]/i.test(
+    text,
+  );
+
 function editorialCategory(title: string, categories: string[]) {
-  // The source's "OCG & TCG" category mixes formats. Require an explicit TCG title.
   if (
-    !/^\[TCG\]|^TCG\s*:/i.test(title) ||
-    /\bOCG\b|rush duel|master duel|duel links/i.test(title) ||
-    categories.some((c) => /rush-duel|duel-links|video-games|master-duel|deck|lore/.test(c)) ||
-    /ban[\s-]*list|forbidden|genesys|point adjustment|decklist|playmat|game mat|sleeves/i.test(
+    excludedFormat(title) ||
+    categories.some((c) =>
+      /rush-duel|duel-links|video-games|master-duel|english-ocg|deck-profile|decklist|lore/.test(c),
+    ) ||
+    /ban[\s-]*list|forbidden.*(?:limited|list)|genesys|point adjustment|decklist|playmat|game mat|sleeves/i.test(
       title,
     )
   )
     return null;
+  if (categories.includes('errata') || /\berrata\b|card text (?:update|correction)/i.test(title))
+    return 'news';
   if (
     categories.some((c) => ['spoilers', 'new-cards', 'alternate-art'].includes(c)) ||
     /reveal|unveil|first look|world premiere|support/i.test(title)
   )
     return 'reveals';
   if (
-    categories.some((c) => ['product-news', 'misc-product'].includes(c)) ||
-    /booster|pack|box|release|product|collection|announced/i.test(title)
+    categories.some((c) =>
+      ['product-news', 'misc-product', 'reprints', 'structure-deck'].includes(c),
+    ) ||
+    /booster|pack|box|release|product|collection|announced|reprint|structure deck/i.test(title)
   )
     return 'releases';
   return null;
 }
 
-export function parseYGOrganizationNews(html: string): WebNewsCandidate[] {
+function listingPosts(html: string): z.infer<typeof post>[] {
   // Read JSON embedded in the public page, never execute its scripts or HTML.
   const script = [
     ...html.matchAll(/<script\b[^>]*data-url="\/api\/posts\?[^\"]*"[^>]*>([\s\S]*?)<\/script>/gi),
@@ -70,32 +84,40 @@ export function parseYGOrganizationNews(html: string): WebNewsCandidate[] {
     const payload = z
       .object({ data: z.object({ posts: z.array(post).max(100) }) })
       .parse(JSON.parse(envelope.body));
-    const items = new Map<string, WebNewsCandidate>();
-    for (const p of payload.data.posts) {
-      const title = newsText(p.title),
-        category = editorialCategory(
-          title,
-          p.categories.map((c) => c.slug),
-        );
-      const url = ygorganizationArticle(`https://ygorganization.com/${p.slug}`);
-      const published_on = p.date.slice(0, 10);
-      if (!category || !url || !validDay(published_on) || !Number.isFinite(Date.parse(p.date)))
-        continue;
-      items.set(url, {
-        id: `ygorg-${hash(url).slice(0, 24)}`,
-        url,
-        title: title.slice(0, 160),
-        summary: newsText(p.excerpt).slice(0, 600),
-        published_on,
-        category,
-        source_image: ygorganizationImage(p.featuredImage?.src || '') || '',
-        boards: ['yugioh'],
-      });
-    }
-    return [...items.values()];
+    return payload.data.posts;
   } catch {
     fail(502, 'Cambió el listado de YGOrganization. No se modificaron tus noticias.');
   }
+}
+
+export function parseYGOrganizationNews(
+  html: string,
+  checks: Record<string, FormatCheck> = {},
+): WebNewsCandidate[] {
+  const items = new Map<string, WebNewsCandidate>();
+  for (const p of listingPosts(html)) {
+    const title = newsText(p.title),
+      category = editorialCategory(
+        title,
+        p.categories.map((c) => c.slug),
+      );
+    const url = ygorganizationArticle(`https://ygorganization.com/${p.slug}`);
+    const published_on = p.date.slice(0, 10);
+    if (!category || !url || !validDay(published_on) || !Number.isFinite(Date.parse(p.date)))
+      continue;
+    if (!explicitTcg(title) && !checks[hash(url)]?.tcg) continue;
+    items.set(url, {
+      id: `ygorg-${hash(url).slice(0, 24)}`,
+      url,
+      title: title.slice(0, 160),
+      summary: newsText(p.excerpt).slice(0, 600),
+      published_on,
+      category,
+      source_image: ygorganizationImage(p.featuredImage?.src || '') || '',
+      boards: ['yugioh'],
+    });
+  }
+  return [...items.values()];
 }
 
 export async function reviewYGOrganizationNews() {
@@ -108,19 +130,70 @@ export async function reviewYGOrganizationNews() {
     ).rows[0]?.discovery;
     if (
       old?.policy_version === NEWS_DISCOVERY_POLICY_VERSION &&
+      old?.format_policy_version === FORMAT_POLICY_VERSION &&
       Date.now() - Date.parse(old.checked_at) < 5 * 60000
     )
       return old;
-    // Three recent public pages; bounded work, no crawl of the entire archive.
+    // Search the requested categories, so unrelated posts cannot displace relevant news.
     const pages = await Promise.all(
-      [1, 2, 3].map((page) =>
-        read(`https://ygorganization.com/${page === 1 ? '' : `?page=${page}`}`),
-      ),
+      [1, 2, 3].map((page) => read(`${ygorganizationListing}${page === 1 ? '' : `&page=${page}`}`)),
     );
-    const unique = new Map(pages.flatMap(parseYGOrganizationNews).map((item) => [item.url, item]));
+    const checks: Record<string, FormatCheck> =
+      old?.format_policy_version === FORMAT_POLICY_VERSION ? { ...old.format_checks } : {};
+    const unlabelled = [...new Map(pages.flatMap(listingPosts).map((p) => [p.slug, p])).values()]
+      .filter((p) => {
+        const url = ygorganizationArticle(`https://ygorganization.com/${p.slug}`);
+        const checked = url ? checks[hash(url)] : null;
+        return (
+          url &&
+          !explicitTcg(newsText(p.title)) &&
+          editorialCategory(
+            newsText(p.title),
+            p.categories.map((c) => c.slug),
+          ) &&
+          (!checked || Date.now() - Date.parse(checked.checked_at) > 7 * 86400000)
+        );
+      })
+      // Product/reprint announcements are often TCG without the prefix; inspect those first.
+      .sort(
+        (a, b) =>
+          Number(
+            editorialCategory(
+              newsText(a.title),
+              a.categories.map((c) => c.slug),
+            ) === 'reveals',
+          ) -
+            Number(
+              editorialCategory(
+                newsText(b.title),
+                b.categories.map((c) => c.slug),
+              ) === 'reveals',
+            ) || b.date.localeCompare(a.date),
+      )
+      .slice(0, 6);
+    const probes = await Promise.allSettled(
+      unlabelled.map(async (p) => {
+        const url = ygorganizationArticle(`https://ygorganization.com/${p.slug}`)!;
+        const html = await read(url); // Source failures are retryable, never cached as an OCG decision.
+        const result = inspectArticle(html);
+        checks[hash(url)] = { checked_at: new Date().toISOString(), tcg: result.tcg };
+      }),
+    );
+    const unique = new Map(
+      pages
+        .flatMap((page) => parseYGOrganizationNews(page, checks))
+        .map((item) => [item.url, item]),
+    );
     const result = {
       checked_at: new Date().toISOString(),
       policy_version: NEWS_DISCOVERY_POLICY_VERSION,
+      format_policy_version: FORMAT_POLICY_VERSION,
+      format_check_errors: probes.filter((p) => p.status === 'rejected').length,
+      format_checks: Object.fromEntries(
+        Object.entries(checks)
+          .sort((a, b) => b[1].checked_at.localeCompare(a[1].checked_at))
+          .slice(0, 120),
+      ),
       items: [...unique.values()].sort(
         (a, b) => b.published_on.localeCompare(a.published_on) || a.id.localeCompare(b.id),
       ),
@@ -133,7 +206,7 @@ export async function reviewYGOrganizationNews() {
   });
 }
 
-export function parseYGOrganizationArticle(html: string, url: string) {
+function inspectArticle(html: string) {
   let metadata: { headline: string; datePublished: string } | undefined;
   for (const script of html.matchAll(
     /<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi,
@@ -150,12 +223,8 @@ export function parseYGOrganizationArticle(html: string, url: string) {
       /* Ignore unrelated metadata; the required article is checked below. */
     }
   }
-  if (
-    !metadata ||
-    !editorialCategory(newsText(metadata.headline || ''), ['new-cards']) ||
-    !validDay(metadata.datePublished?.slice(0, 10) || '')
-  )
-    fail(409, 'No pudimos verificar que el artículo siga siendo una revelación o producto TCG.');
+  if (!metadata || !validDay(metadata.datePublished?.slice(0, 10) || ''))
+    fail(409, 'No pudimos verificar la fecha y el título del artículo.');
   const tree = newsHtmlTree(html);
   let content: NewsNode | undefined;
   const find = (nodes: NewsNode[]) => {
@@ -199,6 +268,37 @@ export function parseYGOrganizationArticle(html: string, url: string) {
   const blocks = extractNewsBlocks(normalize(content.children || []), ygorganizationImage);
   if (!blocks.some((b) => b.kind !== 'image' && b.text.length > 20))
     fail(409, 'El artículo no incluye contenido verificable.');
+  const text = blocks
+    .filter((b) => b.kind !== 'image')
+    .map((b) => b.text)
+    .join('\n');
+  const sourceLinks: string[] = [];
+  const collectLinks = (nodes: NewsNode[]) => {
+    for (const node of nodes) {
+      if (node.name === 'a' && typeof node.attrs?.href === 'string')
+        sourceLinks.push(node.attrs.href);
+      collectLinks(node.children || []);
+    }
+  };
+  collectLinks(content.children || []);
+  const officialTcg = sourceLinks.some((link) => {
+    try {
+      const u = new URL(link);
+      return (
+        u.protocol === 'https:' &&
+        u.hostname === 'www.yugioh-card.com' &&
+        !u.username &&
+        !u.password &&
+        !u.port &&
+        /^\/(?:eu|en)\//.test(u.pathname)
+      );
+    } catch {
+      return false;
+    }
+  });
+  const tcg =
+    !excludedFormat(`${metadata.headline}\n${text}`) &&
+    (explicitTcg(metadata.headline) || /\bTCG\b/i.test(text) || officialTcg);
   const media = new Map<string, WebNewsMedia>();
   for (const block of blocks)
     if (block.kind === 'image' && block.source)
@@ -208,9 +308,14 @@ export function parseYGOrganizationArticle(html: string, url: string) {
       });
   if (media.size > 100)
     fail(409, 'La noticia supera el límite de imágenes. No se importó parcialmente.');
-  // URL is checked before fetching and remains the article attribution.
+  return { blocks, media: [...media.values()], tcg, headline: metadata.headline };
+}
+
+export function parseYGOrganizationArticle(html: string, url: string) {
   if (!ygorganizationArticle(url)) fail(400, 'Artículo de YGOrganization no válido.');
-  return { blocks, media: [...media.values()] };
+  const result = inspectArticle(html);
+  if (!result.tcg) fail(409, 'No pudimos verificar que el artículo corresponda al TCG.');
+  return { blocks: result.blocks, media: result.media };
 }
 
 export async function ygorganizationArticleContent(value: string) {
