@@ -12,6 +12,7 @@ import {
   reserveDailyTranslation,
   runDailyContent,
   splitTranslationBlocks,
+  mylNewsGroups,
 } from '../lib/server/content-automation';
 import { getDb, closeDb } from '../lib/server/db';
 import { cleanupRetiredCovers, ownedCoverKey, rotateWebNews } from '../lib/server/news-cleanup';
@@ -87,6 +88,20 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
       const blocks = splitTranslationBlocks([{ kind: 'paragraph', text, original_text: text }]);
       assert.equal(blocks.map((b) => b.original_text).join(''), text);
       assert.ok(blocks.every((b) => b.text.length <= 900));
+      const groups = mylNewsGroups([
+        { id: 'block-new', candidate: { boards: ['myl-first-block'] } },
+        { id: 'era', candidate: { boards: ['myl-first-era'] } },
+        { id: 'both', candidate: { boards: ['myl-first-era', 'myl-first-block'] } },
+        { id: 'block-old', candidate: { boards: ['myl-first-block'] } },
+      ]);
+      assert.deepEqual(
+        groups.map((group) => group.map((job) => job.id)),
+        [
+          ['era', 'both'],
+          ['block-new', 'block-old'],
+        ],
+      );
+      assert.equal(groups.flat().length, 4, 'Both-format articles are processed only once');
     },
   );
   await t.test(
