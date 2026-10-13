@@ -390,9 +390,10 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
             </button>{' '}
           </div>
           <small>
-            YGOrganization: consulta las 60 publicaciones recientes de su web, con caché de 5
-            minutos. Los mensajes exclusivos de X no se incluyen. Solo se descargan imágenes al
-            preparar una noticia.
+            YGOrganization: consulta hasta 60 publicaciones de las categorías seleccionadas y
+            verifica su formato TCG, con caché de 5 minutos. Incluye reediciones y erratas. Los
+            mensajes exclusivos de X no se incluyen. Solo se descargan imágenes al preparar una
+            noticia.
           </small>
           {candidates.length > 0 && (
             <section
