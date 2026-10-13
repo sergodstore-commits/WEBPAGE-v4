@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
+import { hash } from '../lib/server/core';
+import { isEditorialNewsCandidate } from '../lib/server/news-editorial';
 import {
   ygorganizationArticle,
   ygorganizationImage,
@@ -129,6 +131,149 @@ test('YGOrganization: texto hasta el final, cartas e imágenes en contexto, fall
   );
 });
 
+test('YGOrganization: TCG al final del título, reediciones sin prefijo, erratas y rechazo de códigos japoneses', () => {
+  const reprint = {
+    ...entry,
+    title: 'Structure Deck: Yugi Muto & Seto Kaiba REPRINT',
+    slug: 'reprint',
+    categories: [{ slug: 'structure-deck' }, { slug: 'reprints' }],
+  };
+  const errata = {
+    ...entry,
+    title: 'Forbidden Droplet card text correction [TCG]',
+    slug: 'errata',
+    categories: [{ slug: 'errata' }],
+  };
+  const japanese = {
+    ...entry,
+    title: 'The Ars Magna Return Home [IMPH]',
+    slug: 'japanese',
+    categories: [{ slug: 'new-cards' }],
+  };
+  const unverified = { ...reprint, slug: 'unverified' };
+  const result = parseYGOrganizationNews(listing([reprint, errata, japanese, unverified]), {
+    [hash('https://ygorganization.com/reprint')]: {
+      checked_at: new Date().toISOString(),
+      tcg: true,
+    },
+    [hash('https://ygorganization.com/japanese')]: {
+      checked_at: new Date().toISOString(),
+      tcg: false,
+    },
+  });
+  assert.equal(result.length, 2);
+  assert.equal(result.find((i) => i.url.endsWith('/reprint'))?.category, 'releases');
+  assert.equal(result.find((i) => i.url.endsWith('/errata'))?.category, 'news');
+  assert.ok(result.every(isEditorialNewsCandidate));
+  const european = article(reprint.title).replace(
+    'Release on November 13, 2026.',
+    '<a href="https://www.yugioh-card.com/eu/products/example">Official European release</a>',
+  );
+  assert.ok(
+    parseYGOrganizationArticle(european, 'https://ygorganization.com/reprint').media.length,
+  );
+  const wrongDomain = european.replace(
+    'www.yugioh-card.com/eu/',
+    'www.yugioh-card.com.evil.test/eu/',
+  );
+  assert.throws(
+    () => parseYGOrganizationArticle(wrongDomain, 'https://ygorganization.com/reprint'),
+    /TCG/,
+  );
+  const jp = article(japanese.title).replace(
+    'Release on November 13, 2026.',
+    'IMPH-JP045, a Japanese reveal. <a href="https://www.yugioh-card.com/eu/products/example">TCG future release</a>',
+  );
+  assert.throws(() => parseYGOrganizationArticle(jp, 'https://ygorganization.com/japanese'), /TCG/);
+  assert.throws(
+    () =>
+      parseYGOrganizationArticle(article('Symbols [RD/CA01]'), 'https://ygorganization.com/rush'),
+    /TCG/,
+  );
+  assert.throws(
+    () =>
+      parseYGOrganizationArticle(
+        article('Cards [CR13-AE]').replace('Release on November 13, 2026.', 'Future TCG release.'),
+        'https://ygorganization.com/asian-english',
+      ),
+    /TCG/,
+  );
+});
+
+test('YGOrganization: verifica anuncios sin etiqueta, conserva caché de formato y aísla fallos de fuentes', async (t) => {
+  const { getDb, closeDb } = await import('../lib/server/db');
+  const originalFetch = globalThis.fetch;
+  t.after(async () => {
+    globalThis.fetch = originalFetch;
+    await closeDb();
+  });
+  const db = await getDb();
+  await db.query("UPDATE settings SET data=data-'ygorganization_news_discovery' WHERE id=1");
+  const reprint = {
+    ...entry,
+    title: 'Structure Deck REPRINT',
+    slug: 'european-reprint',
+    categories: [{ slug: 'reprints' }],
+  };
+  const jp = { ...entry, title: 'The Ars Magna Return Home [IMPH]', slug: 'japanese-reveal' };
+  const offline = {
+    ...entry,
+    title: 'Unlabelled booster announced',
+    slug: 'offline',
+    categories: [{ slug: 'product-news' }],
+  };
+  const european = article(reprint.title).replace(
+    'Release on November 13, 2026.',
+    '<a href="https://www.yugioh-card.com/eu/products/example">European release</a>',
+  );
+  const calls: string[] = [];
+  globalThis.fetch = async (input) => {
+    const url = new URL(String(input));
+    calls.push(url.pathname);
+    if (url.pathname === '/') {
+      assert.deepEqual(url.searchParams.getAll('categories'), ['errata', 'f-and-l', 'ocg-tcg']);
+      return new Response(listing([entry, reprint, jp, offline]));
+    }
+    if (url.pathname === '/european-reprint') return new Response(european);
+    if (url.pathname === '/japanese-reveal')
+      return new Response(
+        article(jp.title).replace('Release on November 13, 2026.', 'IMPH-JP045 revealed in Japan.'),
+      );
+    if (url.pathname === '/offline') return new Response('unavailable', { status: 503 });
+    throw Error('Unexpected image or source request');
+  };
+  const found = await reviewYGOrganizationNews();
+  assert.deepEqual(found.items.map((i: { url: string }) => i.url).sort(), [
+    'https://ygorganization.com/european-reprint',
+    'https://ygorganization.com/maestros-first-look',
+  ]);
+  assert.equal(found.format_check_errors, 1);
+  assert.equal(found.format_checks[hash('https://ygorganization.com/japanese-reveal')].tcg, false);
+  assert.ok(
+    !found.format_checks[hash('https://ygorganization.com/offline')],
+    'Network failures must be retryable',
+  );
+  assert.equal(calls.length, 6, 'Three filtered pages and three article probes; no images');
+  await reviewYGOrganizationNews();
+  assert.equal(calls.length, 6, 'Five-minute listing cache');
+  await db.query(
+    "UPDATE settings SET data=jsonb_set(data,'{ygorganization_news_discovery,checked_at}','\"2020-01-01T00:00:00Z\"'::jsonb) WHERE id=1",
+  );
+  await reviewYGOrganizationNews();
+  assert.equal(
+    calls.filter((p) => p === '/european-reprint').length,
+    1,
+    'Positive format cache reused',
+  );
+  assert.equal(
+    calls.filter((p) => p === '/japanese-reveal').length,
+    1,
+    'Negative format cache reused',
+  );
+  assert.equal(calls.filter((p) => p === '/offline').length, 2, 'Failed article retried');
+  await db.query("UPDATE settings SET data=data-'ygorganization_news_discovery' WHERE id=1");
+});
+
 test('YGOrganization: búsqueda cacheada sin descargas, borrador privado, imágenes optimizadas y publicación interna', async (t) => {
   const { getDb, closeDb } = await import('../lib/server/db');
   const { getSettings } = await import('../lib/server/catalog');
@@ -150,10 +295,12 @@ test('YGOrganization: búsqueda cacheada sin descargas, borrador privado, imáge
   globalThis.fetch = async (input, options) => {
     const url = String(input);
     assert.equal(options?.redirect, 'error');
-    if (
-      url.startsWith('https://ygorganization.com/?page=') ||
-      url === 'https://ygorganization.com/'
-    ) {
+    if (new URL(url).hostname === 'ygorganization.com' && new URL(url).pathname === '/') {
+      assert.deepEqual(new URL(url).searchParams.getAll('categories'), [
+        'errata',
+        'f-and-l',
+        'ocg-tcg',
+      ]);
       lists++;
       return new Response(listing([entry]));
     }
