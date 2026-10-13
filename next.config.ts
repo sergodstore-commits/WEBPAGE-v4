@@ -1,10 +1,22 @@
 import type { NextConfig } from 'next';
+const privateFiles = [
+  './.data/**/*',
+  './s/**/*',
+  './ij/**/*',
+  './.env*',
+  './tests/**/*',
+  './.git/**/*',
+  './.agents/**/*',
+  './.codex/**/*',
+  './.next-e2e/**/*',
+];
 const config: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
   serverExternalPackages: ['@electric-sql/pglite', 'pg', 'sharp'],
   outputFileTracingIncludes: { '/api/**/*': ['./db/migrations/**/*'] },
   outputFileTracingExcludes: {
-    '/*': ['./.data/**/*', './s/**/*', './.env*', './tests/**/*', './.git/**/*', './.next-e2e/**/*'],
+    '/*': privateFiles,
+    '/api/**/*': privateFiles,
   },
   async headers() {
     return [

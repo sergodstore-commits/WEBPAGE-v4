@@ -97,14 +97,17 @@ export function parseBanlist(html: string): BanlistSnapshot {
   return { effective_on, cards };
 }
 
-async function readBanlist() {
+async function readBanlist(staged = false) {
   // One scoped DB query avoids repeated transactions and cache reads on each progress step.
   const row = (
     await (
       await getDb()
-    ).query(`SELECT data->'ygo_banlist' AS state,
+    ).query(
+      `SELECT data->$1 AS state,
     (SELECT jsonb_build_object('cards',coalesce(jsonb_agg(data),'[]'::jsonb),'bytes',coalesce(sum(bytes),0)) FROM ygo_card_cache) AS cache
-    FROM settings WHERE id=1`)
+    FROM settings WHERE id=1`,
+      [staged ? 'ygo_banlist_draft' : 'ygo_banlist'],
+    )
   ).rows[0];
   let state: BanlistState | null = row?.state ?? null;
   const bytes = Number(row?.cache?.bytes ?? 0);
@@ -129,12 +132,12 @@ async function readBanlist() {
   return { state, bytes };
 }
 
-export async function getBanlist(): Promise<BanlistState | null> {
-  return (await readBanlist()).state;
+export async function getBanlist(staged = false): Promise<BanlistState | null> {
+  return (await readBanlist(staged)).state;
 }
 
-export async function banlistPanel(): Promise<BanlistPanel> {
-  const { state, bytes } = await readBanlist();
+export async function banlistPanel(staged = false): Promise<BanlistPanel> {
+  const { state, bytes } = await readBanlist(staged);
   const cards = [
     ...new Map(
       [...(state?.current.cards ?? []), ...(state?.upcoming?.cards ?? [])].map((card) => [
@@ -159,9 +162,9 @@ export async function banlistPanel(): Promise<BanlistPanel> {
     storage_limit: EDITION_STORAGE_LIMIT,
   };
 }
-export async function importBanlistCard(batchSize = 1): Promise<BanlistPanel> {
+export async function importBanlistCard(batchSize = 1, staged = false): Promise<BanlistPanel> {
   return withLease(async () => {
-    const state = await getBanlist();
+    const state = await getBanlist(staged);
     if (!state) fail(409, 'Actualiza la lista oficial primero.');
     const unique = [
       ...new Map(
@@ -183,12 +186,12 @@ export async function importBanlistCard(batchSize = 1): Promise<BanlistPanel> {
     // Do not release the lease until every in-flight upload settles, even on source failure.
     const error = results.find((result) => result.status === 'rejected');
     if (error?.status === 'rejected') throw error.reason;
-    return banlistPanel();
+    return banlistPanel(staged);
   });
 }
 
-export async function refreshBanlist(): Promise<BanlistState> {
-  const old = await getBanlist();
+export async function refreshBanlist(staged = false): Promise<BanlistState> {
+  const old = await getBanlist(staged);
   if (old && Date.now() - Date.parse(old.checked_at) < 5 * 60_000) return old;
   const checked_at = new Date().toISOString();
   const html = (await sourceBytes(banlistSource, 1_000_000)).toString();
@@ -215,8 +218,23 @@ export async function refreshBanlist(): Promise<BanlistState> {
   await (
     await getDb()
   ).query(
-    "UPDATE settings SET data=jsonb_set(data,'{ygo_banlist}',$1::jsonb,true) WHERE id=1 AND COALESCE(data->'ygo_banlist'->>'checked_at','') < $2",
-    [JSON.stringify(state), checked_at],
+    "UPDATE settings SET data=jsonb_set(data,ARRAY[$3]::text[],$1::jsonb,true) WHERE id=1 AND COALESCE(data->$3->>'checked_at','') < $2",
+    [JSON.stringify(state), checked_at, staged ? 'ygo_banlist_draft' : 'ygo_banlist'],
   );
-  return (await getBanlist())!;
+  return (await getBanlist(staged))!;
+}
+
+export async function publishBanlistDraft() {
+  return withLease(async () => {
+    const panel = await banlistPanel(true);
+    if (!panel.state || panel.ready !== panel.total)
+      fail(409, 'La banlist todavía está preparando sus cartas.');
+    // Publish only the raw snapshot; card details remain in their permanent shared cache.
+    await (
+      await getDb()
+    ).query(
+      `UPDATE settings SET data=jsonb_set(data,'{ygo_banlist}',data->'ygo_banlist_draft',true)-'ygo_banlist_draft' WHERE id=1 AND data ? 'ygo_banlist_draft'`,
+    );
+    return banlistPanel();
+  });
 }

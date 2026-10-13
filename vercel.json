@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
+  "crons": [{ "path": "/api/cron/content", "schedule": "0 10 * * *" }],
   "installCommand": "npm ci",
   "outputDirectory": ".next",
   "buildCommand": "npm run check:production && node --import tsx scripts/check-flow.ts && npm run build"

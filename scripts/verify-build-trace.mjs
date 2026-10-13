@@ -3,7 +3,11 @@ import path from 'node:path';
 
 const root = process.cwd();
 const dist = process.env.NEXT_DIST_DIR || '.next';
-const routes = ['server/app/[[...slug]]/page.js', 'server/app/api/[...path]/route.js'];
+const routes = [
+  'server/app/[[...slug]]/page.js',
+  'server/app/api/[...path]/route.js',
+  'server/app/api/cron/content/route.js',
+];
 for (const route of routes) {
   const entry = path.resolve(dist, route);
   const trace = JSON.parse(fs.readFileSync(`${entry}.nft.json`, 'utf8'));
@@ -14,7 +18,7 @@ for (const route of routes) {
   for (let i = 0; i < files.length; i++) {
     if (!fs.existsSync(files[i]))
       throw new Error(`Dependencia ausente en ${route}: ${relative[i]}`);
-    if (/^(?:s\/|\.data\/|\.env(?:\.|$))/.test(relative[i]))
+    if (/^(?:s\/|ij\/|\.data\/|\.codex\/|\.agents\/|\.env(?:\.|$))/.test(relative[i]))
       throw new Error(`El artefacto ${route} contiene archivos privados.`);
   }
   if (route.includes('/api/')) {

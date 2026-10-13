@@ -271,6 +271,7 @@ type CachedImage = {
   thumbnail?: string;
   image_bytes: number;
   scope?: 'myl-library';
+  landscape?: boolean;
 };
 async function mediaCache(): Promise<Record<string, CachedImage>> {
   const row = (
@@ -302,9 +303,11 @@ export async function archiveMetaNewsCover(value: string, scope?: 'myl-library')
   if (cache[cacheKey]) return cache[cacheKey];
   const input = await source(url, 4_000_000);
   let output: Buffer | undefined;
+  let landscape = false;
   const imageLimit = scope ? 128_000 : 160_000;
   try {
     const info = await sharp(input, { limitInputPixels: 24_000_000 }).metadata();
+    landscape = Boolean(info.width && info.height && info.width / info.height >= 1.25);
     if (!['jpeg', 'png', 'webp', 'avif'].includes(info.format || '')) throw Error();
     for (const width of scope ? [700, 640, 600, 540, 480] : [960, 800, 640, 480]) {
       for (const quality of scope ? [68, 60, 54, 44] : [78, 64, 48, 44]) {
@@ -382,6 +385,7 @@ export async function archiveMetaNewsCover(value: string, scope?: 'myl-library')
   const saved: CachedImage = {
     image,
     image_bytes: imageBytes,
+    landscape,
     ...(thumbnail ? { thumbnail } : {}),
     ...(scope ? { scope } : {}),
   };

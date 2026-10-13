@@ -140,7 +140,7 @@ export async function getSettings(): Promise<Settings> {
     await (
       await getDb()
     ).query(`SELECT data - ARRAY[
-    'web_news','web_news_discovery','ygorganization_news_discovery','web_news_media_cache','ygo_banlist',
+    'web_news','web_news_discovery','ygorganization_news_discovery','web_news_media_cache','ygo_banlist','ygo_banlist_draft',
     'myl_banlists','myl_banlist_draft','myl_news_discovery','myl_library'
   ]::text[] AS data FROM settings WHERE id=1`)
   ).rows[0].data;

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { boundedBytes, fail } from './core';
 import { getDb } from './db';
 import { mylText } from './myl-news-source';
@@ -7,6 +8,13 @@ import { getWebNews, saveWebNews } from './web-news';
 import { isEditorialNewsCandidate, NEWS_DISCOVERY_POLICY_VERSION } from './news-editorial';
 
 // MyMemory accepts at most 500 UTF-8 bytes per request. No keys or paid fallback.
+const translationBudget = new AsyncLocalStorage<(characters: number) => Promise<void>>();
+export function withTranslationBudget<T>(
+  reserve: (characters: number) => Promise<void>,
+  work: () => Promise<T>,
+) {
+  return translationBudget.run(reserve, work);
+}
 export function translationChunks(text: string): string[] {
   const chunks: string[] = [];
   let chunk = '';
@@ -28,6 +36,8 @@ export function translationChunks(text: string): string[] {
 }
 
 export async function translateNewsText(text: string): Promise<string> {
+  // Reserve before issuing any requests; failed attempts count conservatively too.
+  await translationBudget.getStore()?.(text.length);
   const translated: string[] = [];
   for (const chunk of translationChunks(text)) {
     const url = new URL('https://api.mymemory.translated.net/get');
@@ -58,7 +68,7 @@ export async function translateNewsText(text: string): Promise<string> {
   return translated.join(' ').trim();
 }
 
-export async function prepareNewsDraft(input: unknown) {
+export async function prepareNewsDraft(input: unknown, verifiedCandidate?: WebNewsCandidate) {
   const value = z
     .object({
       id: z.string().regex(/^[a-zA-Z0-9-]{1,80}$/),
@@ -76,13 +86,14 @@ export async function prepareNewsDraft(input: unknown) {
         : 'web_news_discovery';
   const row = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0];
   const discovery = row?.data?.[key];
-  const candidate = (discovery?.items as WebNewsCandidate[] | undefined)?.find(
-    (item) => item.id === value.id,
-  );
+  const candidate =
+    verifiedCandidate ||
+    (discovery?.items as WebNewsCandidate[] | undefined)?.find((item) => item.id === value.id);
   if (
     !candidate ||
+    candidate.id !== value.id ||
     !newsArticle(candidate.url) ||
-    discovery.policy_version !== NEWS_DISCOVERY_POLICY_VERSION
+    (!verifiedCandidate && discovery.policy_version !== NEWS_DISCOVERY_POLICY_VERSION)
   )
     fail(409, 'Busca las novedades otra vez antes de preparar esta noticia.');
   if (!isEditorialNewsCandidate(candidate))

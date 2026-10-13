@@ -19,6 +19,7 @@ import type { EditionChoice } from '@/lib/edition-gallery';
 import { mylDefinition } from '@/lib/myl-library';
 import { useRemote } from '../store/shared';
 import { ContentStatus } from './ContentStatus';
+import { ContentAutomationStatus } from './ContentAutomationStatus';
 
 const needsPreparation = (item: WebNewsItem) =>
   Boolean(
@@ -308,9 +309,10 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
         <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh! y MyL</h2>
         <p>
           Revelaciones y contenido de productos de Yu-Gi-Oh! TCG, MyL Primera Era y Primer Bloque.
-          Busca novedades y decide qué aparece en Noticias. Las restricciones tienen su herramienta
-          en Banlists.
+          Las novedades se preparan y publican cada día. Aquí puedes revisar o editar el contenido.
+          Las restricciones tienen su herramienta en Banlists.
         </p>
+        <ContentAutomationStatus />
         <nav className={styles.stages} aria-label="Flujo de noticias web">
           <button
             type="button"

@@ -24,6 +24,7 @@ import { mylArticleContent } from './myl-news-source';
 import { ygorganizationArticleContent } from './ygorganization-news-source';
 import { contentBody } from './news-content';
 import { translateNewsText } from './news-translation';
+import { latestNews } from '../news-retention';
 
 const schema = z
   .array(
@@ -142,7 +143,7 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
   if (admin) return items;
   const editions = await publishedEditions();
   const library = await communityEditions();
-  return [
+  return latestNews([
     ...editions.map((edition) => ({
       id: `edition-${edition.code}`,
       title: edition.title,
@@ -203,7 +204,7 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
               : undefined,
         }),
       ),
-  ].sort((a, b) => b.published_on.localeCompare(a.published_on));
+  ]);
 }
 
 export async function saveWebNews(input: unknown, itemId?: string) {

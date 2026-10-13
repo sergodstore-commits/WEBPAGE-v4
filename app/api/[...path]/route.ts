@@ -54,6 +54,7 @@ import {
   prepareWebNewsImages,
 } from '@/lib/server/web-news';
 import { reviewMetaNews } from '@/lib/server/meta-news-source';
+import { contentAutomationStatus } from '@/lib/server/content-automation';
 import { reviewYGOrganizationNews } from '@/lib/server/ygorganization-news-source';
 import { reviewMylNews } from '@/lib/server/myl-news-source';
 import { prepareNewsDraft } from '@/lib/server/news-translation';
@@ -345,6 +346,8 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
     if (path[0] === 'admin') {
       const user = await requireUser(request, true);
       const db = await getDb();
+      if (route === 'admin/news/automation' && method === 'GET')
+        return json(await contentAutomationStatus());
       if (route === 'admin/news/banlist' && method === 'GET') return json(await banlistPanel());
       if (route === 'admin/news/banlist' && method === 'POST') {
         await rateLimit(`banlist-refresh:${user.id}`, 10, 60);
