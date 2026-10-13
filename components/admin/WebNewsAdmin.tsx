@@ -312,7 +312,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
           Las novedades se preparan y publican cada día. Aquí puedes revisar o editar el contenido.
           Las restricciones tienen su herramienta en Banlists.
         </p>
-        <ContentAutomationStatus />
+        <ContentAutomationStatus onBusyChange={setBusy} onComplete={load} />
         <p>
           <strong>Herramientas manuales (opcionales)</strong>
         </p>
