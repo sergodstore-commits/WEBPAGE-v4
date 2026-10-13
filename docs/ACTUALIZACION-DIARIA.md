@@ -17,6 +17,7 @@ El panel muestra publicaciones y pendientes por formato, avance de imágenes/tra
 - Cuota automática de traducción: 4.500 caracteres diarios, conservadora respecto al servicio gratuito MyMemory. Las unidades traducidas se guardan; artículos largos pueden necesitar varios días. La traducción automática no equivale a una revisión humana especializada.
 - Se mantienen los presupuestos de almacenamiento existentes. Alcanzarlos detiene descargas y deja el motivo en el panel; nunca se contrata un plan ni se activa una API de pago.
 - Función Node.js con máximo 300 segundos; trabajo acotado con continuación al día siguiente. Fluid Compute debe estar habilitado.
+- Las noticias MyL comparten hasta 90 segundos por ejecución, repartidos entre Primera Era y Primer Bloque cuando ambos tienen pendientes. Una galería grande no monopoliza ambos formatos; el tiempo sin usar se cede al siguiente grupo. Yu-Gi-Oh! dispone de hasta 60 segundos, siempre dentro del plazo total existente.
 - La clave `CRON_SECRET` autoriza únicamente el cron. Las páginas públicas y las visitas nunca disparan importaciones. Los despliegues de vista previa no pueden ejecutarlo.
 
 ## Conservación de cartas
