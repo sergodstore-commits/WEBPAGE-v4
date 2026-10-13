@@ -313,6 +313,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
           Las restricciones tienen su herramienta en Banlists.
         </p>
         <ContentAutomationStatus />
+        <p>
+          <strong>Herramientas manuales (opcionales)</strong>
+        </p>
         <nav className={styles.stages} aria-label="Flujo de noticias web">
           <button
             type="button"
@@ -339,7 +342,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
         </nav>
         <div hidden={stage !== 'sources'}>
           <div className={styles.workflow}>
-            <strong>1. Buscar → 2. Preparar y revisar → 3. Publicar noticia</strong>
+            <strong>Uso manual opcional: buscar → preparar → publicar</strong>
             <p>
               Buscamos revelaciones de cartas y contenido de productos: solo TCG para Yu-Gi-Oh!,
               Primera Era y Primer Bloque para MyL. Las restricciones se actualizan en Banlists.

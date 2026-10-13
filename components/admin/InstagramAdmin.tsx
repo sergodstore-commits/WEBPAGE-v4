@@ -595,7 +595,7 @@ export function InstagramNewsPage({
               ? 'Prepara y revisa el contenido que alimenta Comunidad y los productos.'
               : workspace === 'banlist'
                 ? 'Actualiza las listas completas de Konami y MyL que se consultan en Noticias.'
-                : 'Busca novedades, revisa el contenido y publica tu selección.'}
+                : 'Las noticias web se actualizan y publican automáticamente cada día. Puedes editar el contenido o gestionar Instagram aquí.'}
           </p>
         </div>
         <a
