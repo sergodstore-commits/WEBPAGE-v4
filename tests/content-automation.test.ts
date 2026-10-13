@@ -44,8 +44,17 @@ const asset = (id: number) =>
 test('Daily content: retention, safe cleanup, leases, publication and recovery', async (t) => {
   const db = await getDb();
   t.after(closeDb);
-  await t.test('cron authorization fails closed, including preview deployments', () => {
+  await t.test('cron authorization fails closed, including preview deployments', async () => {
     delete process.env.CRON_SECRET;
+    const { POST } = await import('../app/api/admin/news/automation/retry/route');
+    const unauthorized = await POST(
+      new Request('https://example.test/api/admin/news/automation/retry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      }),
+    );
+    assert.equal(unauthorized.status, 401, 'Recovery cannot be triggered without an admin session');
     assert.equal(authorizedContentCron(new Request('https://example.test')), false);
     process.env.CRON_SECRET = 'test-only-secret';
     const request = new Request('https://example.test', {
@@ -190,6 +199,25 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
         ).rows[0].translation_chars,
         4500,
       );
+      await db.query(
+        "UPDATE content_daily_runs SET status='partial',finished_at=now(),lease_until=now()-interval '1 second'",
+      );
+      assert.equal(
+        await claimContentDay('2026-01-01', 'duplicate'),
+        false,
+        'Scheduled duplicates still skip',
+      );
+      assert.equal(await claimContentDay('2026-01-01', 'explicit-retry', true), true);
+      await assert.rejects(
+        reserveDailyTranslation('2026-01-01', 'explicit-retry', 1),
+        /próxima/,
+        'Recovery never resets the daily translation budget',
+      );
+      assert.equal(await claimContentDay('2026-01-01', 'overlap', true), false);
+      await db.query(
+        "UPDATE content_daily_runs SET status='complete',finished_at=now(),lease_until=now()-interval '1 second'",
+      );
+      assert.equal(await claimContentDay('2026-01-01', 'completed-retry', true), false);
       await db.query('DELETE FROM content_daily_runs');
     },
   );
@@ -219,7 +247,7 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
     'MyL auto-publishes complete local content while a Yu-Gi-Oh! source fails; duplicate daily calls skip',
     async () => {
       await db.query(
-        "UPDATE settings SET data=jsonb_set(data,'{web_news}','[]'::jsonb,true) WHERE id=1",
+        "UPDATE settings SET data=jsonb_set(data,'{web_news}','[]'::jsonb,true)-'ygo_banlist_draft'-'myl_banlist_draft' WHERE id=1",
       );
       await db.query('DELETE FROM content_news_jobs');
       const candidate: WebNewsCandidate = {
@@ -288,6 +316,56 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
           (await db.query('SELECT status FROM content_daily_runs WHERE day=$1', [contentDay()]))
             .rows[0].status,
           'partial',
+        );
+        // Operator recovery adopts only a complete, verified source draft, without another image download.
+        const prepared = (await getWebNews(true))[0];
+        await db.query(
+          "UPDATE settings SET data=jsonb_set(data,'{web_news}',$1::jsonb,true) WHERE id=1",
+          [JSON.stringify([{ ...prepared, visible: false }])],
+        );
+        await db.query(
+          "UPDATE content_news_jobs SET phase='existing',provider='existing' WHERE id=$1",
+          [candidate.id],
+        );
+        const resumed = await runDailyContent(
+          {
+            discover: { myl: discover, tcg: empty, ygorganization: empty },
+            ygoBanlist: async () => {},
+            mylBanlist: async () => {},
+          },
+          20_000,
+          true,
+        );
+        assert.equal('published' in resumed && resumed.published, 1);
+        const published = (await getWebNews(true))[0];
+        assert.equal(published.visible, true);
+        assert.deepEqual(published.media, prepared.media);
+        assert.equal(published.body, prepared.body);
+        assert.equal(
+          (await runDailyContent({}, 20_000, true)).skipped,
+          true,
+          'A completed day is not rerun',
+        );
+        await db.query('DELETE FROM content_daily_runs'); // A later day still respects retired jobs.
+        await db.query(
+          "UPDATE settings SET data=jsonb_set(data,'{web_news}',$1::jsonb,true) WHERE id=1",
+          [JSON.stringify([{ ...published, visible: false }])],
+        );
+        await db.query("UPDATE content_news_jobs SET phase='retired' WHERE id=$1", [candidate.id]);
+        const retired = await runDailyContent(
+          {
+            discover: { myl: discover, tcg: empty, ygorganization: empty },
+            ygoBanlist: async () => {},
+            mylBanlist: async () => {},
+          },
+          20_000,
+          true,
+        );
+        assert.equal('published' in retired && retired.published, 0);
+        assert.equal(
+          (await getWebNews(true))[0].visible,
+          false,
+          'Retired articles are never restored by recovery',
         );
       } finally {
         globalThis.fetch = original;
