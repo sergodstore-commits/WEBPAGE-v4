@@ -73,10 +73,9 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
   );
   const bounds = await calendar.boundingBox();
   const liveBounds = await page
-    .getByRole('region', { name: 'Transmisión en vivo', exact: true })
+    .getByRole('region', { name: 'Transmisión', exact: true })
     .boundingBox();
-  expect(bounds!.x + bounds!.width).toBeLessThan(liveBounds!.x);
-  expect(Math.abs(bounds!.y - liveBounds!.y)).toBeLessThan(2);
+  expect(bounds!.y).toBeGreaterThan(liveBounds!.y + liveBounds!.height);
   await page.screenshot({ path: info.outputPath('agenda-desktop.png'), fullPage: true });
   await calendar.getByRole('button', { name: 'Cerrar detalles del día', exact: true }).click();
   await expect(day).toBeFocused();
@@ -119,9 +118,9 @@ test('Agenda mensual: días de Chile, varios eventos, detalle, cambio de mes y p
     await expect(calendar.getByRole('region')).toBeVisible();
     await expectReadable(page);
     const mobileLive = await page
-      .getByRole('region', { name: 'Transmisión en vivo', exact: true })
+      .getByRole('region', { name: 'Transmisión', exact: true })
       .boundingBox();
-    expect(mobileLive!.y).toBeGreaterThan(mobileCalendar!.y + mobileCalendar!.height);
+    expect(mobileCalendar!.y).toBeGreaterThan(mobileLive!.y + mobileLive!.height);
     await page.screenshot({ path: info.outputPath(`agenda-${width}.png`), fullPage: true });
   }
   await calendar.getByRole('button', { name: 'Compactar', exact: true }).click();

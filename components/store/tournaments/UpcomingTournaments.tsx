@@ -5,10 +5,18 @@ import type { Post } from '@/lib/types';
 import { tournamentDay, tournamentTime, upcomingTournaments } from '@/lib/tournament-display';
 import styles from './Tournaments.module.css';
 
-export function UpcomingTournaments({ posts, now }: { posts: Post[]; now: number }) {
-  const upcoming = upcomingTournaments(posts, now);
+export function UpcomingTournaments({
+  posts,
+  now,
+  compact = false,
+}: {
+  posts: Post[];
+  now: number;
+  compact?: boolean;
+}) {
+  const upcoming = upcomingTournaments(posts, now, compact ? 4 : 6);
   return upcoming.length ? (
-    <ul className={styles.upcoming}>
+    <ul className={`${styles.upcoming} ${compact ? styles.compactUpcoming : ''}`}>
       {upcoming.map((post) => (
         <li key={post.id}>
           <Link href={`/publicacion/${post.slug}`} aria-label={`Ver detalles de ${post.title}`}>

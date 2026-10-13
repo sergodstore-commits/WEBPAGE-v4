@@ -67,6 +67,10 @@ Con transmisión activa: distintivo En vivo, título, reproductor y vínculo al 
 
 Conservar el banner completo. Cuando haya directo, priorizar su acceso inmediato; se puede estudiar un banner desplegable en ese estado, sin recortar la ilustración.
 
+Implementado el 12 de octubre: la transmisión ocupa el ancho principal inmediatamente después del banner completo y los accesos. Respeta el estado configurado en administración: En vivo o Próxima transmisión; el vínculo al torneo aparece si está asociado a una fecha disponible en la agenda consultada. Sin emisión configurada, ofrece la última grabación publicada, ordenada por fecha de grabación, y mantiene el acceso al canal. La miniatura abre el reproductor al seleccionarla; no se cargan reproductores adicionales para el archivo.
+
+Debajo se reúnen el calendario mensual y las cuatro próximas fechas en una lista compacta. El calendario conserva todos los eventos del mes, navegación, ampliación y detalles del día; en móvil se apila después de la transmisión. Resultados y grabaciones quedan al final. No se cambian las configuraciones de YouTube, los eventos publicados ni las reglas de inscripción, y no se añaden archivos al almacenamiento de la tienda.
+
 ## Administración por tarea
 
 | Área                  | Trabajo habitual                                               | Fuente                                                        |
@@ -90,7 +94,7 @@ Ligas y banlists mantienen flujos propios: importar un torneo no equivale a incl
 
 ## Secuencia de ejecución
 
-Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados), junto con los desempates y puestos únicos de las tres ligas. También se implementó la biblioteca compartida MyL para cuatro referencias oficiales, con cobertura explícita, contenido por presentación y actualización administrativa. Se separó el acceso global a Banlists en Noticias, se ajustó la selección editorial de novedades y se compactó la composición pública. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. Sigue dar prioridad al directo de Torneos.
+Avance del 12 de octubre: completada la corrección de fechas y el orden de Tienda/Preventas (21 productos publicados y cinco borradores relacionados), junto con los desempates y puestos únicos de las tres ligas. También se implementó la biblioteca compartida MyL para cuatro referencias oficiales, con cobertura explícita, contenido por presentación y actualización administrativa. Se separó el acceso global a Banlists en Noticias, se ajustó la selección editorial de novedades, se compactó la composición pública y se dio prioridad a la transmisión de Torneos con agenda secundaria. Las fuentes y el comportamiento están documentados en `ESTRUCTURA-CONTENIDO.md`. Sigue aplicar la organización del panel administrativo y sus estados.
 
 1. Corregir fechas y acordar desempates: afectan al orden real y a la confianza en resultados.
 2. Definir la biblioteca compartida y los destinos administrativos, antes de añadir más importadores.

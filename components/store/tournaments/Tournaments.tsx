@@ -120,6 +120,9 @@ export function Tournaments() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   const videos = [...(media.data?.videos || []), ...extra];
+  const broadcast = media.data?.live;
+  const latest = media.data?.videos[0];
+  const related = posts.data?.find((post) => post.id === broadcast?.tournament_id);
   async function more() {
     setBusy(true);
     setError('');
@@ -136,11 +139,11 @@ export function Tournaments() {
     <div className={`store-page ${styles.page}`}>
       <SectionHeader section="tournaments" title="Torneos" />
       <nav className={styles.jumpLinks} aria-label="Secciones de Torneos">
-        <a href="#calendario">
-          Calendario <CalendarDays size={16} aria-hidden="true" />
-        </a>
         <a href="#transmision">
           Transmisión <Radio size={16} aria-hidden="true" />
+        </a>
+        <a href="#calendario">
+          Calendario <CalendarDays size={16} aria-hidden="true" />
         </a>
         <a href="#resultados">
           Resultados <Trophy size={16} aria-hidden="true" />
@@ -149,68 +152,80 @@ export function Tournaments() {
           Grabaciones <Play size={16} aria-hidden="true" />
         </a>
       </nav>
-      <section className={styles.section} aria-labelledby="upcoming-heading">
-        <div className={styles.sectionHeading}>
-          <CalendarDays />
-          <h2 id="upcoming-heading">Próximos torneos</h2>
+      <section id="transmision" className={styles.broadcast} aria-labelledby="live-heading">
+        <div className={styles.broadcastHeading}>
+          <h2 id="live-heading">
+            <Radio size={24} aria-hidden="true" /> Transmisión
+          </h2>
+          <a
+            href={media.data?.channel_url || 'https://www.youtube.com/@SergodStore'}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Canal de YouTube <ExternalLink size={14} aria-hidden="true" />
+          </a>
         </div>
-        {posts.loading ? (
+        {media.loading ? (
           <Loading />
-        ) : posts.error ? (
-          <RemoteError error={posts.error} reload={posts.reload} />
+        ) : media.error ? (
+          <RemoteError error={media.error} reload={media.reload} />
+        ) : broadcast ? (
+          <>
+            <div className={styles.broadcastInfo}>
+              <span className={styles.liveBadge} data-stage={broadcast.stage}>
+                {broadcast.stage === 'live' ? '● EN VIVO' : 'PRÓXIMA TRANSMISIÓN'}
+              </span>
+              <h3>{broadcast.title}</h3>
+              {related && (
+                <Link href={`/publicacion/${related.slug}`}>
+                  Ver torneo <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              )}
+            </div>
+            <Player videoId={broadcast.video_id} title={broadcast.title} />
+          </>
+        ) : latest ? (
+          <>
+            <div className={styles.broadcastInfo}>
+              <span className={styles.replayBadge}>ÚLTIMA GRABACIÓN</span>
+              <h3>{latest.title}</h3>
+              <time dateTime={latest.recorded_at}>{date(latest.recorded_at)}</time>
+            </div>
+            <button
+              className={styles.featuredReplay}
+              onClick={() => setSelected(latest)}
+              aria-label={`Reproducir última grabación: ${latest.title}`}
+            >
+              <Thumbnail key={latest.id} video={latest} />
+              <span className={styles.replayAction}>Reproducir grabación</span>
+            </button>
+          </>
         ) : (
-          <UpcomingTournaments posts={posts.data || []} now={now} />
+          <div className={styles.offline}>
+            <span className={styles.offlineBadge}>Fuera de línea</span>
+            <img src="/brand/sergod-logo-480.webp" alt="SERGOD STORE" width="480" height="240" />
+            <p>Nos vemos en la próxima partida.</p>
+            <span>Los directos y las grabaciones publicadas aparecerán aquí.</span>
+          </div>
         )}
-        <a className={styles.agendaLink} href="#calendario">
-          Ver agenda mensual <ArrowRight size={16} aria-hidden="true" />
-        </a>
       </section>
       <section id="calendario" className={styles.section} aria-labelledby="calendar-heading">
         <div className={styles.sectionHeading}>
           <CalendarDays />
-          <h2 id="calendar-heading">Calendario y transmisión</h2>
+          <h2 id="calendar-heading">Agenda de torneos</h2>
         </div>
         <div className={styles.scheduleLayout}>
           <div className={styles.calendarPanel}>
             <TournamentCalendar posts={posts.data || []} />
           </div>
-          <section id="transmision" className={styles.live} aria-labelledby="live-heading">
-            <div className={styles.panelHeading}>
-              <Radio size={20} aria-hidden="true" />
-              <h2 id="live-heading">Transmisión en vivo</h2>
-              <span>YouTube</span>
-            </div>
-            {media.loading ? (
+          <section className={styles.nextDates} aria-labelledby="upcoming-heading">
+            <h3 id="upcoming-heading">Próximos torneos</h3>
+            {posts.loading ? (
               <Loading />
-            ) : media.error ? (
-              <RemoteError error={media.error} reload={media.reload} />
-            ) : media.data?.live ? (
-              <>
-                <span className={styles.liveBadge} data-stage={media.data.live.stage}>
-                  {media.data.live.stage === 'live' ? '● EN VIVO' : 'PRÓXIMA TRANSMISIÓN'}
-                </span>
-                <p className={styles.liveTitle}>{media.data.live.title}</p>
-                <Player videoId={media.data.live.video_id} title={media.data.live.title} />
-              </>
+            ) : posts.error ? (
+              <RemoteError error={posts.error} reload={posts.reload} />
             ) : (
-              <div className={styles.offline}>
-                <span className={styles.offlineBadge}>Fuera de línea</span>
-                <img
-                  src="/brand/sergod-logo-480.webp"
-                  alt="SERGOD STORE"
-                  width="480"
-                  height="240"
-                />
-                <p>Nos vemos en la próxima partida.</p>
-                <span>Torneos y encuentros de nuestra comunidad en YouTube.</span>
-                <a
-                  href={media.data?.channel_url || 'https://www.youtube.com/@SergodStore'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Visitar el canal de YouTube <ExternalLink size={14} />
-                </a>
-              </div>
+              <UpcomingTournaments posts={posts.data || []} now={now} compact />
             )}
           </section>
         </div>

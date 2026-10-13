@@ -127,7 +127,9 @@ test('Admin YouTube: revisar no importa; previsualizar, publicar, recargar y ret
   expect(writes).toBe(1);
   await page.goto('/torneos');
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Liga revisada', exact: true })).toBeVisible();
+  await expect(
+    page.locator('#grabaciones').getByRole('heading', { name: 'Liga revisada', exact: true }),
+  ).toBeVisible();
   await page.goto('/admin/transmisiones');
   await page.getByRole('button', { name: 'Editar transmisión Liga revisada', exact: true }).click();
   await page.setViewportSize({ width: 375, height: 900 });
@@ -148,7 +150,7 @@ test('Admin YouTube: revisar no importa; previsualizar, publicar, recargar y ret
   await page.goto('/torneos');
   await expect(page.getByRole('heading', { name: 'Liga revisada', exact: true })).toHaveCount(0);
 });
-async function mock(page: Page, live = false) {
+async function mock(page: Page, live: false | 'live' | 'scheduled' = false, recordings = videos) {
   await page.route('https://www.youtube-nocookie.com/**', (r) =>
     r.fulfill({ contentType: 'text/html', body: '<p>Reproductor externo simulado</p>' }),
   );
@@ -174,13 +176,13 @@ async function mock(page: Page, live = false) {
             ? {
                 enabled: true,
                 video_id: 'SergodLive1',
-                stage: 'live',
+                stage: live,
                 title: 'Liga en vivo',
-                tournament_id: null,
+                tournament_id: 'primero',
               }
             : null,
-          videos: videos.slice(offset, offset + 6),
-          total: 8,
+          videos: recordings.slice(offset, offset + 6),
+          total: recordings.length,
         },
       });
     }
@@ -203,19 +205,18 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
         .getByRole('region', { name: 'Transmisiones anteriores', exact: true })
         .getByRole('heading', { level: 3 }),
     ).toHaveText(videos.slice(0, 6).map((v) => v.title));
-    await expect(page.getByText('Fuera de línea', { exact: true })).toBeVisible();
+    await expect(page.getByText('ÚLTIMA GRABACIÓN', { exact: true })).toBeVisible();
     await expect(
       page
-        .getByRole('region', { name: 'Transmisión en vivo', exact: true })
-        .getByRole('img', { name: 'SERGOD STORE', exact: true }),
+        .getByRole('region', { name: 'Transmisión', exact: true })
+        .getByRole('button', { name: 'Reproducir última grabación: Transmisión 0', exact: true }),
     ).toBeVisible();
     await expect(page.getByText('Liga pasado', { exact: true })).toHaveCount(0);
     await expect(page.locator('iframe')).toHaveCount(0);
     await expectReadable(page);
-    await expect(page.getByRole('img', { name: 'Transmisión 0', exact: true })).toHaveAttribute(
-      'src',
-      '/art/hero/mitos-front.webp',
-    );
+    await expect(
+      page.locator('#grabaciones').getByRole('img', { name: 'Transmisión 0', exact: true }),
+    ).toHaveAttribute('src', '/art/hero/mitos-front.webp');
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))
       .toBeLessThanOrEqual(1);
@@ -240,7 +241,7 @@ test('Cartelera ordenada, archivo paginado y miniaturas sin reproductores hasta 
 test('Directo YouTube visible en computador y celular, y detalle sin inscripción ni pago', async ({
   page,
 }) => {
-  await mock(page, true);
+  await mock(page, 'live');
   await page.goto('/torneos');
   await expect(page.getByText('● EN VIVO', { exact: true })).toBeVisible();
   await expectReadable(page);
@@ -248,7 +249,20 @@ test('Directo YouTube visible en computador y celular, y detalle sin inscripció
     'src',
     /youtube-nocookie.com\/embed\/SergodLive1/,
   );
-  await page.setViewportSize({ width: 375, height: 812 });
+  const stream = page.getByRole('region', { name: 'Transmisión', exact: true });
+  await expect(stream.getByRole('link', { name: 'Ver torneo', exact: true })).toHaveAttribute(
+    'href',
+    '/publicacion/primero',
+  );
+  for (const width of [1440, 375]) {
+    await page.setViewportSize({ width, height: 900 });
+    const player = await stream.locator('iframe').boundingBox();
+    const banner = await page.locator('[data-banner-art]').boundingBox();
+    const calendar = await page.locator('#calendario').boundingBox();
+    expect(player!.width / player!.height).toBeCloseTo(16 / 9, 1);
+    expect(player!.width).toBeGreaterThanOrEqual(banner!.width - 10);
+    expect(calendar!.y).toBeGreaterThan(player!.y + player!.height);
+  }
   await expect(page.locator('iframe')).toHaveCount(1);
   await expect(page.getByRole('link', { name: 'Abrir en YouTube', exact: true })).toHaveAttribute(
     'href',
@@ -257,6 +271,34 @@ test('Directo YouTube visible en computador y celular, y detalle sin inscripció
   await page.goto('/publicacion/primero');
   await expect(page.getByRole('heading', { name: 'Liga primero', exact: true })).toBeVisible();
   await expect(page.getByText(/Inscribirse|Entrada|Cupos|Premios|Konami ID/)).toHaveCount(0);
+});
+
+test('Emisión programada, última grabación bajo demanda y canal sin publicaciones', async ({
+  page,
+}) => {
+  await mock(page, 'scheduled');
+  await page.goto('/torneos');
+  const stream = page.getByRole('region', { name: 'Transmisión', exact: true });
+  await expect(stream.getByText('PRÓXIMA TRANSMISIÓN', { exact: true })).toBeVisible();
+  await expect(page.getByText('● EN VIVO', { exact: true })).toHaveCount(0);
+  await page.unroute('**/api/**');
+  await mock(page);
+  await page.reload();
+  await stream.getByRole('button', { name: /^Reproducir última grabación:/ }).click();
+  await expect(page.getByRole('dialog').locator('iframe')).toHaveAttribute('src', /SergodTes00/);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await expect(stream.getByRole('button', { name: /^Reproducir última grabación:/ })).toBeFocused();
+  await page.unroute('**/api/**');
+  await mock(page, false, []);
+  await page.reload();
+  await expect(stream.getByText('Fuera de línea', { exact: true })).toBeVisible();
+  await expect(stream.getByRole('img', { name: 'SERGOD STORE', exact: true })).toBeVisible();
+  await expect(stream.getByRole('link', { name: 'Canal de YouTube', exact: true })).toHaveAttribute(
+    'href',
+    'https://www.youtube.com/@SergodStore',
+  );
+  await expect(page.locator('iframe')).toHaveCount(0);
 });
 test('Permisos, Integraciones sin credenciales y torneo simple guardado desde Admin', async ({
   page,

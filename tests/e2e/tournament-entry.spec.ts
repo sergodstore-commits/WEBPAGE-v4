@@ -21,7 +21,7 @@ const event = (id: string, at: string, extra: Partial<Post> = {}): Post => ({
   ...extra,
 });
 
-test('Entrada Torneos: próximas seis fechas, precios opcionales, Chile y detalle adaptable', async ({
+test('Entrada Torneos: cuatro próximas fechas compactas, precios opcionales, Chile y detalle adaptable', async ({
   page,
 }) => {
   await page.clock.setFixedTime(new Date('2032-10-11T15:00:00Z'));
@@ -57,13 +57,11 @@ test('Entrada Torneos: próximas seis fechas, precios opcionales, Chile y detall
   });
   await page.goto('/torneos');
   const upcoming = page.getByRole('region', { name: 'Próximos torneos', exact: true });
-  await expect(upcoming.getByRole('heading', { level: 3 })).toHaveText([
+  await expect(upcoming.getByRole('list').getByRole('heading', { level: 3 })).toHaveText([
     'Liga Primera Era',
     'Yu-Gi-Oh! semanal',
     'Beyond especial',
     'Fecha 0',
-    'Fecha 1',
-    'Fecha 2',
   ]);
   expect(
     ranges.some((range) => range.includes('from=2032-10-11') && range.includes('to=2032-11-25')),
@@ -83,7 +81,7 @@ test('Entrada Torneos: próximas seis fechas, precios opcionales, Chile y detall
   ).toContainText('$25.000');
   await expect(upcoming.getByText('Especial', { exact: true })).toBeVisible();
   const calendar = page.getByLabel('Calendario de torneos', { exact: true });
-  expect((await upcoming.boundingBox())!.y).toBeLessThan((await calendar.boundingBox())!.y);
+  expect((await upcoming.boundingBox())!.x).toBeGreaterThan((await calendar.boundingBox())!.x);
   for (const width of [320, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -143,7 +141,9 @@ test('Entrada Torneos: error independiente del calendario, reintento y estado si
     'No hay próximas fechas publicadas para los siguientes 45 días.',
   );
   await expect(
-    upcoming.getByRole('link', { name: 'Ver agenda mensual', exact: true }),
+    page
+      .getByRole('navigation', { name: 'Secciones de Torneos' })
+      .getByRole('link', { name: 'Calendario', exact: true }),
   ).toHaveAttribute('href', '#calendario');
 });
 
