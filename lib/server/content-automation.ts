@@ -69,6 +69,11 @@ type Job = {
   header_done: boolean;
   candidate?: WebNewsCandidate;
 };
+export function mylNewsGroups<T extends { candidate?: { boards?: readonly string[] } }>(jobs: T[]) {
+  const era = jobs.filter((job) => job.candidate?.boards?.includes('myl-first-era'));
+  const rest = jobs.filter((job) => !era.includes(job));
+  return [era, rest].filter((group) => group.length);
+}
 type Summary = {
   published: number;
   retired: number;
@@ -319,21 +324,30 @@ export async function runDailyContent(
           AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
           ORDER BY published_on DESC,url LIMIT 10`)
           ).rows;
-          for (const job of jobs) {
-            if (Date.now() >= until) break;
-            try {
-              if (await advanceNews(job, until)) {
-                summary.published++;
-                summary.retired += await rotateWebNews();
+          const groups = game === 'myl' ? mylNewsGroups(jobs) : [jobs];
+          for (const [index, group] of groups.entries()) {
+            // Both MyL formats receive time, even when the other has a large card gallery.
+            // Unused time passes to the remaining group; the overall deadline is unchanged.
+            const groupUntil = Math.min(
+              until,
+              Date.now() + Math.max(0, until - Date.now()) / (groups.length - index),
+            );
+            for (const job of group) {
+              if (Date.now() >= groupUntil) break;
+              try {
+                if (await advanceNews(job, groupUntil)) {
+                  summary.published++;
+                  summary.retired += await rotateWebNews();
+                }
+              } catch (error) {
+                const text = message(error);
+                summary.errors.push(`${game}: ${text}`);
+                await db.query(
+                  'UPDATE content_news_jobs SET last_error=$2,updated_at=now() WHERE url=$1',
+                  [job.url, text],
+                );
+                if (error instanceof AppError && [429, 503].includes(error.status)) break;
               }
-            } catch (error) {
-              const text = message(error);
-              summary.errors.push(`${game}: ${text}`);
-              await db.query(
-                'UPDATE content_news_jobs SET last_error=$2,updated_at=now() WHERE url=$1',
-                [job.url, text],
-              );
-              if (error instanceof AppError && [429, 503].includes(error.status)) break;
             }
           }
         }
