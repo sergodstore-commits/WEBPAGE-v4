@@ -10,6 +10,9 @@ test('Daily updates: protected cron and readable admin status on desktop/mobile'
     ).status(),
   ).toBe(401);
   expect((await page.request.get('/api/admin/news/automation')).status()).toBe(401);
+  expect((await page.request.post('/api/admin/news/automation/retry', { data: {} })).status()).toBe(
+    401,
+  );
   await page.goto('/admin');
   await page.getByLabel('Correo electrónico', { exact: true }).fill('e2e-news@example.test');
   await page.getByLabel('Contraseña', { exact: true }).fill('E2e-Prueba-Sergod-2026!');
@@ -23,6 +26,21 @@ test('Daily updates: protected cron and readable admin status on desktop/mobile'
   const data = await (await page.request.get('/api/admin/news/automation')).json();
   expect(data.limit).toBe(10);
   expect(data.pending).toBeGreaterThanOrEqual(0);
+  expect(data.boards.map((b: { board: string }) => b.board).sort()).toEqual([
+    'myl-first-block',
+    'myl-first-era',
+    'yugioh',
+  ]);
+  expect(data).not.toHaveProperty('token');
+  expect(data.last || {}).not.toHaveProperty('token');
+  expect(
+    (
+      await page.request.post('/api/admin/news/automation/retry', {
+        data: {},
+        headers: { Origin: 'https://other.example.test' },
+      })
+    ).status(),
+  ).toBe(403);
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     await expect(status).toBeVisible();
