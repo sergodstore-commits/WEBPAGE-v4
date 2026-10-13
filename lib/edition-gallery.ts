@@ -3,6 +3,10 @@ export type EditionCard = {
   name: string;
   englishName: string;
   effects: string[];
+  englishEffects?: string[];
+  text_origin?: 'official' | 'translated';
+  translation_method?: 'automatic' | 'sergod';
+  translated_at?: string;
   printings: { code: string; rarity: string }[];
   source: string;
   image: string;

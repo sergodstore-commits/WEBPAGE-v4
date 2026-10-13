@@ -142,20 +142,27 @@ export async function reserveDailyTranslation(day: string, token: string, charac
 async function queueCandidates(provider: Provider, candidates: WebNewsCandidate[], day: string) {
   const db = await getDb();
   const existing = await getWebNews(true);
-  for (const item of existing)
-    await db.query(
-      `INSERT INTO content_news_jobs(url,id,provider,published_on,phase,header_done)
-    VALUES($1,$2,'existing',$3,'existing',true) ON CONFLICT(url) DO NOTHING`,
-      [item.url, item.id, item.published_on],
-    );
+  await db.query(
+    `INSERT INTO content_news_jobs(url,id,provider,published_on,phase,header_done)
+    SELECT x.url,x.id,'existing',x.published_on,'existing',true
+    FROM jsonb_to_recordset($1::jsonb) AS x(url text,id text,published_on date)
+    ON CONFLICT(url) DO NOTHING`,
+    [JSON.stringify(existing.map(({ url, id, published_on }) => ({ url, id, published_on })))],
+  );
+  const seen = new Set(
+    (
+      await db.query('SELECT url FROM content_news_jobs WHERE url=ANY($1::text[])', [
+        candidates.map((c) => c.url),
+      ])
+    ).rows.map((r) => r.url),
+  );
   const game = provider === 'myl' ? 'myl' : 'yugioh';
   const current = latestNews(existing.filter((i) => i.visible && newsGame(i) === game));
   const cutoff = current.length === NEWS_PER_GAME ? current[current.length - 1].published_on : '';
   for (const item of latestNews(
     candidates.filter((i) => i.published_on <= day && i.published_on >= cutoff),
   )) {
-    if ((await db.query('SELECT 1 FROM content_news_jobs WHERE url=$1', [item.url])).rows.length)
-      continue;
+    if (seen.has(item.url)) continue;
     const pending = (
       await db.query(`SELECT id,url,published_on::text FROM content_news_jobs
       WHERE phase IN ('queued','prepared') AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
@@ -254,10 +261,17 @@ export async function runDailyContent(
       await check(provider, async () => {
         await queueCandidates(provider, (await active.discover[provider]()).items, day);
       });
-    await check('Banlist Yu-Gi-Oh! TCG', () =>
-      active.ygoBanlist(Math.min(deadline, Date.now() + 25_000)),
+    await withTranslationBudget(
+      (characters) => reserveDailyTranslation(day, token, characters),
+      async () => {
+        await check('Banlist Yu-Gi-Oh! TCG', () =>
+          active.ygoBanlist(Math.min(deadline, Date.now() + 25_000)),
+        );
+        await check('Banlists MyL', () =>
+          active.mylBanlist(Math.min(deadline, Date.now() + 25_000)),
+        );
+      },
     );
-    await check('Banlists MyL', () => active.mylBanlist(Math.min(deadline, Date.now() + 25_000)));
     await withTranslationBudget(
       (characters) => reserveDailyTranslation(day, token, characters),
       async () => {

@@ -100,6 +100,7 @@ const printing = z.object({
 const sourceCard = z.object({
   id: z.number().int().positive().max(9999999999),
   name: z.string().min(1).max(200),
+  desc: z.string().min(10).max(12000).optional(),
   type: z.string().max(80),
   attribute: z.string().max(30).nullish(),
   atk: z.number().nullish(),
@@ -119,6 +120,7 @@ export type ManifestCard = {
   id: number;
   cid: number | null;
   englishName: string;
+  englishEffects?: string[];
   printings: { code: string; rarity: string }[];
   imageSource: string;
   type: string;
@@ -147,6 +149,7 @@ export async function manifestForKonamiCard(cid: number): Promise<ManifestCard> 
     id: card.id,
     cid,
     englishName: card.name,
+    ...(card.desc ? { englishEffects: [card.desc] } : {}),
     printings: [],
     imageSource,
     type: card.type,
@@ -184,6 +187,7 @@ export async function editionManifest(name: string): Promise<ManifestCard[]> {
         id: card.id,
         cid: card.misc_info?.[0]?.konami_id ?? null,
         englishName: card.name,
+        ...(card.desc ? { englishEffects: [card.desc] } : {}),
         printings,
         imageSource,
         type: card.type,

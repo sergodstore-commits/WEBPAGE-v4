@@ -12,6 +12,7 @@ import {
 } from '@/lib/banlist';
 import { useRemote, Loading } from '../shared';
 import styles from './Banlist.module.css';
+import { CardText } from './CardText';
 
 function BanlistDialog({ close }: { close: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -96,17 +97,11 @@ function BanlistDialog({ close }: { close: () => void }) {
               <h3>{selected.name}</h3>
               <p className={styles.english}>{selected.detail.englishName}</p>
               {selected.change && <p className={styles.change}>{selected.change}</p>}
-              <h4>Texto de la carta en español</h4>
-              {selected.detail.effects.map((effect, i) => (
-                <div key={i}>
-                  {selected.detail!.effects.length > 1 && (
-                    <h4>{i === 0 ? 'Efecto de Péndulo' : 'Efecto de monstruo'}</h4>
-                  )}
-                  <p>{effect}</p>
-                </div>
-              ))}
+              <CardText card={selected.detail} level={4} />
               <a href={selected.detail.source} target="_blank" rel="noopener noreferrer">
-                Consultar ficha oficial en Konami ↗
+                {selected.detail.text_origin === 'translated'
+                  ? 'Consultar efecto original ↗'
+                  : 'Consultar ficha oficial en Konami ↗'}
               </a>
             </section>
           </div>

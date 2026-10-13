@@ -1,0 +1,47 @@
+.text {
+  min-width: 0;
+}
+.text h3,
+.text h4 {
+  color: #e6c38d;
+  font-size: 14px;
+  margin-top: 24px;
+}
+.text p {
+  white-space: pre-line;
+  line-height: 1.85;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  color: #e7eff5;
+}
+.translation {
+  border: 1px solid #3c7587;
+  border-left: 3px solid #79d8ec;
+  padding: 16px;
+  margin-top: 22px;
+  border-radius: 10px;
+  background: #0b1e2b;
+}
+.translation h3,
+.translation h4 {
+  margin-top: 0;
+  color: #99e5f3;
+}
+.translation small {
+  display: block;
+  color: #b5c8d5;
+  line-height: 1.6;
+}
+.translation details {
+  border-top: 1px solid #355363;
+  padding-top: 12px;
+}
+.translation summary {
+  cursor: pointer;
+  color: #bce9f3;
+  font-size: 13px;
+}
+.translation summary:focus-visible {
+  outline: 2px solid #79d8ec;
+  outline-offset: 4px;
+}

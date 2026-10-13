@@ -1,0 +1,58 @@
+{
+  "9603252": {
+    "name": "Witchcrafter Vice-Madame",
+    "english": "1 \"Witchcrafter\" monster + 1 Spellcaster monster\r\nWhen a Spell Card or effect, or a non-Fusion Spellcaster monster effect, is activated (Quick Effect): You can activate 1 of these effects (but you can only use each effect of \"Witchcrafter Vice-Madame\" once per turn).\r\n● Destroy 1 card on the field.\r\n● Special Summon 1 Level 6 or lower \"Witchcrafter\" monster from your hand or Deck.\r\n● Add 1 \"Witchcrafter\" Spell/Trap from your GY to your hand.",
+    "effects": [
+      "1 monstruo \"Witchcrafter\" + 1 monstruo Lanzador de Conjuros\nCuando se activa una Carta Mágica o el efecto de una Carta Mágica, o el efecto de un monstruo Lanzador de Conjuros que no sea de Fusión (Efecto Rápido): puedes activar 1 de estos efectos (pero sólo puedes usar cada efecto de \"Witchcrafter Vice-Madame\" una vez por turno).\n● Destruye 1 carta en el Campo.\n● Invoca de Modo Especial 1 monstruo \"Witchcrafter\" de Nivel 6 o menor desde tu mano o Deck.\n● Añade a tu mano 1 Mágica/Trampa \"Witchcrafter\" de tu Cementerio."
+    ]
+  },
+  "21522601": {
+    "name": "Witchcrafter Madame Verre",
+    "english": "During damage calculation, if your Spellcaster monster battles an opponent's monster (Quick Effect): You can reveal any number of Spells with different names in your hand, and if you do, your battling monster gains 1000 ATK/DEF for each card revealed, until the end of this turn. (Quick Effect): You can discard 1 Spell; negate the effects of all face-up monsters your opponent currently controls, until the end of this turn. You can only use each effect of \"Witchcrafter Madame Verre\" once per turn.",
+    "effects": [
+      "Durante el cálculo de daño, si tu monstruo Lanzador de Conjuros batalla contra un monstruo del adversario (Efecto Rápido): puedes mostrar cualquier cantidad de Cartas Mágicas con nombres diferentes en tu mano y, si lo haces, tu monstruo que está batallando gana 1000 ATK/DEF por cada carta mostrada, hasta el final de este turno. (Efecto Rápido): puedes descartar 1 Carta Mágica; niega los efectos de todos los monstruos boca arriba que tu adversario controle en este momento, hasta el final de este turno. Sólo puedes usar cada efecto de \"Witchcrafter Madame Verre\" una vez por turno."
+    ]
+  },
+  "24269961": {
+    "name": "Unchained Soul Lord of Yama",
+    "english": "2 Fiend monsters\r\nIf this card is Special Summoned: You can add 1 \"Unchained\" monster from your Deck or GY to your hand. If a card(s) you control is destroyed by battle or card effect, while this card is in your GY: You can banish this card; Special Summon 1 Fiend monster from your hand or GY, then you can destroy 1 card you control. You can only use each effect of \"Unchained Soul Lord of Yama\" once per turn.",
+    "effects": [
+      "2 monstruos Demonio\nSi esta carta es Invocada de Modo Especial: puedes añadir a tu mano 1 monstruo \"Unchained\" de tu Deck o Cementerio. Si una o más cartas que controlas son destruidas en batalla o por el efecto de una carta mientras esta carta está en tu Cementerio: puedes desterrar esta carta; Invoca de Modo Especial 1 monstruo Demonio desde tu mano o Cementerio y después puedes destruir 1 carta que controles. Sólo puedes usar cada efecto de \"Unchained Soul Lord of Yama\" una vez por turno."
+    ]
+  },
+  "27118421": {
+    "name": "Starving Venom Fusion Dragon, Four Heavenly Dragons",
+    "english": "2 DARK monsters on the field\r\n(This card is always treated as a \"Predaplant\" card.)\r\nIf this card is Special Summoned: You can target 1 other face-up monster on the field; change its ATK to 0, negate its effects, also it becomes DARK. When your opponent activates a card or effect (Quick Effect): You can Fusion Summon 1 DARK Fusion Monster from your Extra Deck using DARK monsters on either field, including this card. You can only use each effect of \"Starving Venom Fusion Dragon, Four Heavenly Dragons\" once per turn.",
+    "effects": [
+      "2 monstruos de OSCURIDAD en el Campo\n(Esta carta se trata siempre como una carta \"Predaplant\".)\nSi esta carta es Invocada de Modo Especial: puedes seleccionar 1 otro monstruo boca arriba en el Campo; cambia su ATK a 0, niega sus efectos y además se convierte en OSCURIDAD. Cuando tu adversario activa una carta o efecto (Efecto Rápido): puedes Invocar por Fusión 1 Monstruo de Fusión de OSCURIDAD desde tu Deck Extra, usando monstruos de OSCURIDAD de cualquier lado del Campo, incluyendo esta carta. Sólo puedes usar cada efecto de \"Starving Venom Fusion Dragon, Four Heavenly Dragons\" una vez por turno."
+    ]
+  },
+  "29479265": {
+    "name": "Unchained Abomination",
+    "english": "2+ monsters including a Link Monster\r\nIf a card(s) on the field is destroyed by card effect, except by \"Unchained Abomination\" (except during the Damage Step): You can target 1 card on the field; destroy it. When another monster is destroyed by battle: You can target 1 card on the field; destroy it. During the End Phase: You can target 1 card on the field; destroy it. You can only use each effect of \"Unchained Abomination\" once per turn.",
+    "effects": [
+      "2 o más monstruos, incluyendo un Monstruo de Enlace\nSi una o más cartas en el Campo son destruidas por el efecto de una carta, excepto por \"Unchained Abomination\" (excepto durante el Damage Step): puedes seleccionar 1 carta en el Campo; destrúyela. Cuando otro monstruo es destruido en batalla: puedes seleccionar 1 carta en el Campo; destrúyela. Durante la End Phase: puedes seleccionar 1 carta en el Campo; destrúyela. Sólo puedes usar cada efecto de \"Unchained Abomination\" una vez por turno."
+    ]
+  },
+  "89875646": {
+    "name": "Triple Borrel Launch",
+    "english": "Activate 1 of these effects (but you can only use each effect of \"Triple Borrel Launch\" once per turn);\r\n● Shuffle 1 Dragon monster from your GY into the Deck, then you can Special Summon 1 \"Rokket\" monster with a different name from your Deck.\r\n● Shuffle 2 Dragon monsters from your GY into the Deck, then add 1 Field Spell from your GY to your hand.\r\n● Shuffle 3 Dragon monsters from your GY into the Deck, then shuffle up to 3 monsters from your opponent's GY into the Deck.",
+    "effects": [
+      "Activa 1 de estos efectos (pero sólo puedes usar cada efecto de \"Triple Borrel Launch\" una vez por turno);\n● Baraja al Deck 1 monstruo Dragón de tu Cementerio y después puedes Invocar de Modo Especial 1 monstruo \"Rokket\" con un nombre diferente desde tu Deck.\n● Baraja al Deck 2 monstruos Dragón de tu Cementerio y después añade a tu mano 1 Mágica de Campo de tu Cementerio.\n● Baraja al Deck 3 monstruos Dragón de tu Cementerio y después baraja al Deck hasta 3 monstruos del Cementerio de tu adversario."
+    ]
+  },
+  "90960358": {
+    "name": "Toon Dark Magician Girl",
+    "english": "Cannot be Normal Summoned/Set. Must first be Special Summoned (from your hand) by Tributing 1 monster, while you control \"Toon World\". If \"Toon World\" on the field is destroyed, destroy this card. Can attack your opponent directly, unless they control a Toon monster, in which case this card must target a Toon monster for its attacks. Gains 300 ATK for every \"Dark Magician\" or \"Magician of Black Chaos\" in either player's GY.",
+    "effects": [
+      "No puede ser Invocada de Modo Normal/Colocada. Primero debe ser Invocada de Modo Especial desde tu mano Sacrificando 1 monstruo, mientras controles \"Toon World\". Si \"Toon World\" en el Campo es destruido, destruye esta carta. Puede atacar directamente a tu adversario, a menos que controle un monstruo Toon; en ese caso, esta carta debe seleccionar un monstruo Toon como objetivo de sus ataques. Gana 300 ATK por cada \"Dark Magician\" o \"Magician of Black Chaos\" en los Cementerios de ambos jugadores."
+    ]
+  },
+  "93871599": {
+    "name": "The Guiding Flute of Summoning Dragons",
+    "english": "If a Spellcaster monster is on the field: Special Summon 1 Level 5 or higher Dragon monster from your Deck, then if your opponent controls 2 or more monsters, you can Special Summon 1 monster from your Deck with the same name as the Summoned monster, also you cannot Special Summon for the rest of this turn, except Dragon or Spellcaster monsters. During your Main Phase 2, if this card is in your GY because it was sent there this turn: You can banish it; draw 1 card. You can only use each effect of \"The Guiding Flute of Summoning Dragons\" once per turn.",
+    "effects": [
+      "Si hay un monstruo Lanzador de Conjuros en el Campo: Invoca de Modo Especial 1 monstruo Dragón de Nivel 5 o mayor desde tu Deck y después, si tu adversario controla 2 o más monstruos, puedes Invocar de Modo Especial 1 monstruo desde tu Deck con el mismo nombre que el monstruo Invocado. Además, por el resto de este turno no puedes Invocar de Modo Especial, excepto monstruos Dragón o Lanzador de Conjuros. Durante tu Main Phase 2, si esta carta está en tu Cementerio porque fue mandada allí este turno: puedes desterrarla; roba 1 carta. Sólo puedes usar cada efecto de \"The Guiding Flute of Summoning Dragons\" una vez por turno."
+    ]
+  }
+}

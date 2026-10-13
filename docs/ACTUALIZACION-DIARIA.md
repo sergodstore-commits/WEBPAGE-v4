@@ -28,3 +28,9 @@ Conservar cartas implica que su colección puede seguir creciendo aunque haya so
 Aplicar `019_daily_content.sql` antes de desplegar; no modifica tablas comerciales. El panel Noticias muestra la última ejecución, publicaciones y pendientes. `content_daily_runs` conserva 90 días de resultados; `content_news_jobs` conserva URLs procesadas y avance; una exclusión temporal impide ejecuciones solapadas incluso al cambiar de día. Si una ejecución termina abruptamente, el progreso queda disponible para la siguiente.
 
 Cambiar fuentes o políticas requiere revisar sus parsers y pruebas. No publicar artículos incompletos para ocultar fallos de la fuente o del traductor.
+
+## Cartas sin versión oficial en español
+
+Al preparar una carta se consulta primero Konami. Si no hay texto español utilizable, se toma el efecto inglés verificado de YGOPRODeck y se traduce con el mismo servicio gratuito. Se conserva el inglés, se comprueba que los números coincidan y se guarda la traducción una sola vez junto a la carta. La ficha muestra un recuadro de traducción no oficial junto a la imagen, con acceso al texto inglés original. Esta operación no vuelve a traducir en cada visita ni duplica imágenes.
+
+La falta de una ficha española deja de bloquear una edición cuando existe un efecto inglés verificable y una traducción válida. Si falta también el original, cambia la identidad, no coinciden los números o falla el traductor, se conserva el avance y no se inventa un efecto. Las traducciones usadas por la actualización diaria comparten su presupuesto de 4.500 caracteres.

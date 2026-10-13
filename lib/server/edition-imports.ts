@@ -14,13 +14,8 @@ import type {
 } from '../edition-gallery';
 import { getDb, dataDir } from './db';
 import { AppError, fail, hash, isProd, token } from './core';
-import {
-  discoverSets,
-  editionManifest,
-  sourceBytes,
-  spanishCard,
-  type ManifestCard,
-} from './ygo-source';
+import { discoverSets, editionManifest, sourceBytes, type ManifestCard } from './ygo-source';
+import { spanishOrTranslatedCard } from './ygo-translation';
 
 export const EDITION_STORAGE_LIMIT = 100_000_000;
 const verifiedYgoGroups: Record<string, string> = {
@@ -148,7 +143,7 @@ export async function prepareEdition(code: string) {
         verifiedEditionDate(code) || set.release_date,
         `${set.name}: guía de cartas`,
         `Explora las cartas de ${set.name}, consulta sus rarezas y lee los efectos en español.`,
-        `${set.name} reúne cartas para descubrir nuevas combinaciones. En esta guía de SERGOD puedes explorar la edición y consultar sus textos oficiales en español.\n\nBusca por nombre en español, en inglés o por código. Pulsa una carta para ampliar su imagen y leer su efecto.`,
+        `${set.name} reúne cartas para descubrir nuevas combinaciones. En esta guía de SERGOD puedes explorar la edición y consultar sus textos en español.\n\nBusca por nombre en español, en inglés o por código. Pulsa una carta para ampliar su imagen y leer su efecto.`,
       ],
     );
     const row = await rowFor(code);
@@ -238,13 +233,7 @@ export async function cacheYgoCard(pending: ManifestCard): Promise<EditionCard> 
     bytes = 0;
   if (existing) card = existing;
   else {
-    if (!pending.cid)
-      fail(
-        409,
-        `Falta la ficha oficial en español de ${pending.englishName}. Podrás reanudar cuando esté disponible.`,
-      );
-    const source = `https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=${pending.cid}&request_locale=es`;
-    const spanish = spanishCard((await sourceBytes(source, 500_000)).toString('utf8'));
+    const spanish = await spanishOrTranslatedCard(pending);
     const original = await sourceBytes(pending.imageSource, 2_000_000);
     const processor = sharp(original, { limitInputPixels: 5_000_000 });
     const metadata = await processor.metadata();
@@ -277,7 +266,6 @@ export async function cacheYgoCard(pending: ManifestCard): Promise<EditionCard> 
       ...spanish,
       englishName: pending.englishName,
       printings: pending.printings,
-      source,
       image,
       thumbnail,
       type: pending.type,

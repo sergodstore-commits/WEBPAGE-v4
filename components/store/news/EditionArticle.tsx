@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowUpRight, Search, X, Layers3 } from 'lucide-react';
 import styles from './EditionArticle.module.css';
 import type { EditionDocument, EditionCard as Card } from '@/lib/edition-gallery';
 import { EditionConnections } from '../catalog/EditionConnections';
+import { CardText } from '../community/CardText';
 
 const defaultDocument: EditionDocument = {
   name: 'Beyond the Brave',
@@ -277,7 +278,8 @@ export default function EditionArticle({
           <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">
             YGOPRODeck
           </a>
-          . Nombres y efectos en español: base oficial de Konami, enlazada en cada carta.{' '}
+          . Textos de Konami cuando están disponibles; las traducciones automáticas se identifican
+          en cada ficha.{' '}
           {documentData.code === 'betb' && (
             <>
               Referencia de la edición:{' '}
@@ -349,15 +351,7 @@ export default function EditionArticle({
                 {selected.atk !== null && <span>ATK {selected.atk < 0 ? '?' : selected.atk}</span>}
                 {selected.def !== null && <span>DEF {selected.def < 0 ? '?' : selected.def}</span>}
               </div>
-              <h3>Texto de la carta en español</h3>
-              {selected.effects.map((effect, index) => (
-                <div key={index}>
-                  {selected.effects.length > 1 && (
-                    <h3>{index === 0 ? 'Efecto de Péndulo' : 'Efecto de monstruo'}</h3>
-                  )}
-                  <p className={styles.effect}>{effect}</p>
-                </div>
-              ))}
+              <CardText card={selected} />
               <div className={styles.printings}>
                 {selected.printings.map((printing, index) => (
                   <span key={index}>
@@ -371,7 +365,10 @@ export default function EditionArticle({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Consultar en Konami <ArrowUpRight size={16} />
+                {selected.text_origin === 'translated'
+                  ? 'Consultar texto original'
+                  : 'Consultar en Konami'}{' '}
+                <ArrowUpRight size={16} />
               </a>
             </div>
           </div>
