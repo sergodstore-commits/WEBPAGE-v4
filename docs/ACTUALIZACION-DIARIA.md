@@ -2,7 +2,9 @@
 
 El cron de producción llama a `/api/cron/content` cada día a las 10:00 UTC. Vercel Hobby puede ejecutarlo hasta 59 minutos después: entre las 07:00 y 07:59 en verano, o entre las 06:00 y 06:59 en invierno en Santiago. No depende de visitas, del PC ni de Codex abierto.
 
-Fuentes existentes: Yu-Gi-Oh! Meta y YGOrganization (sitios web, solo TCG), blog oficial MyL (Primera Era y Primer Bloque), banlist oficial Konami en español y banlists oficiales MyL. Se conservan los filtros editoriales actuales: revelaciones y contenido de productos. Instagram mantiene su flujo editorial independiente.
+Fuentes existentes: Yu-Gi-Oh! Meta y YGOrganization (sitios web, solo TCG), blog oficial MyL (Primera Era y Primer Bloque), banlist oficial Konami en español y banlists oficiales MyL. Los filtros editoriales incluyen revelaciones y contenido de productos, además de erratas TCG verificadas de YGOrganization. Instagram mantiene su flujo editorial independiente.
+
+YGOrganization consulta tres páginas (hasta 60 publicaciones) de las categorías `errata`, `f-and-l` y `ocg-tcg`, con caché de cinco minutos. Las banlists mantienen su herramienta oficial independiente. Para anuncios sin etiqueta TCG se verifica el cuerpo del artículo y sus enlaces oficiales: hasta seis verificaciones por búsqueda, priorizando productos y reediciones. Los resultados de formato se conservan siete días, con un máximo de 120 registros privados. Los códigos japoneses, Asian English y Rush Duel se excluyen; un fallo de verificación deja el artículo pendiente sin descartar las otras novedades. La búsqueda no descarga imágenes.
 
 Las noticias nuevas se preparan, traducen cuando corresponde, descargan sus imágenes optimizadas y se publican únicamente cuando están completas. MyL no pasa por el traductor. Un fallo de una fuente no detiene las otras. Los borradores manuales preexistentes no se publican automáticamente.
 
