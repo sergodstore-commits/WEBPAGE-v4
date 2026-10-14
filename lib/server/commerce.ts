@@ -4,6 +4,8 @@ import { appUrl, event, fail, flowEnvironment, hash, integer, publicOrder, uuid 
 import { enqueueMail } from './mail';
 import type { OrderItem, Settings } from '../types';
 import { moveReleasedPreorders } from './preorder-release';
+import { preparePosMenuSale, deductPosMenu } from './pos-menu';
+import { posDeliverySlots } from '../pos-menu';
 const itemsSchema = z
   .array(z.object({ product_id: z.uuid(), quantity: z.number().int().min(1).max(100) }))
   .min(1, 'Tu carrito está vacío.')
@@ -23,13 +25,35 @@ const checkoutSchema = z.object({
   delivery: deliverySchema,
   idempotency_key: z.uuid(),
 });
-const posSchema = z.object({
-  items: itemsSchema,
-  payment_method: z.enum(['cash', 'card', 'transfer', 'other']),
-  cash_received: integer.optional(),
-  customer_name: z.string().trim().max(120).optional(),
-  idempotency_key: z.uuid(),
-});
+const posSchema = z
+  .object({
+    items: z
+      .array(z.object({ product_id: z.uuid(), quantity: z.number().int().min(1).max(100) }))
+      .max(100)
+      .default([]),
+    menu_items: z
+      .array(z.object({ product_id: z.uuid(), quantity: z.number().int().min(1).max(100) }))
+      .max(100)
+      .default([]),
+    promos: z
+      .array(z.object({ product_id: z.uuid(), quantity: z.number().int().min(1).max(100) }))
+      .max(100)
+      .default([]),
+    delivery_slot: z.enum(['now', 'current-round', 'round2']).default('now'),
+    table: z.string().trim().max(60).default(''),
+    payment_method: z.enum(['cash', 'card', 'transfer', 'other']),
+    cash_received: integer.optional(),
+    customer_name: z.string().trim().max(120).optional(),
+    idempotency_key: z.uuid(),
+  })
+  .refine(
+    (d) => d.items.length + d.menu_items.length + d.promos.length > 0,
+    'El ticket está vacío.',
+  )
+  .refine(
+    (d) => d.delivery_slot === 'now' || Boolean(d.table),
+    'Indica la mesa para entregar durante una ronda.',
+  );
 function aggregate(items: { product_id: string; quantity: number }[]) {
   const map = new Map<string, number>();
   for (const i of items) map.set(i.product_id, (map.get(i.product_id) || 0) + i.quantity);
@@ -219,15 +243,20 @@ export async function reserveOrder(user: any, input: unknown) {
 export async function completePos(user: any, input: unknown) {
   if (user.role !== 'admin') fail(403, 'Esta acción requiere acceso de administrador.');
   const d = posSchema.parse(input),
-    cart = aggregate(d.items);
-  const fingerprint = hash(JSON.stringify({ ...d, items: cart }));
+    cart = aggregate(d.items),
+    menuItems = aggregate(d.menu_items),
+    promos = aggregate(d.promos);
+  const fingerprint = hash(JSON.stringify({ ...d, items: cart, menu_items: menuItems, promos }));
   const db = await getDb();
   return db.transaction(async (tx) => {
     await tx.query('SELECT id FROM users WHERE id=$1 FOR UPDATE', [user.id]);
     const key = `pos:${user.id}:${d.idempotency_key}`,
       old = await existing(tx, key, fingerprint);
     if (old) return publicOrder(old);
-    const items = await buildItems(tx, cart, user, true);
+    // Lock all menu components before normal products, consistently across POS sales.
+    const menu = await preparePosMenuSale(tx, menuItems, promos);
+    const products = await buildItems(tx, cart, user, true);
+    const items = [...products, ...menu.items];
     const total = items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
     if (total > 100000000) fail(400, 'El total supera el máximo permitido.');
     if (d.payment_method === 'cash' && (d.cash_received === undefined || d.cash_received < total))
@@ -235,7 +264,7 @@ export async function completePos(user: any, input: unknown) {
     const id = uuid();
     const order = (
       await tx.query(
-        `INSERT INTO orders(id,customer_name,source,payment_status,fulfillment_status,subtotal,shipping_price,total,delivery,items,idempotency_key,request_hash,payment_method,cash_received,change_amount) VALUES($1,$2,'pos','approved','delivered',$3,0,$3,'{"method":"pos"}',$4,$5,$6,$7,$8,$9) RETURNING *`,
+        `INSERT INTO orders(id,customer_name,source,payment_status,fulfillment_status,subtotal,shipping_price,total,delivery,items,idempotency_key,request_hash,payment_method,cash_received,change_amount) VALUES($1,$2,'pos','approved',$11,$3,0,$3,$10,$4,$5,$6,$7,$8,$9) RETURNING *`,
         [
           id,
           d.customer_name || 'Venta en local',
@@ -246,10 +275,16 @@ export async function completePos(user: any, input: unknown) {
           d.payment_method,
           d.payment_method === 'cash' ? d.cash_received : null,
           d.payment_method === 'cash' ? d.cash_received! - total : null,
+          JSON.stringify({
+            method: 'pos',
+            entrega: posDeliverySlots[d.delivery_slot],
+            ...(d.table ? { mesa: d.table } : {}),
+          }),
+          d.delivery_slot === 'now' ? 'delivered' : 'received',
         ],
       )
     ).rows[0];
-    for (const i of items) {
+    for (const i of products) {
       await tx.query('UPDATE products SET stock=stock-$2,updated_at=now() WHERE id=$1', [
         i.product_id,
         i.quantity,
@@ -259,10 +294,11 @@ export async function completePos(user: any, input: unknown) {
         [uuid(), i.product_id, id, -i.quantity, 'Venta presencial', user.id],
       );
     }
+    await deductPosMenu(tx, menu.deductions, id, user.id);
     await event(
       tx,
       id,
-      `Venta presencial completada. Medio de pago: ${{ cash: 'efectivo', card: 'tarjeta', transfer: 'transferencia', other: 'otro' }[d.payment_method]}.`,
+      `Pago presencial registrado. Medio de pago: ${{ cash: 'efectivo', card: 'tarjeta', transfer: 'transferencia', other: 'otro' }[d.payment_method]}. Entrega: ${posDeliverySlots[d.delivery_slot]}${d.table ? ` · Mesa ${d.table}` : ''}.`,
     );
     return publicOrder(order);
   });
@@ -526,6 +562,11 @@ export async function updateDelivery(id: string, input: unknown) {
       fail(409, 'Este pedido es una prueba de sandbox. No corresponde a una entrega comercial.');
     if (o.delivery.method === 'pickup' && d.fulfillment_status === 'shipped')
       fail(400, 'Este pedido es para retiro en tienda.');
+    if (o.delivery.method === 'pos' && d.fulfillment_status === 'shipped')
+      fail(
+        400,
+        'La venta presencial se entrega en el local; no corresponde marcarla como enviada.',
+      );
     if (o.delivery.method === 'shipping' && d.fulfillment_status === 'ready')
       fail(400, 'Este pedido es para envío. Usa En preparación o Enviado.');
     if (d.fulfillment_status === 'shipped' && (!d.carrier.trim() || !d.tracking.trim()))
