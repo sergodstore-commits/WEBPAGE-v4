@@ -12,6 +12,7 @@ import {
   type PosTicketProduct,
 } from '@/lib/pos-menu';
 import styles from './PosMenu.module.css';
+import { posMenuMatches, posPromoMatches, type PosDrinkSection } from '@/lib/pos-browse';
 
 function StockRow({
   item,
@@ -78,12 +79,16 @@ export function PosMenuPicker({
   onAdd,
   onMenuChange,
   query,
+  category = 'all',
+  drinkSection = 'all',
 }: {
   ticket: PosTicketLine[];
   busy: boolean;
   onAdd: (product: PosTicketProduct) => void;
   onMenuChange: (items: PosMenuItem[]) => void;
   query: string;
+  category?: 'all' | 'beverages' | 'food' | 'promos';
+  drinkSection?: PosDrinkSection;
 }) {
   const remote = useRemote<PosMenuItem[]>('/admin/pos/menu');
   const [menu, setMenu] = useState<PosMenuItem[]>([]);
@@ -96,9 +101,8 @@ export function PosMenuPicker({
     }
   }, [remote.data, onMenuChange]);
   const remaining = posMenuRemaining(menu, ticket);
-  const matches = menu.filter((item) =>
-    item.name.toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es')),
-  );
+  const matches = posMenuMatches(menu, query, category, drinkSection);
+  const showPromo = (category === 'all' || category === 'promos') && posPromoMatches(menu, query);
   const drinks = menu.filter((item) => item.kind === 'beverage' && !item.alcoholic);
   const selected = menu.find((item) => item.id === beverage);
   const complete = menu.find((item) => item.id === POS_COMPLETE_ID);
@@ -119,61 +123,76 @@ export function PosMenuPicker({
   return (
     <div className={styles.menu}>
       <div className={styles.intro}>
-        <strong>Menú del local</strong>
+        <strong>
+          {category === 'beverages'
+            ? 'Bebidas'
+            : category === 'food'
+              ? 'Comida · completos'
+              : category === 'promos'
+                ? 'Promos del local'
+                : 'Bebidas, comida y promos'}
+        </strong>
         <span>Solo venta presencial · stock independiente</span>
         <button type="button" className="admin-text-button" disabled={busy} onClick={remote.reload}>
           Actualizar existencias
         </button>
       </div>
-      <section className={styles.promo} aria-label="Promo completo y bebida">
-        <div>
-          <Sandwich aria-hidden="true" />
-          <strong>Completo + bebida</strong>
-          <b>{money(POS_PROMO_PRICE)}</b>
-        </div>
-        <label>
-          Bebida de la promo
-          <select
-            aria-label="Bebida de la promo"
-            value={beverage}
-            disabled={busy}
-            onChange={(e) => setBeverage(e.target.value)}
+      {showPromo && (
+        <section className={styles.promo} aria-label="Promo completo y bebida">
+          <div>
+            <Sandwich aria-hidden="true" />
+            <strong>Completo + bebida</strong>
+            <b>{money(POS_PROMO_PRICE)}</b>
+          </div>
+          <label>
+            Bebida de la promo
+            <select
+              aria-label="Bebida de la promo"
+              value={beverage}
+              disabled={busy}
+              onChange={(e) => setBeverage(e.target.value)}
+            >
+              <option value="">Selecciona una bebida sin alcohol</option>
+              {drinks.map((item) => (
+                <option value={item.id} key={item.id} disabled={(remaining.get(item.id) || 0) < 1}>
+                  {item.name}
+                  {item.stock === 0 ? ' · Sin stock' : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          <small>
+            Descuenta un completo y la bebida elegida. Ahorra{' '}
+            {money((complete?.price || 2000) + (selected?.price || 1500) - POS_PROMO_PRICE)}.
+          </small>
+          <button
+            type="button"
+            className="admin-button"
+            disabled={busy || !selected || promoAvailable < 1}
+            onClick={() =>
+              selected &&
+              onAdd({
+                id: `promo-${selected.id}`,
+                name: `Promo completo + ${selected.name}`,
+                sku: `PROMO-${selected.code}`,
+                price: POS_PROMO_PRICE,
+                discount_percent: 0,
+                available: Math.min(complete?.stock || 0, selected.stock),
+                images: [],
+                promo_beverage_id: selected.id,
+              })
+            }
           >
-            <option value="">Selecciona una bebida sin alcohol</option>
-            {drinks.map((item) => (
-              <option value={item.id} key={item.id} disabled={(remaining.get(item.id) || 0) < 1}>
-                {item.name}
-                {item.stock === 0 ? ' · Sin stock' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-        <small>
-          Descuenta un completo y la bebida elegida. Ahorra{' '}
-          {money((complete?.price || 2000) + (selected?.price || 1500) - POS_PROMO_PRICE)}.
-        </small>
-        <button
-          type="button"
-          className="admin-button"
-          disabled={busy || !selected || promoAvailable < 1}
-          onClick={() =>
-            selected &&
-            onAdd({
-              id: `promo-${selected.id}`,
-              name: `Promo completo + ${selected.name}`,
-              sku: `PROMO-${selected.code}`,
-              price: POS_PROMO_PRICE,
-              discount_percent: 0,
-              available: Math.min(complete?.stock || 0, selected.stock),
-              images: [],
-              promo_beverage_id: selected.id,
-            })
-          }
-        >
-          <Plus size={17} />
-          {promoAvailable > 0 ? 'Agregar promo' : 'Promo sin stock disponible'}
-        </button>
-      </section>
+            <Plus size={17} />
+            {promoAvailable > 0 ? 'Agregar promo' : 'Promo sin stock disponible'}
+          </button>
+        </section>
+      )}
+      {!showPromo && matches.length === 0 && (
+        <p role="status">
+          No hay coincidencias en esta categoría. Prueba otro nombre o selecciona «Todos».
+        </p>
+      )}
       <div className={styles.grid}>
         {matches.map((item) => {
           const available = Math.max(0, remaining.get(item.id) || 0);
@@ -216,7 +235,7 @@ export function PosMenuPicker({
           Ingresa el total real disponible. Una venta descuenta los componentes automáticamente.
         </p>
         {notice && <p role="status">{notice}</p>}
-        {menu.map((item) => (
+        {(category === 'promos' ? menu : matches).map((item) => (
           <StockRow
             key={`${item.id}-${item.version}`}
             item={item}
