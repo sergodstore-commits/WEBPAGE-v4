@@ -103,7 +103,12 @@ const services = {
   },
 };
 
-export async function claimContentDay(day: string, token: string, resumePartial = false) {
+export async function claimContentDay(
+  day: string,
+  token: string,
+  resumePartial = false,
+  scheduled = false,
+) {
   const db = await getDb();
   return db.transaction(async (tx) => {
     await tx.query("SELECT pg_advisory_xact_lock(hashtext('sergod-daily-content'))");
@@ -119,9 +124,11 @@ export async function claimContentDay(day: string, token: string, resumePartial 
           `INSERT INTO content_daily_runs(day,token,lease_until) VALUES($1,$2,now()+interval '7 minutes')
       ON CONFLICT(day) DO UPDATE SET token=excluded.token,lease_until=excluded.lease_until,status='running',
       finished_at=NULL,started_at=now()
-      WHERE (content_daily_runs.finished_at IS NULL OR ($3 AND content_daily_runs.status='partial'))
+      WHERE (content_daily_runs.finished_at IS NULL OR ($3 AND content_daily_runs.status='partial')
+        OR ($4 AND content_daily_runs.started_at < (($1::date + time '10:00') AT TIME ZONE 'UTC')
+          AND now() >= (($1::date + time '10:00') AT TIME ZONE 'UTC')))
       AND content_daily_runs.lease_until<now() RETURNING day`,
-          [day, token, resumePartial],
+          [day, token, resumePartial, scheduled],
         )
       ).rows.length,
     );
@@ -272,11 +279,14 @@ export async function runDailyContent(
   overrides: Partial<typeof services> = {},
   durationMs = 220_000,
   resumePartial = false,
+  scheduled = false,
 ) {
   const active = { ...services, ...overrides };
   const day = contentDay(),
     token = randomUUID();
-  if (!(await claimContentDay(day, token, resumePartial))) return { skipped: true, day };
+  // An early operator recovery must not consume the morning cron's slot. The
+  // successful claim moves started_at past 10:00 UTC, preventing duplicate crons.
+  if (!(await claimContentDay(day, token, resumePartial, scheduled))) return { skipped: true, day };
   const deadline = Date.now() + durationMs;
   const summary: Summary = { published: 0, retired: 0, freed_bytes: 0, checks: [], errors: [] };
   const db = await getDb();
