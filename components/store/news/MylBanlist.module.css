@@ -7,7 +7,7 @@
   box-sizing: border-box;
   border: 1px solid #35556b;
   border-radius: 12px;
-  padding: 20px 42px 20px 16px;
+  padding: 16px;
   background: #0b1420;
   display: flex;
   flex-direction: column;
@@ -17,6 +17,30 @@
   position: absolute;
   top: 14px;
   right: 10px;
+  z-index: 1;
+}
+.cardImage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 8px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #080f18;
+  cursor: zoom-in;
+}
+.cardImage img {
+  display: block;
+  width: 100%;
+  height: 240px;
+  object-fit: contain;
+}
+.cardImage:hover {
+  background: #142635;
+}
+.imageMissing {
+  color: #a8c5d5;
+  font-size: 12px;
 }
 .card strong {
   font-size: 16px;
@@ -75,6 +99,9 @@
   }
   .images {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cardImage img {
+    height: 190px;
   }
 }
 @media (max-width: 420px) {
