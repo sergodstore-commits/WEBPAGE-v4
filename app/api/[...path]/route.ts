@@ -2,6 +2,7 @@ import { after, NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
 import { getMylBanlists, mylBanlistPanel, refreshMylBanlists } from '@/lib/server/myl-banlist';
 import { getDb } from '@/lib/server/db';
+import { getPosMenu, savePosMenuStock } from '@/lib/server/pos-menu';
 import {
   mylLibraryPanel,
   prepareMylLibrary,
@@ -703,6 +704,9 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
         return json(await saveSettings(await body(request)));
       if (route === 'admin/pos' && method === 'POST')
         return json(await completePos(user, await body(request)), 201);
+      if (route === 'admin/pos/menu' && method === 'GET') return json(await getPosMenu());
+      if (route === 'admin/pos/menu' && method === 'PATCH')
+        return json(await savePosMenuStock(user, await body(request)));
       if (route === 'admin/mail' && method === 'GET') {
         if (isProd()) fail(404, 'Esta herramienta solo está disponible en desarrollo.');
         return json(
