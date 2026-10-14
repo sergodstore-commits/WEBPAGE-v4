@@ -58,3 +58,11 @@ Las tablas privadas `pos_menu_items` y `pos_menu_movements` quedan fuera de `pro
 El POS sigue siendo una herramienta del personal para registrar pagos ya recibidos; todavía no se conectó Mercado Pago ni se habilitó un autoservicio público. Se puede registrar entrega ahora, durante la ronda actual o en ronda 2. Para entregas por ronda se exige mesa y el pedido permanece recibido hasta marcarlo preparado/entregado en Pedidos. La opción «ronda 2» es una solicitud manual, todavía no se valida contra el calendario vivo de un torneo.
 
 Pruebas locales: catálogo privado y bloqueo de compra online por identificador, permisos, versión de stock, importes de servidor, componentes de promo, exclusión de alcohol, rollback, idempotencia, ventas mixtas TCG/menú, entrega por ronda y competencia por últimas unidades. No se crean ventas ni cobros de prueba en producción.
+
+## Catálogo agrupado solo en el POS — 14-10-2026
+
+Dentro de «Cartas y productos», el POS ofrece accesos a Accesorios, Sobres, Token Box, Toolkits y kits, Displays y cajas, Mazos y Singles. Los accesorios se agrupan por la familia explícita del catálogo; al elegir una variante se muestran su imagen, precio y stock exactos. El ticket recibe el identificador original de esa variante, conservando su inventario independiente. La búsqueda admite colores, formatos, tipos y SKU.
+
+Sobres, token box, kits y demás sellados conservan su tarjeta individual por presentación e idioma. Los kits raciales MyL se incluyen en Toolkits y kits. Se muestran los artículos publicados de tipo Tienda incluso sin stock, pero no se permite venderlos agotados. Borradores y preventas no se publican ni cambian de tipo mediante esta herramienta.
+
+Este cambio afecta únicamente el panel administrativo: la tienda online conserva sus tarjetas individuales. Se reutilizan las imágenes y los datos existentes; no se agregan archivos de imágenes a Storage ni consultas a fuentes externas.
