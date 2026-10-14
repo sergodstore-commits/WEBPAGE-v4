@@ -11,7 +11,9 @@ export async function GET(request: Request) {
       { status: 401, headers: { 'Cache-Control': 'no-store' } },
     );
   try {
-    return Response.json(await runDailyContent(), { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json(await runDailyContent({}, 220_000, false, true), {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch {
     return Response.json(
       { error: 'No se completó la actualización. El contenido publicado se conserva.' },
