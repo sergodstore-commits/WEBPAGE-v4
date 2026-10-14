@@ -317,26 +317,30 @@ function inspectArticle(html: string) {
   });
   const format = excludedFormat(`${metadata.headline}\n${text}`)
     ? undefined
-    : explicitOcg(`${metadata.headline}\n${text}`) ||
-        sourceLinks.some((link) => {
-          try {
-            const u = new URL(link);
-            return (
-              u.protocol === 'https:' &&
-              u.hostname === 'www.yugioh-card.com' &&
-              !u.username &&
-              !u.password &&
-              !u.port &&
-              /^\/japan\//.test(u.pathname)
-            );
-          } catch {
-            return false;
-          }
-        })
+    : explicitOcg(metadata.headline)
       ? ('OCG' as const)
-      : explicitTcg(metadata.headline) || /\bTCG\b/i.test(text) || officialTcg
+      : explicitTcg(metadata.headline)
         ? ('TCG' as const)
-        : undefined;
+        : explicitOcg(text) ||
+            sourceLinks.some((link) => {
+              try {
+                const u = new URL(link);
+                return (
+                  u.protocol === 'https:' &&
+                  u.hostname === 'www.yugioh-card.com' &&
+                  !u.username &&
+                  !u.password &&
+                  !u.port &&
+                  /^\/japan\//.test(u.pathname)
+                );
+              } catch {
+                return false;
+              }
+            })
+          ? ('OCG' as const)
+          : explicitTcg(metadata.headline) || /\bTCG\b/i.test(text) || officialTcg
+            ? ('TCG' as const)
+            : undefined;
   const media = new Map<string, WebNewsMedia>();
   for (const block of blocks)
     if (block.kind === 'image' && block.source)
