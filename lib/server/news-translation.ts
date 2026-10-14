@@ -115,6 +115,7 @@ export async function prepareNewsDraft(input: unknown, verifiedCandidate?: WebNe
       url: candidate.url,
       published_on: candidate.published_on,
       category: candidate.category,
+      format: candidate.format,
       boards: candidate.boards || ['yugioh'],
       title: translatedTitle.slice(0, 160),
       summary: translatedSummary.slice(0, 600),
