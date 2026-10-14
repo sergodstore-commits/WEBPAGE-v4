@@ -234,6 +234,37 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
         "UPDATE content_daily_runs SET status='complete',finished_at=now(),lease_until=now()-interval '1 second'",
       );
       assert.equal(await claimContentDay('2026-01-01', 'completed-retry', true), false);
+      await db.query(
+        "UPDATE content_daily_runs SET status='partial',started_at='2026-01-01T04:59:00Z',finished_at='2026-01-01T05:00:00Z',lease_until=now()-interval '1 second' WHERE day='2026-01-01'",
+      );
+      assert.equal(
+        await claimContentDay('2026-01-01', 'morning-cron', false, true),
+        true,
+        'An early recovery does not consume the scheduled morning slot',
+      );
+      assert.equal(await claimContentDay('2026-01-01', 'overlapping-cron', false, true), false);
+      assert.equal(
+        (await db.query("SELECT translation_chars FROM content_daily_runs WHERE day='2026-01-01'"))
+          .rows[0].translation_chars,
+        4500,
+        'The scheduled continuation preserves the free daily quota',
+      );
+      await db.query(
+        "UPDATE content_daily_runs SET status='partial',finished_at=now(),lease_until=now()-interval '1 second'",
+      );
+      assert.equal(
+        await claimContentDay('2026-01-01', 'duplicate-cron', false, true),
+        false,
+        'A second scheduled request cannot re-run the morning slot',
+      );
+      await db.query(
+        "UPDATE content_daily_runs SET status='complete',started_at='2026-01-01T04:59:00Z',finished_at='2026-01-01T05:00:00Z' WHERE day='2026-01-01'",
+      );
+      assert.equal(
+        await claimContentDay('2026-01-01', 'morning-after-early-complete', false, true),
+        true,
+        'Even an early completed check must not hide news published later that morning',
+      );
       await db.query('DELETE FROM content_daily_runs');
     },
   );
