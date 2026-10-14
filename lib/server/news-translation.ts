@@ -61,7 +61,7 @@ export async function translateNewsText(text: string): Promise<string> {
     } catch {
       fail(
         503,
-        'El traductor gratuito no respondió o agotó su cuota. Puedes preparar la noticia sin traducir y editarla; no se ha publicado nada.',
+        'El traductor gratuito no respondió o agotó su cuota. El avance de traducción se conserva para continuar después.',
       );
     }
   }
