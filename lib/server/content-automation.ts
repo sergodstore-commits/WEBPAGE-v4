@@ -201,7 +201,7 @@ async function queueCandidates(
     if (seen.has(item.url) && !recover) continue;
     const pending = (
       await db.query(`SELECT id,url,published_on::text FROM content_news_jobs
-      WHERE phase IN ('queued','prepared') AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
+      WHERE phase IN ('queued','prepared','translating') AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
       ORDER BY published_on ASC,url`)
     ).rows;
     if (pending.length >= limit) {
@@ -231,12 +231,17 @@ async function queueCandidates(
   }
 }
 
-async function advanceNews(job: Job, until: number) {
+async function advanceNews(job: Job, until: number, translation: { blocked: boolean }) {
   const db = await getDb();
   await prepareNewsDraft({ id: job.id, source: job.provider, translate: false }, job.candidate);
   let item = (await getWebNews(true)).find((i) => i.id === job.id && i.url === job.url);
   if (!item) fail(409, 'El borrador no coincide con la fuente.');
-  if (!item.media_checked) await prepareWebNewsImages(job.id, false, false, true);
+  const wasVisible = item.visible;
+  const needsOriginal =
+    job.provider !== 'myl' &&
+    !item.original_content_blocks &&
+    (!job.header_done || item.content_blocks?.some((b) => b.original_text));
+  if (!item.media_checked || needsOriginal) await prepareWebNewsImages(job.id, false, false, true);
   item = (await getWebNews(true)).find((i) => i.id === job.id)!;
   if (job.phase === 'queued') {
     const blocks = splitTranslationBlocks(item.content_blocks || []);
@@ -246,33 +251,71 @@ async function advanceNews(job: Job, until: number) {
       [job.url],
     );
   }
-  if (!job.header_done) {
-    item = (await getWebNews(true)).find((i) => i.id === job.id)!;
-    if (job.provider !== 'myl') {
-      const title = await translateNewsText(item.original_title || item.title);
-      const summary = await translateNewsText(item.original_summary || item.summary);
-      await saveWebNews(
-        { ...item, title: title.slice(0, 160), summary: summary.slice(0, 600) },
-        job.id,
-      );
-    }
-    await db.query('UPDATE content_news_jobs SET header_done=true WHERE url=$1', [job.url]);
-  }
+  // Image preparation is independent of the translation quota. Never publish missing galleries.
   while (Date.now() < until) {
     item = (await getWebNews(true)).find((i) => i.id === job.id)!;
-    if (!item.content_blocks?.some((b) => b.original_text) && !item.media?.some((m) => !m.image)) {
-      if (!item.content_blocks?.length && !item.media?.length)
-        fail(409, 'La fuente no incluye contenido suficiente para publicar.');
-      await saveWebNews({ ...item, visible: true }, job.id);
-      await db.query(
-        "UPDATE content_news_jobs SET phase='published',candidate=NULL,last_error=NULL,updated_at=now() WHERE url=$1",
-        [job.url],
-      );
-      return true;
-    }
-    await prepareWebNewsImages(job.id, true);
+    if (!item.media?.some((m) => !m.image)) break;
+    await prepareWebNewsImages(job.id, true, false, false);
   }
-  return false;
+  item = (await getWebNews(true)).find((i) => i.id === job.id)!;
+  if (item.media?.some((m) => !m.image)) return false;
+  if (!item.content_blocks?.length && !item.media?.length)
+    fail(409, 'La fuente no incluye contenido suficiente para publicar.');
+  const pending =
+    job.provider !== 'myl' &&
+    (!job.header_done || item.content_blocks?.some((b) => b.original_text));
+  if (pending) {
+    await saveWebNews({ ...item, visible: true, translation_pending: true }, job.id);
+    // Keep this URL in the daily queue, even if it disappears from discovery tomorrow.
+    await db.query(
+      "UPDATE content_news_jobs SET phase='translating',updated_at=now() WHERE url=$1",
+      [job.url],
+    );
+    if (translation.blocked || Date.now() >= until) return !wasVisible;
+    try {
+      if (!job.header_done) {
+        const title = await translateNewsText(item.original_title || item.title);
+        const summary = await translateNewsText(item.original_summary || item.summary);
+        item = (await getWebNews(true)).find((i) => i.id === job.id)!;
+        await saveWebNews(
+          { ...item, title: title.slice(0, 160), summary: summary.slice(0, 600) },
+          job.id,
+        );
+        await db.query('UPDATE content_news_jobs SET header_done=true WHERE url=$1', [job.url]);
+      }
+      while (Date.now() < until) {
+        item = (await getWebNews(true)).find((i) => i.id === job.id)!;
+        if (!item.content_blocks?.some((b) => b.original_text)) break;
+        await prepareWebNewsImages(job.id, true);
+      }
+    } catch (error) {
+      if (!(error instanceof AppError) || ![429, 503].includes(error.status)) throw error;
+      translation.blocked = true;
+      await db.query('UPDATE content_news_jobs SET last_error=$2,updated_at=now() WHERE url=$1', [
+        job.url,
+        message(error),
+      ]);
+      return !wasVisible;
+    }
+    item = (await getWebNews(true)).find((i) => i.id === job.id)!;
+    if (item.content_blocks?.some((b) => b.original_text)) return !wasVisible;
+  }
+  item = (await getWebNews(true)).find((i) => i.id === job.id)!;
+  await saveWebNews(
+    {
+      ...item,
+      visible: true,
+      translation_pending: false,
+      content_language: 'es',
+      original_content_blocks: undefined,
+    },
+    job.id,
+  );
+  await db.query(
+    "UPDATE content_news_jobs SET phase='published',header_done=true,candidate=NULL,last_error=NULL,updated_at=now() WHERE url=$1",
+    [job.url],
+  );
+  return !wasVisible;
 }
 
 export async function runDailyContent(
@@ -328,11 +371,12 @@ export async function runDailyContent(
     await withTranslationBudget(
       (characters) => reserveDailyTranslation(day, token, characters),
       async () => {
+        const translation = { blocked: false };
         for (const game of ['myl', 'yugioh'] as const) {
           const until = Math.min(deadline, Date.now() + (game === 'myl' ? 90_000 : 60_000));
           const jobs = (
             await db.query<Job>(
-              `SELECT * FROM content_news_jobs WHERE phase IN ('queued','prepared')
+              `SELECT * FROM content_news_jobs WHERE phase IN ('queued','prepared','translating')
           AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
           ORDER BY published_on DESC,url LIMIT $1`,
               [NEWS_LIMITS[game]],
@@ -349,7 +393,7 @@ export async function runDailyContent(
             for (const job of group) {
               if (Date.now() >= groupUntil) break;
               try {
-                if (await advanceNews(job, groupUntil)) {
+                if (await advanceNews(job, groupUntil, translation)) {
                   summary.published++;
                   summary.retired += await rotateWebNews();
                 }
@@ -374,7 +418,7 @@ export async function runDailyContent(
     const pending = Number(
       (
         await db.query(
-          "SELECT count(*) AS n FROM content_news_jobs WHERE phase IN ('queued','prepared')",
+          "SELECT count(*) AS n FROM content_news_jobs WHERE phase IN ('queued','prepared','translating')",
         )
       ).rows[0].n,
     );
@@ -405,7 +449,7 @@ export async function contentAutomationStatus() {
   const pending = Number(
     (
       await db.query(
-        "SELECT count(*) AS n FROM content_news_jobs WHERE phase IN ('queued','prepared')",
+        "SELECT count(*) AS n FROM content_news_jobs WHERE phase IN ('queued','prepared','translating')",
       )
     ).rows[0].n,
   );
@@ -418,7 +462,7 @@ export async function contentAutomationStatus() {
     await db.query<
       Job & { last_error: string | null }
     >(`SELECT id,url,provider,phase,candidate,last_error
-    FROM content_news_jobs WHERE phase IN ('queued','prepared') ORDER BY published_on DESC,url LIMIT 30`)
+    FROM content_news_jobs WHERE phase IN ('queued','prepared','translating') ORDER BY published_on DESC,url LIMIT 30`)
   ).rows;
   const pendingJobs = jobs.map((job) => {
     const item = items.find((i) => i.id === job.id && i.url === job.url);
@@ -430,6 +474,8 @@ export async function contentAutomationStatus() {
       images_total: item?.media?.length || 0,
       translation_pending: item?.content_blocks?.filter((b) => b.original_text).length || 0,
       error: job.last_error,
+      visible: Boolean(item?.visible),
+      translation_pending_public: Boolean(item?.translation_pending),
     };
   });
   return {
