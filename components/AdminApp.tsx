@@ -32,6 +32,7 @@ import { YouTubeIntegrations, YouTubeTransmissions } from './admin/YouTubeAdmin'
 import { LeagueAdmin } from './admin/LeagueAdmin';
 import { InstagramNewsPage } from './admin/InstagramAdmin';
 import { PosMenuPicker } from './admin/PosMenuPicker';
+import { PosCatalogPicker } from './admin/PosCatalogPicker';
 import {
   posTicketCapacity,
   posDeliverySlots,
@@ -2878,12 +2879,6 @@ function PosPage() {
   const [receipt, setReceipt] = useState<Order | null>(null);
   const transaction = useRef({ signature: '', key: '' });
   const total = ticket.reduce((sum, line) => sum + price(line.product) * line.quantity, 0);
-  const matches = (r.data || []).filter(
-    (p) =>
-      p.kind === 'store' &&
-      p.status === 'published' &&
-      [p.name, p.sku].some((s) => s.toLowerCase().includes(query.toLowerCase())),
-  );
   function add(p: PosTicketProduct) {
     const line = ticket.find((l) => l.product.id === p.id);
     if ((line?.quantity || 0) >= posTicketCapacity(p, menu, ticket)) {
@@ -3007,7 +3002,7 @@ function PosPage() {
               <Search size={17} />
               <input
                 aria-label="Buscar artículos para venta"
-                placeholder="Buscar por nombre o SKU"
+                placeholder="Nombre, SKU, color o tipo"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -3026,31 +3021,14 @@ function PosPage() {
             <Loading />
           ) : r.error ? (
             <Loading error={r.error} retry={r.load} />
-          ) : matches.length ? (
-            <div className="admin-pos-products">
-              {matches.map((p) => (
-                <button
-                  className="admin-pos-product"
-                  key={p.id}
-                  disabled={p.available < 1 || busy}
-                  onClick={() => add(p)}
-                >
-                  <Thumbnail url={p.images[0]} name={p.name} />
-                  <span>
-                    <strong>{p.name}</strong>
-                    <small>
-                      {p.sku} · {p.available} disponibles
-                    </small>
-                    <b>{money(price(p))}</b>
-                  </span>
-                  <Plus size={17} />
-                </button>
-              ))}
-            </div>
           ) : (
-            <Empty title="No hay artículos para vender">
-              Busca otro nombre o crea artículos para la tienda.
-            </Empty>
+            <PosCatalogPicker
+              products={r.data || []}
+              query={query}
+              ticket={ticket}
+              busy={busy}
+              onAdd={add}
+            />
           )}
         </section>
         <section className="admin-card admin-card-body admin-ticket">
