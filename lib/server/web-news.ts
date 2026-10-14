@@ -8,6 +8,7 @@ import {
   mylArticle,
   ygorganizationArticle,
   newsSourceLabel,
+  publicNewsContent,
   type WebNewsItem,
 } from '../web-news';
 import { validDay } from '../tournament-schedule';
@@ -26,6 +27,16 @@ import { contentBody } from './news-content';
 import { translateNewsText } from './news-translation';
 import { latestNews } from '../news-retention';
 
+const blockSchema = z.object({
+  kind: z.enum(['heading', 'paragraph', 'list', 'image']),
+  text: z.string().max(12000),
+  source: z
+    .string()
+    .max(1000)
+    .refine((v) => Boolean(newsSourceImage(v)))
+    .optional(),
+  original_text: z.string().max(12000).optional(),
+});
 const schema = z
   .array(
     z
@@ -69,22 +80,10 @@ const schema = z
         body: z.string().trim().max(60000).default(''),
         content_version: z.number().int().min(1).max(10).optional(),
         content_language: z.enum(['es', 'en']).optional(),
+        translation_pending: z.boolean().optional(),
+        original_content_blocks: z.array(blockSchema).max(400).optional(),
         format: z.enum(['TCG', 'OCG']).optional(),
-        content_blocks: z
-          .array(
-            z.object({
-              kind: z.enum(['heading', 'paragraph', 'list', 'image']),
-              text: z.string().max(12000),
-              source: z
-                .string()
-                .max(1000)
-                .refine((v) => Boolean(newsSourceImage(v)))
-                .optional(),
-              original_text: z.string().max(12000).optional(),
-            }),
-          )
-          .max(400)
-          .optional(),
+        content_blocks: z.array(blockSchema).max(400).optional(),
         source_image: z
           .string()
           .max(1000)
@@ -168,6 +167,7 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
             yugiohMetaArticle(item.url) === 'https://www.yugiohmeta.com/articles/sets/tcg/betb'
           ),
       )
+      .map(publicNewsContent)
       .map(
         ({
           original_title,
@@ -234,7 +234,30 @@ export async function saveWebNews(input: unknown, itemId?: string) {
       fail(409, 'Prepara las imágenes del artículo antes de publicarlo.');
     if (items.some((item) => item.visible && item.media?.some((m) => !m.image)))
       fail(409, 'Termina de preparar las imágenes antes de publicar esta noticia.');
-    if (items.some((item) => item.visible && item.content_blocks?.some((b) => b.original_text)))
+    if (
+      items.some(
+        (item) =>
+          item.visible &&
+          item.translation_pending &&
+          (mylArticle(item.url) ||
+            !item.original_title ||
+            !item.original_content_blocks?.length ||
+            !item.original_content_blocks.some((b) => b.kind !== 'image' && b.text.trim()) ||
+            item.original_content_blocks.some((b) => b.original_text)),
+      )
+    )
+      fail(
+        409,
+        'Conserva el contenido original completo antes de publicar con traducción pendiente.',
+      );
+    if (
+      items.some(
+        (item) =>
+          item.visible &&
+          !item.translation_pending &&
+          item.content_blocks?.some((b) => b.original_text),
+      )
+    )
       fail(
         409,
         'Termina de traducir el contenido antes de publicar esta noticia. El avance se conserva.',
@@ -272,6 +295,8 @@ export async function prepareWebNewsImages(
           ? await ygorganizationArticleContent(item.url)
           : await articleContent(item.url);
       const manifest = content.media;
+      if (!myl && (refreshContent || !item.original_content_blocks))
+        item.original_content_blocks = content.blocks.map((b) => ({ ...b }));
       if ('format' in content && (content.format === 'TCG' || content.format === 'OCG'))
         item.format = content.format;
       // Upgrade only the old excerpt-as-body imports automatically. A refresh is an explicit editor action.
@@ -314,7 +339,9 @@ export async function prepareWebNewsImages(
         Object.assign(item, await archiveMetaNewsCover(item.source_image));
     } else {
       if (!item.media_checked) fail(409, 'Revisa primero las imágenes de la noticia.');
-      const block = item.content_blocks?.find((b) => b.original_text && b.text === b.original_text);
+      const block = translate
+        ? item.content_blocks?.find((b) => b.original_text && b.text === b.original_text)
+        : undefined;
       if (block) {
         // One translation unit per request makes long articles resumable on the free runtime.
         const translated = await translateNewsText(block.original_text!);
@@ -369,8 +396,9 @@ export async function prepareWebNewsImages(
 }
 
 export async function publicWebArticle(id: string) {
-  const item = (await getWebNews(true)).find((i) => i.id === id && i.visible);
-  if (!item) fail(404, 'Esta noticia no está publicada.');
+  const stored = (await getWebNews(true)).find((i) => i.id === id && i.visible);
+  if (!stored) fail(404, 'Esta noticia no está publicada.');
+  const item = publicNewsContent(stored);
   const {
     original_title,
     original_summary,
