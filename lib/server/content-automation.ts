@@ -1,7 +1,7 @@
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { getDb } from './db';
 import { AppError, fail } from './core';
-import { latestNews, newsGame, NEWS_PER_GAME } from '../news-retention';
+import { latestNews, newsGame, NEWS_LIMITS } from '../news-retention';
 import { newsBoards, type WebNewsBlock, type WebNewsCandidate } from '../web-news';
 import { getWebNews, prepareWebNewsImages, saveWebNews } from './web-news';
 import { prepareNewsDraft, translateNewsText, withTranslationBudget } from './news-translation';
@@ -169,8 +169,9 @@ async function queueCandidates(
     ).rows.map((r) => [r.url, r.phase] as const),
   );
   const game = provider === 'myl' ? 'myl' : 'yugioh';
+  const limit = NEWS_LIMITS[game];
   const current = latestNews(existing.filter((i) => i.visible && newsGame(i) === game));
-  const cutoff = current.length === NEWS_PER_GAME ? current[current.length - 1].published_on : '';
+  const cutoff = current.length === limit ? current[current.length - 1].published_on : '';
   for (const item of latestNews(
     candidates.filter((i) => i.published_on <= day && i.published_on >= cutoff),
   )) {
@@ -196,7 +197,7 @@ async function queueCandidates(
       WHERE phase IN ('queued','prepared') AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
       ORDER BY published_on ASC,url`)
     ).rows;
-    if (pending.length >= NEWS_PER_GAME) {
+    if (pending.length >= limit) {
       if (item.published_on <= pending[0].published_on) continue;
       // A broken old source must not occupy the queue forever and block newer revelations.
       await rotateWebNews([pending[0].id]);
@@ -317,12 +318,15 @@ export async function runDailyContent(
     await withTranslationBudget(
       (characters) => reserveDailyTranslation(day, token, characters),
       async () => {
-        for (const game of ['myl', 'yugioh']) {
+        for (const game of ['myl', 'yugioh'] as const) {
           const until = Math.min(deadline, Date.now() + (game === 'myl' ? 90_000 : 60_000));
           const jobs = (
-            await db.query<Job>(`SELECT * FROM content_news_jobs WHERE phase IN ('queued','prepared')
+            await db.query<Job>(
+              `SELECT * FROM content_news_jobs WHERE phase IN ('queued','prepared')
           AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
-          ORDER BY published_on DESC,url LIMIT 10`)
+          ORDER BY published_on DESC,url LIMIT $1`,
+              [NEWS_LIMITS[game]],
+            )
           ).rows;
           const groups = game === 'myl' ? mylNewsGroups(jobs) : [jobs];
           for (const [index, group] of groups.entries()) {
@@ -404,7 +408,7 @@ export async function contentAutomationStatus() {
     await db.query<
       Job & { last_error: string | null }
     >(`SELECT id,url,provider,phase,candidate,last_error
-    FROM content_news_jobs WHERE phase IN ('queued','prepared') ORDER BY published_on DESC,url LIMIT 20`)
+    FROM content_news_jobs WHERE phase IN ('queued','prepared') ORDER BY published_on DESC,url LIMIT 30`)
   ).rows;
   const pendingJobs = jobs.map((job) => {
     const item = items.find((i) => i.id === job.id && i.url === job.url);
@@ -435,7 +439,8 @@ export async function contentAutomationStatus() {
         .length,
     })),
     pending_jobs: pendingJobs,
-    limit: NEWS_PER_GAME,
+    limit: NEWS_LIMITS.yugioh,
+    limits: NEWS_LIMITS,
     schedule: 'Cada mañana · desde las 10:00 UTC (07:00 en verano / 06:00 en invierno en Chile)',
   };
 }
