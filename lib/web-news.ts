@@ -20,7 +20,7 @@ export type WebNewsItem = {
   content_blocks?: WebNewsBlock[];
   content_version?: number;
   content_language?: 'es' | 'en';
-  format?: 'TCG';
+  format?: 'TCG' | 'OCG';
   cover_cards?: string[];
   media?: WebNewsMedia[];
   media_checked?: boolean;
@@ -64,13 +64,14 @@ export const webNewsCategories = {
 } as const;
 export type WebNewsCategory = keyof typeof webNewsCategories;
 export const newsBoards = {
-  yugioh: 'Yu-Gi-Oh! TCG',
+  yugioh: 'Yu-Gi-Oh! TCG / OCG',
   'myl-first-era': 'MyL Primera Era',
   'myl-first-block': 'MyL Primer Bloque',
 } as const;
 export type NewsBoard = keyof typeof newsBoards;
 export type MylNewsBoard = Exclude<NewsBoard, 'yugioh'>;
 export type WebNewsCandidate = {
+  format?: 'TCG' | 'OCG';
   boards?: NewsBoard[];
   id: string;
   url: string;
