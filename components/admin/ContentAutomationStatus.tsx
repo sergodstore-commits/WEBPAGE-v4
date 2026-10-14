@@ -7,6 +7,7 @@ import styles from './NewsWorkspace.module.css';
 type Status = {
   schedule: string;
   limit: number;
+  limits?: { yugioh: number; myl: number };
   pending: number;
   preserved: number;
   retry_available: boolean;
@@ -62,7 +63,8 @@ export function ContentAutomationStatus({
     <div className={styles.workflow} aria-label="Actualización automática de noticias">
       <strong>Actualización diaria automática</strong>
       <p>
-        {data.schedule}. Máximo {data.limit} noticias de Yu-Gi-Oh! y {data.limit} de MyL en total.
+        {data.schedule}. Máximo {data.limits?.yugioh ?? data.limit} noticias de Yu-Gi-Oh! y{' '}
+        {data.limits?.myl ?? 10} de MyL en total.
       </p>
       <p>
         {data.last
