@@ -24,6 +24,7 @@ type Status = {
     started_at: string;
     finished_at: string | null;
     status: string;
+    translation_chars: number;
     summary: { published?: number; retired?: number; errors?: string[] };
   };
 };
@@ -68,10 +69,16 @@ export function ContentAutomationStatus({
       </p>
       <p>
         {data.last
-          ? `Última revisión: ${date(data.last.finished_at || data.last.started_at)} · ${data.last.status === 'running' ? 'En curso' : `${data.last.summary.published || 0} publicadas`}`
+          ? `Última revisión: ${date(data.last.finished_at || data.last.started_at)} · ${data.last.status === 'running' ? 'En curso' : `${data.last.status === 'partial' ? 'Revisión parcial' : 'Revisión completada'} · ${data.last.summary.published || 0} publicadas`}`
           : 'Programada; esperando la primera revisión.'}
         {data.pending > 0 && ` · ${data.pending} pendientes para continuar automáticamente.`}
       </p>
+      {data.last && (
+        <p>
+          Traducción automática: {data.last.translation_chars || 0} de 4.500 caracteres usados hoy.{' '}
+          MyL ya está en español y no consume esta cuota.
+        </p>
+      )}
       <small>Las cartas y sus galerías se conservan, aunque una noticia salga del listado.</small>
       <p>
         {data.boards
