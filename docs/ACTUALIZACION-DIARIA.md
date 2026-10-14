@@ -6,7 +6,7 @@ Fuentes existentes: Yu-Gi-Oh! Meta (TCG) y YGOrganization (TCG y OCG identificad
 
 YGOrganization consulta directamente tres páginas de `https://ygorganization.com/category/news/new-cards` y tres del listado filtrado `errata`, `f-and-l` y `ocg-tcg`: hasta 120 entradas antes de deduplicar, con caché de cinco minutos. Las noticias se identifican como TCG u OCG; los anuncios sin etiqueta requieren comprobar el cuerpo o un enlace oficial. Se verifican hasta seis artículos por búsqueda, empezando por los nunca comprobados y más recientes. Los fallos de red no se guardan como exclusiones. Se excluyen Rush Duel, Master Duel y Duel Links. Si falla uno de los listados, se conserva el resultado del otro. Las banlists mantienen su herramienta oficial independiente (Yu-Gi-Oh! TCG). La búsqueda no descarga imágenes.
 
-Este es un seguimiento de novedades recientes, no una importación de todo el archivo histórico de New Cards. Las diez noticias públicas de Yu-Gi-Oh! se comparten entre TCG y OCG; las cuotas gratuitas, la verificación de formato y la descarga completa pueden dejar novedades pendientes para otros días. No se garantiza publicar todos los artículos de la fuente ni el mismo día.
+Este es un seguimiento de novedades recientes, no una importación de todo el archivo histórico de New Cards. Las veinte noticias públicas de Yu-Gi-Oh! se comparten entre TCG y OCG; las cuotas gratuitas, la verificación de formato y la descarga completa pueden dejar novedades pendientes para otros días. No se garantiza publicar todos los artículos de la fuente ni el mismo día.
 
 Las noticias nuevas se preparan, traducen cuando corresponde, descargan sus imágenes optimizadas y se publican únicamente cuando están completas. MyL no pasa por el traductor. Un fallo de una fuente no detiene las otras. Los borradores manuales preexistentes no se publican automáticamente.
 
@@ -14,7 +14,7 @@ El panel muestra publicaciones y pendientes por formato, avance de imágenes/tra
 
 ## Límites y continuidad
 
-- Máximo público de 10 noticias Yu-Gi-Oh! y 10 MyL, sumando ambos formatos MyL. Las guías de ediciones también cuentan en el listado público, pero siguen disponibles en Explorar cartas.
+- Máximo público de 20 noticias Yu-Gi-Oh! y 10 MyL, sumando ambos formatos MyL. Las guías de ediciones también cuentan en el listado público, pero siguen disponibles en Explorar cartas.
 - Orden por fecha original de publicación/lanzamiento. Los registros de URLs procesadas evitan reimportar noticias retiradas.
 - Cuota automática de traducción: 4.500 caracteres diarios, conservadora respecto al servicio gratuito MyMemory. Las unidades traducidas se guardan; artículos largos pueden necesitar varios días. La traducción automática no equivale a una revisión humana especializada.
 - Se mantienen los presupuestos de almacenamiento existentes. Alcanzarlos detiene descargas y deja el motivo en el panel; nunca se contrata un plan ni se activa una API de pago.
@@ -28,7 +28,7 @@ Al retirar una noticia, sus imágenes interiores y bloques con información qued
 
 La limpieza solo elimina portadas propias, horizontales, con metadatos conocidos y sin referencias en noticias, galerías conservadas, productos, publicaciones, bibliotecas, banlists o archivos registrados. Los archivos desconocidos se conservan. Supabase Storage se limpia mediante su API, y la cuota se reduce únicamente tras confirmar la eliminación. No se borra directamente su tabla de objetos.
 
-Conservar cartas implica que su colección puede seguir creciendo aunque haya solo 20 noticias visibles. El límite editorial no es un límite de almacenamiento total.
+Conservar cartas implica que su colección puede seguir creciendo aunque haya solo 30 noticias visibles. El límite editorial no es un límite de almacenamiento total.
 
 ## Operación
 
