@@ -66,3 +66,9 @@ Dentro de «Cartas y productos», el POS ofrece accesos a Accesorios, Sobres, To
 Sobres, token box, kits y demás sellados conservan su tarjeta individual por presentación e idioma. Los kits raciales MyL se incluyen en Toolkits y kits. Se muestran los artículos publicados de tipo Tienda incluso sin stock, pero no se permite venderlos agotados. Borradores y preventas no se publican ni cambian de tipo mediante esta herramienta.
 
 Este cambio afecta únicamente el panel administrativo: la tienda online conserva sus tarjetas individuales. Se reutilizan las imágenes y los datos existentes; no se agregan archivos de imágenes a Storage ni consultas a fuentes externas.
+
+## Búsqueda y categorías unificadas — 14-10-2026
+
+El POS inicia en «Todos», mostrando el menú interno y los productos desde un solo buscador. Las categorías principales son Productos TCG, Accesorios, Bebidas, Comida y Promos. Los productos TCG se filtran por presentación; los accesorios por fundas, deckboxes/carpetas, playmats/estuches y dados; las bebidas por gaseosas, sin azúcar y cerveza. Comida muestra los completos y Promos el combo con una bebida sin alcohol.
+
+La búsqueda conserva el texto al cambiar de categoría y ofrece «Buscar en todo» y «Limpiar». Reconoce nombres, SKU y acentos. La promo aparece al buscar completo, promo o una bebida elegible. El menú se carga una vez y conserva sus componentes disponibles al cambiar de categoría. El ajuste de existencias del menú sigue accesible y se filtra según la selección. No cambia ningún precio, stock, permiso, cobro ni dato del catálogo online.
