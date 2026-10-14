@@ -31,6 +31,14 @@ import { AdminShell } from './admin/AdminShell';
 import { YouTubeIntegrations, YouTubeTransmissions } from './admin/YouTubeAdmin';
 import { LeagueAdmin } from './admin/LeagueAdmin';
 import { InstagramNewsPage } from './admin/InstagramAdmin';
+import { PosMenuPicker } from './admin/PosMenuPicker';
+import {
+  posTicketCapacity,
+  posDeliverySlots,
+  type PosTicketLine,
+  type PosTicketProduct,
+  type PosMenuItem,
+} from '@/lib/pos-menu';
 
 type Notice = { text: string; kind: 'success' | 'error' } | null;
 const productStatus: Record<string, string> = {
@@ -2856,7 +2864,12 @@ function SettingsPage() {
 function PosPage() {
   const r = useResource<Product[]>('/admin/products');
   const [query, setQuery] = useState('');
-  const [ticket, setTicket] = useState<{ product: Product; quantity: number }[]>([]);
+  const [ticket, setTicket] = useState<PosTicketLine[]>([]);
+  const [section, setSection] = useState<'products' | 'menu'>('products');
+  const [menu, setMenu] = useState<PosMenuItem[]>([]);
+  const [menuVersion, setMenuVersion] = useState(0);
+  const [deliverySlot, setDeliverySlot] = useState<keyof typeof posDeliverySlots>('now');
+  const [table, setTable] = useState('');
   const [method, setMethod] = useState('cash');
   const [received, setReceived] = useState('');
   const [customer, setCustomer] = useState('');
@@ -2871,12 +2884,12 @@ function PosPage() {
       p.status === 'published' &&
       [p.name, p.sku].some((s) => s.toLowerCase().includes(query.toLowerCase())),
   );
-  function add(p: Product) {
+  function add(p: PosTicketProduct) {
     const line = ticket.find((l) => l.product.id === p.id);
-    if ((line?.quantity || 0) >= p.available) {
+    if ((line?.quantity || 0) >= posTicketCapacity(p, menu, ticket)) {
       setNotice({
         kind: 'error',
-        text: `Solo hay ${p.available} unidades disponibles de ${p.name}.`,
+        text: `No quedan más unidades de ${p.name} para agregar a este ticket. Revisa sus componentes y existencias.`,
       });
       return;
     }
@@ -2894,7 +2907,17 @@ function PosPage() {
     setBusy(true);
     setNotice(null);
     const payload = {
-      items: ticket.map((l) => ({ product_id: l.product.id, quantity: l.quantity })),
+      items: ticket
+        .filter((l) => !l.product.menu_id && !l.product.promo_beverage_id)
+        .map((l) => ({ product_id: l.product.id, quantity: l.quantity })),
+      menu_items: ticket
+        .filter((l) => l.product.menu_id)
+        .map((l) => ({ product_id: l.product.menu_id!, quantity: l.quantity })),
+      promos: ticket
+        .filter((l) => l.product.promo_beverage_id)
+        .map((l) => ({ product_id: l.product.promo_beverage_id!, quantity: l.quantity })),
+      delivery_slot: deliverySlot,
+      table,
       payment_method: method,
       ...(method === 'cash' ? { cash_received: Number(received) } : {}),
       customer_name: customer,
@@ -2911,10 +2934,13 @@ function PosPage() {
       setTicket([]);
       setReceived('');
       setCustomer('');
+      setDeliverySlot('now');
+      setTable('');
+      setMenuVersion((v) => v + 1);
       transaction.current = { signature: '', key: '' };
       setNotice({
         kind: 'success',
-        text: `Venta #${order.number} registrada. El inventario fue actualizado.`,
+        text: `Venta #${order.number} registrada. Stock actualizado${order.fulfillment_status === 'received' ? '; entrega pendiente' : ''}.`,
       });
       await r.load();
     } catch (e) {
@@ -2927,14 +2953,17 @@ function PosPage() {
     <>
       <Heading
         title="Venta en el local"
-        description="Registra el pago recibido y descuenta las unidades del inventario compartido."
+        description="Registra pagos ya recibidos. Productos TCG y menú exclusivo del local, con stock y entrega por ronda."
       />
       <Feedback notice={notice} />
       {receipt && (
         <section className="admin-card admin-card-body admin-receipt">
           <Check size={25} />
           <div>
-            <h2>Venta #{receipt.number} completada</h2>
+            <h2>
+              Venta #{receipt.number}{' '}
+              {receipt.fulfillment_status === 'received' ? '· pendiente de entregar' : 'completada'}
+            </h2>
             <p>
               {money(receipt.total)} · {date(receipt.created_at)}
               {receipt.change_amount !== null ? ` · Cambio: ${money(receipt.change_amount)}` : ''}
@@ -2947,6 +2976,32 @@ function PosPage() {
       )}
       <div className="admin-pos-layout">
         <section className="admin-card">
+          <div className="admin-toolbar" role="group" aria-label="Catálogo de venta presencial">
+            <button
+              type="button"
+              className={`admin-button ${section === 'products' ? '' : 'secondary'}`}
+              aria-pressed={section === 'products'}
+              disabled={busy}
+              onClick={() => {
+                setSection('products');
+                setQuery('');
+              }}
+            >
+              Cartas y productos
+            </button>
+            <button
+              type="button"
+              className={`admin-button ${section === 'menu' ? '' : 'secondary'}`}
+              aria-pressed={section === 'menu'}
+              disabled={busy}
+              onClick={() => {
+                setSection('menu');
+                setQuery('');
+              }}
+            >
+              Menú del local
+            </button>
+          </div>
           <div className="admin-toolbar">
             <div className="admin-search">
               <Search size={17} />
@@ -2958,7 +3013,16 @@ function PosPage() {
               />
             </div>
           </div>
-          {r.loading ? (
+          {section === 'menu' ? (
+            <PosMenuPicker
+              key={menuVersion}
+              ticket={ticket}
+              busy={busy}
+              onAdd={add}
+              onMenuChange={setMenu}
+              query={query}
+            />
+          ) : r.loading ? (
             <Loading />
           ) : r.error ? (
             <Loading error={r.error} retry={r.load} />
@@ -3023,13 +3087,17 @@ function PosPage() {
                           type="number"
                           aria-label={`Cantidad de ${line.product.name}`}
                           min="1"
-                          max={line.product.available}
+                          max={posTicketCapacity(line.product, menu, ticket)}
                           step="1"
                           value={line.quantity}
                           disabled={busy}
                           onChange={(e) => {
                             const n = Number(e.target.value);
-                            if (Number.isInteger(n) && n >= 1 && n <= line.product.available)
+                            if (
+                              Number.isInteger(n) &&
+                              n >= 1 &&
+                              n <= posTicketCapacity(line.product, menu, ticket)
+                            )
                               setTicket((t) =>
                                 t.map((l) =>
                                   l.product.id === line.product.id ? { ...l, quantity: n } : l,
@@ -3039,7 +3107,9 @@ function PosPage() {
                         />
                         <button
                           type="button"
-                          disabled={busy || line.quantity >= line.product.available}
+                          disabled={
+                            busy || line.quantity >= posTicketCapacity(line.product, menu, ticket)
+                          }
                           onClick={() => add(line.product)}
                           aria-label={`Aumentar cantidad de ${line.product.name}`}
                         >
@@ -3078,6 +3148,28 @@ function PosPage() {
                 value={customer}
                 onChange={(e) => setCustomer(e.target.value)}
                 disabled={busy}
+              />
+            </Field>
+            <Field label="Momento de entrega">
+              <select
+                value={deliverySlot}
+                disabled={busy}
+                onChange={(e) => setDeliverySlot(e.target.value as keyof typeof posDeliverySlots)}
+              >
+                {Object.entries(posDeliverySlots).map(([value, label]) => (
+                  <option value={value} key={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={deliverySlot === 'now' ? 'Mesa (opcional)' : 'Mesa para la entrega *'}>
+              <input
+                value={table}
+                maxLength={60}
+                required={deliverySlot !== 'now'}
+                disabled={busy}
+                onChange={(e) => setTable(e.target.value)}
               />
             </Field>
             <Field label="Medio de pago recibido">
