@@ -76,13 +76,14 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
     delete process.env.CRON_SECRET;
   });
   await t.test(
-    '10 per game by release date, MyL formats combined; long blocks lose no source text',
+    '20 Yu-Gi-Oh and 10 MyL by release date; MyL formats combined; long blocks lose no text',
     () => {
-      const items = Array.from({ length: 13 }, (_, i) => article(i + 1));
-      const myl = items.map((_, i) => article(i + 1, true));
+      const items = Array.from({ length: 23 }, (_, i) => article(i + 1));
+      const myl = Array.from({ length: 13 }, (_, i) => article(i + 1, true));
       const result = latestNews([...items.reverse(), ...myl]);
-      assert.equal(result.length, 20);
-      assert.equal(result[0].published_on, '2026-09-13');
+      assert.equal(result.length, 30);
+      assert.equal(result.filter((i) => i.boards?.includes('yugioh')).length, 20);
+      assert.equal(result[0].published_on, '2026-09-23');
       assert.ok(result.every((i) => i.published_on >= '2026-09-04'));
       const text = 'A line with important effects.\n'.repeat(100);
       const blocks = splitTranslationBlocks([{ kind: 'paragraph', text, original_text: text }]);
@@ -108,7 +109,7 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
     'exclusive covers removed; card galleries, shared/library files and commercial data retained',
     async () => {
       const items = [
-        ...Array.from({ length: 12 }, (_, i) => article(i + 1)),
+        ...Array.from({ length: 22 }, (_, i) => article(i + 1)),
         ...Array.from({ length: 11 }, (_, i) => article(i + 1, true)),
       ];
       items[0].image = asset(1);
@@ -127,7 +128,7 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
         { kind: 'paragraph', text: 'Efecto de la carta que permanece.' },
       ];
       items[1].image = asset(2); // Also used by the retired card gallery.
-      items[12].image = asset(3); // Existing protected library scope.
+      items[22].image = asset(3); // Existing protected library scope.
       const cache = Object.fromEntries(
         [1, 2, 3].map((id) => [
           String(id),
@@ -145,7 +146,7 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
         [JSON.stringify(items), JSON.stringify(cache)],
       );
       assert.equal(await rotateWebNews(), 3);
-      assert.equal((await getWebNews(true)).length, 20);
+      assert.equal((await getWebNews(true)).length, 30);
       assert.equal((await db.query('SELECT count(*) AS n FROM news_card_archives')).rows[0].n, 3);
       assert.match(
         JSON.stringify((await db.query('SELECT data FROM news_card_archives')).rows[0].data),
