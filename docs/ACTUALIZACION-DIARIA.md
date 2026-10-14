@@ -10,7 +10,9 @@ YGOrganization consulta directamente tres páginas de `https://ygorganization.co
 
 Este es un seguimiento de novedades recientes, no una importación de todo el archivo histórico de New Cards. Las veinte noticias públicas de Yu-Gi-Oh! se comparten entre TCG y OCG; las cuotas gratuitas, la verificación de formato y la descarga completa pueden dejar novedades pendientes para otros días. No se garantiza publicar todos los artículos de la fuente ni el mismo día.
 
-Las noticias nuevas se preparan, traducen cuando corresponde, descargan sus imágenes optimizadas y se publican únicamente cuando están completas. MyL no pasa por el traductor. Un fallo de una fuente no detiene las otras. Los borradores manuales preexistentes no se publican automáticamente.
+Las noticias nuevas se preparan y descargan sus imágenes optimizadas. Cuando la traducción todavía no está disponible, se publican en su idioma original con una etiqueta visible. La falta de cuota o un fallo del traductor no bloquean la preparación de imágenes ni la publicación de las siguientes noticias. MyL no pasa por el traductor. Un fallo de una fuente no detiene las otras. Los borradores manuales preexistentes no se publican automáticamente.
+
+Las noticias publicadas en idioma original permanecen en la cola diaria de traducción, incluso si desaparecen del listado de origen. El texto original se conserva temporalmente junto al avance español; el público sigue viendo el original completo hasta terminar título, resumen y cuerpo. Entonces se sustituye la misma noticia por su versión española, conservando URL, fecha, posición e imágenes. El original temporal se retira del registro y no se duplican archivos de imagen. Los límites de retención también se aplican a estas noticias; una noticia retirada no se vuelve a publicar.
 
 El panel muestra publicaciones y pendientes por formato, avance de imágenes/traducción y errores por noticia. En la sección de recuperación, un administrador puede reanudar excepcionalmente un día parcial sin esperar al siguiente. La recuperación conserva la cuota diaria, excluye ejecuciones simultáneas y nunca repite un día completado. También puede incorporar borradores completos anteriores a la automatización si vuelven a aparecer en la fuente, conservan su título original y tienen texto español e imágenes verificados; los trabajos retirados no se recuperan. El cron normal sigue siendo una ejecución diaria. La ruta de recuperación exige sesión administrativa, mismo origen y producción, con un máximo de tres intentos por hora.
 
@@ -36,7 +38,7 @@ Conservar cartas implica que su colección puede seguir creciendo aunque haya so
 
 Aplicar `019_daily_content.sql` antes de desplegar; no modifica tablas comerciales. El panel Noticias muestra la última ejecución, publicaciones y pendientes. `content_daily_runs` conserva 90 días de resultados; `content_news_jobs` conserva URLs procesadas y avance; una exclusión temporal impide ejecuciones solapadas incluso al cambiar de día. Si una ejecución termina abruptamente, el progreso queda disponible para la siguiente.
 
-Cambiar fuentes o políticas requiere revisar sus parsers y pruebas. No publicar artículos incompletos para ocultar fallos de la fuente o del traductor.
+Cambiar fuentes o políticas requiere revisar sus parsers y pruebas. No publicar artículos con imágenes pendientes ni con información de fuente incompleta. La traducción pendiente se indica expresamente y no impide consultar el original.
 
 ## Cartas sin versión oficial en español
 
