@@ -69,6 +69,7 @@ const schema = z
         body: z.string().trim().max(60000).default(''),
         content_version: z.number().int().min(1).max(10).optional(),
         content_language: z.enum(['es', 'en']).optional(),
+        format: z.enum(['TCG', 'OCG']).optional(),
         content_blocks: z
           .array(
             z.object({
@@ -188,7 +189,7 @@ export async function getWebNews(admin = false): Promise<WebNewsItem[]> {
               library.some((edition) => edition.code === item.edition_code))
               ? item.edition_code
               : undefined,
-          format: mylArticle(item.url) ? undefined : ('TCG' as const),
+          format: mylArticle(item.url) ? undefined : item.format || ('TCG' as const),
           category: item.category || 'releases',
           article_path:
             item.id === 'beyond-the-brave'
@@ -271,6 +272,8 @@ export async function prepareWebNewsImages(
           ? await ygorganizationArticleContent(item.url)
           : await articleContent(item.url);
       const manifest = content.media;
+      if ('format' in content && (content.format === 'TCG' || content.format === 'OCG'))
+        item.format = content.format;
       // Upgrade only the old excerpt-as-body imports automatically. A refresh is an explicit editor action.
       const legacy =
         !item.content_version &&
@@ -384,6 +387,6 @@ export async function publicWebArticle(id: string) {
         ? item.edition_code
         : undefined,
     source_label: newsSourceLabel(item.url),
-    format: mylArticle(item.url) ? undefined : ('TCG' as const),
+    format: mylArticle(item.url) ? undefined : item.format || ('TCG' as const),
   };
 }
