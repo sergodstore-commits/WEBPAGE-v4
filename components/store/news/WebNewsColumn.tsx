@@ -179,9 +179,13 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
                         }).format(new Date(`${item.published_on}T12:00:00Z`))}
                       </time>
                       <h3 id={`news-title-${item.id}`}>{item.title}</h3>
+                      {item.translation_pending && (
+                        <small>Idioma original · traducción pendiente</small>
+                      )}
                       <p>{item.summary}</p>
                       <span className={styles.read}>
-                        Leer en español <ArrowRight size={16} aria-hidden="true" />
+                        {item.translation_pending ? 'Leer noticia' : 'Leer en español'}{' '}
+                        <ArrowRight size={16} aria-hidden="true" />
                       </span>
                     </div>
                   </Link>
