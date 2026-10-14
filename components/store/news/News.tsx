@@ -151,7 +151,7 @@ export function News() {
   const selected = list.find((p) => p.id === params.get('publicacion'));
   const sections = [
     ['sergod', 'SERGOD STORE'],
-    ['yugioh', 'Yu-Gi-Oh! TCG'],
+    ['yugioh', 'Yu-Gi-Oh! TCG / OCG'],
     ['myl-first-era', 'MyL Primera Era'],
     ['myl-first-block', 'MyL Primer Bloque'],
   ] as const;
