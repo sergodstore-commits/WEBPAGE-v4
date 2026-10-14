@@ -73,9 +73,9 @@ test('Admin YGOrganization: fuente TCG, coincidencias y borrador revisable antes
   );
   await page.goto('/admin/noticias?paso=fuentes');
   const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh! y MyL', exact: true });
-  await section.getByLabel('Fuente TCG', { exact: true }).selectOption('ygorganization');
-  await section.getByRole('button', { name: 'Buscar novedades TCG', exact: true }).click();
-  const results = section.getByRole('region', { name: 'Noticias TCG disponibles' });
+  await section.getByLabel('Fuente Yu-Gi-Oh!', { exact: true }).selectOption('ygorganization');
+  await section.getByRole('button', { name: 'Buscar novedades Yu-Gi-Oh!', exact: true }).click();
+  const results = section.getByRole('region', { name: 'Noticias TCG / OCG disponibles' });
   await expect(results).toContainText('Posible coincidencia con «Rarezas de Maestros»');
   await results.getByRole('button', { name: 'Revisar coincidencia', exact: true }).click();
   await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
