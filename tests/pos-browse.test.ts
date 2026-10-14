@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { posMenuMatches, posPromoMatches, posAccessorySection } from '../lib/pos-browse';
 import type { PosMenuItem } from '../lib/pos-menu';
 import type { Product } from '../lib/types';
+import { posCatalogSearch } from '../lib/pos-catalog';
 
 const menu: PosMenuItem[] = [
   {
@@ -86,4 +87,18 @@ test('POS browse: accessory subcategories classify sleeve families and playmat c
   assert.equal(classify('Porta playmats hexagonal'), 'playmats');
   assert.equal(classify('Dados Destino'), 'dice');
   assert.equal(classify('Accesorio especial'), 'other');
+  const sleeve = {
+    name: 'Fortuna Matte',
+    category: 'Protectores',
+    catalog_name: '',
+    sku: 'FORTUNA',
+    options: {},
+  } as Product;
+  assert.equal(
+    posCatalogSearch(
+      [{ id: 'fortuna', name: 'Fortuna Matte', section: 'accessories', variants: [sleeve] }],
+      'fundas',
+    ).length,
+    1,
+  );
 });
