@@ -21,10 +21,10 @@ test('Daily updates: protected cron and readable admin status on desktop/mobile'
   await page.goto('/admin/noticias?paso=fuentes');
   const status = page.getByLabel('Actualización automática de noticias');
   await expect(status).toContainText('Actualización diaria automática');
-  await expect(status).toContainText('Máximo 10 noticias de Yu-Gi-Oh! y 10 de MyL en total');
+  await expect(status).toContainText('Máximo 20 noticias de Yu-Gi-Oh! y 10 de MyL en total');
   await expect(status).toContainText('Las cartas y sus galerías se conservan');
   const data = await (await page.request.get('/api/admin/news/automation')).json();
-  expect(data.limit).toBe(10);
+  expect(data.limits).toEqual({ yugioh: 20, myl: 10 });
   expect(data.pending).toBeGreaterThanOrEqual(0);
   expect(data.boards.map((b: { board: string }) => b.board).sort()).toEqual([
     'myl-first-block',
