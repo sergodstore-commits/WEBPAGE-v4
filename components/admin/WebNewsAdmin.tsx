@@ -923,7 +923,11 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                           }
                         />
                         <small className={styles.status}>
-                          {item.visible ? 'Visible en Noticias' : 'Borrador sin publicar'}
+                          {item.visible
+                            ? item.translation_pending
+                              ? 'Visible en idioma original · traducción automática pendiente'
+                              : 'Visible en Noticias'
+                            : 'Borrador sin publicar'}
                         </small>
                         <button
                           type={draft.id === item.id && !item.visible ? 'submit' : 'button'}
