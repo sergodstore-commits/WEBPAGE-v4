@@ -6,8 +6,29 @@ import { useRemote, Loading } from '../shared';
 import { banlistDay, normalizeCardSearch } from '@/lib/banlist';
 import { newsBoards, type MylNewsBoard, type WebNewsMedia } from '@/lib/web-news';
 import type { MylBanlistState } from '@/lib/myl-banlist';
+import { mylBanlistCardImage } from '@/lib/myl-card-images';
 import styles from '../community/Banlist.module.css';
 import own from './MylBanlist.module.css';
+
+function CardImage({ name, image, open }: { name: string; image: string; open: () => void }) {
+  const [failed, setFailed] = useState(false);
+  return failed ? (
+    <p className={own.imageMissing}>Imagen no disponible</p>
+  ) : (
+    <button className={own.cardImage} aria-label={`Ampliar ${name}`} onClick={open}>
+      <img
+        src={image}
+        alt={name}
+        loading="lazy"
+        decoding="async"
+        width={700}
+        height={1000}
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+      />
+    </button>
+  );
+}
 
 function MylBanlistDialog({ board, close }: { board: MylNewsBoard; close: () => void }) {
   const remote = useRemote<MylBanlistState | null>('/news/banlist/myl');
@@ -118,19 +139,39 @@ function MylBanlistDialog({ board, close }: { board: MylNewsBoard; close: () => 
                   {cards.length} {cards.length === 1 ? 'carta' : 'cartas'} · Racial Edición
                 </p>
                 <ul className={own.cards}>
-                  {cards.map((c) => (
-                    <li key={c.name}>
-                      <div className={own.card}>
-                        <span className={styles.copies} data-copies={c.copies}>
-                          {c.copies}
-                        </span>
-                        <strong>{c.name}</strong>
-                        <span>{c.edition}</span>
-                        <small>{labels[c.copies]}</small>
-                        {c.change && <em>{c.change}</em>}
-                      </div>
-                    </li>
-                  ))}
+                  {cards.map((c) => {
+                    const image = mylBanlistCardImage(c, board);
+                    return (
+                      <li key={c.name}>
+                        <div className={own.card}>
+                          <span className={styles.copies} data-copies={c.copies}>
+                            {c.copies}
+                          </span>
+                          {image ? (
+                            <CardImage
+                              key={image}
+                              name={c.name}
+                              image={image}
+                              open={() =>
+                                setSelected({
+                                  name: c.name,
+                                  source: image,
+                                  image,
+                                  caption: `${c.edition} · ${labels[c.copies]}`,
+                                })
+                              }
+                            />
+                          ) : (
+                            <p className={own.imageMissing}>Imagen pendiente de verificar</p>
+                          )}
+                          <strong>{c.name}</strong>
+                          <span>{c.edition}</span>
+                          <small>{labels[c.copies]}</small>
+                          {c.change && <em>{c.change}</em>}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
                 {!cards.length && <p>No hay cartas que coincidan con la búsqueda.</p>}
                 <details className={own.rules}>
@@ -171,6 +212,10 @@ function MylBanlistDialog({ board, close }: { board: MylNewsBoard; close: () => 
               <p>
                 Actualizada desde el panel administrativo. Las cartas liberadas en el último aviso
                 se muestran con 3 copias.
+              </p>
+              <p>
+                Imágenes del catálogo oficial de Mitos y Leyendas. Las restricciones corresponden a
+                la lista y los avisos oficiales indicados abajo.
               </p>
               {snapshot.sources.map((url, i) => (
                 <p key={url}>
