@@ -30,7 +30,7 @@ export function WebNewsCover({ item }: { item: WebNewsItem }) {
         <Newspaper size={64} aria-hidden="true" />
       )}
       <span className={styles.newsRibbon}>
-        {item.boards?.some((b) => b !== 'yugioh') ? 'MyL' : 'TCG'} ·{' '}
+        {item.boards?.some((b) => b !== 'yugioh') ? 'MyL' : item.format || 'TCG'} ·{' '}
         {webNewsCategories[item.category || 'news']}
       </span>
     </div>
@@ -48,12 +48,7 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(8);
   const items = (remote.data || [])
-    .filter(
-      (item) =>
-        item.category !== 'banlist' &&
-        (item.boards || ['yugioh']).includes(board) &&
-        (board !== 'yugioh' || item.format === undefined || item.format === 'TCG'),
-    )
+    .filter((item) => item.category !== 'banlist' && (item.boards || ['yugioh']).includes(board))
     .sort((a, b) => b.published_on.localeCompare(a.published_on) || a.id.localeCompare(b.id));
   function chooseCategory(value: WebNewsCategory | '') {
     setLimit(8);
