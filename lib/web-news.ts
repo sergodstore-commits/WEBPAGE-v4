@@ -20,6 +20,8 @@ export type WebNewsItem = {
   content_blocks?: WebNewsBlock[];
   content_version?: number;
   content_language?: 'es' | 'en';
+  translation_pending?: boolean;
+  original_content_blocks?: WebNewsBlock[];
   format?: 'TCG' | 'OCG';
   cover_cards?: string[];
   media?: WebNewsMedia[];
@@ -45,6 +47,21 @@ export function newsContentBody(blocks: WebNewsBlock[]) {
           : b.text,
     )
     .join('\n\n');
+}
+// Keep the public version entirely in the source language until Spanish is complete.
+// The working translation and original share the same optimized image files.
+export function publicNewsContent(item: WebNewsItem): WebNewsItem {
+  const { original_content_blocks, ...value } = item;
+  return item.translation_pending && original_content_blocks?.length
+    ? {
+        ...value,
+        title: item.original_title || item.title,
+        summary: item.original_summary || item.summary,
+        content_blocks: original_content_blocks,
+        body: newsContentBody(original_content_blocks),
+        content_language: 'en',
+      }
+    : value;
 }
 export type WebNewsMedia = {
   source: string;
