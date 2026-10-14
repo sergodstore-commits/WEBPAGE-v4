@@ -44,7 +44,7 @@ const article = (
 <img src="https://cdn.ygorganization.com/2026/10/card-b.png" alt="Card B">
 <span data-content-role="generic">The final paragraph contains the release information.</span></div>`;
 
-test('YGOrganization: solo TCG editorial, URLs seguras y posibles coincidencias sin ocultar novedades', () => {
+test('YGOrganization: TCG y OCG identificados, juegos excluidos y URLs seguras', () => {
   const items = parseYGOrganizationNews(
     listing([
       entry,
@@ -61,7 +61,9 @@ test('YGOrganization: solo TCG editorial, URLs seguras y posibles coincidencias 
       },
     ]),
   );
-  assert.equal(items.length, 1);
+  assert.equal(items.length, 2);
+  assert.equal(items.find((i) => i.url.endsWith('/ocg'))?.format, 'OCG');
+  assert.equal(items[0].format, 'TCG');
   assert.equal(items[0].published_on, '2026-10-08');
   assert.equal(items[0].category, 'reveals');
   assert.deepEqual(parseYGOrganizationNews(listing([])), []);
@@ -116,10 +118,21 @@ test('YGOrganization: texto hasta el final, cartas e imágenes en contexto, fall
   assert.ok(content.blocks.some((b) => b.text.includes('condition after')));
   assert.match(content.blocks.at(-1)!.text, /final paragraph/);
   assert.ok(!content.blocks.some((b) => /Advertisement|site chrome/.test(b.text)));
-  assert.throws(
-    () =>
-      parseYGOrganizationArticle(article('[OCG] Maestros'), 'https://ygorganization.com/maestros'),
-    /TCG/,
+  assert.equal(
+    parseYGOrganizationArticle(
+      article().replace(
+        'Release on November 13, 2026.',
+        'The TCG release differs from the OCG version.',
+      ),
+      'https://ygorganization.com/maestros',
+    ).format,
+    'TCG',
+    'Mentioning another region must not override the explicit article format',
+  );
+  assert.equal(
+    parseYGOrganizationArticle(article('[OCG] Maestros'), 'https://ygorganization.com/maestros')
+      .format,
+    'OCG',
   );
   assert.throws(
     () =>
@@ -131,7 +144,7 @@ test('YGOrganization: texto hasta el final, cartas e imágenes en contexto, fall
   );
 });
 
-test('YGOrganization: TCG al final del título, reediciones sin prefijo, erratas y rechazo de códigos japoneses', () => {
+test('YGOrganization: TCG al final, reediciones, erratas y códigos japoneses como OCG', () => {
   const reprint = {
     ...entry,
     title: 'Structure Deck: Yugi Muto & Seto Kaiba REPRINT',
@@ -154,14 +167,15 @@ test('YGOrganization: TCG al final del título, reediciones sin prefijo, erratas
   const result = parseYGOrganizationNews(listing([reprint, errata, japanese, unverified]), {
     [hash('https://ygorganization.com/reprint')]: {
       checked_at: new Date().toISOString(),
-      tcg: true,
+      format: 'TCG',
     },
     [hash('https://ygorganization.com/japanese')]: {
       checked_at: new Date().toISOString(),
-      tcg: false,
+      format: 'OCG',
     },
   });
-  assert.equal(result.length, 2);
+  assert.equal(result.length, 3);
+  assert.equal(result.find((i) => i.url.endsWith('/japanese'))?.format, 'OCG');
   assert.equal(result.find((i) => i.url.endsWith('/reprint'))?.category, 'releases');
   assert.equal(result.find((i) => i.url.endsWith('/errata'))?.category, 'news');
   assert.ok(result.every(isEditorialNewsCandidate));
@@ -184,19 +198,18 @@ test('YGOrganization: TCG al final del título, reediciones sin prefijo, erratas
     'Release on November 13, 2026.',
     'IMPH-JP045, a Japanese reveal. <a href="https://www.yugioh-card.com/eu/products/example">TCG future release</a>',
   );
-  assert.throws(() => parseYGOrganizationArticle(jp, 'https://ygorganization.com/japanese'), /TCG/);
+  assert.equal(parseYGOrganizationArticle(jp, 'https://ygorganization.com/japanese').format, 'OCG');
   assert.throws(
     () =>
       parseYGOrganizationArticle(article('Symbols [RD/CA01]'), 'https://ygorganization.com/rush'),
     /TCG/,
   );
-  assert.throws(
-    () =>
-      parseYGOrganizationArticle(
-        article('Cards [CR13-AE]').replace('Release on November 13, 2026.', 'Future TCG release.'),
-        'https://ygorganization.com/asian-english',
-      ),
-    /TCG/,
+  assert.equal(
+    parseYGOrganizationArticle(
+      article('Cards [CR13-AE]').replace('Release on November 13, 2026.', 'Future TCG release.'),
+      'https://ygorganization.com/asian-english',
+    ).format,
+    'OCG',
   );
 });
 
@@ -230,9 +243,10 @@ test('YGOrganization: verifica anuncios sin etiqueta, conserva caché de formato
   globalThis.fetch = async (input) => {
     const url = new URL(String(input));
     calls.push(url.pathname);
-    if (url.pathname === '/') {
-      assert.deepEqual(url.searchParams.getAll('categories'), ['errata', 'f-and-l', 'ocg-tcg']);
-      return new Response(listing([entry, reprint, jp, offline]));
+    if (url.pathname === '/' || url.pathname === '/category/news/new-cards') {
+      if (url.pathname === '/')
+        assert.deepEqual(url.searchParams.getAll('categories'), ['errata', 'f-and-l', 'ocg-tcg']);
+      return new Response(listing(url.pathname === '/' ? [reprint, offline] : [entry, jp]));
     }
     if (url.pathname === '/european-reprint') return new Response(european);
     if (url.pathname === '/japanese-reveal')
@@ -245,17 +259,22 @@ test('YGOrganization: verifica anuncios sin etiqueta, conserva caché de formato
   const found = await reviewYGOrganizationNews();
   assert.deepEqual(found.items.map((i: { url: string }) => i.url).sort(), [
     'https://ygorganization.com/european-reprint',
+    'https://ygorganization.com/japanese-reveal',
     'https://ygorganization.com/maestros-first-look',
   ]);
   assert.equal(found.format_check_errors, 1);
-  assert.equal(found.format_checks[hash('https://ygorganization.com/japanese-reveal')].tcg, false);
+  assert.equal(
+    found.format_checks[hash('https://ygorganization.com/japanese-reveal')].format,
+    'OCG',
+  );
+  assert.equal(found.listings_checked.length, 6);
   assert.ok(
     !found.format_checks[hash('https://ygorganization.com/offline')],
     'Network failures must be retryable',
   );
-  assert.equal(calls.length, 6, 'Three filtered pages and three article probes; no images');
+  assert.equal(calls.length, 9, 'Six listing pages and three article probes; no images');
   await reviewYGOrganizationNews();
-  assert.equal(calls.length, 6, 'Five-minute listing cache');
+  assert.equal(calls.length, 9, 'Five-minute listing cache');
   await db.query(
     "UPDATE settings SET data=jsonb_set(data,'{ygorganization_news_discovery,checked_at}','\"2020-01-01T00:00:00Z\"'::jsonb) WHERE id=1",
   );
@@ -271,6 +290,17 @@ test('YGOrganization: verifica anuncios sin etiqueta, conserva caché de formato
     'Negative format cache reused',
   );
   assert.equal(calls.filter((p) => p === '/offline').length, 2, 'Failed article retried');
+  const workingFetch = globalThis.fetch;
+  globalThis.fetch = async (input, options) =>
+    new URL(String(input)).pathname === '/category/news/new-cards'
+      ? new Response('<h1>Changed source</h1>')
+      : workingFetch(input, options);
+  await db.query(
+    "UPDATE settings SET data=jsonb_set(data,'{ygorganization_news_discovery,checked_at}','\"2020-01-01T00:00:00Z\"'::jsonb) WHERE id=1",
+  );
+  const partial = await reviewYGOrganizationNews();
+  assert.equal(partial.listing_errors, 3);
+  assert.ok(partial.items.some((i: { url: string }) => i.url.endsWith('/european-reprint')));
   await db.query("UPDATE settings SET data=data-'ygorganization_news_discovery' WHERE id=1");
 });
 
@@ -295,12 +325,10 @@ test('YGOrganization: búsqueda cacheada sin descargas, borrador privado, imáge
   globalThis.fetch = async (input, options) => {
     const url = String(input);
     assert.equal(options?.redirect, 'error');
-    if (new URL(url).hostname === 'ygorganization.com' && new URL(url).pathname === '/') {
-      assert.deepEqual(new URL(url).searchParams.getAll('categories'), [
-        'errata',
-        'f-and-l',
-        'ocg-tcg',
-      ]);
+    if (
+      new URL(url).hostname === 'ygorganization.com' &&
+      ['/', '/category/news/new-cards'].includes(new URL(url).pathname)
+    ) {
       lists++;
       return new Response(listing([entry]));
     }
@@ -313,10 +341,10 @@ test('YGOrganization: búsqueda cacheada sin descargas, borrador privado, imáge
   };
   const found = await reviewYGOrganizationNews();
   assert.equal(found.items.length, 1);
-  assert.equal(lists, 3);
+  assert.equal(lists, 6);
   assert.equal(downloads, 0, 'Searching never archives images');
   await reviewYGOrganizationNews();
-  assert.equal(lists, 3, 'Five-minute discovery cache');
+  assert.equal(lists, 6, 'Five-minute discovery cache');
   assert.equal(
     'ygorganization_news_discovery' in (await getSettings()),
     false,
@@ -339,6 +367,10 @@ test('YGOrganization: búsqueda cacheada sin descargas, borrador privado, imáge
     /^\/noticias\/tcg\//,
   );
   assert.match(published.body!, /final paragraph/);
+  await saveWebNews({ ...item, visible: true, format: 'OCG' }, item.id);
+  assert.equal((await publicWebArticle(item.id)).format, 'OCG');
+  assert.equal((await getWebNews()).find((i) => i.id === item.id)?.format, 'OCG');
+  assert.equal((await getWebNews(true)).find((i) => i.id === item.id)?.format, 'OCG');
   await (
     await getDb()
   ).query("UPDATE settings SET data=data-'ygorganization_news_discovery' WHERE id=1");
