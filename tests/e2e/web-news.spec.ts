@@ -68,7 +68,7 @@ test('Noticias: pestañas por comunidad, galería TCG con filtros y lectura inte
   );
   await page.goto('/noticias');
   const own = page.getByRole('region', { name: 'SERGOD STORE', exact: true });
-  const world = page.getByRole('region', { name: 'Yu-Gi-Oh! TCG', exact: true });
+  const world = page.getByRole('region', { name: 'Yu-Gi-Oh! TCG / OCG', exact: true });
   await expect(own).toHaveCount(0);
   await expect(page.locator('iframe')).toHaveCount(0);
   await page.getByRole('button', { name: 'SERGOD STORE', exact: true }).click();
@@ -81,7 +81,7 @@ test('Noticias: pestañas por comunidad, galería TCG con filtros y lectura inte
   await expect(page.getByRole('region', { name: 'MyL Primer Bloque', exact: true })).toContainText(
     'Pronto tendremos novedades',
   );
-  await page.getByRole('button', { name: 'Yu-Gi-Oh! TCG', exact: true }).click();
+  await page.getByRole('button', { name: 'Yu-Gi-Oh! TCG / OCG', exact: true }).click();
   await expect(world).toContainText(initialWebNews[0].summary);
   // The banner stays complete; the controls share rows and article titles never cover artwork.
   const sectionsBox = await page
@@ -160,7 +160,7 @@ test('Noticias: temas persistentes, fechas originales y formatos separados', asy
     }),
   );
   await page.goto('/noticias?seccion=yugioh');
-  const world = page.getByRole('region', { name: 'Yu-Gi-Oh! TCG', exact: true });
+  const world = page.getByRole('region', { name: 'Yu-Gi-Oh! TCG / OCG', exact: true });
   await expect(world.locator('article h3')).toHaveText([
     'Lanzamiento reciente',
     'Revelación más reciente',
@@ -387,7 +387,7 @@ test('Admin MyL: buscar y preparar productos conserva fecha, formato y confirmac
   await page.goto('/admin/noticias');
   const section = page.getByRole('region', { name: 'Actualidad Yu-Gi-Oh! y MyL', exact: true });
   await section.getByRole('button', { name: /Buscar y preparar/ }).click();
-  await expect(section).toContainText('solo TCG para Yu-Gi-Oh!');
+  await expect(section).toContainText('TCG y OCG para Yu-Gi-Oh!');
   await expect(section).toContainText('Las restricciones se actualizan en Banlists.');
   await section.getByRole('button', { name: 'Buscar novedades MyL', exact: true }).click();
   await expect(section.getByRole('region', { name: 'Noticias MyL disponibles' })).toContainText(
@@ -521,7 +521,7 @@ test('Admin: biblioteca separada de fuentes, filtros, historial y herramientas b
   await expect(section.getByRole('row').filter({ hasText: 'Nueva edición TCG' })).toBeVisible();
   expect(requests).toEqual([]);
   await expect(
-    section.getByRole('button', { name: 'Buscar novedades TCG', exact: true }),
+    section.getByRole('button', { name: 'Buscar novedades Yu-Gi-Oh!', exact: true }),
   ).not.toBeVisible();
   await section
     .getByRole('combobox', { name: 'Juego o formato', exact: true })
@@ -550,14 +550,14 @@ test('Admin: biblioteca separada de fuentes, filtros, historial y herramientas b
   await section.getByRole('button', { name: /Buscar y preparar/ }).click();
   await expect(page).toHaveURL(/paso=fuentes/);
   await expect(
-    section.getByRole('button', { name: 'Buscar novedades TCG', exact: true }),
+    section.getByRole('button', { name: 'Buscar novedades Yu-Gi-Oh!', exact: true }),
   ).toBeVisible();
   await page.goBack();
   await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
     'Borrador sin perder',
   );
   await section.getByRole('button', { name: /Buscar y preparar/ }).click();
-  await section.getByRole('button', { name: 'Buscar novedades TCG', exact: true }).click();
+  await section.getByRole('button', { name: 'Buscar novedades Yu-Gi-Oh!', exact: true }).click();
   await section.getByRole('button', { name: 'Revisar noticia guardada', exact: true }).click();
   await expect(section.getByLabel('Título en español', { exact: true })).toHaveValue(
     items[0].title,
