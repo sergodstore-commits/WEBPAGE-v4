@@ -103,8 +103,8 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
       setCandidates(result.items);
       setNotice(
         result.items.length
-          ? `${result.items.length} revelaciones y novedades de productos ${source === 'myl' ? 'MyL' : 'TCG'} disponibles. Preparar una noticia no la publica.`
-          : `La fuente no ofrece revelaciones ni novedades de productos ${source === 'myl' ? 'MyL de estos formatos' : 'TCG'} en la consulta actual. Tus noticias guardadas se conservan.`,
+          ? `${result.items.length} revelaciones y novedades de productos ${source === 'myl' ? 'MyL' : 'TCG / OCG'} disponibles. Preparar una noticia no la publica.`
+          : `La fuente no ofrece revelaciones ni novedades de productos ${source === 'myl' ? 'MyL de estos formatos' : 'TCG / OCG'} en la consulta actual. Tus noticias guardadas se conservan.`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos consultar la fuente.');
@@ -308,9 +308,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
       <section className="admin-card admin-card-body" aria-labelledby="web-news-admin-heading">
         <h2 id="web-news-admin-heading">Actualidad Yu-Gi-Oh! y MyL</h2>
         <p>
-          Revelaciones y contenido de productos de Yu-Gi-Oh! TCG, MyL Primera Era y Primer Bloque.
-          Las novedades se preparan y publican cada día. Aquí puedes revisar o editar el contenido.
-          Las restricciones tienen su herramienta en Banlists.
+          Revelaciones y contenido de productos de Yu-Gi-Oh! TCG y OCG, MyL Primera Era y Primer
+          Bloque. Las novedades se preparan y publican cada día. Aquí puedes revisar o editar el
+          contenido. Las restricciones tienen su herramienta en Banlists.
         </p>
         <ContentAutomationStatus onBusyChange={setBusy} onComplete={load} />
         <p>
@@ -344,7 +344,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
           <div className={styles.workflow}>
             <strong>Uso manual opcional: buscar → preparar → publicar</strong>
             <p>
-              Buscamos revelaciones de cartas y contenido de productos: solo TCG para Yu-Gi-Oh!,
+              Buscamos revelaciones de cartas y contenido de productos: TCG y OCG para Yu-Gi-Oh!,
               Primera Era y Primer Bloque para MyL. Las restricciones se actualizan en Banlists.
               Preparar guarda el contenido y sus imágenes como borrador para revisar; no publica
               nada.
@@ -356,7 +356,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
                 disabled={busy}
                 onChange={(e) => setTranslate(e.target.checked)}
               />{' '}
-              Traducir notas TCG al español al preparar
+              Traducir notas Yu-Gi-Oh! al español al preparar
             </label>
             <details>
               <summary>Traducción gratuita y límites</summary>
@@ -371,9 +371,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
           </div>
           <div className={styles.sourceActions}>
             <label>
-              Fuente TCG{' '}
+              Fuente Yu-Gi-Oh!{' '}
               <select
-                aria-label="Fuente TCG"
+                aria-label="Fuente Yu-Gi-Oh!"
                 value={tcgSource}
                 disabled={busy}
                 onChange={(e) => setTcgSource(e.target.value)}
@@ -383,21 +383,20 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
               </select>
             </label>{' '}
             <button className="admin-button" disabled={busy} onClick={() => void review()}>
-              Buscar novedades TCG
+              Buscar novedades Yu-Gi-Oh!
             </button>{' '}
             <button className="admin-button" disabled={busy} onClick={() => void review('myl')}>
               Buscar novedades MyL
             </button>{' '}
           </div>
           <small>
-            YGOrganization: consulta hasta 60 publicaciones de las categorías seleccionadas y
-            verifica su formato TCG, con caché de 5 minutos. Incluye reediciones y erratas. Los
-            mensajes exclusivos de X no se incluyen. Solo se descargan imágenes al preparar una
-            noticia.
+            YGOrganization: consulta hasta 120 publicaciones, incluyendo New Cards, y verifica su
+            formato TCG u OCG, con caché de 5 minutos. Incluye reediciones y erratas. Los mensajes
+            exclusivos de X no se incluyen. Solo se descargan imágenes al preparar una noticia.
           </small>
           {candidates.length > 0 && (
             <section
-              aria-label={`Noticias ${candidates.some((c) => c.boards?.some((b) => b !== 'yugioh')) ? 'MyL' : 'TCG'} disponibles`}
+              aria-label={`Noticias ${candidates.some((c) => c.boards?.some((b) => b !== 'yugioh')) ? 'MyL' : 'TCG / OCG'} disponibles`}
               className="admin-table-scroll"
               style={{ maxHeight: 460, overflow: 'auto' }}
             >
