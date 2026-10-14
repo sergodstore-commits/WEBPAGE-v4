@@ -1,0 +1,130 @@
+.menu {
+  padding: 20px;
+  display: grid;
+  gap: 20px;
+}
+.intro {
+  display: grid;
+  gap: 4px;
+}
+.intro strong {
+  font-size: 20px;
+}
+.intro span,
+.item small,
+.promo small {
+  color: #4c6470;
+  font-size: 13px;
+}
+.promo {
+  padding: 18px;
+  border: 1px solid #87cbd5;
+  border-radius: 14px;
+  background: #edfafd;
+  display: grid;
+  gap: 12px;
+}
+.promo > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.promo b {
+  margin-left: auto;
+  color: #086b7a;
+  font-size: 23px;
+}
+.promo label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+.promo select,
+.stockRow input {
+  min-height: 42px;
+  width: 100%;
+  border: 1px solid #9eb9c4;
+  border-radius: 8px;
+  background: white;
+  color: #152d37;
+  padding: 8px 10px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #c9dce3;
+  border-radius: 12px;
+  padding: 14px;
+  color: #173b49;
+  cursor: pointer;
+}
+.item > span {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+}
+.item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.item:not(:disabled):hover {
+  border-color: #009bb4;
+  background: #f0fbfd;
+}
+.item:focus-visible,
+.stock summary:focus-visible {
+  outline: 3px solid #009bb4;
+  outline-offset: 3px;
+}
+.stock {
+  border-top: 1px solid #cfdee4;
+  padding-top: 16px;
+}
+.stock summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 8px 0;
+}
+.stock > p {
+  font-size: 13px;
+  color: #4c6470;
+}
+.stockRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e9ee;
+}
+.stockRow label {
+  flex: 1;
+  min-width: 140px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px;
+  align-items: center;
+  gap: 8px;
+}
+.stockRow p {
+  width: 100%;
+  color: #9f202f;
+}
+@media (max-width: 650px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .menu {
+    padding: 14px;
+  }
+  .promo > div {
+    flex-wrap: wrap;
+  }
+}
