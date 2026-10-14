@@ -16,7 +16,7 @@ import {
 } from '../lib/server/content-automation';
 import { getDb, closeDb } from '../lib/server/db';
 import { cleanupRetiredCovers, ownedCoverKey, rotateWebNews } from '../lib/server/news-cleanup';
-import { getWebNews } from '../lib/server/web-news';
+import { getWebNews, publicWebArticle } from '../lib/server/web-news';
 import { NEWS_DISCOVERY_POLICY_VERSION } from '../lib/server/news-editorial';
 import { getBanlist, publishBanlistDraft } from '../lib/server/banlist';
 
@@ -475,9 +475,21 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
           mylBanlist: async () => {},
         };
         const first = await runDailyContent(options, 30_000);
-        assert.equal('published' in first && first.published, 0);
+        assert.equal('published' in first && first.published, 1);
         const draft = (await getWebNews(true))[0];
-        assert.equal(draft.visible, false);
+        assert.equal(draft.visible, true);
+        assert.equal(draft.translation_pending, true);
+        const sourceVersion = await publicWebArticle(draft.id);
+        assert.equal(sourceVersion.title, candidate.title);
+        assert.equal(sourceVersion.body, content.trim());
+        assert.equal(sourceVersion.content_language, 'en');
+        assert.ok(!sourceVersion.body?.includes('Invoca'));
+        assert.equal(sourceVersion.original_content_blocks, undefined);
+        assert.equal((await getWebNews()).find((i) => i.id === draft.id)?.title, candidate.title);
+        assert.equal(
+          (await db.query('SELECT phase FROM content_news_jobs')).rows[0].phase,
+          'translating',
+        );
         assert.ok(draft.content_blocks?.some((b) => !b.original_text));
         assert.ok(draft.content_blocks?.some((b) => b.original_text));
         const used = (await db.query('SELECT translation_chars FROM content_daily_runs')).rows[0]
@@ -486,13 +498,116 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
         const before = translations;
         await db.query('DELETE FROM content_daily_runs'); // Simulate tomorrow's fresh daily budget.
         const second = await runDailyContent(options, 30_000);
-        assert.equal('published' in second && second.published, 1);
+        assert.equal(
+          'published' in second && second.published,
+          0,
+          'Translation updates the same published article',
+        );
         assert.equal((await getWebNews(true))[0].visible, true);
+        assert.equal((await getWebNews(true))[0].translation_pending, false);
+        assert.equal((await getWebNews(true)).length, 1);
+        assert.equal((await publicWebArticle(draft.id)).content_language, 'es');
+        assert.match((await publicWebArticle(draft.id)).body!, /Invoca/);
         assert.ok(!(await getWebNews(true))[0].content_blocks?.some((b) => b.original_text));
         assert.ok(translations > before);
         assert.equal(
           (await db.query('SELECT header_done FROM content_news_jobs')).rows[0].header_done,
           true,
+        );
+      } finally {
+        globalThis.fetch = original;
+      }
+    },
+  );
+  await t.test(
+    'A failed free translator still publishes multiple complete original galleries',
+    async () => {
+      await db.query('DELETE FROM content_daily_runs');
+      await db.query('DELETE FROM content_news_jobs');
+      await db.query(
+        "UPDATE settings SET data=jsonb_set(data,'{web_news}','[]'::jsonb,true) WHERE id=1",
+      );
+      const candidates: WebNewsCandidate[] = [1, 2].map((i) => ({
+        ...article(13),
+        id: 'original-fallback-' + i,
+        url: 'https://ygorganization.com/original-fallback-' + i,
+        title: '[TCG] New card ' + i + ' revealed',
+        summary: 'Original English card information.',
+        source_image: '',
+      }));
+      const empty = async () => ({ items: [] });
+      const image = await sharp({
+        create: { width: 400, height: 600, channels: 3, background: '#456789' },
+      })
+        .png()
+        .toBuffer();
+      const original = globalThis.fetch;
+      let translationCalls = 0,
+        imageCalls = 0;
+      globalThis.fetch = async (input) => {
+        const url = String(input);
+        const candidate = candidates.find((c) => c.url === url);
+        if (candidate)
+          return new Response(
+            '<script type="application/ld+json">' +
+              JSON.stringify({
+                '@type': 'Article',
+                headline: candidate.title,
+                datePublished: '2026-09-13',
+              }) +
+              '</script><div class="post-content prose prose-lg"><p>Draw one card. This effect can only be used once per turn.</p><img src="https://cdn.ygorganization.com/2026/10/' +
+              candidate.id +
+              '.png" alt="Original card"></div>',
+          );
+        if (url.startsWith('https://cdn.ygorganization.com/')) {
+          imageCalls++;
+          return new Response(image);
+        }
+        if (url.startsWith('https://api.mymemory.translated.net/get')) {
+          translationCalls++;
+          return new Response(null, { status: 503 });
+        }
+        throw Error('Unexpected network call');
+      };
+      try {
+        const result = await runDailyContent(
+          {
+            discover: {
+              myl: empty,
+              tcg: empty,
+              ygorganization: async () => ({ items: candidates }),
+            },
+            ygoBanlist: async () => {},
+            mylBanlist: async () => {},
+          },
+          30_000,
+        );
+        assert.equal('published' in result && result.published, 2);
+        assert.equal(imageCalls, 2, 'Images are prepared even after the translator fails');
+        assert.equal(
+          translationCalls,
+          1,
+          'The failing translator is not hammered for every following job',
+        );
+        for (const candidate of candidates) {
+          const item = await publicWebArticle(candidate.id);
+          assert.equal(item.visible, true);
+          assert.equal(item.translation_pending, true);
+          assert.equal(item.title, candidate.title);
+          assert.match(item.body!, /Draw one card/);
+          assert.ok(item.media?.every((m) => m.image?.endsWith('.webp')));
+          assert.ok(!item.content_blocks?.some((b) => b.original_text));
+        }
+        const stored = (await getWebNews(true))[0];
+        const { saveWebNews } = await import('../lib/server/web-news');
+        await assert.rejects(
+          () => saveWebNews({ ...stored, original_content_blocks: undefined }, stored.id),
+          /original completo/,
+        );
+        assert.equal(
+          (await db.query("SELECT count(*) AS n FROM content_news_jobs WHERE phase='translating'"))
+            .rows[0].n,
+          2,
         );
       } finally {
         globalThis.fetch = original;
