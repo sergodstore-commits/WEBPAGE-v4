@@ -85,7 +85,7 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
           <div
             className={styles.newsFilters}
             role="group"
-            aria-label={`Categoría de noticias ${board === 'yugioh' ? 'TCG' : title}`}
+            aria-label={`Categoría de noticias ${board === 'yugioh' ? 'TCG / OCG' : title}`}
           >
             <button
               type="button"
@@ -120,7 +120,7 @@ export function WebNewsColumn({ board = 'yugioh' }: { board?: NewsBoard }) {
           <Search size={17} aria-hidden="true" />
           <input
             type="search"
-            aria-label={`Buscar noticias ${board === 'yugioh' ? 'TCG' : title}`}
+            aria-label={`Buscar noticias ${board === 'yugioh' ? 'TCG / OCG' : title}`}
             placeholder="Buscar noticia…"
             value={query}
             onChange={(e) => {
