@@ -9,6 +9,7 @@ import {
   mylArticle,
   newsBoards,
   newsContentBody,
+  newsSourceLabel,
 } from '@/lib/web-news';
 import { useRemote, Loading } from '../shared';
 import styles from './News.module.css';
@@ -62,6 +63,12 @@ export default function WebNewsArticle({ id }: { id: string }) {
             </time>
             <p className={styles.articleLead}>{item.summary}</p>
           </header>
+          {item.translation_pending && (
+            <aside className={styles.effectiveDates} aria-label="Traducción pendiente">
+              Esta noticia está disponible en su idioma original. La versión en español se
+              actualizará automáticamente cuando la traducción esté lista.
+            </aside>
+          )}
           {item.category === 'banlist' && item.effective_dates && (
             <aside className={styles.effectiveDates} aria-label="Vigencia de la banlist">
               {Object.entries(item.effective_dates)
@@ -158,7 +165,7 @@ export default function WebNewsArticle({ id }: { id: string }) {
           <footer className={styles.articleSource}>
             Preparado por SERGOD STORE · Fuente:{' '}
             <a href={item.url} target="_blank" rel="noopener noreferrer">
-              {mylArticle(item.url) ? 'Blog oficial Mitos y Leyendas' : 'Yu-Gi-Oh! Meta'} ↗
+              {newsSourceLabel(item.url)} ↗
             </a>
           </footer>
         </article>
