@@ -51,7 +51,7 @@ export default function WebNewsArticle({ id }: { id: string }) {
         <article className={styles.webArticle}>
           <header>
             <span className={styles.articleCategory}>
-              {mylArticle(item.url) ? 'MITOS Y LEYENDAS' : 'YU-GI-OH! TCG'} ·{' '}
+              {mylArticle(item.url) ? 'MITOS Y LEYENDAS' : `YU-GI-OH! ${item.format || 'TCG'}`} ·{' '}
               {webNewsCategories[item.category || 'news']}
             </span>
             <h1>{item.title}</h1>
