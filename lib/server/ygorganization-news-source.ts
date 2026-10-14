@@ -35,21 +35,22 @@ const post = z.object({
   featuredImage: z.object({ src: z.string().max(1000) }).nullish(),
 });
 
-const FORMAT_POLICY_VERSION = 2;
+const FORMAT_POLICY_VERSION = 3;
 export const ygorganizationListing =
   'https://ygorganization.com/?categories=errata&categories=f-and-l&categories=ocg-tcg';
-type FormatCheck = { checked_at: string; tcg: boolean };
+export const ygorganizationNewCardsListing = 'https://ygorganization.com/category/news/new-cards';
+type FormatCheck = { checked_at: string; format?: 'TCG' | 'OCG' };
 const explicitTcg = (title: string) => /\bTCG\b/i.test(title);
 const excludedFormat = (text: string) =>
-  /\bOCG\b|rush duel|master duel|duel links|\b[A-Z0-9]{2,8}-(?:JP|AE)\d{2,3}\b|\[[A-Z0-9]{2,8}-(?:JP|AE)\]|\bRD\/[A-Z0-9]/i.test(
-    text,
-  );
+  /rush[\s-]*duel|master[\s-]*duel|duel[\s-]*links|\bRD\/[A-Z0-9]/i.test(text);
+const explicitOcg = (text: string) =>
+  /\bOCG\b|\b[A-Z0-9]{2,8}-(?:JP|AE)\d{2,3}\b|\[[A-Z0-9]{2,8}-(?:JP|AE)\]/i.test(text);
 
 function editorialCategory(title: string, categories: string[]) {
   if (
     excludedFormat(title) ||
     categories.some((c) =>
-      /rush-duel|duel-links|video-games|master-duel|english-ocg|deck-profile|decklist|lore/.test(c),
+      /rush-duel|duel-links|video-games|master-duel|deck-profile|decklist|lore/.test(c),
     ) ||
     /ban[\s-]*list|forbidden.*(?:limited|list)|genesys|point adjustment|decklist|playmat|game mat|sleeves/i.test(
       title,
@@ -105,7 +106,12 @@ export function parseYGOrganizationNews(
     const published_on = p.date.slice(0, 10);
     if (!category || !url || !validDay(published_on) || !Number.isFinite(Date.parse(p.date)))
       continue;
-    if (!explicitTcg(title) && !checks[hash(url)]?.tcg) continue;
+    const format = explicitOcg(title)
+      ? 'OCG'
+      : explicitTcg(title)
+        ? 'TCG'
+        : checks[hash(url)]?.format;
+    if (!format) continue;
     items.set(url, {
       id: `ygorg-${hash(url).slice(0, 24)}`,
       url,
@@ -115,6 +121,7 @@ export function parseYGOrganizationNews(
       category,
       source_image: ygorganizationImage(p.featuredImage?.src || '') || '',
       boards: ['yugioh'],
+      format,
     });
   }
   return [...items.values()];
@@ -134,10 +141,28 @@ export async function reviewYGOrganizationNews() {
       Date.now() - Date.parse(old.checked_at) < 5 * 60000
     )
       return old;
-    // Search the requested categories, so unrelated posts cannot displace relevant news.
-    const pages = await Promise.all(
-      [1, 2, 3].map((page) => read(`${ygorganizationListing}${page === 1 ? '' : `&page=${page}`}`)),
+    // Search New Cards directly as well as product/errata categories. Independent failures
+    // must not discard a successful listing. Six bounded pages, no image downloads.
+    const urls = [ygorganizationNewCardsListing, ygorganizationListing].flatMap((base) =>
+      [1, 2, 3].map((page) =>
+        page === 1 ? base : `${base}${base.includes('?') ? '&' : '?'}page=${page}`,
+      ),
     );
+    const fetched = await Promise.allSettled(
+      urls.map(async (url) => {
+        const html = await read(url);
+        listingPosts(html);
+        return html;
+      }),
+    );
+    const pages = fetched.flatMap((result) =>
+      result.status === 'fulfilled' ? [result.value] : [],
+    );
+    if (!pages.length)
+      fail(
+        502,
+        'YGOrganization no respondió correctamente. Tus noticias y borradores se conservan.',
+      );
     const checks: Record<string, FormatCheck> =
       old?.format_policy_version === FORMAT_POLICY_VERSION ? { ...old.format_checks } : {};
     const unlabelled = [...new Map(pages.flatMap(listingPosts).map((p) => [p.slug, p])).values()]
@@ -147,6 +172,7 @@ export async function reviewYGOrganizationNews() {
         return (
           url &&
           !explicitTcg(newsText(p.title)) &&
+          !explicitOcg(newsText(p.title)) &&
           editorialCategory(
             newsText(p.title),
             p.categories.map((c) => c.slug),
@@ -154,29 +180,20 @@ export async function reviewYGOrganizationNews() {
           (!checked || Date.now() - Date.parse(checked.checked_at) > 7 * 86400000)
         );
       })
-      // Product/reprint announcements are often TCG without the prefix; inspect those first.
-      .sort(
-        (a, b) =>
-          Number(
-            editorialCategory(
-              newsText(a.title),
-              a.categories.map((c) => c.slug),
-            ) === 'reveals',
-          ) -
-            Number(
-              editorialCategory(
-                newsText(b.title),
-                b.categories.map((c) => c.slug),
-              ) === 'reveals',
-            ) || b.date.localeCompare(a.date),
-      )
+      // Inspect never-checked posts first, then expired checks: a repeated recent post
+      // must not permanently starve older unlabelled revelations.
+      .sort((a, b) => {
+        const checked = (p: z.infer<typeof post>) =>
+          Boolean(checks[hash(ygorganizationArticle(`https://ygorganization.com/${p.slug}`)!)]);
+        return Number(checked(a)) - Number(checked(b)) || b.date.localeCompare(a.date);
+      })
       .slice(0, 6);
     const probes = await Promise.allSettled(
       unlabelled.map(async (p) => {
         const url = ygorganizationArticle(`https://ygorganization.com/${p.slug}`)!;
         const html = await read(url); // Source failures are retryable, never cached as an OCG decision.
         const result = inspectArticle(html);
-        checks[hash(url)] = { checked_at: new Date().toISOString(), tcg: result.tcg };
+        checks[hash(url)] = { checked_at: new Date().toISOString(), format: result.format };
       }),
     );
     const unique = new Map(
@@ -189,6 +206,8 @@ export async function reviewYGOrganizationNews() {
       policy_version: NEWS_DISCOVERY_POLICY_VERSION,
       format_policy_version: FORMAT_POLICY_VERSION,
       format_check_errors: probes.filter((p) => p.status === 'rejected').length,
+      listing_errors: fetched.filter((p) => p.status === 'rejected').length,
+      listings_checked: urls,
       format_checks: Object.fromEntries(
         Object.entries(checks)
           .sort((a, b) => b[1].checked_at.localeCompare(a[1].checked_at))
@@ -296,9 +315,28 @@ function inspectArticle(html: string) {
       return false;
     }
   });
-  const tcg =
-    !excludedFormat(`${metadata.headline}\n${text}`) &&
-    (explicitTcg(metadata.headline) || /\bTCG\b/i.test(text) || officialTcg);
+  const format = excludedFormat(`${metadata.headline}\n${text}`)
+    ? undefined
+    : explicitOcg(`${metadata.headline}\n${text}`) ||
+        sourceLinks.some((link) => {
+          try {
+            const u = new URL(link);
+            return (
+              u.protocol === 'https:' &&
+              u.hostname === 'www.yugioh-card.com' &&
+              !u.username &&
+              !u.password &&
+              !u.port &&
+              /^\/japan\//.test(u.pathname)
+            );
+          } catch {
+            return false;
+          }
+        })
+      ? ('OCG' as const)
+      : explicitTcg(metadata.headline) || /\bTCG\b/i.test(text) || officialTcg
+        ? ('TCG' as const)
+        : undefined;
   const media = new Map<string, WebNewsMedia>();
   for (const block of blocks)
     if (block.kind === 'image' && block.source)
@@ -308,14 +346,14 @@ function inspectArticle(html: string) {
       });
   if (media.size > 100)
     fail(409, 'La noticia supera el límite de imágenes. No se importó parcialmente.');
-  return { blocks, media: [...media.values()], tcg, headline: metadata.headline };
+  return { blocks, media: [...media.values()], format, headline: metadata.headline };
 }
 
 export function parseYGOrganizationArticle(html: string, url: string) {
   if (!ygorganizationArticle(url)) fail(400, 'Artículo de YGOrganization no válido.');
   const result = inspectArticle(html);
-  if (!result.tcg) fail(409, 'No pudimos verificar que el artículo corresponda al TCG.');
-  return { blocks: result.blocks, media: result.media };
+  if (!result.format) fail(409, 'No pudimos verificar que el artículo corresponda a TCG u OCG.');
+  return { blocks: result.blocks, media: result.media, format: result.format };
 }
 
 export async function ygorganizationArticleContent(value: string) {
