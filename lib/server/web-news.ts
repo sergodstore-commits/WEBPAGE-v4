@@ -242,7 +242,9 @@ export async function saveWebNews(input: unknown, itemId?: string) {
           (mylArticle(item.url) ||
             !item.original_title ||
             !item.original_content_blocks?.length ||
-            !item.original_content_blocks.some((b) => b.kind !== 'image' && b.text.trim()) ||
+            !item.original_content_blocks.some(
+              (b) => b.text.trim() || (b.kind === 'image' && b.source),
+            ) ||
             item.original_content_blocks.some((b) => b.original_text)),
       )
     )
