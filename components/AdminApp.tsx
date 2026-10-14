@@ -31,8 +31,7 @@ import { AdminShell } from './admin/AdminShell';
 import { YouTubeIntegrations, YouTubeTransmissions } from './admin/YouTubeAdmin';
 import { LeagueAdmin } from './admin/LeagueAdmin';
 import { InstagramNewsPage } from './admin/InstagramAdmin';
-import { PosMenuPicker } from './admin/PosMenuPicker';
-import { PosCatalogPicker } from './admin/PosCatalogPicker';
+import { PosBrowse } from './admin/PosBrowse';
 import {
   posTicketCapacity,
   posDeliverySlots,
@@ -2864,9 +2863,7 @@ function SettingsPage() {
 
 function PosPage() {
   const r = useResource<Product[]>('/admin/products');
-  const [query, setQuery] = useState('');
   const [ticket, setTicket] = useState<PosTicketLine[]>([]);
-  const [section, setSection] = useState<'products' | 'menu'>('products');
   const [menu, setMenu] = useState<PosMenuItem[]>([]);
   const [menuVersion, setMenuVersion] = useState(0);
   const [deliverySlot, setDeliverySlot] = useState<keyof typeof posDeliverySlots>('now');
@@ -2971,65 +2968,17 @@ function PosPage() {
       )}
       <div className="admin-pos-layout">
         <section className="admin-card">
-          <div className="admin-toolbar" role="group" aria-label="Catálogo de venta presencial">
-            <button
-              type="button"
-              className={`admin-button ${section === 'products' ? '' : 'secondary'}`}
-              aria-pressed={section === 'products'}
-              disabled={busy}
-              onClick={() => {
-                setSection('products');
-                setQuery('');
-              }}
-            >
-              Cartas y productos
-            </button>
-            <button
-              type="button"
-              className={`admin-button ${section === 'menu' ? '' : 'secondary'}`}
-              aria-pressed={section === 'menu'}
-              disabled={busy}
-              onClick={() => {
-                setSection('menu');
-                setQuery('');
-              }}
-            >
-              Menú del local
-            </button>
-          </div>
-          <div className="admin-toolbar">
-            <div className="admin-search">
-              <Search size={17} />
-              <input
-                aria-label="Buscar artículos para venta"
-                placeholder="Nombre, SKU, color o tipo"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          {section === 'menu' ? (
-            <PosMenuPicker
-              key={menuVersion}
-              ticket={ticket}
-              busy={busy}
-              onAdd={add}
-              onMenuChange={setMenu}
-              query={query}
-            />
-          ) : r.loading ? (
-            <Loading />
-          ) : r.error ? (
-            <Loading error={r.error} retry={r.load} />
-          ) : (
-            <PosCatalogPicker
-              products={r.data || []}
-              query={query}
-              ticket={ticket}
-              busy={busy}
-              onAdd={add}
-            />
-          )}
+          <PosBrowse
+            products={r.data || []}
+            loading={r.loading}
+            error={r.error}
+            retry={r.load}
+            ticket={ticket}
+            busy={busy}
+            onAdd={add}
+            onMenuChange={setMenu}
+            menuVersion={menuVersion}
+          />
         </section>
         <section className="admin-card admin-card-body admin-ticket">
           <div className="admin-card-heading plain">
