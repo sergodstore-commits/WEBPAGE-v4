@@ -623,7 +623,7 @@ export function InstagramNewsPage({
         aria-label="Herramientas de contenido"
       >
         {[
-          ['web', 'Noticias web', 'Yu-Gi-Oh! TCG y MyL'],
+          ['web', 'Noticias web', 'Yu-Gi-Oh! TCG / OCG y MyL'],
           ['instagram', 'SERGOD STORE', 'Publicaciones de Instagram'],
         ].map(([id, title, help]) => (
           <button
