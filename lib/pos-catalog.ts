@@ -1,6 +1,7 @@
 import type { Product } from './types';
 import { catalogPresentation } from './catalog-presentations';
 import { compareCatalogLaunch } from './catalog-order';
+import { posAccessorySection, posAccessorySections } from './pos-browse';
 
 export const posCatalogSections = [
   { id: 'all', label: 'Todos' },
@@ -87,6 +88,9 @@ export function posCatalogSearch(
               p.catalog_name,
               p.brand,
               p.category,
+              ...(family.section === 'accessories'
+                ? [posAccessorySections.find((s) => s.id === posAccessorySection(p))?.label || '']
+                : []),
               ...Object.values(p.options || {}),
             ].join(' '),
           ).includes(text),
