@@ -9,6 +9,8 @@ import { contentBody } from './news-content';
 import { reviewMetaNews } from './meta-news-source';
 import { reviewYGOrganizationNews } from './ygorganization-news-source';
 import { reviewMylNews } from './myl-news-source';
+import { reviewYugiohInstagram } from './yugioh-instagram-source';
+import { suppressDuplicateNews } from './news-deduplication';
 import {
   banlistPanel,
   getBanlist,
@@ -60,7 +62,7 @@ export function splitTranslationBlocks(blocks: WebNewsBlock[]): WebNewsBlock[] {
   return result;
 }
 
-type Provider = 'tcg' | 'ygorganization' | 'myl';
+type Provider = 'tcg' | 'ygorganization' | 'myl' | 'yugioh-instagram';
 type Job = {
   url: string;
   id: string;
@@ -88,7 +90,12 @@ const message = (error: unknown) =>
 
 // Dependencies are explicit so daily leases and isolation can be exercised without external services.
 const services = {
-  discover: { tcg: reviewMetaNews, ygorganization: reviewYGOrganizationNews, myl: reviewMylNews },
+  discover: {
+    tcg: reviewMetaNews,
+    ygorganization: reviewYGOrganizationNews,
+    myl: reviewMylNews,
+    'yugioh-instagram': reviewYugiohInstagram,
+  },
   ygoBanlist: async (until: number) => {
     if (!(await getBanlist(true))) await refreshBanlist(true);
     let panel = await banlistPanel(true);
@@ -201,7 +208,7 @@ async function queueCandidates(
     if (seen.has(item.url) && !recover) continue;
     const pending = (
       await db.query(`SELECT id,url,published_on::text FROM content_news_jobs
-      WHERE phase IN ('queued','prepared','translating') AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
+      WHERE phase IN ('queued','prepared','translating') AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization','yugioh-instagram')"}
       ORDER BY published_on ASC,url`)
     ).rows;
     if (pending.length >= limit) {
@@ -241,7 +248,8 @@ async function advanceNews(job: Job, until: number, translation: { blocked: bool
     job.provider !== 'myl' &&
     !item.original_content_blocks &&
     (!job.header_done || item.content_blocks?.some((b) => b.original_text));
-  if (!item.media_checked || needsOriginal) await prepareWebNewsImages(job.id, false, false, true);
+  if (!item.media_checked || needsOriginal)
+    await prepareWebNewsImages(job.id, false, false, true, true);
   item = (await getWebNews(true)).find((i) => i.id === job.id)!;
   if (job.phase === 'queued') {
     const blocks = splitTranslationBlocks(item.content_blocks || []);
@@ -252,6 +260,7 @@ async function advanceNews(job: Job, until: number, translation: { blocked: bool
     );
   }
   // Image preparation is independent of the translation quota. Never publish missing galleries.
+  if (await suppressDuplicateNews(item)) return false;
   while (Date.now() < until) {
     item = (await getWebNews(true)).find((i) => i.id === job.id)!;
     if (!item.media?.some((m) => !m.image)) break;
@@ -266,6 +275,13 @@ async function advanceNews(job: Job, until: number, translation: { blocked: bool
     (!job.header_done || item.content_blocks?.some((b) => b.original_text));
   if (pending) {
     await saveWebNews({ ...item, visible: true, translation_pending: true }, job.id);
+    if (
+      await suppressDuplicateNews(
+        (await getWebNews(true)).find((i) => i.id === job.id)!,
+        true,
+      )
+    )
+      return false;
     // Keep this URL in the daily queue, even if it disappears from discovery tomorrow.
     await db.query(
       "UPDATE content_news_jobs SET phase='translating',updated_at=now() WHERE url=$1",
@@ -311,6 +327,13 @@ async function advanceNews(job: Job, until: number, translation: { blocked: bool
     },
     job.id,
   );
+  if (
+    await suppressDuplicateNews(
+      (await getWebNews(true)).find((i) => i.id === job.id)!,
+      true,
+    )
+  )
+    return false;
   await db.query(
     "UPDATE content_news_jobs SET phase='published',header_done=true,candidate=NULL,last_error=NULL,updated_at=now() WHERE url=$1",
     [job.url],
@@ -319,12 +342,18 @@ async function advanceNews(job: Job, until: number, translation: { blocked: bool
 }
 
 export async function runDailyContent(
-  overrides: Partial<typeof services> = {},
+  overrides: Omit<Partial<typeof services>, 'discover'> & {
+    discover?: Partial<typeof services.discover>;
+  } = {},
   durationMs = 220_000,
   resumePartial = false,
   scheduled = false,
 ) {
-  const active = { ...services, ...overrides };
+  const active = {
+    ...services,
+    ...overrides,
+    discover: { ...services.discover, ...overrides.discover },
+  };
   const day = contentDay(),
     token = randomUUID();
   // An early operator recovery must not consume the morning cron's slot. The
@@ -343,12 +372,18 @@ export async function runDailyContent(
     }
   };
   try {
+    await check('Duplicados entre fuentes', async () => {
+      for (const item of (await getWebNews(true)).filter((i) => i.visible)) {
+        if (Date.now() >= deadline) break;
+        await suppressDuplicateNews(item, true);
+      }
+    });
     await check('Limpieza', async () => {
       summary.retired += await rotateWebNews();
       summary.freed_bytes += await cleanupRetiredCovers();
     });
     // Independent sources: a failed translation/provider must never prevent MyL publication.
-    for (const provider of ['myl', 'tcg', 'ygorganization'] as const)
+    for (const provider of ['myl', 'tcg', 'ygorganization', 'yugioh-instagram'] as const)
       await check(provider, async () => {
         await queueCandidates(
           provider,
@@ -377,7 +412,7 @@ export async function runDailyContent(
           const jobs = (
             await db.query<Job>(
               `SELECT * FROM content_news_jobs WHERE phase IN ('queued','prepared','translating')
-          AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization')"}
+          AND ${game === 'myl' ? "provider='myl'" : "provider IN ('tcg','ygorganization','yugioh-instagram')"}
           ORDER BY published_on DESC,url LIMIT $1`,
               [NEWS_LIMITS[game]],
             )
@@ -480,6 +515,10 @@ export async function contentAutomationStatus() {
   });
   return {
     last,
+    duplicates: Number(
+      (await db.query("SELECT count(*) AS n FROM content_news_jobs WHERE phase='duplicate'"))
+        .rows[0].n,
+    ),
     pending: pending + (await pendingBanlists()),
     preserved,
     retry_available:

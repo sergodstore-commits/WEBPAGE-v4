@@ -347,6 +347,7 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
                 throw Error('offline');
               },
               ygorganization: empty,
+              'yugioh-instagram': empty,
             },
             ygoBanlist: async () => {},
             mylBanlist: async () => {},
@@ -376,7 +377,12 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
         );
         const resumed = await runDailyContent(
           {
-            discover: { myl: discover, tcg: empty, ygorganization: empty },
+            discover: {
+              myl: discover,
+              tcg: empty,
+              ygorganization: empty,
+              'yugioh-instagram': empty,
+            },
             ygoBanlist: async () => {},
             mylBanlist: async () => {},
           },
@@ -401,7 +407,12 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
         await db.query("UPDATE content_news_jobs SET phase='retired' WHERE id=$1", [candidate.id]);
         const retired = await runDailyContent(
           {
-            discover: { myl: discover, tcg: empty, ygorganization: empty },
+            discover: {
+              myl: discover,
+              tcg: empty,
+              ygorganization: empty,
+              'yugioh-instagram': empty,
+            },
             ygoBanlist: async () => {},
             mylBanlist: async () => {},
           },
@@ -470,7 +481,7 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
       };
       try {
         const options = {
-          discover: { myl: empty, tcg: empty, ygorganization: discover },
+          discover: { myl: empty, tcg: empty, ygorganization: discover, 'yugioh-instagram': empty },
           ygoBanlist: async () => {},
           mylBanlist: async () => {},
         };
@@ -576,6 +587,7 @@ test('Daily content: retention, safe cleanup, leases, publication and recovery',
               myl: empty,
               tcg: empty,
               ygorganization: async () => ({ items: candidates }),
+              'yugioh-instagram': empty,
             },
             ygoBanlist: async () => {},
             mylBanlist: async () => {},

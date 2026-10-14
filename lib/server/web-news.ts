@@ -7,6 +7,7 @@ import {
   newsSourceImage,
   mylArticle,
   ygorganizationArticle,
+  instagramNewsArticle,
   newsSourceLabel,
   publicNewsContent,
   type WebNewsItem,
@@ -26,6 +27,8 @@ import { ygorganizationArticleContent } from './ygorganization-news-source';
 import { contentBody } from './news-content';
 import { translateNewsText } from './news-translation';
 import { latestNews } from '../news-retention';
+import { newsIdentity } from '../news-deduplication';
+import { yugiohInstagramContent } from './yugioh-instagram-source';
 
 const blockSchema = z.object({
   kind: z.enum(['heading', 'paragraph', 'list', 'image']),
@@ -60,6 +63,18 @@ const schema = z
             return url;
           }),
         published_on: z.string().refine(validDay, 'Indica una fecha válida.'),
+        source_published_at: z.iso.datetime({ offset: true }).optional(),
+        dedupe_identity: z
+          .object({
+            version: z.literal(1),
+            title: z.string().max(500),
+            words: z.array(z.string().max(200)).max(300),
+            facts: z.array(z.string().max(200)).max(80),
+            cards: z.array(z.string().max(500)).max(100),
+            signature: z.string().max(80),
+            truncated: z.boolean(),
+          })
+          .optional(),
         visible: z.boolean(),
         category: z.enum(['news', 'reveals', 'releases', 'tournaments', 'banlist']).default('news'),
         edition_code: z
@@ -284,6 +299,7 @@ export async function prepareWebNewsImages(
   batch = false,
   refreshContent = false,
   translate = true,
+  manifestOnly = false,
 ) {
   return withLease(async () => {
     const items = await getWebNews(true);
@@ -295,7 +311,9 @@ export async function prepareWebNewsImages(
         ? await mylArticleContent(item.url, item.published_on)
         : ygorganizationArticle(item.url)
           ? await ygorganizationArticleContent(item.url)
-          : await articleContent(item.url);
+          : instagramNewsArticle(item.url)
+            ? await yugiohInstagramContent(item.url)
+            : await articleContent(item.url);
       const manifest = content.media;
       if (!myl && (refreshContent || !item.original_content_blocks))
         item.original_content_blocks = content.blocks.map((b) => ({ ...b }));
@@ -336,8 +354,9 @@ export async function prepareWebNewsImages(
         ...item.media?.find((old) => old.source === m.source),
         name: m.name,
       }));
+      item.dedupe_identity = newsIdentity({ ...item, dedupe_identity: undefined });
       item.media_checked = true;
-      if (item.source_image && !item.image)
+      if (item.source_image && !item.image && !manifestOnly)
         Object.assign(item, await archiveMetaNewsCover(item.source_image));
     } else {
       if (!item.media_checked) fail(409, 'Revisa primero las imágenes de la noticia.');

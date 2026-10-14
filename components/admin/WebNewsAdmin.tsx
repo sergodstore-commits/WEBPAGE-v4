@@ -6,6 +6,7 @@ import {
   newsArticle,
   mylArticle,
   ygorganizationArticle,
+  instagramNewsArticle,
   newsSourceLabel,
   possibleNewsDuplicate,
   newsBoards,
@@ -94,7 +95,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
     setNotice('');
     try {
       const result = await api<{ items: WebNewsCandidate[] }>(
-        `/admin/news/web-sources/${source === 'myl' ? 'review-myl' : tcgSource === 'ygorganization' ? 'review-ygorganization' : 'review'}`,
+        `/admin/news/web-sources/${source === 'myl' ? 'review-myl' : tcgSource === 'ygorganization' ? 'review-ygorganization' : tcgSource === 'instagram' ? 'review-yugioh-instagram' : 'review'}`,
         {
           method: 'POST',
           body: '{}',
@@ -238,7 +239,9 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
             ? 'myl'
             : ygorganizationArticle(candidate.url)
               ? 'ygorganization'
-              : 'tcg',
+              : instagramNewsArticle(candidate.url)
+                ? 'yugioh-instagram'
+                : 'tcg',
           translate,
         }),
       });
@@ -380,6 +383,7 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
               >
                 <option value="meta">Yu-Gi-Oh! Meta</option>
                 <option value="ygorganization">YGOrganization</option>
+                <option value="instagram">Instagram oficial · @yugiohcardeu</option>
               </select>
             </label>{' '}
             <button className="admin-button" disabled={busy} onClick={() => void review()}>
@@ -394,6 +398,13 @@ export function WebNewsAdmin({ onBusyChange }: { onBusyChange?: (busy: boolean) 
             formato TCG u OCG, con caché de 5 minutos. Incluye reediciones y erratas. Los mensajes
             exclusivos de X no se incluyen. Solo se descargan imágenes al preparar una noticia.
           </small>
+          {tcgSource === 'instagram' && (
+            <p role="status">
+              @yugiohcardeu requiere autorización de Meta para Business Discovery. Si falta, se
+              muestra el motivo y las demás fuentes continúan. SERGOD STORE conserva su Instagram
+              por separado.
+            </p>
+          )}
           {candidates.length > 0 && (
             <section
               aria-label={`Noticias ${candidates.some((c) => c.boards?.some((b) => b !== 'yugioh')) ? 'MyL' : 'TCG / OCG'} disponibles`}

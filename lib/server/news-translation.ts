@@ -72,7 +72,7 @@ export async function prepareNewsDraft(input: unknown, verifiedCandidate?: WebNe
   const value = z
     .object({
       id: z.string().regex(/^[a-zA-Z0-9-]{1,80}$/),
-      source: z.enum(['tcg', 'myl', 'ygorganization']),
+      source: z.enum(['tcg', 'myl', 'ygorganization', 'yugioh-instagram']),
       translate: z.boolean().default(true),
     })
     .parse(input);
@@ -83,7 +83,9 @@ export async function prepareNewsDraft(input: unknown, verifiedCandidate?: WebNe
       ? 'myl_news_discovery'
       : value.source === 'ygorganization'
         ? 'ygorganization_news_discovery'
-        : 'web_news_discovery';
+        : value.source === 'yugioh-instagram'
+          ? 'yugioh_instagram_discovery'
+          : 'web_news_discovery';
   const row = (await (await getDb()).query('SELECT data FROM settings WHERE id=1')).rows[0];
   const discovery = row?.data?.[key];
   const candidate =
@@ -114,6 +116,7 @@ export async function prepareNewsDraft(input: unknown, verifiedCandidate?: WebNe
       id: candidate.id,
       url: candidate.url,
       published_on: candidate.published_on,
+      source_published_at: candidate.source_published_at,
       category: candidate.category,
       format: candidate.format,
       boards: candidate.boards || ['yugioh'],

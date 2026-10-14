@@ -1,4 +1,7 @@
+import { newsRelationship, type NewsIdentity } from './news-deduplication';
 export type WebNewsItem = {
+  source_published_at?: string;
+  dedupe_identity?: NewsIdentity;
   edition_code?: string;
   boards?: NewsBoard[];
   effective_dates?: Partial<Record<MylNewsBoard, string>>;
@@ -51,7 +54,7 @@ export function newsContentBody(blocks: WebNewsBlock[]) {
 // Keep the public version entirely in the source language until Spanish is complete.
 // The working translation and original share the same optimized image files.
 export function publicNewsContent(item: WebNewsItem): WebNewsItem {
-  const { original_content_blocks, ...value } = item;
+  const { original_content_blocks, dedupe_identity, ...value } = item;
   return item.translation_pending && original_content_blocks?.length
     ? {
         ...value,
@@ -88,6 +91,7 @@ export const newsBoards = {
 export type NewsBoard = keyof typeof newsBoards;
 export type MylNewsBoard = Exclude<NewsBoard, 'yugioh'>;
 export type WebNewsCandidate = {
+  source_published_at?: string;
   format?: 'TCG' | 'OCG';
   boards?: NewsBoard[];
   id: string;
@@ -200,10 +204,55 @@ export function mylNewsImage(value: string): string | null {
   }
 }
 export function newsArticle(value: string) {
-  return yugiohMetaArticle(value) || mylArticle(value) || ygorganizationArticle(value);
+  return (
+    yugiohMetaArticle(value) ||
+    mylArticle(value) ||
+    ygorganizationArticle(value) ||
+    instagramNewsArticle(value)
+  );
 }
 export function newsSourceImage(value: string) {
-  return metaNewsImage(value) || mylNewsImage(value) || ygorganizationImage(value);
+  return (
+    metaNewsImage(value) ||
+    mylNewsImage(value) ||
+    ygorganizationImage(value) ||
+    instagramNewsImage(value)
+  );
+}
+export function instagramNewsArticle(value: string): string | null {
+  try {
+    const u = new URL(value);
+    if (
+      u.protocol !== 'https:' ||
+      !['instagram.com', 'www.instagram.com'].includes(u.hostname) ||
+      u.username ||
+      u.password ||
+      u.port ||
+      !/^\/(?:p|reel)\/[A-Za-z0-9_-]+\/?$/.test(u.pathname)
+    )
+      return null;
+    return `https://www.instagram.com${u.pathname.replace(/\/$/, '')}/`;
+  } catch {
+    return null;
+  }
+}
+export function instagramNewsImage(value: string): string | null {
+  try {
+    const u = new URL(value);
+    if (
+      u.protocol !== 'https:' ||
+      u.username ||
+      u.password ||
+      u.port ||
+      u.hash ||
+      !['cdninstagram.com', 'fbcdn.net'].some((host) => u.hostname.endsWith(`.${host}`)) ||
+      !/\.(?:png|jpe?g|webp)$/i.test(u.pathname)
+    )
+      return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
 }
 
 export function ygorganizationArticle(value: string): string | null {
@@ -253,11 +302,17 @@ export function newsSourceLabel(url: string) {
     ? 'Blog oficial Mitos y Leyendas'
     : ygorganizationArticle(url)
       ? 'YGOrganization'
-      : 'Yu-Gi-Oh! Meta';
+      : instagramNewsArticle(url)
+        ? 'Yu-Gi-Oh! Europa · Instagram oficial'
+        : 'Yu-Gi-Oh! Meta';
 }
 
 // Advisory only: different reports about the same set must remain selectable.
 export function possibleNewsDuplicate(candidate: WebNewsCandidate, items: WebNewsItem[]) {
+  const verified = items.find(
+    (item) => item.url !== candidate.url && newsRelationship(candidate, item) === 'duplicate',
+  );
+  if (verified) return verified;
   const words = (text: string) =>
     new Set(
       text

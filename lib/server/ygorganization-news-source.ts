@@ -118,6 +118,7 @@ export function parseYGOrganizationNews(
       title: title.slice(0, 160),
       summary: newsText(p.excerpt).slice(0, 600),
       published_on,
+      source_published_at: new Date(p.date).toISOString(),
       category,
       source_image: ygorganizationImage(p.featuredImage?.src || '') || '',
       boards: ['yugioh'],

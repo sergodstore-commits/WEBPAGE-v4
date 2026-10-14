@@ -57,6 +57,7 @@ import {
 import { reviewMetaNews } from '@/lib/server/meta-news-source';
 import { contentAutomationStatus } from '@/lib/server/content-automation';
 import { reviewYGOrganizationNews } from '@/lib/server/ygorganization-news-source';
+import { reviewYugiohInstagram } from '@/lib/server/yugioh-instagram-source';
 import { reviewMylNews } from '@/lib/server/myl-news-source';
 import { prepareNewsDraft } from '@/lib/server/news-translation';
 import { getBanlist, refreshBanlist, banlistPanel, importBanlistCard } from '@/lib/server/banlist';
@@ -474,6 +475,10 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       if (route === 'admin/news/web-sources/review-ygorganization' && method === 'POST') {
         await rateLimit(`ygorg-news-review:${user.id}`, 20, 60);
         return json(await reviewYGOrganizationNews());
+      }
+      if (route === 'admin/news/web-sources/review-yugioh-instagram' && method === 'POST') {
+        await rateLimit(`ygo-instagram-review:${user.id}`, 20, 60);
+        return json(await reviewYugiohInstagram());
       }
       if (
         path[1] === 'news' &&

@@ -10,6 +10,7 @@ type Status = {
   limits?: { yugioh: number; myl: number };
   pending: number;
   preserved: number;
+  duplicates?: number;
   retry_available: boolean;
   boards: { board: string; label: string; published: number; pending: number }[];
   pending_jobs: {
@@ -82,6 +83,10 @@ export function ContentAutomationStatus({
         </p>
       )}
       <small>Las cartas y sus galerías se conservan, aunque una noticia salga del listado.</small>
+      <p>
+        Duplicados omitidos: {data.duplicates || 0}. Se conserva la primera publicación de origen;
+        las ampliaciones con información nueva siguen publicándose.
+      </p>
       <p>
         {data.boards
           ?.map((b) => `${b.label}: ${b.published} publicadas · ${b.pending} pendientes`)

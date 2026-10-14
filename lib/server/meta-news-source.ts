@@ -117,6 +117,7 @@ export function parseMetaNews(input: unknown, editorialOnly = true): WebNewsCand
       title: item.title,
       summary: (item.description || '').slice(0, 600),
       published_on,
+      source_published_at: new Date(item.date).toISOString(),
       category:
         editorialCategory ||
         (item.subCategory === 'card-reveals'

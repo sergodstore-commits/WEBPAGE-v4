@@ -399,6 +399,28 @@ function snapshot(raw: unknown) {
   };
 }
 const mediaFields = 'id,caption,media_type,media_product_type,permalink,timestamp';
+/** Only the explicitly approved official profile; never arbitrary account discovery. */
+export async function officialYugiohInstagram() {
+  if (loginMode() !== 'facebook')
+    fail(409, 'La fuente @yugiohcardeu requiere la conexión con Facebook Login.');
+  const { c, access } = await ready();
+  try {
+    return await graph(
+      c.user_id,
+      access,
+      {
+        fields:
+          'business_discovery.username(yugiohcardeu){username,media.limit(25){id,caption,permalink,timestamp,media_type,media_url,thumbnail_url,children.limit(25){id,media_type,media_url,thumbnail_url}}}',
+      },
+      'facebook',
+    );
+  } catch {
+    fail(
+      409,
+      'Instagram oficial @yugiohcardeu pendiente: Meta debe autorizar Business Discovery para esta aplicación. Las demás fuentes siguen actualizándose.',
+    );
+  }
+}
 export async function reviewInstagram(adminId: string, cursor?: string) {
   const after = z
     .string()
