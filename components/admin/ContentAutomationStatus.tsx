@@ -19,6 +19,8 @@ type Status = {
     images_total: number;
     translation_pending: number;
     error: string | null;
+    visible?: boolean;
+    translation_pending_public?: boolean;
   }[];
   last: null | {
     started_at: string;
@@ -92,6 +94,7 @@ export function ContentAutomationStatus({
             {data.pending_jobs.map((job) => (
               <li key={job.id}>
                 <strong>{job.title}</strong>
+                {job.visible && job.translation_pending_public && ' · Publicada en idioma original'}
                 {' · '}
                 {job.images_ready}/{job.images_total} imágenes
                 {job.translation_pending > 0 && ` · ${job.translation_pending} textos por traducir`}
