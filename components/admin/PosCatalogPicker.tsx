@@ -14,6 +14,7 @@ import {
   type PosCatalogSection,
 } from '@/lib/pos-catalog';
 import styles from './PosCatalog.module.css';
+import { posAccessorySection, type PosAccessorySection } from '@/lib/pos-browse';
 
 function ProductImage({ product }: { product: Product }) {
   const [failed, setFailed] = useState(false);
@@ -116,34 +117,54 @@ export function PosCatalogPicker({
   ticket,
   busy,
   onAdd,
+  section: controlledSection,
+  accessorySection = 'all',
+  excludeAccessories = false,
+  hideFilters = false,
 }: {
   products: Product[];
   query: string;
   ticket: PosTicketLine[];
   busy: boolean;
   onAdd: (p: Product) => void;
+  section?: PosCatalogSection;
+  accessorySection?: PosAccessorySection;
+  excludeAccessories?: boolean;
+  hideFilters?: boolean;
 }) {
-  const [section, setSection] = useState<PosCatalogSection>('all');
+  const [localSection, setSection] = useState<PosCatalogSection>('all');
+  const section = controlledSection ?? localSection;
   const families = posCatalogFamilies(products);
-  const matches = posCatalogSearch(families, query, section);
+  const matches = posCatalogSearch(families, query, section).filter(
+    (family) =>
+      (!excludeAccessories || family.section !== 'accessories') &&
+      (accessorySection === 'all' || posAccessorySection(family.variants[0]) === accessorySection),
+  );
   const count = (id: PosCatalogSection) =>
     id === 'all' ? families.length : families.filter((family) => family.section === id).length;
   return (
     <div className={styles.catalog}>
-      <div className={styles.filters} role="group" aria-label="Tipos de productos del POS">
-        {posCatalogSections.map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            aria-pressed={section === item.id}
-            disabled={busy}
-            onClick={() => setSection(item.id)}
-          >
-            {item.label}
-            <span>{count(item.id)}</span>
-          </button>
-        ))}
-      </div>
+      {hideFilters && (
+        <h2 className={styles.sectionTitle}>
+          {section === 'accessories' ? 'Accesorios' : 'Cartas y productos'}
+        </h2>
+      )}
+      {!hideFilters && (
+        <div className={styles.filters} role="group" aria-label="Tipos de productos del POS">
+          {posCatalogSections.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              aria-pressed={section === item.id}
+              disabled={busy}
+              onClick={() => setSection(item.id)}
+            >
+              {item.label}
+              <span>{count(item.id)}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <p className={styles.help}>
         {matches.length} {matches.length === 1 ? 'grupo o producto' : 'grupos y productos'} ·
         accesorios agrupados; sobres, cajas y kits por presentación.
